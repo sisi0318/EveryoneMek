@@ -1,3 +1,11 @@
 {
-  "parent": "naturesmekanism:block/ore_chamber_port"
+  "parent": "naturesmekanism:block/ore_chamber_port",
+  "overrides": [
+    {
+      "predicate": {
+        "naturesmekanism:port_output": 1
+      },
+      "model": "naturesmekanism:block/ore_chamber_port_output"
+    }
+  ]
 }

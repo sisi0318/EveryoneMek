@@ -12,6 +12,11 @@ import de.ellpeck.naturesaura.reg.ModRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import mekanism.api.Action;
+import mekanism.api.RelativeSide;
+import mekanism.common.lib.transmitter.TransmissionType;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.BlockItemStateProperties;
+import net.minecraft.network.chat.Component;
 import mekanism.common.inventory.container.MekanismContainer;
 import mekanism.common.inventory.container.sync.SyncableInt;
 import mekanism.common.util.MekanismUtils;
@@ -46,6 +51,55 @@ public final class OreChamberLogic {
     public ItemStack target() { return targetId < 0 ? ItemStack.EMPTY : new ItemStack(BuiltInRegistries.ITEM.byId(targetId)); }
     public int auraCost() { return auraCost; }
     public BlockPos center() { return machine.getBlockPos().relative(machine.getDirection().getOpposite()); }
+    /** Every cell on the selected multiblock face, including edges and corners. */
+    public List<BlockPos> facePositions(Direction direction) {
+        BlockPos center = center();
+        var result = new ArrayList<BlockPos>(9);
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-1, -1, -1), center.offset(1, 1, 1))) {
+            int distance = (pos.getX() - center.getX()) * direction.getStepX()
+                  + (pos.getY() - center.getY()) * direction.getStepY() + (pos.getZ() - center.getZ()) * direction.getStepZ();
+            if (distance == 1) result.add(pos.immutable());
+        }
+        return result;
+    }
+    /** Called by Mek's normal side-configuration packets, including batch configuration. */
+    public void applyItemSide(Direction direction) {
+        var level = machine.getLevel();
+        if (level == null || level.isClientSide || machine.readingSavedData() || level.getBlockEntity(machine.getBlockPos()) != machine) return;
+        var side = RelativeSide.fromDirections(machine.getDirection(), direction);
+        var mode = machine.getConfig().getConfig(TransmissionType.ITEM).getDataType(side);
+        for (BlockPos pos : facePositions(direction)) {
+            if (!level.hasChunkAt(pos)) continue;
+            var state = level.getBlockState(pos);
+            if (!state.is(Content.CHAMBER_PORT.get())) continue;
+            var updated = ChamberPortBlock.withItemMode(state, mode);
+            if (updated != state) {
+                level.setBlockAndUpdate(pos, updated);
+                level.invalidateCapabilities(pos);
+            }
+        }
+    }
+    public BlockPos sideDisplayPosition(RelativeSide side) {
+        Direction direction = side.getDirection(machine.getDirection());
+        BlockPos input = null;
+        var level = machine.getLevel();
+        if (level != null) for (BlockPos pos : facePositions(direction)) {
+            if (!level.hasChunkAt(pos)) continue;
+            var state = level.getBlockState(pos);
+            if (!state.is(Content.CHAMBER_PORT.get())) continue;
+            if (ChamberPortBlock.itemMode(state).canOutput()) return pos;
+            if (input == null) input = pos;
+        }
+        return input == null ? machine.getBlockPos().relative(direction) : input;
+    }
+    public static ItemStack portDisplayStack(net.minecraft.world.level.block.state.BlockState state) {
+        var stack = new ItemStack(Content.CHAMBER_PORT);
+        stack.set(DataComponents.BLOCK_STATE, new BlockItemStateProperties(java.util.Map.of(
+              "output", Boolean.toString(state.getValue(ChamberPortBlock.OUTPUT)), "item_mode", state.getValue(ChamberPortBlock.ITEM_MODE).getSerializedName())));
+        stack.set(DataComponents.CUSTOM_NAME, Component.translatable("gui.naturesmekanism.port_mode",
+              Component.translatable(ChamberPortBlock.itemMode(state).getTranslationKey())));
+        return stack;
+    }
     public boolean containsShell(BlockPos pos) {
         BlockPos center = center();
         int x = Math.abs(pos.getX() - center.getX()), y = Math.abs(pos.getY() - center.getY()), z = Math.abs(pos.getZ() - center.getZ());

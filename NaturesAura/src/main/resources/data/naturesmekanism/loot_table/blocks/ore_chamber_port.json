@@ -12,7 +12,8 @@
               "function": "minecraft:copy_state",
               "block": "naturesmekanism:ore_chamber_port",
               "properties": [
-                "output"
+                "output",
+                "item_mode"
               ]
             }
           ]

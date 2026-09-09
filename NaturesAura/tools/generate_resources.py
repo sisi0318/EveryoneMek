@@ -27,17 +27,16 @@ def write(path, value):
 zh = {"itemGroup.naturesmekanism": "自然机械", "chemical.naturesmekanism.aura": "灵气"}
 en = {"itemGroup.naturesmekanism": "Nature's Mekanism", "chemical.naturesmekanism.aura": "Aura"}
 descriptions = [
-    ("用 FE 生产灵气。可通过加压管道输出，也可开启环境释放。", "Produces Aura from FE. Supports pressurized tubes and optional environmental release."),
-    ("消耗原料、树苗、金叶粉和 FE，执行森林仪式。", "Processes forest recipes using ingredients, a sapling, gold powder and FE."),
-    ("消耗原料、灵气和 FE 进行灌注；优先使用储罐灵气，不足时使用环境灵气。催化物不消耗。", "Infuses ingredients using Aura and FE. Uses stored Aura first, then environmental Aura. Catalysts are retained."),
-    ("替换原版祭祀台，周围仍须保留完整花阵。一份呼唤物处理一批供品。", "Replaces the Offering Table and requires its flower arrangement. One calling item starts a batch."),
-    ("用瓶与塞和 FE 装瓶。半径 30 格灵气至少 100,000 时，每瓶消耗 20,000 灵气并按维度产出；灵气不高于 -100,000 时产出真空瓶。储罐灵气优先。模拟环境模块可解除环境和维度门槛并选择产物。", "Fills Bottle and Cork using FE. Within 30 blocks, at least 100,000 Aura permits a dimension-specific bottle costing 20,000 Aura; at most -100,000 Aura permits vacuum bottles at no Aura cost. Stored Aura is used first. An Environment Simulation Module bypasses environmental and dimension requirements and allows product selection."),
-    ("设置环境灵气上下限，过量时回收至储罐，不足时释放储罐灵气。支持单向模式、红石和范围升级；达到目标后停止耗电。输入数值后回车或点击勾号应用。", "Balances environmental Aura between configurable lower and upper limits. Recovers excess Aura into its Chemical tank and releases stored Aura when below the lower limit. Supports one-way modes, redstone and range modules; consumes no FE while at target. Press Enter or click the checkmark to apply a number."),
-    ("读取自然灵气的降生配方，消耗原料、FE 和灵气生成生物。可设置世界坐标轴 X/Y/Z 偏移、水平半径和区域数量上限；每个范围模块增加 2 格最大半径。陆生生物需要地面，水生生物需要水。储罐优先，不足从半径 35 格环境补足。生成成功后才扣原料和灵气。", "Spawns entities from Nature's Aura recipes using ingredients, FE and Aura. Configure world-axis X/Y/Z offsets, horizontal radius and area population limit. Each Range Module adds 2 blocks of maximum radius. Land creatures need a floor and aquatic creatures need water. Uses stored Aura first, then environmental Aura within 35 blocks. Ingredients and Aura are consumed only after successful spawning."),
-    ("用 FE 和两份食物配对繁殖成年动物，保留繁殖冷却。降生之灵模式要求动物周围 30 格至少 120 万灵气，由自然灵气原版事件产出并自动收集；普通繁殖模式允许低灵气和海龟、青蛙怀卵。动物间需小于 3 格且无遮挡。支持区域与数量上限。", "Breeds adult animals using FE and two food items, preserving cooldowns. Birth Spirits mode requires at least 1.2M Aura within 30 blocks of the parent; the native Nature's Aura event produces spirits for automatic collection. Breeding mode allows low Aura and turtle/frog pregnancy. Parents must be less than 3 blocks apart with line of sight. Supports work area and population limits."),
+    ("用 FE 生产灵气，可通过加压管道输出，也可释放到周围环境。", "Produces Aura from FE. Send it through pressurized tubes or release it into the environment."),
+    ("消耗原料、树苗、金叶粉和 FE，完成森林仪式。", "Performs forest rituals using ingredients, a sapling, gold powder and FE."),
+    ("消耗原料、灵气和 FE 进行灌注，催化物不消耗。优先使用储罐灵气，不足时从环境补足。", "Infuses ingredients using Aura and FE without consuming the catalyst. Uses stored Aura first, then environmental Aura."),
+    ("消耗供品、呼唤物和 FE 进行交换，需要完整花阵。一份呼唤物可处理一批供品。", "Exchanges offerings using a calling item and FE. Requires a complete flower arrangement; one calling item handles a batch."),
+    ("消耗瓶与塞和 FE，按环境与维度制作灵气瓶或真空瓶。装入模拟环境模块后可选择产物。", "Uses Bottle and Cork and FE to make Aura or vacuum bottles, depending on the environment and dimension. Install an Environment Simulation Module to choose the product."),
+    ("用 FE 调节周围灵气：过量回收入罐，不足从罐内释放。支持上下限设置、单向调控和范围升级。", "Uses FE to recover excess environmental Aura or release stored Aura when levels are low. Supports target limits, one-way operation and range upgrades."),
+    ("消耗原料、FE 和灵气生成生物，可设置生成位置、范围和数量上限。陆生生物需要地面，水生生物需要水；支持范围升级。灵气优先使用储罐，不足时从环境补足。", "Spawns creatures using ingredients, FE and Aura. Set the spawn position, range and population limit. Land creatures need a floor; aquatic creatures need water. Supports range upgrades and uses stored Aura before drawing from the environment."),
+    ("消耗食物和 FE 自动繁殖动物，并收集降生之灵。降生之灵模式需周围至少 120 万灵气，普通繁殖模式无此限制。可设置工作范围和数量上限。", "Breeds animals using food and FE and collects birth spirits. Birth Spirits mode needs at least 1.2M nearby Aura; Breeding mode has no Aura threshold. Supports work area and population limits."),
+    ("消耗石头或下界岩、FE 和灵气凝聚矿石，需要慷慨之粉与高于 200 万环境灵气。粉末不消耗。使用 3×3×3 中空外壳，物品配置可切换对应面的端口模式。", "Condenses stone or netherrack into ores using FE and Aura. Requires reusable Powder of the Bountiful Core and over 2M environmental Aura. Build a hollow 3x3x3 shell and set its ports through item side configuration."),
 ]
-
-descriptions.append(("3×3×3 中空多方块：控制器位于侧面中心并朝外，其余 25 格用凝聚室外壳或端口，中心留空。输入石头（主世界）或下界岩（下界）、慷慨之粉与 FE；半径 30 格环境灵气须高于 200 万。按原版权重生成矿石并扣灵气，粉末保留。端口潜行空手右键切换输入/输出，普通右键打开控制器。", "Hollow 3x3x3 multiblock: outward-facing controller at the center of a side, 25 casing/port blocks and an empty center. Uses stone in the Overworld or netherrack in the Nether, Powder of the Bountiful Core, FE and Aura. Requires over 2M environmental Aura within 30 blocks. Selects ores using native weights; powder is retained. Sneak with an empty hand to toggle port input/output; use normally to open the controller."))
 
 for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions, strict=True):
     zh[f"block.{ID}.{name}"] = cn
@@ -93,6 +92,7 @@ for key, cn, english in [
     ("chamber_powder_kept", "慷慨之粉保留 · 需要中空多方块", "Powder retained / Requires hollow multiblock"),
     ("port.input", "凝聚室端口：输入物品、灵气与 FE", "Chamber port: items, Aura and FE input"),
     ("port.output", "凝聚室端口：输出矿石", "Chamber port: ore output"),
+    ("port_mode", "凝聚室端口（%s）", "Chamber Port (%s)"),
     ("breeder_mode.spirit", "降生之灵", "Birth Spirits"),
     ("breeder_mode.breed", "普通繁殖", "Breeding"),
     ("status.17", "等待成年配对动物及食物", "Waiting for adult pair and food"),
@@ -197,6 +197,7 @@ for name, cn, english in [("ore_chamber_casing", "凝聚室外壳", "Ore Chamber
     write(f"assets/{ID}/models/item/{name}.json", {"parent": f"{ID}:block/{name}"})
     write(f"assets/{ID}/models/block/{name}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": f"{ID}:block/ore_condensation_chamber/{'top' if name.endswith('casing') else 'front'}"}})
     if name.endswith("port"):
+        write(f"assets/{ID}/models/item/{name}.json", {"parent": f"{ID}:block/{name}", "overrides": [{"predicate": {f"{ID}:port_output": 1}, "model": f"{ID}:block/{name}_output"}]})
         write(f"assets/{ID}/models/block/{name}_output.json", {"parent": "minecraft:block/cube_all", "textures": {"all": f"{ID}:block/ore_condensation_chamber/front_active"}})
         variants = {f"output={str(output).lower()}": {"model": f"{ID}:block/{name}{'_output' if output else ''}"} for output in [False, True]}
     else:
@@ -204,7 +205,7 @@ for name, cn, english in [("ore_chamber_casing", "凝聚室外壳", "Ore Chamber
     write(f"assets/{ID}/blockstates/{name}.json", {"variants": variants})
     entry = {"type": "minecraft:item", "name": f"{ID}:{name}"}
     if name.endswith("port"):
-        entry["functions"] = [{"function": "minecraft:copy_state", "block": f"{ID}:{name}", "properties": ["output"]}]
+        entry["functions"] = [{"function": "minecraft:copy_state", "block": f"{ID}:{name}", "properties": ["output", "item_mode"]}]
     write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [entry]}]})
 write(f"data/{ID}/recipe/ore_chamber_casing.json", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["SIS", "ICI", "SIS"], "key": {"S": {"tag": "c:ingots/steel"}, "I": {"item": "naturesaura:infused_iron"}, "C": {"item": "mekanism:steel_casing"}}, "result": {"id": f"{ID}:ore_chamber_casing", "count": 8}})
 write(f"data/{ID}/recipe/ore_chamber_port.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ACA", "HSH", "ACA"], "key": {"A": {"item": "mekanism:alloy_reinforced"}, "C": {"item": "mekanism:advanced_control_circuit"}, "H": {"item": "minecraft:hopper"}, "S": {"item": f"{ID}:ore_chamber_casing"}}, "result": {"id": f"{ID}:ore_chamber_port", "count": 2}})

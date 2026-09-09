@@ -67,6 +67,8 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     private int status;
     private int environmentAura;
     private int environmentRefreshTicks;
+    private boolean readingSavedData;
+    boolean readingSavedData() { return readingSavedData; }
 
     public AuraMachine(BlockPos pos, BlockState state) {
         super(Content.MACHINES.get(((MachineBlock) state.getBlock()).kind), pos, state);
@@ -103,6 +105,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         if (kind().outputsChemical())
             ejectorComponent.setOutputData(configComponent, TransmissionType.CHEMICAL);
         else ejectorComponent.setOutputData(configComponent, TransmissionType.ITEM);
+        if (chamber != null) configComponent.addConfigChangeListener(TransmissionType.ITEM, chamber::applyItemSide);
     }
 
     public MachineKind kind() { return ((MachineBlock) getBlockState().getBlock()).kind; }
@@ -421,7 +424,9 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
 
     @Override
     protected void applyImplicitComponents(BlockEntity.DataComponentInput input) {
-        super.applyImplicitComponents(input);
+        readingSavedData = true;
+        try { super.applyImplicitComponents(input); }
+        finally { readingSavedData = false; }
         environmentOutput = Boolean.TRUE.equals(input.get(Content.ENVIRONMENT_OUTPUT));
         Integer mode = input.get(Content.BOTTLING_MODE);
         bottlingMode = BottlingMode.byId(mode == null ? 0 : mode);
@@ -487,7 +492,9 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
 
     @Override
     public void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
+        readingSavedData = true;
+        try { super.loadAdditional(tag, provider); }
+        finally { readingSavedData = false; }
         duration = Math.clamp(tag.getInt("work_duration"), 1, 1_000_000);
         progress = Math.clamp(tag.getInt("work_progress"), 0, duration);
         batch = Math.clamp(tag.getInt("work_batch"), 0, 16);

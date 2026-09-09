@@ -50,6 +50,7 @@ dependencies {
     runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.22.1.316'
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.ow2.asm:asm-tree:9.8'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

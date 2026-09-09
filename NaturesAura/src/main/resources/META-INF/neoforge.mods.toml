@@ -2,6 +2,9 @@ modLoader="javafml"
 loaderVersion="[4,)"
 license="MIT"
 
+[[mixins]]
+config="naturesmekanism.mixins.json"
+
 [[mods]]
 modId="naturesmekanism"
 version="${version}"

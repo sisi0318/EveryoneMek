@@ -73,6 +73,106 @@ public final class OreChamberGameTests {
         return (ChamberPortEntity) m.getLevel().getBlockEntity(pos);
     }
 
+    private static void clickItemSide(AuraMachine m, RelativeSide side, mekanism.common.network.MekClickType click) {
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft((ServerLevel) m.getLevel());
+        var context = (net.neoforged.neoforge.network.handling.IPayloadContext) java.lang.reflect.Proxy.newProxyInstance(
+              OreChamberGameTests.class.getClassLoader(), new Class[]{net.neoforged.neoforge.network.handling.IPayloadContext.class},
+              (proxy, method, args) -> {
+                  if (method.getName().equals("player")) return player;
+                  throw new UnsupportedOperationException(method.getName());
+              });
+        new mekanism.common.network.to_server.configuration_update.PacketSideData(m.getBlockPos(), click, side, TransmissionType.ITEM).handle(context);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 20)
+    public static void sideIconsFindRemotePortsOnAllFacesAndRefreshAfterChanges(GameTestHelper h) {
+        for (Direction facing : Direction.Plane.HORIZONTAL) {
+            AuraMachine m = machine(h.getLevel(), h.absolutePos(new BlockPos(5, 1, 5)), facing);
+            try {
+                for (RelativeSide side : RelativeSide.values()) {
+                    var positions = m.chamber().facePositions(side.getDirection(facing));
+                    check(positions.size() == 9, "Side preview did not inspect a full face");
+                    var inputPos = positions.stream().filter(p -> !p.equals(m.getBlockPos())).findFirst().orElseThrow();
+                    var outputPos = positions.getLast();
+                    port(m, inputPos, false);
+                    check(m.chamber().sideDisplayPosition(side).equals(inputPos), "Port icon ignored controller orientation " + facing + "/" + side);
+                    port(m, outputPos, true);
+                    check(m.chamber().sideDisplayPosition(side).equals(outputPos), "Output port was hidden behind another port or casing");
+                    var display = OreChamberLogic.portDisplayStack(h.getLevel().getBlockState(outputPos));
+                    check(display.is(Content.CHAMBER_PORT.asItem()) && "true".equals(display.get(DataComponents.BLOCK_STATE).properties().get("output")), "Output icon lost its item or lit model state");
+                    h.getLevel().setBlockAndUpdate(outputPos, Content.CHAMBER_CASING.defaultState());
+                    check(m.chamber().sideDisplayPosition(side).equals(inputPos), "Port removal left a stale icon");
+                    h.getLevel().setBlockAndUpdate(inputPos, Content.CHAMBER_CASING.defaultState());
+                    check(m.chamber().sideDisplayPosition(side).equals(m.getBlockPos().relative(side.getDirection(facing))), "No-port preview failed to restore the adjacent block");
+                }
+            } finally { clean(m); }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "port_gui_chest", timeoutTicks = 85)
+    public static void nativeGuiOutputPacketEjectsToChestAndHandlesFullDisabledAndResume(GameTestHelper h) {
+        AuraMachine m = machine(h);
+        m.energy().setEnergy(0);
+        var p = port(m, m.chamber().center().south(), false);
+        var chestPos = p.getBlockPos().south();
+        h.getLevel().setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState());
+        var chest = (ChestBlockEntity) h.getLevel().getBlockEntity(chestPos);
+        m.getInventorySlots(null).get(2).setStack(new ItemStack(Items.IRON_ORE, 5));
+        clickItemSide(m, RelativeSide.BACK, mekanism.common.network.MekClickType.LEFT);
+        check(p.output(), "Clicking Output in Mek's item configuration did not configure the actual port");
+        h.runAfterDelay(20, () -> {
+            check(chest.getItem(0).is(Items.IRON_ORE) && chest.getItem(0).getCount() == 5 && count(m) == 0, "GUI-configured port failed to eject directly into a chest");
+            for (int i = 0; i < chest.getContainerSize(); i++) chest.setItem(i, new ItemStack(Items.STONE, 64));
+            m.getInventorySlots(null).get(2).setStack(new ItemStack(Items.COAL_ORE, 7));
+        });
+        h.runAfterDelay(35, () -> {
+            check(count(m) == 7, "Full chest lost chamber output");
+            clickItemSide(m, RelativeSide.BACK, mekanism.common.network.MekClickType.SHIFT_LEFT);
+            check(p.itemMode() == DataType.NONE && p.items.getSlots() == 0, "Clearing a side left its port enabled");
+            chest.setItem(0, ItemStack.EMPTY);
+        });
+        h.runAfterDelay(50, () -> {
+            check(count(m) == 7 && chest.getItem(0).isEmpty(), "Disabled port continued ejecting");
+            clickItemSide(m, RelativeSide.BACK, mekanism.common.network.MekClickType.LEFT);
+            clickItemSide(m, RelativeSide.BACK, mekanism.common.network.MekClickType.LEFT);
+        });
+        h.runAfterDelay(70, () -> {
+            try {
+                check(count(m) == 0 && chest.getItem(0).is(Items.COAL_ORE) && chest.getItem(0).getCount() == 7, "Re-enabled output did not resume exactly once");
+                h.succeed();
+            } finally { clean(m); }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 20)
+    public static void guiPortModesSupportCombinedIoEnergyDropsAndLegacySaves(GameTestHelper h) {
+        AuraMachine m = machine(h);
+        try {
+            var p = port(m, m.chamber().center().south(), true);
+            // Old worlds have only the output boolean. Loading the controller must not erase those settings.
+            check(p.itemMode() == DataType.OUTPUT, "Legacy output port changed mode");
+            m.loadAdditional(m.saveWithoutMetadata(h.getLevel().registryAccess()), h.getLevel().registryAccess());
+            check(p.output(), "Loading a controller overwrote an existing port mode");
+            var config = m.getConfig().getConfig(TransmissionType.ITEM);
+            config.setDataType(DataType.INPUT_OUTPUT, RelativeSide.BACK);
+            m.getConfig().sideChanged(TransmissionType.ITEM, RelativeSide.BACK);
+            check(p.items.getSlots() == 6, "Input/output mode did not expose both inventories");
+            check(p.items.insertItem(0, new ItemStack(Items.STONE, 2), false).isEmpty(), "Combined port did not accept feedstock");
+            check(p.items.extractItem(0, 1, false).isEmpty(), "Combined port extracted feedstock");
+            m.getInventorySlots(null).get(2).setStack(new ItemStack(Items.DIAMOND_ORE));
+            check(p.items.extractItem(2, 1, false).getCount() == 1, "Combined port did not expose ore output");
+            config.setDataType(DataType.ENERGY, RelativeSide.BACK);
+            m.getConfig().sideChanged(TransmissionType.ITEM, RelativeSide.BACK);
+            var battery = new ItemStack(mekanism.common.registries.MekanismItems.ENERGY_TABLET.get());
+            battery.getCapability(Capabilities.EnergyStorage.ITEM).receiveEnergy(1000, false);
+            check(p.items.getSlots() == 1 && p.items.insertItem(0, battery, false).isEmpty(), "Energy-item mode did not target the charging slot");
+            var drop = Block.getDrops(p.getBlockState(), h.getLevel(), p.getBlockPos(), p, null, new ItemStack(Items.DIAMOND_PICKAXE)).getFirst();
+            check("energy".equals(drop.get(DataComponents.BLOCK_STATE).properties().get("item_mode")), "Dropped port lost its GUI mode");
+            h.succeed();
+        } finally { clean(m); }
+    }
+
     @GameTest(template = "empty", timeoutTicks = 20)
     public static void allHorizontalRotationsRequireCompleteHollowShell(GameTestHelper h) {
         for (Direction face : Direction.Plane.HORIZONTAL) {
