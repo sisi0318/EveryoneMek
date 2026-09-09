@@ -1,0 +1,67 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  natures-mekanism:
+    name: Nature's Mekanism / Java 21
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: NaturesAura
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle and validate wrapper
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-provider: basic
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          dependency-graph: disabled
+
+      - name: Build and run unit and server tests
+        run: bash ./gradlew --no-daemon --console=plain --max-workers=2 build runGameTestServer
+
+      - name: Upload mod JAR
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: NaturesMekanism-${{ github.sha }}
+          path: NaturesAura/build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload test reports and server logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: NaturesMekanism-test-reports-${{ github.sha }}
+          path: |
+            NaturesAura/build/reports/tests/
+            NaturesAura/build/test-results/
+            NaturesAura/run/logs/
+            NaturesAura/runs/**/logs/
+          if-no-files-found: warn
+          retention-days: 7

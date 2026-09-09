@@ -1,0 +1,23 @@
+{
+  "itemGroup.naturesmekanism": "Nature's Mekanism",
+  "chemical.naturesmekanism.aura": "Aura",
+  "block.naturesmekanism.universal_aura_generator": "Universal Aura Generator",
+  "description.naturesmekanism.universal_aura_generator": "Produces Aura from FE. Supports pressurized tubes and optional environmental release.",
+  "block.naturesmekanism.universal_forest_ritual": "Universal Forest Ritual",
+  "description.naturesmekanism.universal_forest_ritual": "Processes forest recipes using ingredients, a sapling, gold powder and FE.",
+  "block.naturesmekanism.universal_natural_altar": "Universal Natural Altar",
+  "description.naturesmekanism.universal_natural_altar": "Infuses ingredients using Aura and FE. Catalysts are retained.",
+  "block.naturesmekanism.universal_offering": "Universal Offering Ritual",
+  "description.naturesmekanism.universal_offering": "Replaces the Offering Table and requires its flower arrangement. One calling item starts a batch.",
+  "gui.naturesmekanism.status.0": "Running",
+  "gui.naturesmekanism.status.1": "Paused by redstone",
+  "gui.naturesmekanism.status.2": "Flower arrangement incomplete",
+  "gui.naturesmekanism.status.3": "Output full",
+  "gui.naturesmekanism.status.4": "Waiting for ingredients or catalyst",
+  "gui.naturesmekanism.status.5": "Not enough Aura",
+  "gui.naturesmekanism.status.6": "Not enough energy",
+  "gui.naturesmekanism.electric_aura": "Electricity into Aura",
+  "gui.naturesmekanism.environment_on": "Output: tubes + environment",
+  "gui.naturesmekanism.environment_off": "Output: tubes",
+  "gui.naturesmekanism.toggle_environment": "Release toggle"
+}

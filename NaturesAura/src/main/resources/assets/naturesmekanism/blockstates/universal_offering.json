@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "naturesmekanism:block/universal_offering",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "naturesmekanism:block/universal_offering",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "naturesmekanism:block/universal_offering",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "naturesmekanism:block/universal_offering",
+      "y": 270
+    }
+  }
+}

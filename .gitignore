@@ -1,0 +1,12 @@
+**/.gradle/
+**/.gradle-home/
+**/build/
+**/run/
+**/runs/
+**/logs/
+**/.idea/
+**/*.iml
+**/out/
+
+# Local research notes; keep on disk but never publish.
+/docs/MEKANISM_ADDON_RESEARCH.md

@@ -1,0 +1,23 @@
+{
+  "itemGroup.naturesmekanism": "自然机械",
+  "chemical.naturesmekanism.aura": "灵气",
+  "block.naturesmekanism.universal_aura_generator": "通用灵气发生器",
+  "description.naturesmekanism.universal_aura_generator": "用 FE 生产灵气。可通过加压管道输出，也可开启环境释放。",
+  "block.naturesmekanism.universal_forest_ritual": "通用森林仪式",
+  "description.naturesmekanism.universal_forest_ritual": "消耗原料、树苗、金叶粉和 FE，执行森林仪式。",
+  "block.naturesmekanism.universal_natural_altar": "通用自然祭坛",
+  "description.naturesmekanism.universal_natural_altar": "消耗原料、灵气和 FE 进行灌注；催化物不消耗。",
+  "block.naturesmekanism.universal_offering": "通用呼唤仪式",
+  "description.naturesmekanism.universal_offering": "替换原版祭祀台，周围仍须保留完整花阵。一份呼唤物处理一批供品。",
+  "gui.naturesmekanism.status.0": "运行中",
+  "gui.naturesmekanism.status.1": "红石控制：暂停",
+  "gui.naturesmekanism.status.2": "花阵不完整",
+  "gui.naturesmekanism.status.3": "输出空间不足",
+  "gui.naturesmekanism.status.4": "等待材料或催化物",
+  "gui.naturesmekanism.status.5": "灵气不足",
+  "gui.naturesmekanism.status.6": "电力不足",
+  "gui.naturesmekanism.electric_aura": "电力转化为灵气",
+  "gui.naturesmekanism.environment_on": "输出：管道 + 环境",
+  "gui.naturesmekanism.environment_off": "输出：管道",
+  "gui.naturesmekanism.toggle_environment": "切换释放"
+}

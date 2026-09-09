@@ -1,0 +1,83 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "mekanism:block/steel_casing",
+    "shell": "mekanism:block/steel_casing",
+    "accent": "minecraft:block/gold_block",
+    "panel": "minecraft:block/deepslate_tiles"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#shell",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#shell",
+          "cullface": "south"
+        },
+        "east": {
+          "texture": "#shell",
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#shell",
+          "cullface": "west"
+        },
+        "up": {
+          "texture": "#shell",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#shell",
+          "cullface": "down"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        2,
+        -0.01
+      ],
+      "to": [
+        14,
+        14,
+        0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#panel"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        4,
+        -0.02
+      ],
+      "to": [
+        12,
+        12,
+        -0.01
+      ],
+      "faces": {
+        "north": {
+          "texture": "#accent"
+        }
+      }
+    }
+  ]
+}
