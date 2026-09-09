@@ -1,6 +1,7 @@
 # EveryoneMek 开发与接手指引
 
-本文件适用于整个仓库。进入模组子目录后，还要阅读其中的 `AGENTS.md`。
+本文件只记录适用于整个仓库、可跨模组复用的规范。进入模组子目录后，还要阅读其中的 `AGENTS.md`。
+具体模组的依赖版本、机器机制、槽位索引、UI 坐标、测试数量、源码入口和故障记录，只写在该模组自己的 `AGENTS.md`，不要放到根目录。
 使用标准文件名 `AGENTS.md`，不要另建内容重复的 `agent.md`，避免工具漏读或规范分叉。
 
 ## 1. 接手入口
@@ -11,7 +12,7 @@
 4. 先复现用户实际操作。尤其区分“在界面选输出”和“潜行右键端口”，不能假设二者已经联动。
 5. 按任务已有授权完成开发、验证、提交和推送，不重复询问已经确认的动作。
 
-当前模组详细经验：[NaturesAura/AGENTS.md](NaturesAura/AGENTS.md)。
+模组专用入口统一为 `<模组目录>/AGENTS.md`。
 
 ## 2. 用户明确的偏好
 
@@ -25,7 +26,7 @@
 
 - 使用 PowerShell 7，优先 `C:\Program Files\PowerShell\7\pwsh.exe`，设置 `login = false`。只有不可用时才考虑 Windows PowerShell 5.1。
 - 搜索优先 `rg` / `rg --files`。PowerShell 下用 `rg pattern directory -g '*.java'`，不要假设 `directory/*.java` 会被 shell 展开。
-- 使用项目自带 Gradle Wrapper，先确认 Java 版本。当前 Minecraft 1.21.1 模组使用 Java 21。
+- 使用目标子项目自带 Gradle Wrapper；Java、Minecraft、加载器和 Mek 版本均按该子项目的声明确认，不在根规范中固定。
 - 每个子项目使用自己的 `.gradle-home`；缓存、开发世界、日志和构建产物不提交。
 - 查找现有 Node、Python 和图像运行时，不把某台机器的用户目录硬编码进脚本。
 - `sharp` 从 `art/package.json` 所在项目解析。找不到时先安装该目录依赖，或给当前进程设置正确的 `NODE_PATH`。
@@ -33,22 +34,18 @@
 - 文件操作使用 `-LiteralPath`。递归操作前核对最终绝对路径，只处理明确的项目临时文件。
 - 保存原命令退出码后再读取日志，避免把失败误报为成功。
 
-在目标模组目录执行：
+通用构建命令示例，在目标模组目录执行；额外测试任务按其 `build.gradle` 和专用指引添加：
 
 ```powershell
 $env:GRADLE_USER_HOME = Join-Path $PWD '.gradle-home'
 New-Item -ItemType Directory -Path build -Force | Out-Null
-.\gradlew.bat build runGameTestServer --console=plain *> build/verification.log
+.\gradlew.bat build --console=plain *> build/verification.log
 $verificationExit = $LASTEXITCODE
 Get-Content build/verification.log -Tail 40
 exit $verificationExit
 ```
 
-指定补丁版本时，带点号的 Gradle 属性参数整体加引号：
-
-```powershell
-.\gradlew.bat '-Pneo_version=21.1.243' build runGameTestServer --console=plain
-```
+指定依赖版本时，将整个 `-P属性名=版本号` 参数加引号，尤其是包含点号的版本号；属性名和目标版本以子项目为准。
 
 确认具体问题后再扩大验证，不要每次文字修改都重跑完整服务器。
 
@@ -69,7 +66,7 @@ exit $verificationExit
 
 ## 5. 加工、持久化与多方块
 
-- 先检查材料、容量、工作条件、能量与灵气，再推进加工。扣费时机要符合动作语义；动物繁殖等取消事件不能套用普通合成的退款规则。
+- 先检查材料、容量、工作条件和各项资源，再推进加工。涉及世界事件时，单独确认取消与退款语义，不能机械套用普通合成规则。
 - 产物先填兼容堆叠，再占空槽；随机副产物按最大数量预留空间。
 - 产物、输入组件、消耗、时间及相关设置进入工作签名，换材料或目标后不能沿用旧加工进度。
 - NBT 读取限幅并处理缺省值，防止负进度、枚举越界或溢出。实体保存和拆成物品后的保存分别验证。
@@ -83,8 +80,8 @@ exit $verificationExit
 - 优先使用 Mek 原有窗口、标签、槽位、进度条和输入框。升级窗口保留速度/能量列表，自定义模块放在底部扩展槽。
 - 菜单槽坐标和屏幕坐标一起修改；屏幕增高时同时移动物品栏标签和玩家槽位。
 - 进度箭头按输入框右边界与输出框左边界计算居中，给文字、边框和点击区留间隔。
-- 状态区写可采取行动的原因，例如“缺少慷慨之粉”“等待石头或下界岩”，不要合并不同故障。
-- 区分储罐与环境：空罐不一定不能工作，负灵气不能统一夹为零。
+- 状态区写可采取行动的原因，例如“缺少催化材料”“输出空间不足”，不要合并不同故障。
+- 分开显示资源储量和工作条件，明确单位；区分未测量与零值，合法负值不能被强制归零。
 - 数字设置显示服务器确认值，回车或勾号提交。服务器检查菜单 ID、距离、权限、数值范围。
 - 模式文本、切换按钮和端口图标动态刷新，不能只在构造窗口时读取一次。
 - 多方块六面图标检查**整个对应结构面**，而非控制器旁边一格；同面多个端口要有明确优先规则。
@@ -95,7 +92,7 @@ exit $verificationExit
 
 ## 7. 材质制作规范
 
-现有原稿与提示词：[NaturesAura/art/README.md](NaturesAura/art/README.md)。
+原稿、提示词和导出说明维护在目标模组自己的美术资源目录中，具体路径由该模组指引说明。
 
 - 运行时贴图是**真正的 16×16 PNG**，不是细密大图加像素滤镜。
 - 灰黑工业机壳、粗像素边框、内凹工作区为主，以少量功能色和清楚轮廓区分机器。
@@ -110,7 +107,7 @@ exit $verificationExit
 3. 将选定原稿复制到 `art/source/`，保存完整提示词、参考来源和输出位置，不能只留在工具默认目录。
 4. 用已有 Node/Sharp 工具机械分面，以 `nearest` 缩到 16×16；不要用代码重绘、模糊或伪造要求生成的图案。
 5. 检查四个面、放大联系表和等距方块预览。原稿太复杂时针对缺陷重新生成，不能指望不断缩小来挽救。
-6. 更新资源生成器的模型、方块状态、物品模型和语言键；新增机器同步导出脚本的名称、标题、说明数组。
+6. 更新模型、方块状态、物品模型和语言键，并同步目标模组的资源清单与导出配置。
 7. 检查 JAR 内 PNG 尺寸和引用。原稿、提示词和预览留在仓库 `art/`，不进入游戏 JAR。
 
 已有贴图的复用、分面、最近邻缩放和 JSON 模型修改不需要重新生成。
@@ -134,11 +131,11 @@ Flat opaque atlas; no perspective, text, bloom, gradients, fine noise or fantasy
 
 ## 8. 验证与发布
 
-- 匹配、分摊、字节码契约用 JUnit；真实机器、管道、实体事件、环境资源和存档用服务端 GameTest。
-- `build` 不代表执行了 GameTest。当前 `check` 只额外编译 GameTest，需显式运行 `runGameTestServer`。
+- 匹配、分摊、字节码契约适合单元测试；真实机器、管道、实体事件、资源和存档使用该子项目的服务端集成测试。
+- 不假设 `build` 或 `check` 已执行全部测试；检查子项目任务依赖，再显式运行尚未覆盖的必要测试。
 - 修复用户问题优先补真实操作回归，例如配置数据包 → 端口模式 → 相邻箱子，不只修改内部字段。
 - 准备实际可用的测试资源：空能量板不能给机器充电，手工放置的能量立方要明确开启自动输出。
-- 测试修改的配方表、矿物表、监听器、配置、排除表在 `finally` 恢复；停掉测试机器并清理实体，避免污染后续用例。
+- 测试修改的共享表、监听器和配置在 `finally` 恢复；停止测试机器并清理实体，避免污染后续用例。
 - 界面小改或文字修改不盲目扩展测试；运行逻辑、协议、存档和依赖变更增加相应验证。
 - JSON 由生成器维护，修改生成器后再生成，不只改生成文件。
 - 打包检查版本、资源与类，不能含 GameTest、开发世界、源图、私人文档；语言资源变化也要重新打包。
@@ -149,10 +146,10 @@ Flat opaque atlas; no perspective, text, bloom, gradients, fine noise or fantasy
 
 ## 9. Git 与本地文件边界
 
-- 标题格式：`[ModuleName] type: description`。`NaturesAura/` 使用 `[NaturesAura]`，其他模组使用其目录名；独立的跨模组改动分开提交。
+- 标题格式：`[ModuleName] type: description`，模组前缀使用对应目录名；独立的跨模组改动分开提交。
 - 仅涉及共享规则、基础设施的改动使用 `[Repo]`。
 - 类型选择 `feat`、`fix`、`docs`、`refactor`、`perf`、`test`、`build`、`ci`、`style`、`chore`、`revert`。
-- 标题中不加 Markdown 星号。示例：`[NaturesAura] fix: sync chamber port output`。
+- 标题中不加 Markdown 星号。示例：`[ExampleMod] fix: correct output routing`。
 - 保留用户已有修改，遵循任务指定分支。未指定名称的新分支使用 `codex/` 前缀，不擅自重写已发布历史。
 - `docs/MEKANISM_ADDON_RESEARCH.md` 明确只留本地：保留忽略规则，不提交、不推送，也不为了补全文档复制其全文到公开文件。
 - 提交前运行 `git diff --check` 并检查暂存列表，不用 `git add -f` 绕过上述忽略规则。
@@ -166,7 +163,7 @@ git -c http.sslBackend=openssl -c credential.helper= -c 'credential.helper=!gh a
 
 ## 10. 维护这些经验
 
-- 代表性修复写入对应模组 `AGENTS.md`，记录现象、根因、做法和测试/源码入口。
+- 根目录只补充跨模组通用规则；代表性故障、修复和具体源码入口写入对应模组 `AGENTS.md`。
 - 区分当前行为与历史问题，行为变更后同步修订，不让修复过的限制变成新的规则。
 - 记录可验证的具体经验，不写“某 API 可能可以”的猜测。
 - 指向仓库可维护源文件，临时克隆路径不是长期依赖；更新依赖后重新核对契约。
