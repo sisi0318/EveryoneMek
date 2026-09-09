@@ -55,7 +55,7 @@ public final class OreChamberJeiCategory implements IRecipeCategory<OreChamberJe
     }
     @Override public void draw(Display recipe, IRecipeSlotsView slots, GuiGraphics graphics, double mouseX, double mouseY) {
         arrow.draw(graphics, 104, 4);
-        line(graphics, Component.translatable("gui.naturesmekanism.bottling_dimension." + (recipe.nether() ? "nether" : "overworld")), 29);
+        line(graphics, Component.translatable("gui.naturesmekanism.chamber_material." + (recipe.nether() ? "netherrack" : "stone")), 29);
         line(graphics, Component.translatable("gui.naturesmekanism.chamber_threshold"), 43);
         line(graphics, Component.translatable("gui.naturesmekanism.chamber_weight", recipe.ore().weight(),
               String.format(Locale.ROOT, "%.2f", 100D * recipe.ore().weight() / recipe.total())), 57);

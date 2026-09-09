@@ -35,7 +35,7 @@ descriptions = [
     ("用 FE 调节周围灵气：过量回收入罐，不足从罐内释放。支持上下限设置、单向调控和范围升级。", "Uses FE to recover excess environmental Aura or release stored Aura when levels are low. Supports target limits, one-way operation and range upgrades."),
     ("消耗原料、FE 和灵气生成生物，可设置生成位置、范围和数量上限。陆生生物需要地面，水生生物需要水；支持范围升级。灵气优先使用储罐，不足时从环境补足。", "Spawns creatures using ingredients, FE and Aura. Set the spawn position, range and population limit. Land creatures need a floor; aquatic creatures need water. Supports range upgrades and uses stored Aura before drawing from the environment."),
     ("消耗食物和 FE 自动繁殖动物，并收集降生之灵。降生之灵模式需周围至少 120 万灵气，普通繁殖模式无此限制。可设置工作范围和数量上限。", "Breeds animals using food and FE and collects birth spirits. Birth Spirits mode needs at least 1.2M nearby Aura; Breeding mode has no Aura threshold. Supports work area and population limits."),
-    ("消耗石头或下界岩、FE 和灵气凝聚矿石，需要慷慨之粉与高于 200 万环境灵气。粉末不消耗。使用 3×3×3 中空外壳，物品配置可切换对应面的端口模式。", "Condenses stone or netherrack into ores using FE and Aura. Requires reusable Powder of the Bountiful Core and over 2M environmental Aura. Build a hollow 3x3x3 shell and set its ports through item side configuration."),
+    ("石头凝聚主世界矿石，下界岩凝聚下界矿石。消耗 FE 和灵气，需要慷慨之粉与高于 200 万环境灵气；粉末不消耗。使用 3×3×3 中空外壳。", "Condenses stone into Overworld ores or netherrack into Nether ores using FE and Aura. Requires reusable Powder of the Bountiful Core, over 2M environmental Aura and a hollow 3x3x3 shell."),
 ]
 
 for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions, strict=True):
@@ -81,8 +81,12 @@ for index, (cn, english) in enumerate([("区域生物数量已达上限", "Area 
     en[f"gui.{ID}.status.{index}"] = english
 for key, cn, english in [
     ("status.20", "凝聚室结构不完整或中心未留空", "Chamber shell incomplete or center blocked"),
-    ("status.21", "维度不支持或原版矿物凝聚已停用", "Unsupported dimension or ore effect disabled"),
-    ("status.22", "等待石头/下界岩与慷慨之粉", "Needs stone/netherrack and ore-effect powder"),
+    ("status.21", "当前维度不支持矿物凝聚", "Ore condensation is unavailable in this dimension"),
+    ("status.22", "等待石头或下界岩", "Needs stone or netherrack"),
+    ("status.25", "缺少慷慨之粉", "Needs Powder of the Bountiful Core"),
+    ("status.26", "矿物凝聚功能已停用", "Ore condensation is disabled"),
+    ("chamber_material.stone", "石头 → 主世界矿物", "Stone → Overworld ores"),
+    ("chamber_material.netherrack", "下界岩 → 下界矿物", "Netherrack → Nether ores"),
     ("status.23", "需要高于 200 万环境灵气", "Needs more than 2M environmental Aura"),
     ("status.24", "当前矿物权重表没有可用矿石", "No valid ores in the current weighted table"),
     ("chamber_structure", "结构：3×3×3 中空外壳", "Structure: hollow 3x3x3 shell"),

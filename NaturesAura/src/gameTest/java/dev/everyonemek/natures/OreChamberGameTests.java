@@ -58,7 +58,7 @@ public final class OreChamberGameTests {
     }
     private static AuraMachine machine(GameTestHelper h) { return machine(h.getLevel(), h.absolutePos(new BlockPos(5, 1, 5)), Direction.NORTH); }
     private static void feed(AuraMachine m, int amount) {
-        m.inputs.get(0).setStack(new ItemStack(OreChamberLogic.substrate(m.getLevel()), amount));
+        m.inputs.get(0).setStack(new ItemStack(Items.STONE, amount));
         m.inputs.get(1).setStack(powder());
     }
     private static void cycle(AuraMachine m) { for (int i = 0; i < MekanismUtils.getTicks(m, MachineConfig.ORE_TICKS.get()); i++) m.onUpdateServer(); }
@@ -228,18 +228,18 @@ public final class OreChamberGameTests {
             m.onUpdateServer(); check(m.status() == 23, "Exact 2M threshold was accepted");
             AuraTestEnvironment.set(m, 30, 3_000_000);
             m.inputs.get(1).setStackUnchecked(ItemEffectPowder.setEffect(new ItemStack(ModItems.EFFECT_POWDER), ResourceLocation.parse("naturesaura:animal")));
-            m.onUpdateServer(); check(m.status() == 22, "Wrong powder was accepted");
+            m.onUpdateServer(); check(m.status() == 25, "Wrong powder was accepted or its error was hidden");
             ItemStack invalid = new ItemStack(ModItems.EFFECT_POWDER); invalid.set(ItemEffectPowder.Data.TYPE, new ItemEffectPowder.Data("bad:%%%"));
             check(!OreChamberLogic.isPowder(invalid), "Malformed powder component accepted");
-            m.inputs.get(1).setStack(powder()); m.inputs.get(0).setStack(new ItemStack(Items.NETHERRACK));
-            m.onUpdateServer(); check(m.status() == 22, "Nether substrate accepted in Overworld");
+            m.inputs.get(1).setStack(powder()); m.inputs.get(0).setStackUnchecked(new ItemStack(Items.OBSIDIAN));
+            m.onUpdateServer(); check(m.status() == 22, "Unsupported feedstock was accepted or its error was hidden");
             feed(m, 1); m.getInventorySlots(null).subList(2, 6).forEach(s -> s.setStack(new ItemStack(Items.STONE, 64)));
             m.onUpdateServer(); check(m.status() == 3, "Full outputs accepted work");
             check(m.energy().getEnergy() == energy && m.auraTank().getStored() == 100_000, "Blocked work spent resources");
             m.getInventorySlots(null).subList(2, 6).forEach(s -> s.setStack(ItemStack.EMPTY));
             m.energy().setEnergy(0); m.onUpdateServer(); check(m.status() == 6 && count(m) == 0, "Unpowered chamber worked");
             m.energy().setEnergy(energy); ModConfig.instance.oreEffect.set(false); m.onUpdateServer();
-            check(m.status() == 21 && m.energy().getEnergy() == energy, "Bypassed Nature's Aura oreEffect config");
+            check(m.status() == 26 && m.energy().getEnergy() == energy, "Bypassed Nature's Aura oreEffect config");
             h.succeed();
         } finally { ModConfig.instance.oreEffect.set(enabled); clean(m); }
     }
@@ -254,7 +254,7 @@ public final class OreChamberGameTests {
             NaturesAuraAPI.OVERWORLD_ORES.clear(); NaturesAuraAPI.OVERWORLD_ORES.add(ore("ores/missing_test_tag", 10));
             m.onUpdateServer(); check(m.status() == 24 && m.progress() == 0, "Empty tag did not halt safely");
             NaturesAuraAPI.OVERWORLD_ORES.add(ore("ores/coal", 5000));
-            for (var o : OreChamberLogic.ores(h.getLevel(), m.chamber().center()))
+            for (var o : OreChamberLogic.ores(h.getLevel(), m.chamber().center(), Items.STONE))
                 if (o.item() instanceof net.minecraft.world.item.BlockItem block) OreSpawnEffect.SPAWN_EXCEPTIONS.add(block.getBlock().defaultBlockState());
             // Exclude both standard variants; a valid fallback in the tag must also be respected.
             OreSpawnEffect.SPAWN_EXCEPTIONS.add(Blocks.COAL_ORE.defaultBlockState());
@@ -278,12 +278,13 @@ public final class OreChamberGameTests {
     }
 
     @GameTest(template = "empty", batch = "ore_dimensions", timeoutTicks = 20)
-    public static void netherUsesNetherrackTableAndEndCannotRun(GameTestHelper h) {
+    public static void netherAcceptsBothMaterialsAndEndCannotRun(GameTestHelper h) {
         for (var dimension : List.of(Level.NETHER, Level.END)) {
             var level = h.getLevel().getServer().getLevel(dimension);
             level.getChunkAt(new BlockPos(4, 95, 4));
             AuraMachine m = machine(level, new BlockPos(4, 95, 4), Direction.EAST);
             var original = new ArrayList<>(NaturesAuraAPI.NETHER_ORES);
+            var overworld = new ArrayList<>(NaturesAuraAPI.OVERWORLD_ORES);
             try {
                 AuraTestEnvironment.set(m, 30, 3_000_000);
                 m.inputs.get(0).setStack(new ItemStack(Items.NETHERRACK)); m.inputs.get(1).setStack(powder());
@@ -292,10 +293,50 @@ public final class OreChamberGameTests {
                 if (dimension == Level.NETHER) {
                     check(count(m) == 1 && m.getInventorySlots(null).get(2).getStack().is(Items.NETHER_QUARTZ_ORE), "Nether ignored native substrate/table");
                     check(m.auraTank().getStored() == 2000, "Nether quartz native weight cost is not 8000");
+                    NaturesAuraAPI.OVERWORLD_ORES.clear(); NaturesAuraAPI.OVERWORLD_ORES.add(ore("ores/coal", 5000));
+                    m.inputs.get(0).setStack(new ItemStack(Items.STONE));
+                    m.auraTank().setStack(new ChemicalStack(Content.AURA, 40_000));
+                    cycle(m);
+                    check(count(m) == 2 && m.getInventorySlots(null).get(3).getStack().is(OreChamberLogic.displayOres(false).getFirst().item()),
+                          "Stone in Nether failed to select Overworld ores");
+                    check(m.auraTank().getStored() == 20_000, "Stone used the Nether ore cost");
                 } else check(count(m) == 0 && m.status() == 21 && m.energy().getEnergy() == m.energy().getMaxEnergy(), "End bypassed dimension restriction");
-            } finally { NaturesAuraAPI.NETHER_ORES.clear(); NaturesAuraAPI.NETHER_ORES.addAll(original); clean(m); }
+            } finally {
+                NaturesAuraAPI.NETHER_ORES.clear(); NaturesAuraAPI.NETHER_ORES.addAll(original);
+                NaturesAuraAPI.OVERWORLD_ORES.clear(); NaturesAuraAPI.OVERWORLD_ORES.addAll(overworld); clean(m);
+            }
         }
         h.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "ore_materials", timeoutTicks = 20)
+    public static void overworldNetherrackSelectsNetherOresAndResetsChangedMaterialWork(GameTestHelper h) {
+        AuraMachine m = machine(h);
+        var overworld = new ArrayList<>(NaturesAuraAPI.OVERWORLD_ORES);
+        var nether = new ArrayList<>(NaturesAuraAPI.NETHER_ORES);
+        try {
+            NaturesAuraAPI.OVERWORLD_ORES.clear(); NaturesAuraAPI.OVERWORLD_ORES.add(ore("ores/coal", 5000));
+            NaturesAuraAPI.NETHER_ORES.clear(); NaturesAuraAPI.NETHER_ORES.add(ore("ores/quartz", 8000));
+            feed(m, 1); m.auraTank().setStack(new ChemicalStack(Content.AURA, 100_000));
+            AuraTestEnvironment.set(m, 30, 3_240_000);
+            for (int i = 0; i < 50; i++) m.onUpdateServer();
+            check(m.progress() == .25 && m.chamber().auraCost() == 20_000, "Stone work did not start");
+            m.inputs.get(0).setStack(new ItemStack(Items.NETHERRACK, 64));
+            m.onUpdateServer();
+            check(m.progress() == .005 && m.chamber().target().is(Items.NETHER_QUARTZ_ORE) && m.chamber().auraCost() == 8000,
+                  "Netherrack in Overworld was rejected or reused stone work");
+            for (int i = 0; i < 49; i++) m.onUpdateServer();
+            m.loadAdditional(m.saveWithoutMetadata(h.getLevel().registryAccess()), h.getLevel().registryAccess());
+            for (int i = 0; i < 150; i++) m.onUpdateServer();
+            check(count(m) == 1 && m.getInventorySlots(null).get(2).getStack().is(Items.NETHER_QUARTZ_ORE), "Saved netherrack work did not produce Nether ore");
+            check(m.inputs.get(0).getCount() == 63 && m.inputs.get(1).getCount() == 1 && m.auraTank().getStored() == 92_000,
+                  "Netherrack, retained powder or Aura cost incorrect");
+            check(m.energy().getMaxEnergy() - m.energy().getEnergy() == 250 * m.energy().getEnergyPerTick(), "Material switch reused paid work or charged extra FE");
+            h.succeed();
+        } finally {
+            NaturesAuraAPI.OVERWORLD_ORES.clear(); NaturesAuraAPI.OVERWORLD_ORES.addAll(overworld);
+            NaturesAuraAPI.NETHER_ORES.clear(); NaturesAuraAPI.NETHER_ORES.addAll(nether); clean(m);
+        }
     }
 
     @GameTest(template = "empty", timeoutTicks = 20)

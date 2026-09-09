@@ -124,18 +124,16 @@ public final class OreChamberLogic {
         var data = stack.get(ItemEffectPowder.Data.TYPE);
         return data != null && OreSpawnEffect.NAME.toString().equals(data.effect());
     }
-    public static Item substrate(Level level) {
+    private static boolean supportedDimension(Level level) {
         var type = IAuraType.forLevel(level);
-        return type.isSimilar(NaturesAuraAPI.TYPE_OVERWORLD) ? Items.STONE
-              : type.isSimilar(NaturesAuraAPI.TYPE_NETHER) ? Items.NETHERRACK : Items.AIR;
+        return type.isSimilar(NaturesAuraAPI.TYPE_OVERWORLD) || type.isSimilar(NaturesAuraAPI.TYPE_NETHER);
     }
     public record Ore(ResourceLocation tag, int weight, Item item) {
         public int cost() { return (int) Math.clamp(40_000L - 4L * weight, 1, Integer.MAX_VALUE); }
     }
-    public static List<Ore> ores(Level level, BlockPos center) {
-        var type = IAuraType.forLevel(level);
-        var weighted = type.isSimilar(NaturesAuraAPI.TYPE_OVERWORLD) ? NaturesAuraAPI.OVERWORLD_ORES
-              : type.isSimilar(NaturesAuraAPI.TYPE_NETHER) ? NaturesAuraAPI.NETHER_ORES : List.<de.ellpeck.naturesaura.api.misc.WeightedOre>of();
+    public static List<Ore> ores(Level level, BlockPos center, Item material) {
+        var weighted = material == Items.STONE ? NaturesAuraAPI.OVERWORLD_ORES
+              : material == Items.NETHERRACK ? NaturesAuraAPI.NETHER_ORES : List.<WeightedOre>of();
         var player = level instanceof ServerLevel server ? FakePlayerFactory.get(server, ModRegistry.FAKE_PLAYER) : null;
         var context = new BlockPlaceContext(level, player, InteractionHand.MAIN_HAND, ItemStack.EMPTY,
               new BlockHitResult(Vec3.atCenterOf(center), Direction.UP, center, false));
@@ -166,14 +164,15 @@ public final class OreChamberLogic {
 
     public void tick() {
         if (!formed()) { machine.setStatus(20); return; }
-        if (!ModConfig.instance.oreEffect.get() || substrate(machine.getLevel()) == Items.AIR) { machine.setStatus(21); return; }
-        if (!machine.inputs.get(0).getStack().is(substrate(machine.getLevel())) || !isPowder(machine.inputs.get(1).getStack())) {
-            machine.setStatus(22); return;
-        }
+        if (!ModConfig.instance.oreEffect.get()) { machine.setStatus(26); return; }
+        if (!supportedDimension(machine.getLevel())) { machine.setStatus(21); return; }
+        Item material = machine.inputs.get(0).getStack().getItem();
+        if (material != Items.STONE && material != Items.NETHERRACK) { machine.setStatus(22); return; }
+        if (!isPowder(machine.inputs.get(1).getStack())) { machine.setStatus(25); return; }
         int environment = IAuraChunk.getAuraInArea(machine.getLevel(), machine.getBlockPos(), 30);
         machine.setEnvironmentAura(environment);
         if (environment <= 2_000_000) { machine.setStatus(23); return; }
-        var ores = ores(machine.getLevel(), center());
+        var ores = ores(machine.getLevel(), center(), material);
         if (ores.isEmpty()) { reset(); machine.setStatus(24); return; }
         Ore selected = ores.stream().filter(o -> o.tag().equals(selectedTag) && o.weight() == selectedWeight
               && BuiltInRegistries.ITEM.getId(o.item()) == targetId).findFirst().orElse(null);
@@ -191,7 +190,7 @@ public final class OreChamberLogic {
         CompoundTag next = new CompoundTag();
         next.putString("tag", selected.tag().toString()); next.putInt("weight", selected.weight());
         next.putString("item", BuiltInRegistries.ITEM.getKey(selected.item()).toString());
-        next.putString("substrate", BuiltInRegistries.ITEM.getKey(substrate(machine.getLevel())).toString());
+        next.putString("substrate", BuiltInRegistries.ITEM.getKey(material).toString());
         next.putInt("ticks", MachineConfig.ORE_TICKS.get());
         if (!next.equals(signature)) {
             signature = next; progress = 0;
