@@ -296,6 +296,13 @@ Mek `SideDataButton` 在构造时缓存控制器旁边的 `otherBlockItem`，所
 
 ## 12. 服务端测试的隔离经验
 
+现有测试是可复用的回归资产，不代表每次修改都要全部执行。遵循根目录的最小验证原则：
+
+- 文档修改不运行 Gradle；文案、材质和简单 UI 改动以资源检查与 `classes` 编译为主。
+- 逻辑修复优先使用已有相关测试，仅为必要且容易复发的问题补回归。
+- `test --tests` 可以筛选 JUnit；不能据此假设 `runGameTestServer` 也支持同样的筛选参数。现有服务端任务会执行本模组用例，涉及真实机器、事件或物流且需要验证时再运行一次。
+- 不为普通改动重复完整 GameTest，也不默认在多个 NeoForge 版本上重复验证。复杂的存档、资源结算、公共能力或依赖改动再扩大范围。
+
 | 测试入口 | 主要用途 |
 | --- | --- |
 | `MachineGameTests` | 基础生产、花阵、升级、物品附件、迁移、环境付款 |
@@ -321,24 +328,25 @@ Mek `SideDataButton` 在构造时缓存控制器旁边的 `otherBlockItem`，所
 
 ## 13. 构建、打包与交付
 
-在本目录使用 PowerShell 7：
+日常编译在本目录使用 PowerShell 7：
 
 ```powershell
 $env:GRADLE_USER_HOME = Join-Path $PWD '.gradle-home'
 New-Item -ItemType Directory -Path build -Force | Out-Null
-.\gradlew.bat build runGameTestServer --console=plain *> build/verification.log
+.\gradlew.bat classes --console=plain *> build/verification.log
 $verificationExit = $LASTEXITCODE
 Get-Content build/verification.log -Tail 40
 exit $verificationExit
 ```
 
+- 需要 JAR 时运行 `assemble`；需要特定单元测试时使用 `test --tests '完整测试类名'`；确需全量验证时才运行 `build runGameTestServer`。
 - 遇到失败先保存/读取具体异常，再重跑；不要先覆盖唯一日志，只剩一个“FAILED”而丢掉根因。
-- 只改文案资源后可以重新 `build` 打包，不必重复服务端用例；纯 AGENTS/README 文档改动不需要构建。
+- 只改文案资源后可以重新 `assemble` 打包，不必重复测试；纯 AGENTS/README 文档改动不需要构建或等待 CI。
 - JAR 路径是 `build/libs/NaturesMekanism-<version>.jar`。核对 `META-INF/neoforge.mods.toml` 版本、语言、模型、PNG 尺寸、Mixin 和访问转换配置。
 - `gameTest` 类、源图、开发脚本和私人研究稿不能出现在 JAR 中。
 - UI 或网络相关发布让用户同步更新客户端和服务端；不要把只替换一端当成可靠兼容方式。
 - 验证非默认 NeoForge 时用带引号的 `-Pneo_version=...`，验证后恢复默认构建，避免无意改变发布基线。
-- 推送用 `[NaturesAura] feat/fix/docs: ...`，等待对应提交 CI，再报告 JAR 和结果。不要为纯文档修改升版本。
+- 推送用 `[NaturesAura] feat/fix/docs: ...`。功能发布按对应提交确认必要 CI，纯文档交付检查内容和提交即可；不要为纯文档修改升版本。
 
 ## 14. 上游源码定位与维护
 
