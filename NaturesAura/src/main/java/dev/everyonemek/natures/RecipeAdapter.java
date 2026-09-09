@@ -30,6 +30,7 @@ public final class RecipeAdapter {
             case AURA_BOTTLER -> stack.is(ModItems.BOTTLE_TWO_THE_REBOTTLING);
             // Modded animals define their own food predicates; validate against the selected parents at runtime.
             case INDUSTRIAL_BREEDER -> true;
+            case ORE_CHAMBER -> slot == 0 ? stack.is(Items.STONE) || stack.is(Items.NETHERRACK) : OreChamberLogic.isPowder(stack);
             case ANIMAL_SPAWNER -> recipes(level, ModRecipes.ANIMAL_SPAWNER_TYPE).stream()
                   .anyMatch(h -> h.value().ingredients.stream().anyMatch(i -> i.test(stack)));
             case FOREST_RITUAL -> slot == 9 ? stack.is(ModBlocks.GOLD_POWDER.asItem())

@@ -4,7 +4,7 @@
 
 面向 Minecraft 1.21.1 / NeoForge 21.1.241 的 Mekanism 扩展项目集合。
 
-当前子项目：[Nature's Mekanism](NaturesAura/README.md)，提供自然灵气发生器、森林仪式、自然祭坛、呼唤仪式、灵气装瓶机、环境灵气调控器、通用降生祭坛和工业养殖机。
+当前子项目：[Nature's Mekanism](NaturesAura/README.md)，提供自然灵气发生器、森林仪式、自然祭坛、呼唤仪式、灵气装瓶机、环境灵气调控器、通用降生祭坛、工业养殖机，以及矿物凝聚室多方块。
 
 开发资料：
 

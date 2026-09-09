@@ -1,0 +1,6 @@
+{
+  "tool": "image_gen",
+  "reference": "source/universal_aura_generator.png",
+  "prompt": "Create an ORIGINAL Minecraft Mekanism ORE CONDENSATION CHAMBER CONTROLLER texture atlas. The attached image is a strict style reference for neutral gray industrial casing and grid layout only. Exact equal 2x2 grid without margins or labels: top left idle front; top right top face; bottom left side/back/bottom; bottom right active front. Each quadrant must have the visual simplicity of only 16x16 large solid-colored pixel cells. At least 85 percent charcoal and neutral gray, coarse Minecraft pixels. Front: a plain recessed square metal processing chamber window with one small gray ore block silhouette and two tiny muted-gold ore flecks, with a short muted green horizontal status strip below it. Top: gray reinforced inset lid with tiny dark fastening pixels. Side: gray inset structural panel and a dark horizontal vent. Active front has exactly the same geometry as idle front, with only its short status strip becoming bright lime and its two gold ore pixels slightly lighter. No fantasy ornament, flowers, wooden boards, gold trim, crystals, gems, bloom, gradients, fine pixel noise, lettering, perspective or 3D block render. Flat opaque texture atlas matching the reference gray machine family.",
+  "output": "source/ore_condensation_chamber.png"
+}

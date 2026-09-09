@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ACA",
+    "HSH",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    },
+    "S": {
+      "item": "naturesmekanism:ore_chamber_casing"
+    }
+  },
+  "result": {
+    "id": "naturesmekanism:ore_chamber_port",
+    "count": 2
+  }
+}

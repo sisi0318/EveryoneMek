@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SIS",
+    "ICI",
+    "SIS"
+  ],
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "I": {
+      "item": "naturesaura:infused_iron"
+    },
+    "C": {
+      "item": "mekanism:steel_casing"
+    }
+  },
+  "result": {
+    "id": "naturesmekanism:ore_chamber_casing",
+    "count": 8
+  }
+}

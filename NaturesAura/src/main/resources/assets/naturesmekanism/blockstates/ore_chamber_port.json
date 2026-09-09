@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "naturesmekanism:block/ore_chamber_port"
+    },
+    "output=true": {
+      "model": "naturesmekanism:block/ore_chamber_port_output"
+    }
+  }
+}

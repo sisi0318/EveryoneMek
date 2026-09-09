@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "naturesmekanism:block/ore_condensation_chamber/front_active"
+  }
+}

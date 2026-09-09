@@ -16,6 +16,7 @@ MACHINES = {
     "aura_controller": ("灵气调控器", "Aura Controller", "naturesaura:aura_detector"),
     "universal_animal_spawner": ("通用降生祭坛", "Universal Animal Spawner", "naturesaura:animal_spawner"),
     "industrial_breeder": ("工业养殖机", "Industrial Breeder", "naturesaura:birth_spirit"),
+    "ore_condensation_chamber": ("矿物凝聚室", "Ore Condensation Chamber", "naturesaura:infused_iron"),
 }
 
 def write(path, value):
@@ -35,6 +36,8 @@ descriptions = [
     ("读取自然灵气的降生配方，消耗原料、FE 和灵气生成生物。可设置世界坐标轴 X/Y/Z 偏移、水平半径和区域数量上限；每个范围模块增加 2 格最大半径。陆生生物需要地面，水生生物需要水。储罐优先，不足从半径 35 格环境补足。生成成功后才扣原料和灵气。", "Spawns entities from Nature's Aura recipes using ingredients, FE and Aura. Configure world-axis X/Y/Z offsets, horizontal radius and area population limit. Each Range Module adds 2 blocks of maximum radius. Land creatures need a floor and aquatic creatures need water. Uses stored Aura first, then environmental Aura within 35 blocks. Ingredients and Aura are consumed only after successful spawning."),
     ("用 FE 和两份食物配对繁殖成年动物，保留繁殖冷却。降生之灵模式要求动物周围 30 格至少 120 万灵气，由自然灵气原版事件产出并自动收集；普通繁殖模式允许低灵气和海龟、青蛙怀卵。动物间需小于 3 格且无遮挡。支持区域与数量上限。", "Breeds adult animals using FE and two food items, preserving cooldowns. Birth Spirits mode requires at least 1.2M Aura within 30 blocks of the parent; the native Nature's Aura event produces spirits for automatic collection. Breeding mode allows low Aura and turtle/frog pregnancy. Parents must be less than 3 blocks apart with line of sight. Supports work area and population limits."),
 ]
+
+descriptions.append(("3×3×3 中空多方块：控制器位于侧面中心并朝外，其余 25 格用凝聚室外壳或端口，中心留空。输入石头（主世界）或下界岩（下界）、慷慨之粉与 FE；半径 30 格环境灵气须高于 200 万。按原版权重生成矿石并扣灵气，粉末保留。端口潜行空手右键切换输入/输出，普通右键打开控制器。", "Hollow 3x3x3 multiblock: outward-facing controller at the center of a side, 25 casing/port blocks and an empty center. Uses stone in the Overworld or netherrack in the Nether, Powder of the Bountiful Core, FE and Aura. Requires over 2M environmental Aura within 30 blocks. Selects ores using native weights; powder is retained. Sneak with an empty hand to toggle port input/output; use normally to open the controller."))
 
 for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions, strict=True):
     zh[f"block.{ID}.{name}"] = cn
@@ -78,6 +81,18 @@ for index, (cn, english) in enumerate([("区域生物数量已达上限", "Area 
     zh[f"gui.{ID}.status.{index}"] = cn
     en[f"gui.{ID}.status.{index}"] = english
 for key, cn, english in [
+    ("status.20", "凝聚室结构不完整或中心未留空", "Chamber shell incomplete or center blocked"),
+    ("status.21", "维度不支持或原版矿物凝聚已停用", "Unsupported dimension or ore effect disabled"),
+    ("status.22", "等待石头/下界岩与慷慨之粉", "Needs stone/netherrack and ore-effect powder"),
+    ("status.23", "需要高于 200 万环境灵气", "Needs more than 2M environmental Aura"),
+    ("status.24", "当前矿物权重表没有可用矿石", "No valid ores in the current weighted table"),
+    ("chamber_structure", "结构：3×3×3 中空外壳", "Structure: hollow 3x3x3 shell"),
+    ("chamber_cost", "本次成本：%s 灵气", "Selected cost: %s Aura"),
+    ("chamber_threshold", "半径 30 格环境灵气 > 2,000,000", "Environmental Aura > 2,000,000 within 30 blocks"),
+    ("chamber_weight", "权重：%s · 抽取概率约 %s%%", "Weight: %s / Chance: ~%s%%"),
+    ("chamber_powder_kept", "慷慨之粉保留 · 需要中空多方块", "Powder retained / Requires hollow multiblock"),
+    ("port.input", "凝聚室端口：输入物品、灵气与 FE", "Chamber port: items, Aura and FE input"),
+    ("port.output", "凝聚室端口：输出矿石", "Chamber port: ore output"),
     ("breeder_mode.spirit", "降生之灵", "Birth Spirits"),
     ("breeder_mode.breed", "普通繁殖", "Breeding"),
     ("status.17", "等待成年配对动物及食物", "Waiting for adult pair and food"),
@@ -176,8 +191,30 @@ write(f"data/{ID}/recipe/range_module.json", {
             "C": {"item": "mekanism:advanced_control_circuit"}},
     "result": {"id": f"{ID}:range_module", "count": 1},
 })
-write("data/minecraft/tags/block/mineable/pickaxe.json", {"replace": False, "values": [f"{ID}:{n}" for n in MACHINES]})
-write("data/minecraft/tags/block/needs_iron_tool.json", {"replace": False, "values": [f"{ID}:{n}" for n in MACHINES]})
+for name, cn, english in [("ore_chamber_casing", "凝聚室外壳", "Ore Chamber Casing"), ("ore_chamber_port", "凝聚室端口", "Ore Chamber Port")]:
+    zh[f"block.{ID}.{name}"] = cn
+    en[f"block.{ID}.{name}"] = english
+    write(f"assets/{ID}/models/item/{name}.json", {"parent": f"{ID}:block/{name}"})
+    write(f"assets/{ID}/models/block/{name}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": f"{ID}:block/ore_condensation_chamber/{'top' if name.endswith('casing') else 'front'}"}})
+    if name.endswith("port"):
+        write(f"assets/{ID}/models/block/{name}_output.json", {"parent": "minecraft:block/cube_all", "textures": {"all": f"{ID}:block/ore_condensation_chamber/front_active"}})
+        variants = {f"output={str(output).lower()}": {"model": f"{ID}:block/{name}{'_output' if output else ''}"} for output in [False, True]}
+    else:
+        variants = {"": {"model": f"{ID}:block/{name}"}}
+    write(f"assets/{ID}/blockstates/{name}.json", {"variants": variants})
+    entry = {"type": "minecraft:item", "name": f"{ID}:{name}"}
+    if name.endswith("port"):
+        entry["functions"] = [{"function": "minecraft:copy_state", "block": f"{ID}:{name}", "properties": ["output"]}]
+    write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [entry]}]})
+write(f"data/{ID}/recipe/ore_chamber_casing.json", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["SIS", "ICI", "SIS"], "key": {"S": {"tag": "c:ingots/steel"}, "I": {"item": "naturesaura:infused_iron"}, "C": {"item": "mekanism:steel_casing"}}, "result": {"id": f"{ID}:ore_chamber_casing", "count": 8}})
+write(f"data/{ID}/recipe/ore_chamber_port.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ACA", "HSH", "ACA"], "key": {"A": {"item": "mekanism:alloy_reinforced"}, "C": {"item": "mekanism:advanced_control_circuit"}, "H": {"item": "minecraft:hopper"}, "S": {"item": f"{ID}:ore_chamber_casing"}}, "result": {"id": f"{ID}:ore_chamber_port", "count": 2}})
+# Override the controller's generic recipe with its late-game structure components.
+write(f"data/{ID}/recipe/ore_condensation_chamber.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ACA", "SPS", "ACA"], "key": {"A": {"item": "mekanism:alloy_atomic"}, "C": {"item": "mekanism:elite_control_circuit"}, "S": {"item": f"{ID}:ore_chamber_casing"}, "P": {"type": "neoforge:components", "items": "naturesaura:effect_powder", "components": {"naturesaura:effect_powder_data": {"effect": "naturesaura:ore_spawn"}}}}, "result": {"id": f"{ID}:ore_condensation_chamber", "count": 1}})
+write(f"assets/{ID}/lang/zh_cn.json", zh)
+write(f"assets/{ID}/lang/en_us.json", en)
+all_blocks = [*MACHINES, "ore_chamber_casing", "ore_chamber_port"]
+write("data/minecraft/tags/block/mineable/pickaxe.json", {"replace": False, "values": [f"{ID}:{n}" for n in all_blocks]})
+write("data/minecraft/tags/block/needs_iron_tool.json", {"replace": False, "values": [f"{ID}:{n}" for n in all_blocks]})
 
 # Small air-only structure for server GameTests (NBT, big endian).
 def string(s):

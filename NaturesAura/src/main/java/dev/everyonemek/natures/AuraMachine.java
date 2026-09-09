@@ -56,6 +56,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     private final WorkArea area;
     private final AnimalSpawnerLogic spawner;
     private final IndustrialBreederLogic breeder;
+    private final OreChamberLogic chamber;
     private MachineEnergyContainer<AuraMachine> energy;
     private IChemicalTank auraTank;
     private int progress, duration = 20, batch;
@@ -73,6 +74,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         area = kind().hasWorkArea() ? new WorkArea(this) : null;
         spawner = kind() == MachineKind.ANIMAL_SPAWNER ? new AnimalSpawnerLogic(this) : null;
         breeder = kind() == MachineKind.INDUSTRIAL_BREEDER ? new IndustrialBreederLogic(this) : null;
+        chamber = kind() == MachineKind.ORE_CHAMBER ? new OreChamberLogic(this) : null;
         List<BasicInventorySlot> recipeInputs = kind() == MachineKind.FOREST_RITUAL ? inputs.subList(0, 8) : inputs;
         var item = configComponent.setupItemIOConfig(new ArrayList<IInventorySlot>(recipeInputs),
               new ArrayList<IInventorySlot>(outputs), energySlot, false);
@@ -188,6 +190,8 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
             spawner.tick();
         } else if (breeder != null) {
             breeder.tick();
+        } else if (chamber != null) {
+            chamber.tick();
         } else if (kind() == MachineKind.AURA_GENERATOR) {
             if (environmentOutput) emitAura();
             tickGenerator();
@@ -357,14 +361,14 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
 
     public void toggleEnvironmentOutput() { environmentOutput = !environmentOutput; markForSave(); }
     public boolean environmentOutput() { return environmentOutput; }
-    public double progress() { return breeder != null ? breeder.progress() : spawner != null ? spawner.progress() : progress / (double) Math.max(1, duration); }
+    public double progress() { return chamber != null ? chamber.progress() : breeder != null ? breeder.progress() : spawner != null ? spawner.progress() : progress / (double) Math.max(1, duration); }
     public int status() { return status; }
     public int environmentAura() { return environmentAura; }
     void setEnvironmentAura(int amount) { environmentAura = amount; }
     void setStatus(int value) { status = value; }
     public int environmentRadius() {
         if (kind() == MachineKind.ANIMAL_SPAWNER) return 35;
-        if (kind() == MachineKind.INDUSTRIAL_BREEDER) return 30;
+        if (kind() == MachineKind.INDUSTRIAL_BREEDER || kind() == MachineKind.ORE_CHAMBER) return 30;
         if (kind() == MachineKind.AURA_CONTROLLER) return Math.min(64, MachineConfig.CONTROLLER_RADIUS.get() + rangeModules() * 8);
         return kind() == MachineKind.AURA_BOTTLER ? BottlingRules.RANGE : MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get();
     }
@@ -379,6 +383,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     public WorkArea area() { return area; }
     public AnimalSpawnerLogic spawner() { return spawner; }
     public IndustrialBreederLogic breeder() { return breeder; }
+    public OreChamberLogic chamber() { return chamber; }
     public boolean hasSimulationModule() { return simulationModuleSlot != null && simulationModuleSlot.getStack().is(Content.SIMULATION_MODULE); }
     public BottlingMode bottlingMode() { return bottlingMode; }
     public void cycleBottlingMode() { setBottlingMode(bottlingMode.next(hasSimulationModule())); }
@@ -459,6 +464,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         if (area != null) area.track(container);
         if (spawner != null) spawner.track(container);
         if (breeder != null) breeder.track(container);
+        if (chamber != null) chamber.track(container);
         container.track(SyncableBoolean.create(() -> environmentOutput, v -> environmentOutput = v));
     }
 
@@ -475,6 +481,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         if (area != null) tag.put("work_area", area.save());
         if (spawner != null) tag.put("spawner_work", spawner.save());
         if (breeder != null) tag.put("breeder_work", breeder.save());
+        if (chamber != null) tag.put("chamber_work", chamber.save());
         if (workSignature != null) tag.put("work_signature", workSignature);
     }
 
@@ -491,6 +498,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         if (area != null) area.load(tag.getCompound("work_area"));
         if (spawner != null) spawner.load(tag.getCompound("spawner_work"));
         if (breeder != null) breeder.load(tag.getCompound("breeder_work"));
+        if (chamber != null) chamber.load(tag.getCompound("chamber_work"));
         workSignature = tag.contains("work_signature") ? tag.getCompound("work_signature") : null;
     }
 }

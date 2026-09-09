@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ACA",
+    "SPS",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "S": {
+      "item": "naturesmekanism:ore_chamber_casing"
+    },
+    "P": {
+      "type": "neoforge:components",
+      "items": "naturesaura:effect_powder",
+      "components": {
+        "naturesaura:effect_powder_data": {
+          "effect": "naturesaura:ore_spawn"
+        }
+      }
+    }
+  },
+  "result": {
+    "id": "naturesmekanism:ore_condensation_chamber",
+    "count": 1
+  }
+}

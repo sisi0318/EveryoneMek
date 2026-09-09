@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "naturesmekanism:ore_chamber_port",
+          "functions": [
+            {
+              "function": "minecraft:copy_state",
+              "block": "naturesmekanism:ore_chamber_port",
+              "properties": [
+                "output"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

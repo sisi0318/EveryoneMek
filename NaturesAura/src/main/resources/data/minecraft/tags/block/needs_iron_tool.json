@@ -8,6 +8,9 @@
     "naturesmekanism:aura_bottler",
     "naturesmekanism:aura_controller",
     "naturesmekanism:universal_animal_spawner",
-    "naturesmekanism:industrial_breeder"
+    "naturesmekanism:industrial_breeder",
+    "naturesmekanism:ore_condensation_chamber",
+    "naturesmekanism:ore_chamber_casing",
+    "naturesmekanism:ore_chamber_port"
   ]
 }

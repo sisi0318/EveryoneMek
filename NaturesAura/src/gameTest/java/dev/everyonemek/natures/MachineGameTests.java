@@ -62,6 +62,7 @@ public final class MachineGameTests {
                     case AURA_BOTTLER -> new ItemStack(ModItems.BOTTLE_TWO_THE_REBOTTLING, 3);
                     case ANIMAL_SPAWNER -> new ItemStack(ModItems.BIRTH_SPIRIT, i + 1);
                     case INDUSTRIAL_BREEDER -> new ItemStack(Items.WHEAT, i + 1);
+                    case ORE_CHAMBER -> i == 0 ? new ItemStack(Items.STONE, 3) : de.ellpeck.naturesaura.items.ItemEffectPowder.setEffect(new ItemStack(ModItems.EFFECT_POWDER), de.ellpeck.naturesaura.chunk.effect.OreSpawnEffect.NAME);
                     default -> ItemStack.EMPTY;
                 };
                 slots.get(i).setStack(ingredient);

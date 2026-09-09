@@ -28,9 +28,9 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
     public MachineScreen(MachineMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         imageWidth = 238;
-        imageHeight = tile.kind().hasWorkArea() ? 290 : 220;
+        imageHeight = 220 + tile.kind().guiExtraHeight();
         inventoryLabelX = 38;
-        inventoryLabelY = tile.kind().hasWorkArea() ? 194 : 124;
+        inventoryLabelY = 124 + tile.kind().guiExtraHeight();
         dynamicSlots = true;
     }
 
@@ -144,6 +144,12 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
                   Component.translatable("gui.naturesmekanism.area_cap", tile.area().cap()))));
             addNumericSetting(18, 177, 86, SetMachineSettingPayload.AREA_RADIUS);
             addNumericSetting(112, 177, 86, SetMachineSettingPayload.AREA_CAP);
+        }
+        if (tile.chamber() != null) {
+            addRenderableWidget(new GuiInnerScreen(this, 18, 126, 180, 28, () -> List.of(
+                  tile.chamber().target().isEmpty() ? Component.translatable("gui.naturesmekanism.chamber_structure")
+                        : tile.chamber().target().getHoverName(),
+                  Component.translatable("gui.naturesmekanism.chamber_cost", TextUtils.format(tile.chamber().auraCost())))));
         }
     }
 

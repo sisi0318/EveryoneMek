@@ -15,7 +15,7 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
     protected int getInventoryXOffset() { return 38; }
 
     @Override
-    protected int getInventoryYOffset() { return tile.kind().hasWorkArea() ? 206 : 136; }
+    protected int getInventoryYOffset() { return 136 + tile.kind().guiExtraHeight(); }
 
     public VirtualInventoryContainerSlot getGoldModuleSlot() {
         return slots.stream().filter(slot -> slot instanceof VirtualInventoryContainerSlot virtual

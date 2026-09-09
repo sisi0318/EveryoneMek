@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/ore_condensation_chamber",
+  "textures": {
+    "north": "naturesmekanism:block/ore_condensation_chamber/front_active"
+  }
+}

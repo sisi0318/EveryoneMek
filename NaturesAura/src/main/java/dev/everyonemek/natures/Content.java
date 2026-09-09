@@ -25,6 +25,9 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -54,6 +57,15 @@ public final class Content {
     public static final ContainerTypeRegistryObject<MachineMenu> MENU = MENUS.register("machine", AuraMachine.class, MachineMenu::new);
     public static final Map<MachineKind, BlockRegistryObject<MachineBlock, ItemBlockTooltip<MachineBlock>>> MACHINES = new EnumMap<>(MachineKind.class);
     public static final Map<MachineKind, TileEntityTypeRegistryObject<AuraMachine>> MACHINE_TILES = new EnumMap<>(MachineKind.class);
+    public static final BlockRegistryObject<Block, BlockItem> CHAMBER_CASING = BLOCKS.register("ore_chamber_casing",
+          BlockBehaviour.Properties.of().strength(4, 12).requiresCorrectToolForDrops());
+    public static final BlockRegistryObject<ChamberPortBlock, BlockItem> CHAMBER_PORT = BLOCKS.register("ore_chamber_port",
+          () -> new ChamberPortBlock(BlockBehaviour.Properties.of().strength(4, 12).requiresCorrectToolForDrops()));
+    public static final TileEntityTypeRegistryObject<ChamberPortEntity> CHAMBER_PORT_TILE = TILES.builder(CHAMBER_PORT, ChamberPortEntity::new)
+          .with(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, (port, side) -> port.items)
+          .with(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK, (port, side) -> port.energy)
+          .with(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.block(), (port, side) -> port.strictEnergy)
+          .with(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), (port, side) -> port.chemicals).build();
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, NaturesMekanism.ID);
 
     static {
@@ -104,6 +116,8 @@ public final class Content {
                   output.accept(INFINITE_GOLD_MODULE);
                   output.accept(SIMULATION_MODULE);
                   output.accept(RANGE_MODULE);
+                  output.accept(CHAMBER_CASING);
+                  output.accept(CHAMBER_PORT);
               }).build());
     }
 

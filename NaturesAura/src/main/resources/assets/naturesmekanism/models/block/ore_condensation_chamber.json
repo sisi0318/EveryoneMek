@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "naturesmekanism:block/ore_condensation_chamber/side",
+    "north": "naturesmekanism:block/ore_condensation_chamber/front",
+    "up": "naturesmekanism:block/ore_condensation_chamber/top",
+    "south": "naturesmekanism:block/ore_condensation_chamber/side",
+    "east": "naturesmekanism:block/ore_condensation_chamber/side",
+    "west": "naturesmekanism:block/ore_condensation_chamber/side",
+    "down": "naturesmekanism:block/ore_condensation_chamber/side"
+  }
+}

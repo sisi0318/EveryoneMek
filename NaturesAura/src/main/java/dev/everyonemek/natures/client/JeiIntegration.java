@@ -21,6 +21,7 @@ public final class JeiIntegration implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         registration.addRecipeCategories(new BottlingJeiCategory(registration.getJeiHelpers().getGuiHelper()));
+        registration.addRecipeCategories(new OreChamberJeiCategory(registration.getJeiHelpers().getGuiHelper()));
     }
 
     @Override
@@ -30,15 +31,19 @@ public final class JeiIntegration implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.OFFERING).asItem()), JEINaturesAuraPlugin.OFFERING);
         registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.AURA_BOTTLER)), BottlingJeiCategory.TYPE);
         registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.ANIMAL_SPAWNER)), JEINaturesAuraPlugin.SPAWNER);
+        registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.ORE_CHAMBER)), OreChamberJeiCategory.TYPE);
     }
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(BottlingJeiCategory.TYPE, BottlingJeiCategory.recipes());
+        registration.addRecipes(OreChamberJeiCategory.TYPE, OreChamberJeiCategory.recipes());
         for (MachineKind kind : MachineKind.values())
             registration.addItemStackInfo(new ItemStack(Content.MACHINES.get(kind).asItem()), Component.translatable(kind.getTranslationKey()));
         registration.addItemStackInfo(new ItemStack(Content.SIMULATION_MODULE.get()),
               Component.translatable("tooltip.naturesmekanism.simulation_module"),
               Component.translatable("tooltip.naturesmekanism.simulation_module.install"));
+        for (var part : java.util.List.of(Content.CHAMBER_CASING, Content.CHAMBER_PORT))
+            registration.addItemStackInfo(new ItemStack(part), Component.translatable(MachineKind.ORE_CHAMBER.getTranslationKey()));
     }
 }

@@ -12,6 +12,7 @@ public final class MachineConfig {
     public static final ModConfigSpec.IntValue CONTROLLER_FE, CONTROLLER_RATE, CONTROLLER_RADIUS;
     public static final ModConfigSpec.IntValue SPAWNER_FE;
     public static final ModConfigSpec.IntValue BREEDER_FE, BREEDER_TICKS;
+    public static final ModConfigSpec.IntValue ORE_FE, ORE_TICKS;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -26,6 +27,8 @@ public final class MachineConfig {
         SPAWNER_FE = b.defineInRange("spawnerFEPerTick", 200, 1, 1_000_000);
         BREEDER_FE = b.defineInRange("breederFEPerTick", 200, 1, 1_000_000);
         BREEDER_TICKS = b.defineInRange("breederTicks", 100, 1, 12000);
+        ORE_FE = b.defineInRange("oreChamberFEPerTick", 800, 1, 1_000_000);
+        ORE_TICKS = b.defineInRange("oreChamberTicks", 200, 1, 12000);
         CONTROLLER_RATE = b.defineInRange("controllerAuraPerTick", 1000, 1, 1_000_000);
         CONTROLLER_RADIUS = b.defineInRange("controllerBaseRadius", 16, 1, 32);
         BOTTLER_TICKS = b.defineInRange("bottlerTicks", 40, 1, 12000);
@@ -56,6 +59,7 @@ public final class MachineConfig {
             case AURA_CONTROLLER -> CONTROLLER_FE.get();
             case ANIMAL_SPAWNER -> SPAWNER_FE.get();
             case INDUSTRIAL_BREEDER -> BREEDER_FE.get();
+            case ORE_CHAMBER -> ORE_FE.get();
         };
     }
 
