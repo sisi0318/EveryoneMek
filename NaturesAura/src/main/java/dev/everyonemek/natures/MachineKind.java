@@ -12,6 +12,8 @@ public enum MachineKind implements ILangEntry {
 
     MachineKind(String id) { this.id = id; }
 
+    public int inputCount() { return this == FOREST_RITUAL ? 10 : this == AURA_GENERATOR ? 0 : 2; }
+
     @Override
     public String getTranslationKey() { return "description." + NaturesMekanism.ID + "." + id; }
 }

@@ -10,8 +10,12 @@ import mekanism.api.RelativeSide;
 import mekanism.api.Upgrade;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.common.registries.MekanismBlocks;
+import mekanism.common.registries.MekanismItems;
 import mekanism.common.registries.MekanismDataComponents;
 import mekanism.common.util.MekanismUtils;
+import mekanism.common.attachments.containers.ContainerType;
+import mekanism.common.attachments.containers.item.AttachedItems;
+import mekanism.common.util.text.BooleanStateDisplay.YesNo;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -40,6 +44,77 @@ public final class MachineGameTests {
 
     private static void check(boolean value, String message) {
         if (!value) throw new AssertionError(message);
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 20)
+    public static void droppedMachinesSupportInventoryTooltipAndContainerReaders(GameTestHelper h) {
+        for (MachineKind kind : MachineKind.values()) {
+            AuraMachine m = machine(h, kind, new BlockPos(2 + kind.ordinal() * 2, 1, 2));
+            var slots = m.getInventorySlots(null);
+            for (int i = 0; i < kind.inputCount(); i++) {
+                ItemStack ingredient = switch (kind) {
+                    case FOREST_RITUAL -> new ItemStack(i == 8 ? Items.OAK_SAPLING : i == 9 ? ModBlocks.GOLD_POWDER : Items.STONE, i + 1);
+                    case NATURAL_ALTAR -> new ItemStack(i == 0 ? Items.BONE : ModBlocks.CRUSHING_CATALYST, i + 1);
+                    case OFFERING -> new ItemStack(i == 0 ? ModItems.INFUSED_IRON : ModItems.CALLING_SPIRIT, i + 1);
+                    default -> ItemStack.EMPTY;
+                };
+                slots.get(i).setStack(ingredient);
+            }
+            int energySlot = kind.inputCount();
+            if (kind.inputCount() > 0) {
+                for (int i = 0; i < 4; i++) slots.get(kind.inputCount() + i).setStack(new ItemStack(Items.COBBLESTONE, i + 1));
+                energySlot += 4;
+            }
+            slots.get(energySlot).setStack(new ItemStack(MekanismItems.ENERGY_TABLET.get()));
+            if (m.goldModuleSlot() != null) m.goldModuleSlot().setStack(new ItemStack(Content.INFINITE_GOLD_MODULE.get()));
+            if (m.auraTank() != null) m.auraTank().setStack(new ChemicalStack(Content.AURA, 1234));
+            var expected = slots.stream().map(s -> s.getStack().copy()).toList();
+            ItemStack drop = Block.getDrops(m.getBlockState(), h.getLevel(), m.getBlockPos(), m, null,
+                  new ItemStack(Items.DIAMOND_PICKAXE)).getFirst();
+            drop = ItemStack.parse(h.getLevel().registryAccess(), drop.save(h.getLevel().registryAccess())).orElseThrow();
+            // Exact reader from ItemBlockTooltip.addDetails, without starting a game client.
+            check(YesNo.hasInventory(drop) == YesNo.YES_COLORED, kind + ": occupied inventory tooltip failed");
+            var attachedSlots = ContainerType.ITEM.getAttachmentContainersIfPresent(drop);
+            check(attachedSlots.size() == expected.size(), kind + ": attached slot count changed");
+            for (int i = 0; i < expected.size(); i++)
+                check(ItemStack.matches(attachedSlots.get(i).getStack(), expected.get(i)), kind + ": saved slot moved: " + i);
+            check(ContainerType.ENERGY.getAttachmentContainersIfPresent(drop).getFirst().getEnergy() == m.energy().getEnergy(),
+                  kind + ": saved energy unreadable");
+            if (m.auraTank() != null)
+                check(ContainerType.CHEMICAL.getAttachmentContainersIfPresent(drop).getFirst().getStored() == 1234,
+                      kind + ": saved Aura unreadable");
+            AuraMachine restored = new AuraMachine(m.getBlockPos(), m.getBlockState());
+            restored.setLevel(h.getLevel());
+            restored.applyComponentsFromItemStack(drop);
+            for (int i = 0; i < expected.size(); i++)
+                check(ItemStack.matches(restored.getInventorySlots(null).get(i).getStack(), expected.get(i)),
+                      kind + ": replaced machine lost slot " + i);
+            ItemStack empty = new ItemStack(Content.MACHINES.get(kind));
+            empty.set(MekanismDataComponents.ATTACHED_ITEMS, AttachedItems.create(expected.size()));
+            check(YesNo.hasInventory(empty) == YesNo.NO_COLORED, kind + ": empty saved inventory tooltip failed");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 20)
+    public static void legacyForestItemInventoryKeepsItsOriginalSlots(GameTestHelper h) {
+        ItemStack legacy = new ItemStack(Content.MACHINES.get(MachineKind.FOREST_RITUAL));
+        var oldSlots = new java.util.ArrayList<ItemStack>();
+        for (int i = 0; i < 8; i++) oldSlots.add(new ItemStack(Items.STONE, i + 1));
+        oldSlots.add(new ItemStack(Items.OAK_SAPLING));
+        oldSlots.add(new ItemStack(ModBlocks.GOLD_POWDER, 16));
+        for (int i = 0; i < 4; i++) oldSlots.add(new ItemStack(Items.COBBLESTONE, i + 1));
+        oldSlots.add(new ItemStack(MekanismItems.ENERGY_TABLET.get()));
+        legacy.set(MekanismDataComponents.ATTACHED_ITEMS, new AttachedItems(oldSlots));
+        check(YesNo.hasInventory(legacy) == YesNo.YES_COLORED, "0.1.0 forest tooltip failed");
+        var reader = ContainerType.ITEM.getAttachmentContainersIfPresent(legacy);
+        for (int i = 0; i < 15; i++) check(ItemStack.matches(reader.get(i).getStack(), oldSlots.get(i)), "Legacy slot changed: " + i);
+        AuraMachine restored = machine(h, MachineKind.FOREST_RITUAL, new BlockPos(2, 1, 2));
+        restored.applyComponentsFromItemStack(legacy);
+        check(restored.goldModuleSlot().isEmpty(), "Legacy inventory invented a module");
+        for (int i = 0; i < 15; i++) check(ItemStack.matches(restored.getInventorySlots(null).get(i).getStack(), oldSlots.get(i)),
+              "Legacy replacement lost slot " + i);
+        h.succeed();
     }
 
     @GameTest(template = "empty", timeoutTicks = 60)

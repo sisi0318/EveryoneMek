@@ -3,8 +3,13 @@ package dev.everyonemek.natures;
 import java.util.EnumMap;
 import java.util.Map;
 import mekanism.api.Upgrade;
+import mekanism.api.AutomationType;
 import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalBuilder;
+import mekanism.common.attachments.containers.ContainerType;
+import mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder;
+import mekanism.common.attachments.containers.item.ItemSlotsBuilder;
+import mekanism.common.attachments.containers.item.ComponentBackedInventorySlot;
 import mekanism.common.block.attribute.AttributeSideConfig;
 import mekanism.common.content.blocktype.Machine;
 import mekanism.common.item.block.ItemBlockTooltip;
@@ -50,6 +55,25 @@ public final class Content {
                         ? AttributeSideConfig.ADVANCED_ELECTRIC_MACHINE : AttributeSideConfig.ELECTRIC_MACHINE)
                   .build();
             var block = BLOCKS.registerDetails(kind.id, () -> new MachineBlock(kind, type));
+            block.forItemHolder(holder -> {
+                // Block-entity capabilities do not register the readers for saved block items.
+                // These must follow AuraMachine's slot order, including the appended module.
+                holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
+                    var slots = ItemSlotsBuilder.builder().addInput(kind.inputCount());
+                    if (kind.inputCount() > 0) slots.addOutput(4);
+                    slots.addEnergy();
+                    if (kind == MachineKind.FOREST_RITUAL)
+                        slots.addSlot((containerType, stack, index) -> new ComponentBackedInventorySlot(stack, index,
+                              (item, automation) -> automation != AutomationType.EXTERNAL,
+                              (item, automation) -> automation != AutomationType.EXTERNAL,
+                              item -> item.is(INFINITE_GOLD_MODULE), true, 1));
+                    return slots.build();
+                });
+                if (kind == MachineKind.AURA_GENERATOR || kind == MachineKind.NATURAL_ALTAR)
+                    holder.addAttachmentOnlyContainers(ContainerType.CHEMICAL, () -> ChemicalTanksBuilder.builder()
+                          .addBasic(AuraMachine.AURA_CAPACITY, stack -> stack.is(AURA)).build());
+                // ItemBlockTooltip already registers its energy attachment and capability.
+            });
             MACHINES.put(kind, block);
             MACHINE_TILES.put(kind, TILES.mekBuilder(block, AuraMachine::new)
                   .clientTicker(TileEntityMekanism::tickClient)

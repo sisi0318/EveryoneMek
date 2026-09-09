@@ -14,6 +14,7 @@ import mekanism.api.chemical.IChemicalTank;
 import mekanism.api.inventory.IInventorySlot;
 import mekanism.api.math.MathUtils;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
+import mekanism.common.attachments.containers.item.AttachedItems;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
 import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
 import mekanism.common.capabilities.holder.energy.EnergyContainerHelper;
@@ -113,7 +114,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         var builder = InventorySlotHelper.forSideWithConfig(this);
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
-        int count = kind() == MachineKind.FOREST_RITUAL ? 10 : kind() == MachineKind.AURA_GENERATOR ? 0 : 2;
+        int count = kind().inputCount();
         for (int i = 0; i < count; i++) {
             final int slot = i;
             int x = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 18 + i % 4 * 18 : 104) : 42 + i * 40;
@@ -320,6 +321,17 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     protected void applyImplicitComponents(BlockEntity.DataComponentInput input) {
         super.applyImplicitComponents(input);
         environmentOutput = Boolean.TRUE.equals(input.get(Content.ENVIRONMENT_OUTPUT));
+    }
+
+    @Override
+    public void applyInventorySlots(BlockEntity.DataComponentInput input, List<IInventorySlot> slots, AttachedItems attachedItems) {
+        // 0.1.0 forest block items predate the appended module slot. Mek otherwise skips the whole inventory.
+        if (kind() == MachineKind.FOREST_RITUAL && attachedItems.size() == 15 && slots.size() == 16) {
+            var migrated = new ArrayList<>(attachedItems.containers());
+            migrated.add(ItemStack.EMPTY);
+            attachedItems = new AttachedItems(migrated);
+        }
+        super.applyInventorySlots(input, slots, attachedItems);
     }
 
     @Override
