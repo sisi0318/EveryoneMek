@@ -2,9 +2,11 @@
 
 Minecraft 1.21.1 的自然灵气工业化扩展。机器使用 Mekanism 的升级、红石控制、六面配置、储能、物流和界面组件，直接读取 NaturesAura 配方。
 
+![16×16 方块材质预览](art/block-preview.png)
+
 ## 安装
 
-将构建产物 `build/libs/NaturesMekanism-0.1.2.jar` 放入客户端与服务端的 `mods` 目录，替换旧版扩展 JAR。
+将构建产物 `build/libs/NaturesMekanism-0.1.3.jar` 放入客户端与服务端的 `mods` 目录，替换旧版扩展 JAR。
 
 本轮实际验证的依赖组合：
 
@@ -100,6 +102,6 @@ $env:GRADLE_USER_HOME = Join-Path $PWD '.gradle-home'
 .\gradlew.bat runClient
 ```
 
-JSON 资源由 `python tools/generate_resources.py` 生成；模型引用已安装的 Minecraft/Mek 材质，没有复制其纹理文件。JEI 可显示这三台加工机对应的原版配方与机器说明。
+JSON 资源由 `python tools/generate_resources.py` 生成。四台机器使用新增的 16×16 方块贴图，参考原版 Mek 的灰黑工业风格，包含正面、顶部、侧面和工作状态正面。贴图原稿、完整提示词和导出说明见 [材质说明](art/README.md)。JEI 可显示这三台加工机对应的原版配方与机器说明。
 
 目前已通过构建、6 项单元测试和 19 项服务端 GameTest，覆盖真实加压管道、环境灵气、三种配方、催化物、满输出、存档恢复、机器掉落组件、高速部分产量、额外输入分离、模块拆装/功耗/保存、中英文界面标题，以及自然祭坛环境供能、混合供能和暂停恢复。客户端游戏内验收由使用者进行。

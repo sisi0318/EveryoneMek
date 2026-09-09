@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/universal_offering",
+  "textures": {
+    "north": "naturesmekanism:block/universal_offering/front_active"
+  }
+}

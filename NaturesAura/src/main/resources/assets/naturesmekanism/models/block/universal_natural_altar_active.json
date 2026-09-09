@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/universal_natural_altar",
+  "textures": {
+    "north": "naturesmekanism:block/universal_natural_altar/front_active"
+  }
+}

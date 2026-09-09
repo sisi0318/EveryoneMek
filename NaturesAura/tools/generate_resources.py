@@ -8,10 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "src/main/resources"
 ID = "naturesmekanism"
 MACHINES = {
-    "universal_aura_generator": ("通用灵气发生器", "Universal Aura Generator", "minecraft:block/emerald_block", "naturesaura:gold_leaf"),
-    "universal_forest_ritual": ("通用森林仪式", "Universal Forest Ritual", "minecraft:block/moss_block", "naturesaura:wood_stand"),
-    "universal_natural_altar": ("通用自然祭坛", "Universal Natural Altar", "minecraft:block/oxidized_copper", "naturesaura:nature_altar"),
-    "universal_offering": ("通用呼唤仪式", "Universal Offering Ritual", "minecraft:block/gold_block", "naturesaura:offering_table"),
+    "universal_aura_generator": ("通用灵气发生器", "Universal Aura Generator", "naturesaura:gold_leaf"),
+    "universal_forest_ritual": ("通用森林仪式", "Universal Forest Ritual", "naturesaura:wood_stand"),
+    "universal_natural_altar": ("通用自然祭坛", "Universal Natural Altar", "naturesaura:nature_altar"),
+    "universal_offering": ("通用呼唤仪式", "Universal Offering Ritual", "naturesaura:offering_table"),
 }
 
 def write(path, value):
@@ -28,26 +28,28 @@ descriptions = [
     ("替换原版祭祀台，周围仍须保留完整花阵。一份呼唤物处理一批供品。", "Replaces the Offering Table and requires its flower arrangement. One calling item starts a batch."),
 ]
 
-for (name, (cn, english, accent, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions):
+for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions):
     zh[f"block.{ID}.{name}"] = cn
     en[f"block.{ID}.{name}"] = english
     zh[f"container.{ID}.{name}"] = cn
     en[f"container.{ID}.{name}"] = english
     zh[f"description.{ID}.{name}"] = desc_cn
     en[f"description.{ID}.{name}"] = desc_en
-    # Models reference installed Minecraft/Mekanism textures; no external texture files are copied.
+    texture = f"{ID}:block/{name}"
     model = {
-        "parent": "minecraft:block/block",
-        "textures": {"particle": "mekanism:block/steel_casing", "shell": "mekanism:block/steel_casing", "accent": accent, "panel": "minecraft:block/deepslate_tiles"},
-        "elements": [
-            {"from": [0, 0, 0], "to": [16, 16, 16], "faces": {d: {"texture": "#shell", "cullface": d} for d in ["north", "south", "east", "west", "up", "down"]}},
-            {"from": [2, 2, -0.01], "to": [14, 14, 0], "faces": {"north": {"texture": "#panel"}}},
-            {"from": [4, 4, -0.02], "to": [12, 12, -0.01], "faces": {"north": {"texture": "#accent"}}},
-        ],
+        "parent": "minecraft:block/cube",
+        "textures": {"particle": f"{texture}/side", "north": f"{texture}/front", "up": f"{texture}/top",
+                     **{side: f"{texture}/side" for side in ["south", "east", "west", "down"]}},
     }
     write(f"assets/{ID}/models/block/{name}.json", model)
+    write(f"assets/{ID}/models/block/{name}_active.json", {
+        "parent": f"{ID}:block/{name}", "textures": {"north": f"{texture}/front_active"},
+    })
     write(f"assets/{ID}/models/item/{name}.json", {"parent": f"{ID}:block/{name}"})
-    write(f"assets/{ID}/blockstates/{name}.json", {"variants": {f"facing={face}": {"model": f"{ID}:block/{name}", "y": rotation} for face, rotation in [("north", 0), ("east", 90), ("south", 180), ("west", 270)]}})
+    write(f"assets/{ID}/blockstates/{name}.json", {"variants": {
+        f"facing={face},active={str(active).lower()}": {"model": f"{ID}:block/{name}{'_active' if active else ''}", "y": rotation}
+        for face, rotation in [("north", 0), ("east", 90), ("south", 180), ("west", 270)] for active in [False, True]
+    }})
     components = ["mekanism:ejector", "mekanism:owner", "mekanism:redstone_control", "mekanism:security", "mekanism:side_config", "mekanism:upgrades", "mekanism:energy", "mekanism:items", "mekanism:chemicals", f"{ID}:environment_output"]
     write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:{name}", "functions": [{"function": "minecraft:copy_name", "source": "block_entity"}, {"function": "minecraft:copy_components", "source": "block_entity", "include": components}]}]}]})
     write(f"data/{ID}/recipe/{name}.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ASA", "CKC", "ASA"], "key": {"A": {"item": "mekanism:alloy_infused"}, "S": {"tag": "c:ingots/steel"}, "C": {"item": "mekanism:basic_control_circuit"}, "K": {"item": core}}, "result": {"id": f"{ID}:{name}", "count": 1}})

@@ -1,19 +1,35 @@
 {
   "variants": {
-    "facing=north": {
+    "facing=north,active=false": {
       "model": "naturesmekanism:block/universal_offering",
       "y": 0
     },
-    "facing=east": {
+    "facing=north,active=true": {
+      "model": "naturesmekanism:block/universal_offering_active",
+      "y": 0
+    },
+    "facing=east,active=false": {
       "model": "naturesmekanism:block/universal_offering",
       "y": 90
     },
-    "facing=south": {
+    "facing=east,active=true": {
+      "model": "naturesmekanism:block/universal_offering_active",
+      "y": 90
+    },
+    "facing=south,active=false": {
       "model": "naturesmekanism:block/universal_offering",
       "y": 180
     },
-    "facing=west": {
+    "facing=south,active=true": {
+      "model": "naturesmekanism:block/universal_offering_active",
+      "y": 180
+    },
+    "facing=west,active=false": {
       "model": "naturesmekanism:block/universal_offering",
+      "y": 270
+    },
+    "facing=west,active=true": {
+      "model": "naturesmekanism:block/universal_offering_active",
       "y": 270
     }
   }

@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/universal_aura_generator",
+  "textures": {
+    "north": "naturesmekanism:block/universal_aura_generator/front_active"
+  }
+}

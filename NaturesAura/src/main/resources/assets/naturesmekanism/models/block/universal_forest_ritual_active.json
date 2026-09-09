@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/universal_forest_ritual",
+  "textures": {
+    "north": "naturesmekanism:block/universal_forest_ritual/front_active"
+  }
+}
