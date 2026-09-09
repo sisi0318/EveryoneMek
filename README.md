@@ -13,3 +13,5 @@
 推送到 `main`、提交 PR 或在 Actions 页面手动运行时，会自动构建并运行测试。成功后可在对应运行的 Artifacts 中下载 `NaturesMekanism` JAR，测试报告单独保存。
 
 项目代码采用 [MIT 许可证](LICENSE)，第三方组件说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+正式发布指定模组：在 Actions 中选择 **Release selected mod**，通过 **Run workflow** 选择模组并编译发布。操作与版本规则见 [手动发布说明](docs/RELEASING.md)。

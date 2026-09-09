@@ -1,0 +1,121 @@
+name: Release selected mod
+run-name: Release ${{ inputs.module }} · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 要编译并发布的模组
+        type: choice
+        required: true
+        default: NaturesAura
+        options:
+          - NaturesAura
+      draft:
+        description: 仅创建草稿（勾选后不会公开发布）
+        type: boolean
+        default: false
+      prerelease:
+        description: 标记为预发布版本
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.module }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ inputs.module }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tag: ${{ steps.mod.outputs.tag }}
+      title: ${{ steps.mod.outputs.title }}
+      filename: ${{ steps.mod.outputs.filename }}
+      artifact: ${{ steps.mod.outputs.artifact }}
+    steps:
+      - name: Check out selected commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Resolve mod and version
+        id: mod
+        env:
+          RELEASE_MODULE: ${{ inputs.module }}
+        run: python3 .github/scripts/prepare_release.py
+
+      - name: Set up Java
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: ${{ steps.mod.outputs.java }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-provider: basic
+          dependency-graph: disabled
+
+      - name: Compile selected mod
+        working-directory: ${{ steps.mod.outputs.directory }}
+        run: bash ./gradlew --no-daemon --console=plain --max-workers=2 clean assemble
+
+      - name: Prepare release package
+        env:
+          RELEASE_MODULE: ${{ inputs.module }}
+        run: python3 .github/scripts/prepare_release.py --stage "$RUNNER_TEMP/release-package"
+
+      - name: Upload selected package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.mod.outputs.artifact }}
+          path: ${{ runner.temp }}/release-package/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish ${{ inputs.module }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.build.outputs.tag }}
+      RELEASE_TITLE: ${{ needs.build.outputs.title }}
+      RELEASE_FILE: ${{ needs.build.outputs.filename }}
+      RELEASE_ARTIFACT: ${{ needs.build.outputs.artifact }}
+      RELEASE_DRAFT: ${{ inputs.draft }}
+      RELEASE_PRERELEASE: ${{ inputs.prerelease }}
+    steps:
+      - name: Download this run's selected package
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$RELEASE_ARTIFACT" --dir release
+
+      - name: Verify package checksum
+        working-directory: release
+        run: sha256sum --check SHA256SUMS
+
+      - name: Create release
+        shell: bash
+        run: |
+          set -euo pipefail
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG")
+          if jq -e --arg ref "refs/tags/$RELEASE_TAG" 'any(.[]; .ref == $ref)' <<< "$refs" >/dev/null; then
+            echo "::error::Tag $RELEASE_TAG already exists. Update the selected mod's mod_version before publishing another build."
+            exit 1
+          fi
+          args=("$RELEASE_TAG" "release/$RELEASE_FILE" "release/SHA256SUMS"
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"
+            --title "$RELEASE_TITLE" --notes-file release/RELEASE_NOTES.md --latest=false)
+          if [[ "$RELEASE_DRAFT" == "true" ]]; then args+=(--draft); fi
+          if [[ "$RELEASE_PRERELEASE" == "true" ]]; then args+=(--prerelease); fi
+          url=$(gh release create "${args[@]}")
+          printf '## Release ready\n\n[%s](%s)\n\nFile: `%s`\n' "$RELEASE_TITLE" "$url" "$RELEASE_FILE" >> "$GITHUB_STEP_SUMMARY"
