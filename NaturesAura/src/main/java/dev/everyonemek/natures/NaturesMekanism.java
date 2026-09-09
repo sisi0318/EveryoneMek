@@ -12,5 +12,6 @@ public final class NaturesMekanism {
     public NaturesMekanism(IEventBus bus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, MachineConfig.SPEC);
         Content.register(bus);
+        bus.addListener(SetMachineSettingPayload::register);
     }
 }

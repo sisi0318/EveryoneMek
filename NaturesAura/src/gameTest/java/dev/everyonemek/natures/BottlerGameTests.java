@@ -33,10 +33,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(NaturesMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class BottlerGameTests {
-    private static void check(boolean value, String message) { if (!value) throw new AssertionError(message); }
+    private static void check(boolean value, String message) { if (!value) throw new net.minecraft.gametest.framework.GameTestAssertException(message); }
 
     private static AuraMachine machine(GameTestHelper h, int x) {
         BlockPos pos = new BlockPos(x, 1, 5);
+        h.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR);
         h.setBlock(pos, Content.MACHINES.get(MachineKind.AURA_BOTTLER).get());
         AuraMachine m = (AuraMachine) h.getBlockEntity(pos);
         m.energy().setEnergy(m.energy().getMaxEnergy());
@@ -53,11 +54,7 @@ public final class BottlerGameTests {
     }
 
     private static void environment(AuraMachine m, int target) {
-        int current = environment(m);
-        var chunk = IAuraChunk.getAuraChunk(m.getLevel(), m.getBlockPos());
-        if (current > target) chunk.drainAura(m.getBlockPos(), current - target, false, false);
-        else if (current < target) chunk.storeAura(m.getBlockPos(), target - current, false, false);
-        check(environment(m) == target, "Environment fixture did not reach " + target);
+        check(AuraTestEnvironment.set(m, BottlingRules.RANGE, target) == target, "Environment fixture did not reach " + target);
     }
 
     private static ItemStack output(AuraMachine m) { return m.getInventorySlots(null).get(1).getStack(); }
@@ -79,6 +76,7 @@ public final class BottlerGameTests {
             check(typed(output(m), NaturesAuraAPI.TYPE_OVERWORLD), "Native Overworld bottle has the wrong Aura type");
             check(environment(m) == 80_000 && m.auraTank().isEmpty(), "Boundary bottle did not charge exactly 20000 world Aura");
             check(m.status() == 7, "Next bottle should wait for the environmental threshold");
+            m.energy().setEnergy(0);
             h.succeed();
         });
     }
@@ -199,6 +197,7 @@ public final class BottlerGameTests {
         check(restored.hasSimulationModule() && restored.bottlingMode() == BottlingMode.DARKNESS, "Dropped bottler lost its module or selected product");
         check(restored.simulationModuleSlot().extractItem(1, Action.EXECUTE, AutomationType.MANUAL).getCount() == 1, "Module removal did not return one item");
         check(restored.energy().getEnergyPerTick() == normal, "Removing the module left the energy surcharge");
+        m.energy().setEnergy(0);
         h.succeed();
     }
 

@@ -3,6 +3,7 @@ package dev.everyonemek.natures.client;
 import dev.everyonemek.natures.AuraMachine;
 import dev.everyonemek.natures.MachineKind;
 import dev.everyonemek.natures.MachineMenu;
+import dev.everyonemek.natures.SetMachineSettingPayload;
 import java.util.List;
 import mekanism.client.gui.GuiConfigurableTile;
 import mekanism.client.gui.element.GuiInnerScreen;
@@ -14,11 +15,13 @@ import mekanism.client.gui.element.progress.ProgressType;
 import mekanism.client.gui.element.tab.GuiEnergyTab;
 import mekanism.client.gui.element.tab.window.GuiUpgradeWindowTab;
 import mekanism.client.gui.element.window.GuiWindow;
+import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.inventory.container.SelectedWindowData;
 import mekanism.common.util.text.TextUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class MachineScreen extends GuiConfigurableTile<AuraMachine, MachineMenu> {
     private GuiUpgradeWindowTab moduleUpgradeTab;
@@ -34,7 +37,7 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
     @Override
     protected void addGenericTabs() {
         super.addGenericTabs();
-        if (tile.kind() == MachineKind.FOREST_RITUAL || tile.kind() == MachineKind.AURA_BOTTLER) {
+        if (tile.kind() == MachineKind.FOREST_RITUAL || tile.kind() == MachineKind.AURA_BOTTLER || tile.kind().supportsRange()) {
             // Keep the native security/redstone tabs and swap only the upgrade-window factory.
             var original = children().stream().filter(GuiUpgradeWindowTab.class::isInstance).findFirst().orElseThrow();
             removeWidget(original);
@@ -43,7 +46,9 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
                 protected GuiWindow createWindow(SelectedWindowData data) {
                     return tile.kind() == MachineKind.FOREST_RITUAL
                           ? new ForestUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data)
-                          : new BottlerUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
+                          : tile.kind() == MachineKind.AURA_BOTTLER
+                                ? new BottlerUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data)
+                                : new RangeUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
                 }
             });
         }
@@ -65,6 +70,23 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
                       minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 0);
                       return true;
                   }));
+        } else if (tile.controller() != null) {
+            addRenderableWidget(new MekanismButton(this, 18, 22, 180, 16,
+                  Component.translatable(tile.controller().mode().translationKey()), (button, x, y) -> {
+                      minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 2);
+                      return true;
+                  }) {
+                @Override public void tick() {
+                    super.tick();
+                    setMessage(Component.translatable(tile.controller().mode().translationKey()));
+                }
+            });
+            addRenderableWidget(new GuiInnerScreen(this, 18, 40, 86, 15, () -> List.of(
+                  Component.translatable("gui.naturesmekanism.control_lower", TextUtils.format(tile.controller().lower())))));
+            addRenderableWidget(new GuiInnerScreen(this, 112, 40, 86, 15, () -> List.of(
+                  Component.translatable("gui.naturesmekanism.control_upper", TextUtils.format(tile.controller().upper())))));
+            addNumericSetting(18, 57, 86, SetMachineSettingPayload.CONTROL_LOWER);
+            addNumericSetting(112, 57, 86, SetMachineSettingPayload.CONTROL_UPPER);
         } else {
             ProgressType progressType = ProgressType.SMALL_RIGHT;
             // Center within the gap between the input frame and the 2x2 output frame.
@@ -92,6 +114,20 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
               () -> environment ? List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()),
                     Component.translatable("gui.naturesmekanism.environment_aura", tile.environmentRadius(), TextUtils.format(tile.environmentAura())))
                     : List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()))));
+    }
+
+    private GuiTextField addNumericSetting(int x, int y, int width, int setting) {
+        GuiTextField field = addRenderableWidget(new GuiTextField(this, x, y, width, 15));
+        field.setMaxLength(11);
+        field.setInputValidator(c -> c == '-' || c >= '0' && c <= '9');
+        field.configureDigitalBorderInput(() -> {
+            try {
+                int value = Math.clamp(Long.parseLong(field.getText()), Integer.MIN_VALUE, Integer.MAX_VALUE);
+                PacketDistributor.sendToServer(new SetMachineSettingPayload(menu.containerId, setting, value));
+                field.setText("");
+            } catch (NumberFormatException ignored) { }
+        });
+        return field;
     }
 
     @Override

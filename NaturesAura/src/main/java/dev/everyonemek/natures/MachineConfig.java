@@ -9,6 +9,7 @@ public final class MachineConfig {
     public static final ModConfigSpec.IntValue INFINITE_GOLD_POWER_MULTIPLIER;
     public static final ModConfigSpec.IntValue ALTAR_ENVIRONMENT_RADIUS;
     public static final ModConfigSpec.IntValue BOTTLER_FE, BOTTLER_TICKS, SIMULATION_POWER_MULTIPLIER;
+    public static final ModConfigSpec.IntValue CONTROLLER_FE, CONTROLLER_RATE, CONTROLLER_RADIUS;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -19,6 +20,9 @@ public final class MachineConfig {
         ALTAR_FE = b.defineInRange("altarFEPerTick", 100, 1, 1_000_000);
         OFFERING_FE = b.defineInRange("offeringFEPerTick", 200, 1, 1_000_000);
         BOTTLER_FE = b.defineInRange("bottlerFEPerTick", 100, 1, 1_000_000);
+        CONTROLLER_FE = b.defineInRange("controllerFEPerTick", 50, 1, 1_000_000);
+        CONTROLLER_RATE = b.defineInRange("controllerAuraPerTick", 1000, 1, 1_000_000);
+        CONTROLLER_RADIUS = b.defineInRange("controllerBaseRadius", 16, 1, 32);
         BOTTLER_TICKS = b.defineInRange("bottlerTicks", 40, 1, 12000);
         SIMULATION_POWER_MULTIPLIER = b.comment("Bottler total energy multiplier with one environment simulation module; Aura cost is unchanged.")
               .defineInRange("simulationPowerMultiplier", 2, 2, 100);
@@ -44,6 +48,7 @@ public final class MachineConfig {
             case NATURAL_ALTAR -> ALTAR_FE.get();
             case OFFERING -> OFFERING_FE.get();
             case AURA_BOTTLER -> BOTTLER_FE.get();
+            case AURA_CONTROLLER -> CONTROLLER_FE.get();
         };
     }
 

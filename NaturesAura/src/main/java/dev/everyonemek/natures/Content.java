@@ -20,6 +20,8 @@ import mekanism.common.util.UnitDisplayUtils.EnergyUnit;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
@@ -38,9 +40,13 @@ public final class Content {
           () -> new InfiniteGoldModuleItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
     public static final DeferredItem<SimulationModuleItem> SIMULATION_MODULE = ITEMS.register("environment_simulation_module",
           () -> new SimulationModuleItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
+    public static final DeferredItem<RangeModuleItem> RANGE_MODULE = ITEMS.register("range_module",
+          () -> new RangeModuleItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
     public static final DataComponentDeferredRegister COMPONENTS = new DataComponentDeferredRegister(NaturesMekanism.ID);
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> ENVIRONMENT_OUTPUT = COMPONENTS.registerBoolean("environment_output");
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Integer>> BOTTLING_MODE = COMPONENTS.registerInt("bottling_mode");
+    public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> CONTROL_SETTINGS = COMPONENTS.simple("control_settings",
+          builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final DeferredChemical<Chemical> AURA = CHEMICALS.register("aura", () -> new Chemical(ChemicalBuilder.builder().tint(0x89CC37)));
     public static final ContainerTypeRegistryObject<MachineMenu> MENU = MENUS.register("machine", AuraMachine.class, MachineMenu::new);
     public static final Map<MachineKind, BlockRegistryObject<MachineBlock, ItemBlockTooltip<MachineBlock>>> MACHINES = new EnumMap<>(MachineKind.class);
@@ -70,6 +76,11 @@ public final class Content {
                               (item, automation) -> automation != AutomationType.EXTERNAL,
                               (item, automation) -> automation != AutomationType.EXTERNAL,
                               item -> item.is(kind == MachineKind.FOREST_RITUAL ? INFINITE_GOLD_MODULE : SIMULATION_MODULE), true, 1));
+                    if (kind.supportsRange())
+                        slots.addSlot((containerType, stack, index) -> new ComponentBackedInventorySlot(stack, index,
+                              (item, automation) -> automation != AutomationType.EXTERNAL,
+                              (item, automation) -> automation != AutomationType.EXTERNAL,
+                              item -> item.is(RANGE_MODULE), true, RangeModuleSlot.LIMIT));
                     return slots.build();
                 });
                 if (kind.hasChemicalTank())
@@ -89,6 +100,7 @@ public final class Content {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind).asItem());
                   output.accept(INFINITE_GOLD_MODULE);
                   output.accept(SIMULATION_MODULE);
+                  output.accept(RANGE_MODULE);
               }).build());
     }
 

@@ -13,6 +13,7 @@ MACHINES = {
     "universal_natural_altar": ("通用自然祭坛", "Universal Natural Altar", "naturesaura:nature_altar"),
     "universal_offering": ("通用呼唤仪式", "Universal Offering Ritual", "naturesaura:offering_table"),
     "aura_bottler": ("灵气装瓶机", "Aura Bottler", "naturesaura:bottle_two_the_rebottling"),
+    "aura_controller": ("灵气调控器", "Aura Controller", "naturesaura:aura_detector"),
 }
 
 def write(path, value):
@@ -28,6 +29,7 @@ descriptions = [
     ("消耗原料、灵气和 FE 进行灌注；优先使用储罐灵气，不足时使用环境灵气。催化物不消耗。", "Infuses ingredients using Aura and FE. Uses stored Aura first, then environmental Aura. Catalysts are retained."),
     ("替换原版祭祀台，周围仍须保留完整花阵。一份呼唤物处理一批供品。", "Replaces the Offering Table and requires its flower arrangement. One calling item starts a batch."),
     ("用瓶与塞和 FE 装瓶。半径 30 格灵气至少 100,000 时，每瓶消耗 20,000 灵气并按维度产出；灵气不高于 -100,000 时产出真空瓶。储罐灵气优先。模拟环境模块可解除环境和维度门槛并选择产物。", "Fills Bottle and Cork using FE. Within 30 blocks, at least 100,000 Aura permits a dimension-specific bottle costing 20,000 Aura; at most -100,000 Aura permits vacuum bottles at no Aura cost. Stored Aura is used first. An Environment Simulation Module bypasses environmental and dimension requirements and allows product selection."),
+    ("设置环境灵气上下限，过量时回收至储罐，不足时释放储罐灵气。支持单向模式、红石和范围升级；达到目标后停止耗电。输入数值后回车或点击勾号应用。", "Balances environmental Aura between configurable lower and upper limits. Recovers excess Aura into its Chemical tank and releases stored Aura when below the lower limit. Supports one-way modes, redstone and range modules; consumes no FE while at target. Press Enter or click the checkmark to apply a number."),
 ]
 
 for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions):
@@ -55,10 +57,12 @@ for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), des
     components = ["mekanism:ejector", "mekanism:owner", "mekanism:redstone_control", "mekanism:security", "mekanism:side_config", "mekanism:upgrades", "mekanism:energy", "mekanism:items", "mekanism:chemicals", f"{ID}:environment_output"]
     if name == "aura_bottler":
         components.append(f"{ID}:bottling_mode")
+    if name == "aura_controller":
+        components.append(f"{ID}:control_settings")
     write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:{name}", "functions": [{"function": "minecraft:copy_name", "source": "block_entity"}, {"function": "minecraft:copy_components", "source": "block_entity", "include": components}]}]}]})
     write(f"data/{ID}/recipe/{name}.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ASA", "CKC", "ASA"], "key": {"A": {"item": "mekanism:alloy_infused"}, "S": {"tag": "c:ingots/steel"}, "C": {"item": "mekanism:basic_control_circuit"}, "K": {"item": core}}, "result": {"id": f"{ID}:{name}", "count": 1}})
 
-statuses = [("运行中", "Running"), ("红石控制：暂停", "Paused by redstone"), ("花阵不完整", "Flower arrangement incomplete"), ("输出空间不足", "Output full"), ("等待材料或催化物", "Waiting for ingredients or catalyst"), ("灵气不足", "Not enough Aura"), ("电力不足", "Not enough energy"), ("环境未达到装瓶条件", "Bottling environment unsuitable"), ("该目标需要模拟环境模块", "Target needs a simulation module")]
+statuses = [("运行中", "Running"), ("红石控制：暂停", "Paused by redstone"), ("花阵不完整", "Flower arrangement incomplete"), ("输出空间不足", "Output full"), ("等待材料或催化物", "Waiting for ingredients or catalyst"), ("灵气不足", "Not enough Aura"), ("电力不足", "Not enough energy"), ("环境未达到装瓶条件", "Bottling environment unsuitable"), ("该目标需要模拟环境模块", "Target needs a simulation module"), ("已在目标范围内", "Within target limits"), ("已停用", "Disabled"), ("目标区块未加载", "Target chunk not loaded"), ("正在回收环境灵气", "Recovering environmental Aura"), ("正在释放储罐灵气", "Releasing stored Aura")]
 for index, (cn, english) in enumerate(statuses):
     zh[f"gui.{ID}.status.{index}"] = cn
     en[f"gui.{ID}.status.{index}"] = english
@@ -87,6 +91,14 @@ for key, cn, english in [
     ("bottling_dimension.other", "其他对应维度", "Other matching dimensions"),
     ("bottling_dimension.any", "任意维度", "Any dimension"),
     ("bottling_simulation_hint", "可装模拟环境模块解除环境、维度门槛", "Simulation module can bypass these conditions"),
+    ("control_mode.balance", "自动平衡", "Automatic balance"),
+    ("control_mode.recover", "仅回收至上限", "Recover excess above upper limit"),
+    ("control_mode.release", "仅释放至下限", "Release up to lower limit"),
+    ("control_mode.hold", "停用调控", "Disable regulation"),
+    ("control_lower", "下限：%s", "Lower: %s"),
+    ("control_upper", "上限：%s", "Upper: %s"),
+    ("range_module_count", "范围升级：%s / 4", "Range Modules: %s / 4"),
+    ("range_module_power", "范围升级总功耗 ×%s", "Range energy multiplier: x%s"),
 ]:
     zh[f"gui.{ID}.{key}"] = cn
     en[f"gui.{ID}.{key}"] = english
@@ -102,6 +114,12 @@ zh[f"tooltip.{ID}.simulation_module"] = "解除装瓶机的维度和环境门槛
 en[f"tooltip.{ID}.simulation_module"] = "Bypasses bottling environment and dimension requirements. Select sunlight, ghosts, darkness or vacuum at increased energy use. Aura bottles still cost 20,000 Aura. Maximum: 1."
 zh[f"tooltip.{ID}.simulation_module.install"] = "放入装瓶机升级窗口的模块槽，或潜行右键装瓶机安装。点击主界面按钮选择产物。"
 en[f"tooltip.{ID}.simulation_module.install"] = "Insert into the bottler's upgrade-window module slot, or sneak-use on a bottler. Click the main-screen button to select the product."
+zh[f"item.{ID}.range_module"] = "范围升级模块"
+en[f"item.{ID}.range_module"] = "Range Module"
+zh[f"tooltip.{ID}.range_module"] = "扩大支持机器的工作范围，最多安装 4 个。每个模块额外增加一份基础总功耗。"
+en[f"tooltip.{ID}.range_module"] = "Extends supported machines' working range. Maximum: 4. Each module adds one extra full share of normal energy use."
+zh[f"tooltip.{ID}.range_module.install"] = "放入升级窗口的范围槽，或潜行右键安装。调控器每个模块增加 8 格半径。"
+en[f"tooltip.{ID}.range_module.install"] = "Insert into the upgrade-window range slot or sneak-use to install. Each module adds 8 blocks of controller radius."
 write(f"assets/{ID}/lang/zh_cn.json", zh)
 write(f"assets/{ID}/lang/en_us.json", en)
 write(f"assets/{ID}/models/item/infinite_gold_module.json", {
@@ -126,6 +144,16 @@ write(f"data/{ID}/recipe/environment_simulation_module.json", {
             "V": {"item": "naturesaura:vacuum_bottle"}, "A": {"item": "mekanism:alloy_reinforced"},
             "C": {"item": "mekanism:elite_control_circuit"}},
     "result": {"id": f"{ID}:environment_simulation_module", "count": 1},
+})
+write(f"assets/{ID}/models/item/range_module.json", {
+    "parent": "minecraft:item/generated",
+    "textures": {"layer0": "mekanism:item/upgrade_filter", "layer1": "minecraft:item/ender_pearl"},
+})
+write(f"data/{ID}/recipe/range_module.json", {
+    "type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["AEA", "ECE", "AEA"],
+    "key": {"A": {"item": "mekanism:alloy_reinforced"}, "E": {"item": "minecraft:ender_pearl"},
+            "C": {"item": "mekanism:advanced_control_circuit"}},
+    "result": {"id": f"{ID}:range_module", "count": 1},
 })
 write("data/minecraft/tags/block/mineable/pickaxe.json", {"replace": False, "values": [f"{ID}:{n}" for n in MACHINES]})
 write("data/minecraft/tags/block/needs_iron_tool.json", {"replace": False, "values": [f"{ID}:{n}" for n in MACHINES]})

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AEA",
+    "ECE",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "E": {
+      "item": "minecraft:ender_pearl"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    }
+  },
+  "result": {
+    "id": "naturesmekanism:range_module",
+    "count": 1
+  }
+}

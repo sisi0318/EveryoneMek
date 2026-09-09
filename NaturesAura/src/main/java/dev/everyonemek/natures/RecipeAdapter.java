@@ -26,7 +26,7 @@ public final class RecipeAdapter {
     public static boolean accepts(Level level, MachineKind kind, int slot, ItemStack stack) {
         if (level == null) return true;
         return switch (kind) {
-            case AURA_GENERATOR -> false;
+            case AURA_GENERATOR, AURA_CONTROLLER -> false;
             case AURA_BOTTLER -> stack.is(ModItems.BOTTLE_TWO_THE_REBOTTLING);
             case FOREST_RITUAL -> slot == 9 ? stack.is(ModBlocks.GOLD_POWDER.asItem())
                   : recipes(level, ModRecipes.TREE_RITUAL_TYPE).stream().anyMatch(h -> slot == 8

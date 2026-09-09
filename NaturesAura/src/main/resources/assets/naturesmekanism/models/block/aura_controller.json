@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "naturesmekanism:block/aura_controller/side",
+    "north": "naturesmekanism:block/aura_controller/front",
+    "up": "naturesmekanism:block/aura_controller/top",
+    "south": "naturesmekanism:block/aura_controller/side",
+    "east": "naturesmekanism:block/aura_controller/side",
+    "west": "naturesmekanism:block/aura_controller/side",
+    "down": "naturesmekanism:block/aura_controller/side"
+  }
+}

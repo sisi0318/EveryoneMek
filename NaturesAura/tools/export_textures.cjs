@@ -4,7 +4,7 @@ const path = require('node:path');
 const {createRequire} = require('node:module');
 const sharp = createRequire(path.resolve(__dirname, '../art/package.json'))('sharp');
 const root = path.resolve(__dirname, '..');
-const machines = ['universal_aura_generator', 'universal_forest_ritual', 'universal_natural_altar', 'universal_offering', 'aura_bottler'];
+const machines = ['universal_aura_generator', 'universal_forest_ritual', 'universal_natural_altar', 'universal_offering', 'aura_bottler', 'aura_controller'];
 const faces = {front: [0, 0], top: [1, 0], side: [0, 1], front_active: [1, 1]};
 
 async function pixelFace(machine, face, transform, shade) {
@@ -20,27 +20,31 @@ async function pixelFace(machine, face, transform, shade) {
 }
 
 async function renderPreview() {
-  const titles = ['通用灵气发生器', '通用森林仪式', '通用自然祭坛', '通用呼唤仪式', '灵气装瓶机'];
-  const subtitles = ['电力转化 · 绿色能量条', '树苗 · 金叶粉 · 八方原料', '灵气灌注 · 催化接口', '供品托盘 · 呼唤指示灯', '灌装喷嘴 · 玻璃瓶 · 模拟环境'];
+  const titles = ['通用灵气发生器', '通用森林仪式', '通用自然祭坛', '通用呼唤仪式', '灵气装瓶机', '灵气调控器'];
+  const subtitles = ['电力转化 · 绿色能量条', '树苗 · 金叶粉 · 八方原料', '灵气灌注 · 催化接口', '供品托盘 · 呼唤指示灯', '灌装喷嘴 · 玻璃瓶 · 模拟环境', '双向箭头 · 回收与释放'];
   const content = [];
+  const columns = machines.length > 5 ? 3 : machines.length;
+  const rows = Math.ceil(machines.length / columns);
   for (let i = 0; i < machines.length; i++) {
-    const x = 48 + i * 320;
+    const x = 48 + i % columns * 320;
+    const rowOffset = Math.floor(i / columns) * 380;
     const machine = machines[i];
-    content.push(`<g transform="translate(${x},170)">`);
+    content.push(`<g transform="translate(${x},${170 + rowOffset})">`);
     content.push(await pixelFace(machine, 'top', 'matrix(8,4,-8,4,128,-64)', 1.08));
     content.push(await pixelFace(machine, 'front_active', 'matrix(8,4,0,8,0,0)', 1));
     content.push(await pixelFace(machine, 'side', 'matrix(8,-4,0,8,128,64)', 0.78));
-    content.push(`</g><text x="${x + 128}" y="403" text-anchor="middle" font-size="22" font-weight="600">${titles[i]}</text>`);
-    content.push(`<text x="${x + 128}" y="434" text-anchor="middle" font-size="15" fill="#576359">${subtitles[i]}</text>`);
+    content.push(`</g><text x="${x + 128}" y="${403 + rowOffset}" text-anchor="middle" font-size="22" font-weight="600">${titles[i]}</text>`);
+    content.push(`<text x="${x + 128}" y="${434 + rowOffset}" text-anchor="middle" font-size="15" fill="#576359">${subtitles[i]}</text>`);
   }
-  const width = 96 + machines.length * 320;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="520" viewBox="0 0 ${width} 520">
-    <rect width="${width}" height="520" fill="#edf0eb"/>
+  const width = 96 + columns * 320;
+  const height = 520 + (rows - 1) * 380;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <rect width="${width}" height="${height}" fill="#edf0eb"/>
     <g font-family="Microsoft YaHei,Arial,sans-serif" fill="#24302b">
       <text x="48" y="46" font-size="25" font-weight="700">Nature's Mekanism</text>
       <text x="${width - 48}" y="44" text-anchor="end" font-size="17" fill="#576359">16×16 · 原版 Mek 像素风格</text>
       ${content.join('')}
-      <text x="${width / 2}" y="491" text-anchor="middle" font-size="15" fill="#576359">方块材质预览 · 运行状态</text>
+      <text x="${width / 2}" y="${height - 29}" text-anchor="middle" font-size="15" fill="#576359">方块材质预览 · 运行状态</text>
     </g></svg>`;
   await fs.writeFile(path.join(root, 'art/block-preview.svg'), svg);
   await sharp(Buffer.from(svg)).png().toFile(path.join(root, 'art/block-preview.png'));

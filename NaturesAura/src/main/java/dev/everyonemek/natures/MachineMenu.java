@@ -29,6 +29,27 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
               .map(slot -> (VirtualInventoryContainerSlot) slot).findFirst().orElseThrow();
     }
 
+    public VirtualInventoryContainerSlot getRangeModuleSlot() {
+        return slots.stream().filter(slot -> slot instanceof VirtualInventoryContainerSlot virtual
+                    && virtual.getInventorySlot() == tile.rangeModuleSlot())
+              .map(slot -> (VirtualInventoryContainerSlot) slot).findFirst().orElseThrow();
+    }
+
+    private boolean canConfigure(Player player) {
+        return stillValid(player) && IBlockSecurityUtils.INSTANCE.canAccess(player, player.level(), tile.getBlockPos(), tile);
+    }
+
+    public boolean applySetting(Player player, int setting, int value) {
+        if (player.level().isClientSide || !canConfigure(player)) return false;
+        if (tile.controller() != null) {
+            if (setting == SetMachineSettingPayload.CONTROL_LOWER) tile.controller().setLower(value);
+            else if (setting == SetMachineSettingPayload.CONTROL_UPPER) tile.controller().setUpper(value);
+            else return false;
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean stillValid(Player player) {
         return super.stillValid(player) && player.distanceToSqr(tile.getBlockPos().getX() + 0.5,
@@ -37,13 +58,17 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
 
     @Override
     public boolean clickMenuButton(Player player, int id) {
-        if (!stillValid(player) || !IBlockSecurityUtils.INSTANCE.canAccess(player, player.level(), tile.getBlockPos(), tile)) return false;
+        if (!canConfigure(player)) return false;
         if (id == 0 && tile.kind() == MachineKind.AURA_GENERATOR) {
             if (!player.level().isClientSide) tile.toggleEnvironmentOutput();
             return true;
         }
         if (id == 1 && tile.kind() == MachineKind.AURA_BOTTLER) {
             if (!player.level().isClientSide) tile.cycleBottlingMode();
+            return true;
+        }
+        if (id == 2 && tile.controller() != null) {
+            if (!player.level().isClientSide) tile.controller().cycleMode();
             return true;
         }
         return false;

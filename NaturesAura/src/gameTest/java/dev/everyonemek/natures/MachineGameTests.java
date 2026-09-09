@@ -36,20 +36,23 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class MachineGameTests {
     private static AuraMachine machine(GameTestHelper h, MachineKind kind, BlockPos pos) {
+        h.setBlock(pos, Blocks.AIR);
         h.setBlock(pos, Content.MACHINES.get(kind).get());
         AuraMachine machine = (AuraMachine) h.getBlockEntity(pos);
         machine.energy().setEnergy(machine.energy().getMaxEnergy());
+        // Metadata-only controller fixtures must not keep changing neighbouring environment tests.
+        if (machine.controller() != null) while (machine.controller().mode() != AuraControllerLogic.Mode.HOLD) machine.controller().cycleMode();
         return machine;
     }
 
     private static void check(boolean value, String message) {
-        if (!value) throw new AssertionError(message);
+        if (!value) throw new net.minecraft.gametest.framework.GameTestAssertException(message);
     }
 
     @GameTest(template = "empty", timeoutTicks = 20)
     public static void droppedMachinesSupportInventoryTooltipAndContainerReaders(GameTestHelper h) {
         for (MachineKind kind : MachineKind.values()) {
-            AuraMachine m = machine(h, kind, new BlockPos(2 + kind.ordinal() * 2, 1, 2));
+            AuraMachine m = machine(h, kind, new BlockPos(2 + kind.ordinal() % 4 * 2, 1, 2 + kind.ordinal() / 4 * 3));
             var slots = m.getInventorySlots(null);
             for (int i = 0; i < kind.inputCount(); i++) {
                 ItemStack ingredient = switch (kind) {
@@ -69,6 +72,7 @@ public final class MachineGameTests {
             slots.get(energySlot).setStack(new ItemStack(MekanismItems.ENERGY_TABLET.get()));
             if (m.goldModuleSlot() != null) m.goldModuleSlot().setStack(new ItemStack(Content.INFINITE_GOLD_MODULE.get()));
             if (m.simulationModuleSlot() != null) m.simulationModuleSlot().setStack(new ItemStack(Content.SIMULATION_MODULE.get()));
+            if (m.rangeModuleSlot() != null) m.rangeModuleSlot().setStack(new ItemStack(Content.RANGE_MODULE.get(), 2));
             if (m.auraTank() != null) m.auraTank().setStack(new ChemicalStack(Content.AURA, 1234));
             var expected = slots.stream().map(s -> s.getStack().copy()).toList();
             ItemStack drop = Block.getDrops(m.getBlockState(), h.getLevel(), m.getBlockPos(), m, null,
@@ -94,6 +98,7 @@ public final class MachineGameTests {
             ItemStack empty = new ItemStack(Content.MACHINES.get(kind));
             empty.set(MekanismDataComponents.ATTACHED_ITEMS, AttachedItems.create(expected.size()));
             check(YesNo.hasInventory(empty) == YesNo.NO_COLORED, kind + ": empty saved inventory tooltip failed");
+            m.energy().setEnergy(0);
         }
         h.succeed();
     }
@@ -220,6 +225,7 @@ public final class MachineGameTests {
             int after = IAuraChunk.getAuraInArea(h.getLevel(), generator.getBlockPos(), 16);
             check(after > before, "Environment release did not modify NaturesAura's actual chunk storage");
             check(generator.auraTank().getStored() < 10_000, "Environment release duplicated the tank's Aura");
+            generator.toggleEnvironmentOutput();
             h.succeed();
         });
     }
@@ -280,6 +286,8 @@ public final class MachineGameTests {
         check(drop.has(MekanismDataComponents.ATTACHED_CHEMICALS), "Drop lost chemical storage");
         check(drop.has(MekanismDataComponents.ATTACHED_ENERGY), "Drop lost stored energy");
         check(Boolean.TRUE.equals(drop.get(Content.ENVIRONMENT_OUTPUT)), "Drop lost environment output mode");
+        m.toggleEnvironmentOutput();
+        m.energy().setEnergy(0);
         h.succeed();
     }
 
@@ -410,17 +418,13 @@ public final class MachineGameTests {
                     check(translations.has(key) && !translations.get(key).getAsString().equals(key), "Untranslated menu title: " + language + ":" + key);
                 }
             }
+            m.energy().setEnergy(0);
         }
         h.succeed();
     }
 
     private static int setEnvironmentAura(GameTestHelper h, AuraMachine machine, int target) {
-        int radius = MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get();
-        int current = IAuraChunk.getAuraInArea(h.getLevel(), machine.getBlockPos(), radius);
-        IAuraChunk chunk = IAuraChunk.getAuraChunk(h.getLevel(), machine.getBlockPos());
-        if (current < target) chunk.storeAura(machine.getBlockPos(), target - current, false, false);
-        else if (current > target) chunk.drainAura(machine.getBlockPos(), current - target, false, false);
-        return IAuraChunk.getAuraInArea(h.getLevel(), machine.getBlockPos(), radius);
+        return AuraTestEnvironment.set(machine, MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get(), target);
     }
 
     @GameTest(template = "empty", batch = "environment_only", timeoutTicks = 130)
@@ -447,12 +451,16 @@ public final class MachineGameTests {
         m.inputs.getFirst().setStack(new ItemStack(Items.IRON_INGOT));
         h.runAfterDelay(10, () -> {
             check(m.auraTank().getStored() < 5_000 && m.auraTank().getStored() > 0, "Tank was not used first");
-            check(IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get()) == before, "Environment was drained while tank Aura was sufficient");
+            int current = IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get());
+            check(current == before, "Environment changed while tank Aura was sufficient: " + before + " -> " + current);
         });
         h.runAfterDelay(100, () -> {
             check(m.inputs.getFirst().isEmpty() && m.auraTank().isEmpty(), "Mixed-source recipe did not finish");
             int after = IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get());
-            check(before - after == 10_000, "Mixed sources double-charged or created Aura");
+            var spots = new java.util.ArrayList<String>();
+            IAuraChunk.getSpotsInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get(),
+                  (pos, amount) -> spots.add(pos.toShortString() + "=" + amount));
+            check(before - after == 10_000, "Mixed Aura cost changed: " + before + " -> " + after + "; machine=" + m.getBlockPos().toShortString() + "; spots=" + spots);
             h.succeed();
         });
     }

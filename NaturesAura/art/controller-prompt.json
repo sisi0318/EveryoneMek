@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "source/universal_aura_generator.png",
+  "output": "source/aura_controller.png",
+  "prompt": "Create an ORIGINAL Minecraft Mekanism AURA CONTROLLER block texture atlas, using the attached atlas as the strict gray industrial STYLE reference. Exact equal 2x2 quadrants, no margins, no text: top left idle front, top right top, bottom left side/back/bottom, bottom right active front. Every quadrant should consist of only 16x16 large solid-colored pixel cells, like genuine low resolution Minecraft machine textures. At least 85 percent neutral charcoal and gray, 4-8 gray tones, the same recessed square machine interface and casing as the reference family. Front feature: two tiny opposing simple pixel arrows in a dark chamber, muted green upward arrow on left and muted blue downward arrow on right, indicating balancing and recovery. A small gray horizontal divider and two indicator pixels; no complex gauges. Top is a simple gray service hatch with two tiny green/blue status pixels. Side is a plain gray inset plate with a black horizontal vent. Active front preserves idle geometry exactly, brightening only those green and blue arrow pixels. No fancy magic motifs, wood, gold or bronze trim, gemstones, crystals, bloom, gradients, fine detail, lettering or 3D perspective. Flat opaque game texture sheet."
+}

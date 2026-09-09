@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/aura_controller",
+  "textures": {
+    "north": "naturesmekanism:block/aura_controller/front_active"
+  }
+}
