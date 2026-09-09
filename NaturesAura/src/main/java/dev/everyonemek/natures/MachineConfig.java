@@ -11,6 +11,7 @@ public final class MachineConfig {
     public static final ModConfigSpec.IntValue BOTTLER_FE, BOTTLER_TICKS, SIMULATION_POWER_MULTIPLIER;
     public static final ModConfigSpec.IntValue CONTROLLER_FE, CONTROLLER_RATE, CONTROLLER_RADIUS;
     public static final ModConfigSpec.IntValue SPAWNER_FE;
+    public static final ModConfigSpec.IntValue BREEDER_FE, BREEDER_TICKS;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -23,6 +24,8 @@ public final class MachineConfig {
         BOTTLER_FE = b.defineInRange("bottlerFEPerTick", 100, 1, 1_000_000);
         CONTROLLER_FE = b.defineInRange("controllerFEPerTick", 50, 1, 1_000_000);
         SPAWNER_FE = b.defineInRange("spawnerFEPerTick", 200, 1, 1_000_000);
+        BREEDER_FE = b.defineInRange("breederFEPerTick", 200, 1, 1_000_000);
+        BREEDER_TICKS = b.defineInRange("breederTicks", 100, 1, 12000);
         CONTROLLER_RATE = b.defineInRange("controllerAuraPerTick", 1000, 1, 1_000_000);
         CONTROLLER_RADIUS = b.defineInRange("controllerBaseRadius", 16, 1, 32);
         BOTTLER_TICKS = b.defineInRange("bottlerTicks", 40, 1, 12000);
@@ -52,6 +55,7 @@ public final class MachineConfig {
             case AURA_BOTTLER -> BOTTLER_FE.get();
             case AURA_CONTROLLER -> CONTROLLER_FE.get();
             case ANIMAL_SPAWNER -> SPAWNER_FE.get();
+            case INDUSTRIAL_BREEDER -> BREEDER_FE.get();
         };
     }
 

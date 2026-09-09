@@ -1,0 +1,6 @@
+{
+  "tool": "image_gen",
+  "reference": "source/universal_aura_generator.png",
+  "prompt": "Create an ORIGINAL Minecraft Mekanism INDUSTRIAL ANIMAL BREEDER block texture atlas. The attached image is a strict style reference for gray industrial casing and layout only. Exact equal 2x2 grid without margins or labels: top left idle front; top right top face; bottom left side/back/bottom; bottom right active front. Each quadrant must have the visual simplicity of only 16x16 large solid-colored pixel cells. At least 85 percent charcoal and neutral gray, coarse Minecraft pixels and a plain recessed industrial square feeding interface. The front shows a small abstract 3x2 muted-brown feed tray and two small pale-gray square animal-face indicators side by side above it, with tiny muted pink status pixels between them. Keep it mechanical and minimal, no literal farm scenery. Top: plain gray inset hatch with a small muted-brown feed inlet. Side: gray inset service panel with a dark horizontal vent. Active front has exactly the same geometry, with only the pink status pixels becoming bright and one pale face highlight. No fantasy ornament, flowers, wood boards, gold trim, crystals, gems, bloom, gradients, fine pixel noise, lettering, perspective or 3D block render. Flat opaque texture atlas.",
+  "output": "source/industrial_breeder.png"
+}

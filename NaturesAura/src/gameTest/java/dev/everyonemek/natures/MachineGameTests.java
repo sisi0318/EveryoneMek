@@ -61,6 +61,7 @@ public final class MachineGameTests {
                     case OFFERING -> new ItemStack(i == 0 ? ModItems.INFUSED_IRON : ModItems.CALLING_SPIRIT, i + 1);
                     case AURA_BOTTLER -> new ItemStack(ModItems.BOTTLE_TWO_THE_REBOTTLING, 3);
                     case ANIMAL_SPAWNER -> new ItemStack(ModItems.BIRTH_SPIRIT, i + 1);
+                    case INDUSTRIAL_BREEDER -> new ItemStack(Items.WHEAT, i + 1);
                     default -> ItemStack.EMPTY;
                 };
                 slots.get(i).setStack(ingredient);

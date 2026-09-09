@@ -92,6 +92,19 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
             addRenderableWidget(new GuiInnerScreen(this, 106, 24, 92, 48, () -> List.of(
                   tile.spawner().target() == null ? Component.translatable("gui.naturesmekanism.no_target") : tile.spawner().target().getDescription(),
                   Component.translatable("gui.naturesmekanism.area_count", tile.spawner().nearby(), tile.area().cap()))));
+        } else if (tile.breeder() != null) {
+            addRenderableWidget(new MekanismButton(this, 78, 22, 74, 16,
+                  Component.translatable(tile.breeder().modeKey()), (button, x, y) -> {
+                      minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 3);
+                      return true;
+                  }) {
+                @Override public void tick() {
+                    super.tick(); setMessage(Component.translatable(tile.breeder().modeKey()));
+                }
+            });
+            addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 107, 49));
+            addRenderableWidget(new GuiInnerScreen(this, 78, 74, 120, 15, () -> List.of(
+                  Component.translatable("gui.naturesmekanism.area_count", tile.breeder().nearby(), tile.area().cap()))));
         } else {
             ProgressType progressType = ProgressType.SMALL_RIGHT;
             // Center within the gap between the input frame and the 2x2 output frame.

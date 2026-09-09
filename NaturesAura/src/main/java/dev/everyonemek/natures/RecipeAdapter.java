@@ -28,6 +28,8 @@ public final class RecipeAdapter {
         return switch (kind) {
             case AURA_GENERATOR, AURA_CONTROLLER -> false;
             case AURA_BOTTLER -> stack.is(ModItems.BOTTLE_TWO_THE_REBOTTLING);
+            // Modded animals define their own food predicates; validate against the selected parents at runtime.
+            case INDUSTRIAL_BREEDER -> true;
             case ANIMAL_SPAWNER -> recipes(level, ModRecipes.ANIMAL_SPAWNER_TYPE).stream()
                   .anyMatch(h -> h.value().ingredients.stream().anyMatch(i -> i.test(stack)));
             case FOREST_RITUAL -> slot == 9 ? stack.is(ModBlocks.GOLD_POWDER.asItem())

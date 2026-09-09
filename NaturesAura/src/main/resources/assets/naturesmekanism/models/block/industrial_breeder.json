@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "naturesmekanism:block/industrial_breeder/side",
+    "north": "naturesmekanism:block/industrial_breeder/front",
+    "up": "naturesmekanism:block/industrial_breeder/top",
+    "south": "naturesmekanism:block/industrial_breeder/side",
+    "east": "naturesmekanism:block/industrial_breeder/side",
+    "west": "naturesmekanism:block/industrial_breeder/side",
+    "down": "naturesmekanism:block/industrial_breeder/side"
+  }
+}

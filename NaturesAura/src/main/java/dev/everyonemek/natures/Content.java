@@ -45,6 +45,7 @@ public final class Content {
     public static final DataComponentDeferredRegister COMPONENTS = new DataComponentDeferredRegister(NaturesMekanism.ID);
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> ENVIRONMENT_OUTPUT = COMPONENTS.registerBoolean("environment_output");
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Integer>> BOTTLING_MODE = COMPONENTS.registerInt("bottling_mode");
+    public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> BREED_ONLY = COMPONENTS.registerBoolean("breed_only");
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> CONTROL_SETTINGS = COMPONENTS.simple("control_settings",
           builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> AREA_SETTINGS = COMPONENTS.simple("area_settings",

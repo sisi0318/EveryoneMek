@@ -72,6 +72,10 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
             if (!player.level().isClientSide) tile.controller().cycleMode();
             return true;
         }
+        if (id == 3 && tile.breeder() != null) {
+            if (!player.level().isClientSide) tile.breeder().setBreedOnly(!tile.breeder().breedOnly());
+            return true;
+        }
         return false;
     }
 }

@@ -9,17 +9,18 @@ public enum MachineKind implements ILangEntry {
     OFFERING("universal_offering"),
     AURA_BOTTLER("aura_bottler"),
     AURA_CONTROLLER("aura_controller"),
-    ANIMAL_SPAWNER("universal_animal_spawner");
+    ANIMAL_SPAWNER("universal_animal_spawner"),
+    INDUSTRIAL_BREEDER("industrial_breeder");
 
     public final String id;
 
     MachineKind(String id) { this.id = id; }
 
-    public int inputCount() { return this == ANIMAL_SPAWNER ? 9 : this == FOREST_RITUAL ? 10 : this == AURA_GENERATOR || this == AURA_CONTROLLER ? 0 : this == AURA_BOTTLER ? 1 : 2; }
+    public int inputCount() { return hasWorkArea() ? 9 : this == FOREST_RITUAL ? 10 : this == AURA_GENERATOR || this == AURA_CONTROLLER ? 0 : this == AURA_BOTTLER ? 1 : 2; }
     public int outputCount() { return inputCount() == 0 || this == ANIMAL_SPAWNER ? 0 : 4; }
-    public boolean hasWorkArea() { return this == ANIMAL_SPAWNER; }
-    public boolean hasChemicalTank() { return this == AURA_GENERATOR || usesEnvironmentAura(); }
-    public boolean usesEnvironmentAura() { return this == NATURAL_ALTAR || this == AURA_BOTTLER || this == AURA_CONTROLLER || this == ANIMAL_SPAWNER; }
+    public boolean hasWorkArea() { return this == ANIMAL_SPAWNER || this == INDUSTRIAL_BREEDER; }
+    public boolean hasChemicalTank() { return this == AURA_GENERATOR || usesEnvironmentAura() && this != INDUSTRIAL_BREEDER; }
+    public boolean usesEnvironmentAura() { return this == NATURAL_ALTAR || this == AURA_BOTTLER || this == AURA_CONTROLLER || hasWorkArea(); }
     public boolean supportsRange() { return this == AURA_CONTROLLER || hasWorkArea(); }
     public boolean outputsChemical() { return this == AURA_GENERATOR || this == AURA_CONTROLLER; }
 

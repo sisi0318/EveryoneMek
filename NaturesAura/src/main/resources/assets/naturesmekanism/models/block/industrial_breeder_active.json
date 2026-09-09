@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/industrial_breeder",
+  "textures": {
+    "north": "naturesmekanism:block/industrial_breeder/front_active"
+  }
+}

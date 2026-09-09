@@ -15,6 +15,7 @@ MACHINES = {
     "aura_bottler": ("灵气装瓶机", "Aura Bottler", "naturesaura:bottle_two_the_rebottling"),
     "aura_controller": ("灵气调控器", "Aura Controller", "naturesaura:aura_detector"),
     "universal_animal_spawner": ("通用降生祭坛", "Universal Animal Spawner", "naturesaura:animal_spawner"),
+    "industrial_breeder": ("工业养殖机", "Industrial Breeder", "naturesaura:birth_spirit"),
 }
 
 def write(path, value):
@@ -32,9 +33,10 @@ descriptions = [
     ("用瓶与塞和 FE 装瓶。半径 30 格灵气至少 100,000 时，每瓶消耗 20,000 灵气并按维度产出；灵气不高于 -100,000 时产出真空瓶。储罐灵气优先。模拟环境模块可解除环境和维度门槛并选择产物。", "Fills Bottle and Cork using FE. Within 30 blocks, at least 100,000 Aura permits a dimension-specific bottle costing 20,000 Aura; at most -100,000 Aura permits vacuum bottles at no Aura cost. Stored Aura is used first. An Environment Simulation Module bypasses environmental and dimension requirements and allows product selection."),
     ("设置环境灵气上下限，过量时回收至储罐，不足时释放储罐灵气。支持单向模式、红石和范围升级；达到目标后停止耗电。输入数值后回车或点击勾号应用。", "Balances environmental Aura between configurable lower and upper limits. Recovers excess Aura into its Chemical tank and releases stored Aura when below the lower limit. Supports one-way modes, redstone and range modules; consumes no FE while at target. Press Enter or click the checkmark to apply a number."),
     ("读取自然灵气的降生配方，消耗原料、FE 和灵气生成生物。可设置世界坐标轴 X/Y/Z 偏移、水平半径和区域数量上限；每个范围模块增加 2 格最大半径。陆生生物需要地面，水生生物需要水。储罐优先，不足从半径 35 格环境补足。生成成功后才扣原料和灵气。", "Spawns entities from Nature's Aura recipes using ingredients, FE and Aura. Configure world-axis X/Y/Z offsets, horizontal radius and area population limit. Each Range Module adds 2 blocks of maximum radius. Land creatures need a floor and aquatic creatures need water. Uses stored Aura first, then environmental Aura within 35 blocks. Ingredients and Aura are consumed only after successful spawning."),
+    ("用 FE 和两份食物配对繁殖成年动物，保留繁殖冷却。降生之灵模式要求动物周围 30 格至少 120 万灵气，由自然灵气原版事件产出并自动收集；普通繁殖模式允许低灵气和海龟、青蛙怀卵。动物间需小于 3 格且无遮挡。支持区域与数量上限。", "Breeds adult animals using FE and two food items, preserving cooldowns. Birth Spirits mode requires at least 1.2M Aura within 30 blocks of the parent; the native Nature's Aura event produces spirits for automatic collection. Breeding mode allows low Aura and turtle/frog pregnancy. Parents must be less than 3 blocks apart with line of sight. Supports work area and population limits."),
 ]
 
-for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions):
+for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions, strict=True):
     zh[f"block.{ID}.{name}"] = cn
     en[f"block.{ID}.{name}"] = english
     zh[f"container.{ID}.{name}"] = cn
@@ -61,8 +63,10 @@ for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), des
         components.append(f"{ID}:bottling_mode")
     if name == "aura_controller":
         components.append(f"{ID}:control_settings")
-    if name == "universal_animal_spawner":
+    if name in ("universal_animal_spawner", "industrial_breeder"):
         components.append(f"{ID}:area_settings")
+    if name == "industrial_breeder":
+        components.append(f"{ID}:breed_only")
     write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:{name}", "functions": [{"function": "minecraft:copy_name", "source": "block_entity"}, {"function": "minecraft:copy_components", "source": "block_entity", "include": components}]}]}]})
     write(f"data/{ID}/recipe/{name}.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ASA", "CKC", "ASA"], "key": {"A": {"item": "mekanism:alloy_infused"}, "S": {"tag": "c:ingots/steel"}, "C": {"item": "mekanism:basic_control_circuit"}, "K": {"item": core}}, "result": {"id": f"{ID}:{name}", "count": 1}})
 
@@ -74,6 +78,11 @@ for index, (cn, english) in enumerate([("区域生物数量已达上限", "Area 
     zh[f"gui.{ID}.status.{index}"] = cn
     en[f"gui.{ID}.status.{index}"] = english
 for key, cn, english in [
+    ("breeder_mode.spirit", "降生之灵", "Birth Spirits"),
+    ("breeder_mode.breed", "普通繁殖", "Breeding"),
+    ("status.17", "等待成年配对动物及食物", "Waiting for adult pair and food"),
+    ("status.18", "等待配对、食物及 120 万环境灵气", "Needs pair, food and 1.2M nearby Aura"),
+    ("status.19", "正在收集降生之灵", "Collecting birth spirits"),
     ("no_target", "等待配方", "Waiting for recipe"),
     ("area_count", "数量：%s / %s", "Count: %s / %s"),
     ("area_offset", "偏移 X: %s · Y: %s · Z: %s", "Offset X: %s / Y: %s / Z: %s"),
