@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ASA",
+    "CKC",
+    "ASA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_infused"
+    },
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "K": {
+      "item": "naturesaura:animal_spawner"
+    }
+  },
+  "result": {
+    "id": "naturesmekanism:universal_animal_spawner",
+    "count": 1
+  }
+}

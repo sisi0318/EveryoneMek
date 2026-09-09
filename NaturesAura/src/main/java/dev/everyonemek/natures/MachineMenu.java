@@ -15,7 +15,7 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
     protected int getInventoryXOffset() { return 38; }
 
     @Override
-    protected int getInventoryYOffset() { return 136; }
+    protected int getInventoryYOffset() { return tile.kind().hasWorkArea() ? 206 : 136; }
 
     public VirtualInventoryContainerSlot getGoldModuleSlot() {
         return slots.stream().filter(slot -> slot instanceof VirtualInventoryContainerSlot virtual
@@ -41,6 +41,7 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
 
     public boolean applySetting(Player player, int setting, int value) {
         if (player.level().isClientSide || !canConfigure(player)) return false;
+        if (tile.area() != null) return tile.area().set(setting, value);
         if (tile.controller() != null) {
             if (setting == SetMachineSettingPayload.CONTROL_LOWER) tile.controller().setLower(value);
             else if (setting == SetMachineSettingPayload.CONTROL_UPPER) tile.controller().setUpper(value);

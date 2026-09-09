@@ -60,14 +60,15 @@ public final class MachineGameTests {
                     case NATURAL_ALTAR -> new ItemStack(i == 0 ? Items.BONE : ModBlocks.CRUSHING_CATALYST, i + 1);
                     case OFFERING -> new ItemStack(i == 0 ? ModItems.INFUSED_IRON : ModItems.CALLING_SPIRIT, i + 1);
                     case AURA_BOTTLER -> new ItemStack(ModItems.BOTTLE_TWO_THE_REBOTTLING, 3);
+                    case ANIMAL_SPAWNER -> new ItemStack(ModItems.BIRTH_SPIRIT, i + 1);
                     default -> ItemStack.EMPTY;
                 };
                 slots.get(i).setStack(ingredient);
             }
             int energySlot = kind.inputCount();
-            if (kind.inputCount() > 0) {
-                for (int i = 0; i < 4; i++) slots.get(kind.inputCount() + i).setStack(new ItemStack(Items.COBBLESTONE, i + 1));
-                energySlot += 4;
+            if (kind.outputCount() > 0) {
+                for (int i = 0; i < kind.outputCount(); i++) slots.get(kind.inputCount() + i).setStack(new ItemStack(Items.COBBLESTONE, i + 1));
+                energySlot += kind.outputCount();
             }
             slots.get(energySlot).setStack(new ItemStack(MekanismItems.ENERGY_TABLET.get()));
             if (m.goldModuleSlot() != null) m.goldModuleSlot().setStack(new ItemStack(Content.INFINITE_GOLD_MODULE.get()));

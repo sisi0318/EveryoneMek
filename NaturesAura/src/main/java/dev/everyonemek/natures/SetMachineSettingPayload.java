@@ -10,6 +10,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 /** Numeric settings are accepted only for the sender's currently open, accessible machine menu. */
 public record SetMachineSettingPayload(int containerId, int setting, int value) implements CustomPacketPayload {
     public static final int CONTROL_LOWER = 0, CONTROL_UPPER = 1;
+    public static final int AREA_X = 10, AREA_Y = 11, AREA_Z = 12, AREA_RADIUS = 13, AREA_CAP = 14;
     public static final Type<SetMachineSettingPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(NaturesMekanism.ID, "machine_setting"));
     public static final StreamCodec<ByteBuf, SetMachineSettingPayload> STREAM_CODEC = StreamCodec.composite(
           ByteBufCodecs.VAR_INT, SetMachineSettingPayload::containerId,

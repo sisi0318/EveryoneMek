@@ -29,6 +29,7 @@ public final class JeiIntegration implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.NATURAL_ALTAR).asItem()), JEINaturesAuraPlugin.ALTAR);
         registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.OFFERING).asItem()), JEINaturesAuraPlugin.OFFERING);
         registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.AURA_BOTTLER)), BottlingJeiCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(Content.MACHINES.get(MachineKind.ANIMAL_SPAWNER)), JEINaturesAuraPlugin.SPAWNER);
     }
 
     @Override

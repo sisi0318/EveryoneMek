@@ -28,9 +28,9 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
     public MachineScreen(MachineMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         imageWidth = 238;
-        imageHeight = 220;
+        imageHeight = tile.kind().hasWorkArea() ? 290 : 220;
         inventoryLabelX = 38;
-        inventoryLabelY = 124;
+        inventoryLabelY = tile.kind().hasWorkArea() ? 194 : 124;
         dynamicSlots = true;
     }
 
@@ -87,6 +87,11 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
                   Component.translatable("gui.naturesmekanism.control_upper", TextUtils.format(tile.controller().upper())))));
             addNumericSetting(18, 57, 86, SetMachineSettingPayload.CONTROL_LOWER);
             addNumericSetting(112, 57, 86, SetMachineSettingPayload.CONTROL_UPPER);
+        } else if (tile.spawner() != null) {
+            addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 78, 45));
+            addRenderableWidget(new GuiInnerScreen(this, 106, 24, 92, 48, () -> List.of(
+                  tile.spawner().target() == null ? Component.translatable("gui.naturesmekanism.no_target") : tile.spawner().target().getDescription(),
+                  Component.translatable("gui.naturesmekanism.area_count", tile.spawner().nearby(), tile.area().cap()))));
         } else {
             ProgressType progressType = ProgressType.SMALL_RIGHT;
             // Center within the gap between the input frame and the 2x2 output frame.
@@ -114,6 +119,19 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
               () -> environment ? List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()),
                     Component.translatable("gui.naturesmekanism.environment_aura", tile.environmentRadius(), TextUtils.format(tile.environmentAura())))
                     : List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()))));
+        if (tile.area() != null) {
+            addRenderableWidget(new GuiInnerScreen(this, 18, 126, 180, 15, () -> List.of(
+                  Component.translatable("gui.naturesmekanism.area_offset", tile.area().x(), tile.area().y(), tile.area().z()))));
+            addNumericSetting(18, 143, 56, SetMachineSettingPayload.AREA_X);
+            addNumericSetting(80, 143, 56, SetMachineSettingPayload.AREA_Y);
+            addNumericSetting(142, 143, 56, SetMachineSettingPayload.AREA_Z);
+            addRenderableWidget(new GuiInnerScreen(this, 18, 160, 86, 15, () -> List.of(
+                  Component.translatable("gui.naturesmekanism.area_radius", tile.area().radius(), tile.area().maxRadius()))));
+            addRenderableWidget(new GuiInnerScreen(this, 112, 160, 86, 15, () -> List.of(
+                  Component.translatable("gui.naturesmekanism.area_cap", tile.area().cap()))));
+            addNumericSetting(18, 177, 86, SetMachineSettingPayload.AREA_RADIUS);
+            addNumericSetting(112, 177, 86, SetMachineSettingPayload.AREA_CAP);
+        }
     }
 
     private GuiTextField addNumericSetting(int x, int y, int width, int setting) {

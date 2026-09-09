@@ -5,6 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IngredientAssignmentTest {
     @Test
+    void countedOverlappingIngredientsReassignWithoutReusingItems() {
+        boolean[][] accepts = {{true, true}, {true, false}};
+        assertArrayEquals(new int[]{64, 64}, IngredientAssignment.matchQuantities(accepts, new int[]{64, 64}, new int[]{64, 64}));
+        assertNull(IngredientAssignment.matchQuantities(accepts, new int[]{63, 65}, new int[]{64, 64}));
+        assertArrayEquals(new int[]{3, 4}, IngredientAssignment.matchQuantities(new boolean[][]{{true, true}}, new int[]{3, 8}, new int[]{7}));
+    }
+    @Test
     void overlappingTagsDoNotStealTheOnlyExactIngredient() {
         assertArrayEquals(new int[]{1, 1}, IngredientAssignment.match(new boolean[][]{{true, true}, {true, false}}, new int[]{1, 1}));
     }

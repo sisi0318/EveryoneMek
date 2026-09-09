@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/universal_animal_spawner",
+  "textures": {
+    "north": "naturesmekanism:block/universal_animal_spawner/front_active"
+  }
+}

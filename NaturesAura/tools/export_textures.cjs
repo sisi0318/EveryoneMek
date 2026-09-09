@@ -4,7 +4,7 @@ const path = require('node:path');
 const {createRequire} = require('node:module');
 const sharp = createRequire(path.resolve(__dirname, '../art/package.json'))('sharp');
 const root = path.resolve(__dirname, '..');
-const machines = ['universal_aura_generator', 'universal_forest_ritual', 'universal_natural_altar', 'universal_offering', 'aura_bottler', 'aura_controller'];
+const machines = ['universal_aura_generator', 'universal_forest_ritual', 'universal_natural_altar', 'universal_offering', 'aura_bottler', 'aura_controller', 'universal_animal_spawner'];
 const faces = {front: [0, 0], top: [1, 0], side: [0, 1], front_active: [1, 1]};
 
 async function pixelFace(machine, face, transform, shade) {
@@ -20,8 +20,8 @@ async function pixelFace(machine, face, transform, shade) {
 }
 
 async function renderPreview() {
-  const titles = ['通用灵气发生器', '通用森林仪式', '通用自然祭坛', '通用呼唤仪式', '灵气装瓶机', '灵气调控器'];
-  const subtitles = ['电力转化 · 绿色能量条', '树苗 · 金叶粉 · 八方原料', '灵气灌注 · 催化接口', '供品托盘 · 呼唤指示灯', '灌装喷嘴 · 玻璃瓶 · 模拟环境', '双向箭头 · 回收与释放'];
+  const titles = ['通用灵气发生器', '通用森林仪式', '通用自然祭坛', '通用呼唤仪式', '灵气装瓶机', '灵气调控器', '通用降生祭坛'];
+  const subtitles = ['电力转化 · 绿色能量条', '树苗 · 金叶粉 · 八方原料', '灵气灌注 · 催化接口', '供品托盘 · 呼唤指示灯', '灌装喷嘴 · 玻璃瓶 · 模拟环境', '双向箭头 · 回收与释放', '生物培育舱 · 区域与数量控制'];
   const content = [];
   const columns = machines.length > 5 ? 3 : machines.length;
   const rows = Math.ceil(machines.length / columns);

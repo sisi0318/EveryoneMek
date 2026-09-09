@@ -14,6 +14,7 @@ MACHINES = {
     "universal_offering": ("通用呼唤仪式", "Universal Offering Ritual", "naturesaura:offering_table"),
     "aura_bottler": ("灵气装瓶机", "Aura Bottler", "naturesaura:bottle_two_the_rebottling"),
     "aura_controller": ("灵气调控器", "Aura Controller", "naturesaura:aura_detector"),
+    "universal_animal_spawner": ("通用降生祭坛", "Universal Animal Spawner", "naturesaura:animal_spawner"),
 }
 
 def write(path, value):
@@ -30,6 +31,7 @@ descriptions = [
     ("替换原版祭祀台，周围仍须保留完整花阵。一份呼唤物处理一批供品。", "Replaces the Offering Table and requires its flower arrangement. One calling item starts a batch."),
     ("用瓶与塞和 FE 装瓶。半径 30 格灵气至少 100,000 时，每瓶消耗 20,000 灵气并按维度产出；灵气不高于 -100,000 时产出真空瓶。储罐灵气优先。模拟环境模块可解除环境和维度门槛并选择产物。", "Fills Bottle and Cork using FE. Within 30 blocks, at least 100,000 Aura permits a dimension-specific bottle costing 20,000 Aura; at most -100,000 Aura permits vacuum bottles at no Aura cost. Stored Aura is used first. An Environment Simulation Module bypasses environmental and dimension requirements and allows product selection."),
     ("设置环境灵气上下限，过量时回收至储罐，不足时释放储罐灵气。支持单向模式、红石和范围升级；达到目标后停止耗电。输入数值后回车或点击勾号应用。", "Balances environmental Aura between configurable lower and upper limits. Recovers excess Aura into its Chemical tank and releases stored Aura when below the lower limit. Supports one-way modes, redstone and range modules; consumes no FE while at target. Press Enter or click the checkmark to apply a number."),
+    ("读取自然灵气的降生配方，消耗原料、FE 和灵气生成生物。可设置世界坐标轴 X/Y/Z 偏移、水平半径和区域数量上限；每个范围模块增加 2 格最大半径。陆生生物需要地面，水生生物需要水。储罐优先，不足从半径 35 格环境补足。生成成功后才扣原料和灵气。", "Spawns entities from Nature's Aura recipes using ingredients, FE and Aura. Configure world-axis X/Y/Z offsets, horizontal radius and area population limit. Each Range Module adds 2 blocks of maximum radius. Land creatures need a floor and aquatic creatures need water. Uses stored Aura first, then environmental Aura within 35 blocks. Ingredients and Aura are consumed only after successful spawning."),
 ]
 
 for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions):
@@ -59,6 +61,8 @@ for (name, (cn, english, core)), (desc_cn, desc_en) in zip(MACHINES.items(), des
         components.append(f"{ID}:bottling_mode")
     if name == "aura_controller":
         components.append(f"{ID}:control_settings")
+    if name == "universal_animal_spawner":
+        components.append(f"{ID}:area_settings")
     write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:{name}", "functions": [{"function": "minecraft:copy_name", "source": "block_entity"}, {"function": "minecraft:copy_components", "source": "block_entity", "include": components}]}]}]})
     write(f"data/{ID}/recipe/{name}.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ASA", "CKC", "ASA"], "key": {"A": {"item": "mekanism:alloy_infused"}, "S": {"tag": "c:ingots/steel"}, "C": {"item": "mekanism:basic_control_circuit"}, "K": {"item": core}}, "result": {"id": f"{ID}:{name}", "count": 1}})
 
@@ -66,7 +70,15 @@ statuses = [("运行中", "Running"), ("红石控制：暂停", "Paused by redst
 for index, (cn, english) in enumerate(statuses):
     zh[f"gui.{ID}.status.{index}"] = cn
     en[f"gui.{ID}.status.{index}"] = english
+for index, (cn, english) in enumerate([("区域生物数量已达上限", "Area population limit reached"), ("生成区域没有合适空间", "No suitable spawn space"), ("生物生成受阻或已被取消", "Entity spawn blocked or cancelled")], start=14):
+    zh[f"gui.{ID}.status.{index}"] = cn
+    en[f"gui.{ID}.status.{index}"] = english
 for key, cn, english in [
+    ("no_target", "等待配方", "Waiting for recipe"),
+    ("area_count", "数量：%s / %s", "Count: %s / %s"),
+    ("area_offset", "偏移 X: %s · Y: %s · Z: %s", "Offset X: %s / Y: %s / Z: %s"),
+    ("area_radius", "半径：%s / %s", "Radius: %s / %s"),
+    ("area_cap", "数量上限：%s", "Limit: %s"),
     ("electric_aura", "电力转化为灵气", "Electricity into Aura"),
     ("environment_on", "输出：管道 + 环境", "Output: tubes + environment"),
     ("environment_off", "输出：管道", "Output: tubes"),

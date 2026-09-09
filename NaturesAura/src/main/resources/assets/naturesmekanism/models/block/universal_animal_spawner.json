@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "naturesmekanism:block/universal_animal_spawner/side",
+    "north": "naturesmekanism:block/universal_animal_spawner/front",
+    "up": "naturesmekanism:block/universal_animal_spawner/top",
+    "south": "naturesmekanism:block/universal_animal_spawner/side",
+    "east": "naturesmekanism:block/universal_animal_spawner/side",
+    "west": "naturesmekanism:block/universal_animal_spawner/side",
+    "down": "naturesmekanism:block/universal_animal_spawner/side"
+  }
+}

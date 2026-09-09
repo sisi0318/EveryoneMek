@@ -47,6 +47,8 @@ public final class Content {
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Integer>> BOTTLING_MODE = COMPONENTS.registerInt("bottling_mode");
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> CONTROL_SETTINGS = COMPONENTS.simple("control_settings",
           builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
+    public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> AREA_SETTINGS = COMPONENTS.simple("area_settings",
+          builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final DeferredChemical<Chemical> AURA = CHEMICALS.register("aura", () -> new Chemical(ChemicalBuilder.builder().tint(0x89CC37)));
     public static final ContainerTypeRegistryObject<MachineMenu> MENU = MENUS.register("machine", AuraMachine.class, MachineMenu::new);
     public static final Map<MachineKind, BlockRegistryObject<MachineBlock, ItemBlockTooltip<MachineBlock>>> MACHINES = new EnumMap<>(MachineKind.class);
@@ -69,7 +71,7 @@ public final class Content {
                 // These must follow AuraMachine's slot order, including the appended module.
                 holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
                     var slots = ItemSlotsBuilder.builder().addInput(kind.inputCount());
-                    if (kind.inputCount() > 0) slots.addOutput(4);
+                    if (kind.outputCount() > 0) slots.addOutput(kind.outputCount());
                     slots.addEnergy();
                     if (kind == MachineKind.FOREST_RITUAL || kind == MachineKind.AURA_BOTTLER)
                         slots.addSlot((containerType, stack, index) -> new ComponentBackedInventorySlot(stack, index,
