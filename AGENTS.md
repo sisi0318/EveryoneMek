@@ -1,16 +1,172 @@
-# Repository instructions
+# EveryoneMek 开发与接手指引
 
-## Windows terminal
+本文件适用于整个仓库。进入模组子目录后，还要阅读其中的 `AGENTS.md`。
+使用标准文件名 `AGENTS.md`，不要另建内容重复的 `agent.md`，避免工具漏读或规范分叉。
 
-- Use PowerShell 7, preferably `C:\Program Files\PowerShell\7\pwsh.exe`, with `login = false`.
-- Use Windows PowerShell 5.1 only if PowerShell 7 is unavailable.
+## 1. 接手入口
 
-## Commit messages
+1. 查看 `git status --short`、最近提交和目标模组的 `gradle.properties`、`build.gradle`，确认已有修改、版本和依赖。
+2. 阅读该模组的 `AGENTS.md`、`README.md`、`CHANGELOG.md`。使用说明反映当前行为；旧设计记录可能只描述历史版本。
+3. 从现有实现和测试找相似功能，再核对目标版本的 Mek、NeoForge、Minecraft 和被扩展模组源码。
+4. 先复现用户实际操作。尤其区分“在界面选输出”和“潜行右键端口”，不能假设二者已经联动。
+5. 按任务已有授权完成开发、验证、提交和推送，不重复询问已经确认的动作。
 
-- Format commit subjects as `[ModuleName] type: description`.
-- Use the module's directory name as the scope: changes to `NaturesAura/` use `[NaturesAura]`.
-- Use the corresponding module name for future mod subprojects. Split independent changes across modules into separate commits.
-- Use `[Repo]` for changes that only affect shared repository infrastructure or policies.
-- Choose an appropriate conventional type, such as `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `chore`, or `revert`.
-- Keep the subject concise and describe the resulting change. Do not include Markdown asterisks around the scope.
-- Examples: `[NaturesAura] feat: add ore condensation chamber`, `[NaturesAura] fix: preserve machine inventory`, `[Repo] ci: update build workflow`.
+当前模组详细经验：[NaturesAura/AGENTS.md](NaturesAura/AGENTS.md)。
+
+## 2. 用户明确的偏好
+
+- **客户端游戏内验收由用户进行。不要自行启动 `runClient`，也不要自动操作用户的游戏客户端。** 可以运行无界面服务端 GameTest。
+- 机器外观和界面沿用 Mek 工业风格，功能必须能通过真实物流使用。
+- 玩家说明简短，写用途、消耗和必要条件。物品提示里不要出现“读取某模组配方”“调用原版事件”“底层 API”等实现过程。
+- 界面设置必须影响实际行为；颜色变成“输出”却没有配置实际端口，属于功能缺陷。
+- 修复保留已有库存、升级、设置和存档，不能靠清空数据解决兼容问题。
+
+## 3. Windows、命令与依赖
+
+- 使用 PowerShell 7，优先 `C:\Program Files\PowerShell\7\pwsh.exe`，设置 `login = false`。只有不可用时才考虑 Windows PowerShell 5.1。
+- 搜索优先 `rg` / `rg --files`。PowerShell 下用 `rg pattern directory -g '*.java'`，不要假设 `directory/*.java` 会被 shell 展开。
+- 使用项目自带 Gradle Wrapper，先确认 Java 版本。当前 Minecraft 1.21.1 模组使用 Java 21。
+- 每个子项目使用自己的 `.gradle-home`；缓存、开发世界、日志和构建产物不提交。
+- 查找现有 Node、Python 和图像运行时，不把某台机器的用户目录硬编码进脚本。
+- `sharp` 从 `art/package.json` 所在项目解析。找不到时先安装该目录依赖，或给当前进程设置正确的 `NODE_PATH`。
+- shell 使用真实换行。写文件优先补丁或 PowerShell 单引号 here-string，避免 `$()`、反引号被执行。
+- 文件操作使用 `-LiteralPath`。递归操作前核对最终绝对路径，只处理明确的项目临时文件。
+- 保存原命令退出码后再读取日志，避免把失败误报为成功。
+
+在目标模组目录执行：
+
+```powershell
+$env:GRADLE_USER_HOME = Join-Path $PWD '.gradle-home'
+New-Item -ItemType Directory -Path build -Force | Out-Null
+.\gradlew.bat build runGameTestServer --console=plain *> build/verification.log
+$verificationExit = $LASTEXITCODE
+Get-Content build/verification.log -Tail 40
+exit $verificationExit
+```
+
+指定补丁版本时，带点号的 Gradle 属性参数整体加引号：
+
+```powershell
+.\gradlew.bat '-Pneo_version=21.1.243' build runGameTestServer --console=plain
+```
+
+确认具体问题后再扩大验证，不要每次文字修改都重跑完整服务器。
+
+## 4. Mek 扩展的共同原则
+
+- **不要凭印象猜 API。** 以当前依赖 JAR/对应源码为准；旧教程的类名、方法、参数和资源格式可能不适用。
+- 优先复用 Mek 的机器基类、注册器、能量容器、槽位、升级、红石、安全、六面配置和弹出组件。
+- 父构造可能调用 `getInitialInventory`、`getInitialEnergyContainers` 等覆写方法，此时子类构造主体尚未执行。不能依赖未创建的逻辑对象，也不要用字段初始化表达式覆盖父构造期间已创建的槽位。
+- BlockEntity 能力、掉落 ItemStack 容器和菜单同步是三件事，必须分别接好。
+- 新槽位默认追加到已有槽位后面；更改顺序或数量必须提供旧存档迁移。
+- 用 `RelativeSide` 和机器朝向换算世界方向，不把“右侧”写死成东面。
+- `Action.SIMULATE` 必须无副作用。Mek 插入通常返回**剩余量**，NeoForge FE 接收返回**接收量**。
+- Mek 无侧面能量代理可能只读。已踩过的坑：`getCapability(..., null)` 能读出储能，但不接受充电。
+- 能量转发优先复用 `ForgeEnergyIntegration` 的单位转换和取整，不假设所有整合包都有固定 FE 比例。
+- 区分 `AutomationType.EXTERNAL`、`MANUAL`、`INTERNAL`，不要为让管道“能动”而全部使用内部操作。
+- 分别检查物品有效性、提取权限、暴露侧面和自动弹出。注册能力成功不等于开启了自动输出。
+- 自定义模块扩展原有升级窗口，不随意修改 Mek 的 `Upgrade` 枚举。
+
+## 5. 加工、持久化与多方块
+
+- 先检查材料、容量、工作条件、能量与灵气，再推进加工。扣费时机要符合动作语义；动物繁殖等取消事件不能套用普通合成的退款规则。
+- 产物先填兼容堆叠，再占空槽；随机副产物按最大数量预留空间。
+- 产物、输入组件、消耗、时间及相关设置进入工作签名，换材料或目标后不能沿用旧加工进度。
+- NBT 读取限幅并处理缺省值，防止负进度、枚举越界或溢出。实体保存和拆成物品后的保存分别验证。
+- 世界查询先检查区块已加载，扫描、寻找产物位置或连接端口不能强制加载区块。
+- 端口转发控制器库存和储罐，不维护第二份资源。缓存的能力对象每次操作仍需核对端口、控制器和完整结构。
+- 结构损坏后停止加工，旧 handler 不能继续转移资源；修复后应能恢复。
+- 六面配置、端口方块模式、实际 capability 和自动弹出必须联动，不能留下两套矛盾设置。
+
+## 6. UI 设计规范
+
+- 优先使用 Mek 原有窗口、标签、槽位、进度条和输入框。升级窗口保留速度/能量列表，自定义模块放在底部扩展槽。
+- 菜单槽坐标和屏幕坐标一起修改；屏幕增高时同时移动物品栏标签和玩家槽位。
+- 进度箭头按输入框右边界与输出框左边界计算居中，给文字、边框和点击区留间隔。
+- 状态区写可采取行动的原因，例如“缺少慷慨之粉”“等待石头或下界岩”，不要合并不同故障。
+- 区分储罐与环境：空罐不一定不能工作，负灵气不能统一夹为零。
+- 数字设置显示服务器确认值，回车或勾号提交。服务器检查菜单 ID、距离、权限、数值范围。
+- 模式文本、切换按钮和端口图标动态刷新，不能只在构造窗口时读取一次。
+- 多方块六面图标检查**整个对应结构面**，而非控制器旁边一格；同面多个端口要有明确优先规则。
+- 提示通常两三句。精确公式、长结构说明和实现解释放 README 或 JEI，中英文同步维护。
+- 先寻找公开扩展点；确需 Mixin 时限制作用范围，只改必要行为，不复制整套 Mek 窗口。
+- 客户端 Mixin 放配置的 `client` 列表，客户端事件限定 `Dist.CLIENT`。用字节码契约检查目标字段/方法，避免服务端加载客户端类。
+- 无界面测试可验证坐标映射、包处理与接口契约，但不等于游戏内视觉验收，报告时明确区别。
+
+## 7. 材质制作规范
+
+现有原稿与提示词：[NaturesAura/art/README.md](NaturesAura/art/README.md)。
+
+- 运行时贴图是**真正的 16×16 PNG**，不是细密大图加像素滤镜。
+- 灰黑工业机壳、粗像素边框、内凹工作区为主，以少量功能色和清楚轮廓区分机器。
+- 避免大面积木板、花草、金边、宝石、复杂法阵、渐变光晕和高频噪声；缩到 16 像素后仍需看得懂。
+- 每台机器保留 `front`、`top`、`side`、`front_active` 四个面。侧面可复用到背面和底面。
+- 静止与工作面尽量只改变灯光或局部亮度，几何图案保持一致。
+
+已采用的制作流程：
+
+1. 新创作的位图优先用内置 ImageGen，附现有机器原稿作风格参考；生成前阅读可用的图像生成技能。
+2. 要求等分 2×2 图集：左上静止正面、右上顶部、左下侧面、右下工作正面。无边距、文字和透视，每格具有 16×16 粗像素的简洁度。
+3. 将选定原稿复制到 `art/source/`，保存完整提示词、参考来源和输出位置，不能只留在工具默认目录。
+4. 用已有 Node/Sharp 工具机械分面，以 `nearest` 缩到 16×16；不要用代码重绘、模糊或伪造要求生成的图案。
+5. 检查四个面、放大联系表和等距方块预览。原稿太复杂时针对缺陷重新生成，不能指望不断缩小来挽救。
+6. 更新资源生成器的模型、方块状态、物品模型和语言键；新增机器同步导出脚本的名称、标题、说明数组。
+7. 检查 JAR 内 PNG 尺寸和引用。原稿、提示词和预览留在仓库 `art/`，不进入游戏 JAR。
+
+已有贴图的复用、分面、最近邻缩放和 JSON 模型修改不需要重新生成。
+方块工作态与物品图标是两套模型选择：输出端口的物品图标需要组件、属性 getter、模型 override 配合，不能只改方块状态。
+
+可复用的提示词骨架（替换机器用途和识别特征，再附参考图）：
+
+```text
+Create an ORIGINAL Minecraft Mekanism-style <machine purpose> texture atlas.
+Use the attached image as a style reference for the gray casing, not as an edit target.
+Exact equal 2x2 grid, no margins or labels: top-left idle front, top-right top,
+bottom-left side/back/bottom, bottom-right active front.
+Each quadrant must have the simplicity of 16x16 large, solid-color pixel cells.
+At least 85% charcoal and neutral gray; recessed mechanical work area.
+Front feature: <one small, recognizable functional silhouette and a few status pixels>.
+Keep idle and active geometry identical; only the status light becomes brighter.
+Flat opaque atlas; no perspective, text, bloom, gradients, fine noise or fantasy ornament.
+```
+
+先查看参考图，确认参考对象和用途；完整方块面保持不透明，不留会被分面缩放放大的边距。
+
+## 8. 验证与发布
+
+- 匹配、分摊、字节码契约用 JUnit；真实机器、管道、实体事件、环境资源和存档用服务端 GameTest。
+- `build` 不代表执行了 GameTest。当前 `check` 只额外编译 GameTest，需显式运行 `runGameTestServer`。
+- 修复用户问题优先补真实操作回归，例如配置数据包 → 端口模式 → 相邻箱子，不只修改内部字段。
+- 准备实际可用的测试资源：空能量板不能给机器充电，手工放置的能量立方要明确开启自动输出。
+- 测试修改的配方表、矿物表、监听器、配置、排除表在 `finally` 恢复；停掉测试机器并清理实体，避免污染后续用例。
+- 界面小改或文字修改不盲目扩展测试；运行逻辑、协议、存档和依赖变更增加相应验证。
+- JSON 由生成器维护，修改生成器后再生成，不只改生成文件。
+- 打包检查版本、资源与类，不能含 GameTest、开发世界、源图、私人文档；语言资源变化也要重新打包。
+- 功能发布更新版本、README、CHANGELOG；纯开发文档修改不提升模组版本，不生成新 JAR。
+- 远程入口是 `.github/workflows/build.yml`。按当前提交 SHA 检查 CI，不能拿旧提交的成功当本次成功。
+- `gh run watch` 网络超时不代表 CI 失败；可用一次 `gh run view ... --json status,conclusion,url` 重查，准确报告结果。
+- 交付提供 JAR、使用方法、验证结果和必要更新步骤，说明尽量简短。
+
+## 9. Git 与本地文件边界
+
+- 标题格式：`[ModuleName] type: description`。`NaturesAura/` 使用 `[NaturesAura]`，其他模组使用其目录名；独立的跨模组改动分开提交。
+- 仅涉及共享规则、基础设施的改动使用 `[Repo]`。
+- 类型选择 `feat`、`fix`、`docs`、`refactor`、`perf`、`test`、`build`、`ci`、`style`、`chore`、`revert`。
+- 标题中不加 Markdown 星号。示例：`[NaturesAura] fix: sync chamber port output`。
+- 保留用户已有修改，遵循任务指定分支。未指定名称的新分支使用 `codex/` 前缀，不擅自重写已发布历史。
+- `docs/MEKANISM_ADDON_RESEARCH.md` 明确只留本地：保留忽略规则，不提交、不推送，也不为了补全文档复制其全文到公开文件。
+- 提交前运行 `git diff --check` 并检查暂存列表，不用 `git add -f` 绕过上述忽略规则。
+- 普通推送遇到 Windows TLS/凭据后端问题时先核对认证；已配置 GitHub CLI 的环境可临时使用下面的后端，不能关闭证书校验：
+
+```powershell
+git -c http.sslBackend=openssl -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin main
+```
+
+分支名按当前任务调整，认证信息不写入脚本、配置、日志或文档。
+
+## 10. 维护这些经验
+
+- 代表性修复写入对应模组 `AGENTS.md`，记录现象、根因、做法和测试/源码入口。
+- 区分当前行为与历史问题，行为变更后同步修订，不让修复过的限制变成新的规则。
+- 记录可验证的具体经验，不写“某 API 可能可以”的猜测。
+- 指向仓库可维护源文件，临时克隆路径不是长期依赖；更新依赖后重新核对契约。
