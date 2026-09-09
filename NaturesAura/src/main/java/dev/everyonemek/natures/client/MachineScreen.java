@@ -65,7 +65,13 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
                       return true;
                   }));
         } else {
-            addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 132, 40));
+            ProgressType progressType = ProgressType.SMALL_RIGHT;
+            // Center within the gap between the input frame and the 2x2 output frame.
+            int inputFrameRight = tile.kind() == MachineKind.FOREST_RITUAL ? 121 : 99;
+            int outputFrameLeft = 159;
+            int progressX = (inputFrameRight + outputFrameLeft - progressType.getWidth()) / 2;
+            int progressY = 47 - progressType.getHeight() / 2;
+            addRenderableWidget(new GuiProgress(tile::progress, progressType, this, progressX, progressY));
         }
         boolean altar = tile.kind() == MachineKind.NATURAL_ALTAR;
         addRenderableWidget(new GuiInnerScreen(this, 18, 94, tile.kind() == MachineKind.AURA_GENERATOR ? 108 : 180, altar ? 28 : 18,

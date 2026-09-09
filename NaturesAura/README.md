@@ -4,7 +4,7 @@ Minecraft 1.21.1 的自然灵气工业化扩展。机器使用 Mekanism 的升�
 
 ## 安装
 
-将构建产物 `build/libs/NaturesMekanism-0.1.1.jar` 放入客户端与服务端的 `mods` 目录，替换旧版扩展 JAR。
+将构建产物 `build/libs/NaturesMekanism-0.1.2.jar` 放入客户端与服务端的 `mods` 目录，替换旧版扩展 JAR。
 
 本轮实际验证的依赖组合：
 

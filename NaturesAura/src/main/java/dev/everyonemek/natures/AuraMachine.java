@@ -117,7 +117,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         for (int i = 0; i < count; i++) {
             final int slot = i;
             int x = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 18 + i % 4 * 18 : 104) : 42 + i * 40;
-            int y = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 30 + i / 4 * 18 : 30 + (i - 8) * 22) : 40;
+            int y = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 30 + i / 4 * 18 : 30 + (i - 8) * 22) : 39;
             var input = BasicInventorySlot.at((stack, automation) -> automation != AutomationType.EXTERNAL,
                   (stack, automation) -> true, stack -> RecipeAdapter.accepts(getLevel(), kind(), slot, stack), listener, x, y);
             inputs.add(input);
