@@ -17,14 +17,20 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.DeferredItem;
 
 public final class Content {
     public static final BlockDeferredRegister BLOCKS = new BlockDeferredRegister(NaturesMekanism.ID);
     public static final TileEntityTypeDeferredRegister TILES = new TileEntityTypeDeferredRegister(NaturesMekanism.ID);
     public static final ContainerTypeDeferredRegister MENUS = new ContainerTypeDeferredRegister(NaturesMekanism.ID);
     public static final ChemicalDeferredRegister CHEMICALS = new ChemicalDeferredRegister(NaturesMekanism.ID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NaturesMekanism.ID);
+    public static final DeferredItem<InfiniteGoldModuleItem> INFINITE_GOLD_MODULE = ITEMS.register("infinite_gold_module",
+          () -> new InfiniteGoldModuleItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
     public static final DataComponentDeferredRegister COMPONENTS = new DataComponentDeferredRegister(NaturesMekanism.ID);
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> ENVIRONMENT_OUTPUT = COMPONENTS.registerBoolean("environment_output");
     public static final DeferredChemical<Chemical> AURA = CHEMICALS.register("aura", () -> new Chemical(ChemicalBuilder.builder().tint(0x89CC37)));
@@ -54,11 +60,13 @@ public final class Content {
               .icon(() -> new ItemStack(MACHINES.get(MachineKind.AURA_GENERATOR).asItem()))
               .displayItems((parameters, output) -> {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind).asItem());
+                  output.accept(INFINITE_GOLD_MODULE);
               }).build());
     }
 
     public static void register(IEventBus bus) {
         COMPONENTS.register(bus);
+        ITEMS.register(bus);
         CHEMICALS.register(bus);
         BLOCKS.register(bus);
         TILES.register(bus);

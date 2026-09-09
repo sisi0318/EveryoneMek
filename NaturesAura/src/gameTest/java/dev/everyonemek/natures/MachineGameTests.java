@@ -6,9 +6,12 @@ import de.ellpeck.naturesaura.items.ModItems;
 import de.ellpeck.naturesaura.api.aura.chunk.IAuraChunk;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
+import mekanism.api.RelativeSide;
+import mekanism.api.Upgrade;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.common.registries.MekanismBlocks;
 import mekanism.common.registries.MekanismDataComponents;
+import mekanism.common.util.MekanismUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -17,6 +20,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import com.google.gson.JsonParser;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -197,5 +204,210 @@ public final class MachineGameTests {
         check(drop.has(MekanismDataComponents.ATTACHED_ENERGY), "Drop lost stored energy");
         check(Boolean.TRUE.equals(drop.get(Content.ENVIRONMENT_OUTPUT)), "Drop lost environment output mode");
         h.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 35)
+    public static void fastGeneratorFillsTheLastUnitAndResumesWithoutEmptying(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.AURA_GENERATOR, new BlockPos(2, 1, 2));
+        m.getComponent().addUpgrades(Upgrade.SPEED, 8);
+        m.getComponent().addUpgrades(Upgrade.ENERGY, 8);
+        m.auraTank().setStack(new ChemicalStack(Content.AURA, AuraMachine.AURA_CAPACITY - 1));
+        long before = m.energy().getEnergy();
+        h.runAfterDelay(8, () -> {
+            check(m.auraTank().getStored() == AuraMachine.AURA_CAPACITY, "High speed refused a partial batch despite free capacity");
+            check(m.energy().getEnergy() < before, "Final unit was produced without energy");
+            long fullEnergy = m.energy().getEnergy();
+            h.runAfterDelay(4, () -> {
+                check(m.energy().getEnergy() == fullEnergy, "Full generator consumed energy");
+                m.auraTank().extract(1, Action.EXECUTE, AutomationType.INTERNAL);
+            });
+        });
+        h.runAfterDelay(25, () -> {
+            check(m.auraTank().getStored() == AuraMachine.AURA_CAPACITY, "Generator required the tank to be emptied before resuming");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 30)
+    public static void forestRoutesSaplingsAndPowderOnlyThroughExtraSlots(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.FOREST_RITUAL, new BlockPos(2, 1, 2));
+        var normal = h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, m.getBlockPos(), m.getDirection());
+        var extra = h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, m.getBlockPos(), RelativeSide.BACK.getDirection(m.getDirection()));
+        check(normal != null && normal.getSlots() == 8, "Normal input still contains auxiliary or module slots");
+        check(extra != null && extra.getSlots() == 2, "Extra input must expose exactly the sapling and powder slots");
+        check(extra.insertItem(0, new ItemStack(Items.OAK_SAPLING), false).isEmpty(), "Extra input rejected sapling");
+        check(extra.insertItem(1, new ItemStack(ModBlocks.GOLD_POWDER, 16), false).isEmpty(), "Extra input rejected gold powder");
+        check(m.inputs.get(8).getCount() == 1 && m.inputs.get(9).getCount() == 16, "Auxiliary items reached the wrong saved slot indices");
+        check(m.inputs.subList(0, 8).stream().allMatch(s -> s.isEmpty()), "Extra items contaminated recipe inputs");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 30)
+    public static void goldModuleIsSingleReversibleAndMultipliesUpgradedEnergy(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.FOREST_RITUAL, new BlockPos(2, 1, 2));
+        long normal = m.energy().getEnergyPerTick();
+        ItemStack stack = new ItemStack(Content.INFINITE_GOLD_MODULE.get(), 4);
+        check(m.goldModuleSlot().insertItem(stack, Action.SIMULATE, AutomationType.MANUAL).getCount() == 3, "Module capacity is not one");
+        check(!m.hasInfiniteGold() && m.energy().getEnergyPerTick() == normal, "Simulation installed the module");
+        check(m.goldModuleSlot().insertItem(stack, Action.EXECUTE, AutomationType.MANUAL).getCount() == 3, "Installation consumed more than one module");
+        check(m.hasInfiniteGold() && m.energy().getEnergyPerTick() == normal * MachineConfig.INFINITE_GOLD_POWER_MULTIPLIER.get(), "Module did not increase energy usage");
+        check(!m.goldModuleSlot().insertItem(stack.copyWithCount(1), Action.EXECUTE, AutomationType.MANUAL).isEmpty(), "Second module installed");
+        m.getComponent().addUpgrades(Upgrade.SPEED, 4);
+        m.getComponent().addUpgrades(Upgrade.ENERGY, 4);
+        long upgraded = MekanismUtils.getEnergyPerTick(m, m.energy().getBaseEnergyPerTick());
+        check(m.energy().getEnergyPerTick() == upgraded * MachineConfig.INFINITE_GOLD_POWER_MULTIPLIER.get(), "Mek upgrades removed the module surcharge");
+        check(m.goldModuleSlot().extractItem(1, Action.EXECUTE, AutomationType.MANUAL).getCount() == 1, "Uninstall did not return the module");
+        check(!m.hasInfiniteGold() && m.energy().getEnergyPerTick() == upgraded, "Uninstall did not restore normal usage");
+        h.succeed();
+    }
+
+    private static void prepareForestWithoutPowder(AuraMachine m) {
+        m.inputs.get(0).setStack(new ItemStack(Items.STONE, 3));
+        m.inputs.get(1).setStack(new ItemStack(ModItems.GOLD_LEAF));
+        m.inputs.get(2).setStack(new ItemStack(Items.GOLD_INGOT));
+        m.inputs.get(3).setStack(new ItemStack(ModItems.TOKEN_JOY));
+        m.inputs.get(8).setStack(new ItemStack(Items.OAK_SAPLING));
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 560)
+    public static void moduleReplacesPowderButStillConsumesSaplingAndRecipeGoldLeaf(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.FOREST_RITUAL, new BlockPos(2, 1, 2));
+        prepareForestWithoutPowder(m);
+        m.goldModuleSlot().insertItem(new ItemStack(Content.INFINITE_GOLD_MODULE.get()), Action.EXECUTE, AutomationType.MANUAL);
+        long before = m.energy().getEnergy();
+        long costPerTick = m.energy().getEnergyPerTick();
+        h.runAfterDelay(530, () -> {
+            check(m.inputs.stream().allMatch(s -> s.isEmpty()), "Module bypassed sapling or recipe ingredients");
+            check(m.hasInfiniteGold() && m.goldModuleSlot().getCount() == 1, "Module was consumed");
+            check(before - m.energy().getEnergy() == costPerTick * 500, "Recipe did not pay the increased energy cost");
+            check(m.getInventorySlots(null).stream().anyMatch(s -> s.getStack().is(ModBlocks.NATURE_ALTAR.asItem())), "Recipe without powder did not finish");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void removingModuleDuringWorkRestoresPowderRequirement(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.FOREST_RITUAL, new BlockPos(2, 1, 2));
+        prepareForestWithoutPowder(m);
+        m.goldModuleSlot().insertItem(new ItemStack(Content.INFINITE_GOLD_MODULE.get()), Action.EXECUTE, AutomationType.MANUAL);
+        h.runAfterDelay(35, () -> {
+            check(m.progress() > 0, "Fixture did not begin processing");
+            m.goldModuleSlot().extractItem(1, Action.EXECUTE, AutomationType.MANUAL);
+        });
+        h.runAfterDelay(70, () -> {
+            check(m.status() == 4 && m.progress() == 0, "Old powder-free plan survived uninstall");
+            check(m.inputs.get(8).getCount() == 1 && m.inputs.get(1).getCount() == 1, "Incomplete work consumed ingredients");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 30)
+    public static void moduleAndLegacySlotsSurviveSaveAndMachineDrops(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.FOREST_RITUAL, new BlockPos(2, 1, 2));
+        m.inputs.get(8).setStack(new ItemStack(Items.OAK_SAPLING, 13));
+        m.inputs.get(9).setStack(new ItemStack(ModBlocks.GOLD_POWDER, 35));
+        var legacy = m.saveWithoutMetadata(h.getLevel().registryAccess());
+        AuraMachine oldSave = new AuraMachine(m.getBlockPos(), m.getBlockState());
+        oldSave.setLevel(h.getLevel());
+        oldSave.loadAdditional(legacy, h.getLevel().registryAccess());
+        check(oldSave.inputs.get(8).getCount() == 13 && oldSave.inputs.get(9).getCount() == 35 && !oldSave.hasInfiniteGold(), "Pre-module slot indices changed");
+        m.goldModuleSlot().insertItem(new ItemStack(Content.INFINITE_GOLD_MODULE.get()), Action.EXECUTE, AutomationType.MANUAL);
+        AuraMachine restored = new AuraMachine(m.getBlockPos(), m.getBlockState());
+        restored.setLevel(h.getLevel());
+        restored.loadAdditional(m.saveWithoutMetadata(h.getLevel().registryAccess()), h.getLevel().registryAccess());
+        check(restored.hasInfiniteGold() && restored.energy().getEnergyPerTick() == m.energy().getEnergyPerTick(), "Saved module state or surcharge was lost");
+        ItemStack drop = Block.getDrops(m.getBlockState(), h.getLevel(), m.getBlockPos(), m, null, new ItemStack(Items.DIAMOND_PICKAXE)).getFirst();
+        check(drop.get(MekanismDataComponents.ATTACHED_ITEMS).containers().stream().anyMatch(s -> s.is(Content.INFINITE_GOLD_MODULE) && s.getCount() == 1), "Machine drop lost or duplicated the installed module");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 30)
+    public static void everyActualContainerTitleHasEnglishAndChineseTranslations(GameTestHelper h) throws Exception {
+        for (MachineKind kind : MachineKind.values()) {
+            AuraMachine m = machine(h, kind, new BlockPos(1 + kind.ordinal(), 1, 2));
+            String key = ((TranslatableContents) m.getDisplayName().getContents()).getKey();
+            for (String language : new String[]{"en_us", "zh_cn"}) {
+                try (var in = MachineGameTests.class.getResourceAsStream("/assets/naturesmekanism/lang/" + language + ".json")) {
+                    check(in != null, "Language resource missing");
+                    var translations = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+                    check(translations.has(key) && !translations.get(key).getAsString().equals(key), "Untranslated menu title: " + language + ":" + key);
+                }
+            }
+        }
+        h.succeed();
+    }
+
+    private static int setEnvironmentAura(GameTestHelper h, AuraMachine machine, int target) {
+        int radius = MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get();
+        int current = IAuraChunk.getAuraInArea(h.getLevel(), machine.getBlockPos(), radius);
+        IAuraChunk chunk = IAuraChunk.getAuraChunk(h.getLevel(), machine.getBlockPos());
+        if (current < target) chunk.storeAura(machine.getBlockPos(), target - current, false, false);
+        else if (current > target) chunk.drainAura(machine.getBlockPos(), current - target, false, false);
+        return IAuraChunk.getAuraInArea(h.getLevel(), machine.getBlockPos(), radius);
+    }
+
+    @GameTest(template = "empty", batch = "environment_only", timeoutTicks = 130)
+    public static void altarProcessesUsingEnvironmentWithAnEmptyChemicalTank(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.NATURAL_ALTAR, new BlockPos(5, 1, 8));
+        int before = setEnvironmentAura(h, m, IAuraChunk.DEFAULT_AURA);
+        m.inputs.getFirst().setStack(new ItemStack(Items.IRON_INGOT));
+        h.runAfterDelay(100, () -> {
+            check(m.inputs.getFirst().isEmpty(), "Altar did not recognize environmental Aura");
+            check(m.auraTank().isEmpty(), "Direct environment consumption unexpectedly duplicated Aura into the tank");
+            check(m.getInventorySlots(null).stream().anyMatch(s -> s.getStack().is(ModItems.INFUSED_IRON)), "Environment-powered altar produced no output");
+            int after = IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get());
+            check(before - after == 15_000, "Environment-powered recipe did not consume exactly its Aura cost");
+            check(m.environmentAura() > 0, "Environmental Aura is not exposed for the menu");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "environment_mixed", timeoutTicks = 130)
+    public static void altarUsesTankFirstAndEnvironmentOnlyForTheRemainder(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.NATURAL_ALTAR, new BlockPos(5, 1, 8));
+        int before = setEnvironmentAura(h, m, IAuraChunk.DEFAULT_AURA);
+        m.auraTank().insert(new ChemicalStack(Content.AURA, 5_000), Action.EXECUTE, AutomationType.INTERNAL);
+        m.inputs.getFirst().setStack(new ItemStack(Items.IRON_INGOT));
+        h.runAfterDelay(10, () -> {
+            check(m.auraTank().getStored() < 5_000 && m.auraTank().getStored() > 0, "Tank was not used first");
+            check(IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get()) == before, "Environment was drained while tank Aura was sufficient");
+        });
+        h.runAfterDelay(100, () -> {
+            check(m.inputs.getFirst().isEmpty() && m.auraTank().isEmpty(), "Mixed-source recipe did not finish");
+            int after = IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get());
+            check(before - after == 10_000, "Mixed sources double-charged or created Aura");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "environment_blocked", timeoutTicks = 170)
+    public static void altarDoesNotSpendEitherSourceUntilEnergyOutputAndAuraAreReady(GameTestHelper h) {
+        AuraMachine m = machine(h, MachineKind.NATURAL_ALTAR, new BlockPos(5, 1, 8));
+        int before = setEnvironmentAura(h, m, IAuraChunk.DEFAULT_AURA);
+        m.energy().setEnergy(0);
+        m.inputs.getFirst().setStack(new ItemStack(Items.IRON_INGOT));
+        h.runAfterDelay(10, () -> {
+            check(m.status() == 6 && m.progress() == 0, "Unpowered altar made progress");
+            check(IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get()) == before, "Unpowered altar consumed environment Aura");
+            m.energy().setEnergy(m.energy().getMaxEnergy());
+            for (int i = 2; i < 6; i++) m.getInventorySlots(null).get(i).setStack(new ItemStack(Items.COBBLESTONE, 64));
+        });
+        h.runAfterDelay(20, () -> {
+            check(m.status() == 3 && m.energy().getEnergy() == m.energy().getMaxEnergy(), "Blocked altar consumed power");
+            check(IAuraChunk.getAuraInArea(h.getLevel(), m.getBlockPos(), MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get()) == before, "Blocked altar consumed environment Aura");
+            m.getInventorySlots(null).get(2).setStack(ItemStack.EMPTY);
+            setEnvironmentAura(h, m, -20_000);
+            m.auraTank().insert(new ChemicalStack(Content.AURA, 100), Action.EXECUTE, AutomationType.INTERNAL);
+        });
+        h.runAfterDelay(30, () -> {
+            check(m.status() == 5 && m.progress() == 0, "Altar overdrew an exhausted environment");
+            check(m.auraTank().getStored() == 100 && m.energy().getEnergy() == m.energy().getMaxEnergy(), "Insufficient combined Aura partially consumed resources");
+            setEnvironmentAura(h, m, 50_000);
+        });
+        h.runAfterDelay(140, () -> {
+            check(m.inputs.getFirst().isEmpty(), "Altar failed to resume after environment replenishment");
+            check(m.getInventorySlots(null).get(2).getStack().is(ModItems.INFUSED_IRON), "Resumed environment recipe lost its output");
+            h.succeed();
+        });
     }
 }

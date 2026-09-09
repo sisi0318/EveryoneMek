@@ -1,6 +1,7 @@
 package dev.everyonemek.natures;
 
 import mekanism.common.inventory.container.tile.MekanismTileContainer;
+import mekanism.common.inventory.container.slot.VirtualInventoryContainerSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 
@@ -14,6 +15,12 @@ public final class MachineMenu extends MekanismTileContainer<AuraMachine> {
 
     @Override
     protected int getInventoryYOffset() { return 136; }
+
+    public VirtualInventoryContainerSlot getGoldModuleSlot() {
+        return slots.stream().filter(slot -> slot instanceof VirtualInventoryContainerSlot virtual
+                    && virtual.getInventorySlot() == tile.goldModuleSlot())
+              .map(slot -> (VirtualInventoryContainerSlot) slot).findFirst().orElseThrow();
+    }
 
     @Override
     public boolean stillValid(Player player) {

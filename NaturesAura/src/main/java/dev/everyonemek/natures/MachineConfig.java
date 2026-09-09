@@ -6,6 +6,8 @@ public final class MachineConfig {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.IntValue GENERATOR_FE, AURA_PER_CYCLE, FOREST_FE, ALTAR_FE, OFFERING_FE;
     public static final ModConfigSpec.IntValue OFFERING_TICKS, FOREST_GOLD, EMIT_RATE, EMIT_LIMIT;
+    public static final ModConfigSpec.IntValue INFINITE_GOLD_POWER_MULTIPLIER;
+    public static final ModConfigSpec.IntValue ALTAR_ENVIRONMENT_RADIUS;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -19,6 +21,10 @@ public final class MachineConfig {
               .defineInRange("offeringTicks", 100, 1, 12000);
         FOREST_GOLD = b.comment("Gold powder consumed per forest ritual, replacing the original 16 powder positions.")
               .defineInRange("forestGoldPowder", 16, 0, 64);
+        INFINITE_GOLD_POWER_MULTIPLIER = b.comment("Forest ritual energy multiplier while one Infinite Gold Leaf Module is installed. Applied after Mek upgrades.")
+              .defineInRange("infiniteGoldPowerMultiplier", 2, 2, 100);
+        ALTAR_ENVIRONMENT_RADIUS = b.comment("Natural altar range for environmental Aura. Stored Chemical is consumed first; the environment supplies only the shortfall.")
+              .defineInRange("altarEnvironmentRadius", 20, 1, 64);
         EMIT_RATE = b.comment("Aura per tick released when the generator's environment output is enabled.")
               .defineInRange("environmentAuraPerTick", 100, 1, 100_000);
         EMIT_LIMIT = b.comment("Stop releasing when the 16-block area's aura reaches this amount. Baseline is 1000000.")

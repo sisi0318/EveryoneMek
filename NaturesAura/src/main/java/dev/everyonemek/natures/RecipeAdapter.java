@@ -48,7 +48,7 @@ public final class RecipeAdapter {
                 for (var holder : recipes(level, ModRecipes.TREE_RITUAL_TYPE)) {
                     TreeRitualRecipe r = holder.value();
                     if (r.time < 1 || r.ingredients.size() > 8 || r.output.isEmpty() || !r.saplingType.test(in.get(8).getStack())) continue;
-                    int gold = MachineConfig.FOREST_GOLD.get();
+                    int gold = machine.hasInfiniteGold() ? 0 : MachineConfig.FOREST_GOLD.get();
                     if (gold > 0 && (!in.get(9).getStack().is(ModBlocks.GOLD_POWDER.asItem()) || in.get(9).getCount() < gold)) continue;
                     boolean[][] accepts = new boolean[r.ingredients.size()][8];
                     int[] counts = new int[8];

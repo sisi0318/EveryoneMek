@@ -12,6 +12,7 @@ import mekanism.api.chemical.BasicChemicalTank;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalTank;
 import mekanism.api.inventory.IInventorySlot;
+import mekanism.api.math.MathUtils;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.capabilities.holder.chemical.ChemicalTankHelper;
 import mekanism.common.capabilities.holder.chemical.IChemicalTankHolder;
@@ -28,6 +29,7 @@ import mekanism.common.inventory.slot.OutputInventorySlot;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.tile.component.TileComponentEjector;
 import mekanism.common.tile.component.config.DataType;
+import mekanism.common.tile.component.config.slot.InventorySlotInfo;
 import mekanism.common.tile.prefab.TileEntityConfigurableMachine;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.UpgradeUtils;
@@ -46,6 +48,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     public List<BasicInventorySlot> inputs;
     private List<OutputInventorySlot> outputs;
     private EnergyInventorySlot energySlot;
+    private GoldModuleSlot goldModuleSlot;
     private MachineEnergyContainer<AuraMachine> energy;
     private IChemicalTank auraTank;
     private int progress, duration = 20, batch;
@@ -53,24 +56,31 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     private CompoundTag workSignature;
     private boolean environmentOutput;
     private int status;
+    private int environmentAura;
+    private int environmentRefreshTicks;
 
     public AuraMachine(BlockPos pos, BlockState state) {
         super(Content.MACHINES.get(((MachineBlock) state.getBlock()).kind), pos, state);
-        var item = configComponent.setupItemIOConfig(new ArrayList<IInventorySlot>(inputs),
+        List<BasicInventorySlot> recipeInputs = kind() == MachineKind.FOREST_RITUAL ? inputs.subList(0, 8) : inputs;
+        var item = configComponent.setupItemIOConfig(new ArrayList<IInventorySlot>(recipeInputs),
               new ArrayList<IInventorySlot>(outputs), energySlot, false);
         for (RelativeSide side : RelativeSide.values()) item.setDataType(DataType.INPUT, side);
+        if (kind() == MachineKind.FOREST_RITUAL) {
+            item.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false, inputs.get(8), inputs.get(9)));
+            item.setDataType(DataType.EXTRA, RelativeSide.BACK);
+        }
         item.setDataType(DataType.OUTPUT, RelativeSide.RIGHT);
         item.setDataType(DataType.ENERGY, RelativeSide.BOTTOM);
         item.setEjecting(true);
         var power = configComponent.setupInputConfig(TransmissionType.ENERGY, energy);
         for (RelativeSide side : RelativeSide.values()) power.setDataType(DataType.INPUT, side);
         if (auraTank != null) {
-        var chemical = kind() == MachineKind.AURA_GENERATOR
-              ? configComponent.setupOutputConfig(TransmissionType.CHEMICAL, auraTank)
-              : configComponent.setupInputConfig(TransmissionType.CHEMICAL, auraTank);
-        for (RelativeSide side : RelativeSide.values()) chemical.setDataType(
-              kind() == MachineKind.AURA_GENERATOR ? DataType.OUTPUT : DataType.INPUT, side);
-        chemical.setEjecting(kind() == MachineKind.AURA_GENERATOR);
+            var chemical = kind() == MachineKind.AURA_GENERATOR
+                  ? configComponent.setupOutputConfig(TransmissionType.CHEMICAL, auraTank)
+                  : configComponent.setupInputConfig(TransmissionType.CHEMICAL, auraTank);
+            for (RelativeSide side : RelativeSide.values()) chemical.setDataType(
+                  kind() == MachineKind.AURA_GENERATOR ? DataType.OUTPUT : DataType.INPUT, side);
+            chemical.setEjecting(kind() == MachineKind.AURA_GENERATOR);
         }
         ejectorComponent = new TileComponentEjector(this);
         if (kind() == MachineKind.AURA_GENERATOR)
@@ -119,14 +129,26 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
             builder.addSlot(output);
         }
         builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 206, 78));
+        if (kind() == MachineKind.FOREST_RITUAL) {
+            // Append after all existing slots so 0.1.0 saves and dropped machine inventories keep their indices.
+            builder.addSlot(goldModuleSlot = new GoldModuleSlot(() -> {
+                listener.onContentsChanged();
+                refreshModuleEnergy();
+            }));
+        }
         return builder.build();
     }
 
     @Override
     protected boolean onUpdateServer() {
         boolean update = super.onUpdateServer();
+        refreshModuleEnergy();
         energySlot.fillContainerOrConvert();
         setActive(false);
+        if (kind() == MachineKind.NATURAL_ALTAR && --environmentRefreshTicks <= 0) {
+            environmentAura = readEnvironmentAura();
+            environmentRefreshTicks = 10;
+        }
         if (!canFunction()) { status = 1; return update; }
         if (kind() == MachineKind.OFFERING && !OfferingFlowers.complete(level, worldPosition)) {
             status = 2;
@@ -143,8 +165,9 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
 
     private void tickGenerator() {
         duration = Math.max(1, MekanismUtils.getTicks(this, 20));
-        long generated = (long) MachineConfig.AURA_PER_CYCLE.get() * MekanismUtils.getOperationsPerTick(this, 20, 1);
-        if (auraTank.getNeeded() < generated) { status = 3; return; }
+        long nominal = (long) MachineConfig.AURA_PER_CYCLE.get() * MekanismUtils.getOperationsPerTick(this, 20, 1);
+        long generated = Math.min(nominal, auraTank.getNeeded());
+        if (generated <= 0) { status = 3; return; }
         if (!payEnergy()) return;
         setActive(true);
         status = 0;
@@ -183,9 +206,18 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         int next = Math.min(progress + 1, duration);
         long totalDue = IngredientAssignment.due(plan.aura(), next, duration);
         long toPay = Math.max(0, totalDue - paidAura);
-        if (toPay > 0 && (auraTank == null || auraTank.getStored() < toPay)) { status = 5; return; }
+        long fromTank = auraTank == null ? 0 : Math.min(toPay, auraTank.getStored());
+        long fromEnvironment = toPay - fromTank;
+        EnvironmentDraw draw = fromEnvironment > 0 ? prepareEnvironmentDraw(fromEnvironment) : null;
+        if (fromEnvironment > 0 && draw == null) { status = 5; return; }
         if (!payEnergy()) return;
-        if (toPay > 0) auraTank.extract(toPay, Action.EXECUTE, AutomationType.INTERNAL);
+        // Both sources have been checked before spending energy or modifying either source.
+        // NaturesAura's aimForZero=false contract drains the exact requested amount.
+        if (draw != null) {
+            draw.chunk().drainAura(draw.pos(), draw.amount(), false, false);
+            environmentAura = Math.max(0, environmentAura - draw.amount());
+        }
+        if (fromTank > 0) auraTank.extract(fromTank, Action.EXECUTE, AutomationType.INTERNAL);
         paidAura += toPay;
         progress = next;
         status = 0;
@@ -201,6 +233,23 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
             resetWork();
         }
         markForSave();
+    }
+
+    private record EnvironmentDraw(IAuraChunk chunk, BlockPos pos, int amount) { }
+
+    private int readEnvironmentAura() {
+        // The API queries NaturesAura's indexed chunks; it does not request neighbouring chunks to load.
+        return Math.max(0, IAuraChunk.getAuraInArea(level, worldPosition, MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get()));
+    }
+
+    private EnvironmentDraw prepareEnvironmentDraw(long amount) {
+        if (kind() != MachineKind.NATURAL_ALTAR || amount > Integer.MAX_VALUE) return null;
+        environmentAura = readEnvironmentAura();
+        if (environmentAura < amount) return null;
+        BlockPos spot = IAuraChunk.getHighestSpot(level, worldPosition, MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get(), worldPosition);
+        if (!level.hasChunkAt(spot)) return null;
+        IAuraChunk chunk = IAuraChunk.getAuraChunk(level, spot);
+        return chunk.drainAura(spot, (int) amount, false, true) == amount ? new EnvironmentDraw(chunk, spot, (int) amount) : null;
     }
 
     private boolean payEnergy() {
@@ -243,8 +292,23 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     public boolean environmentOutput() { return environmentOutput; }
     public double progress() { return progress / (double) Math.max(1, duration); }
     public int status() { return status; }
+    public int environmentAura() { return environmentAura; }
     public IChemicalTank auraTank() { return auraTank; }
     public MachineEnergyContainer<AuraMachine> energy() { return energy; }
+    public GoldModuleSlot goldModuleSlot() { return goldModuleSlot; }
+    public boolean hasInfiniteGold() { return goldModuleSlot != null && goldModuleSlot.getStack().is(Content.INFINITE_GOLD_MODULE); }
+
+    private void refreshModuleEnergy() {
+        if (kind() != MachineKind.FOREST_RITUAL || energy == null || getComponent() == null || level != null && level.isClientSide) return;
+        long normal = MekanismUtils.getEnergyPerTick(this, energy.getBaseEnergyPerTick());
+        energy.setEnergyPerTick(hasInfiniteGold() ? MathUtils.multiplyClamped(normal, MachineConfig.INFINITE_GOLD_POWER_MULTIPLIER.get()) : normal);
+    }
+
+    @Override
+    public void recalculateUpgrades(Upgrade upgrade) {
+        super.recalculateUpgrades(upgrade);
+        refreshModuleEnergy();
+    }
 
     @Override
     protected void collectImplicitComponents(DataComponentMap.Builder builder) {
@@ -267,6 +331,8 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         container.track(SyncableInt.create(() -> progress, v -> progress = v));
         container.track(SyncableInt.create(() -> duration, v -> duration = v));
         container.track(SyncableInt.create(() -> status, v -> status = v));
+        if (kind() == MachineKind.NATURAL_ALTAR)
+            container.track(SyncableInt.create(() -> environmentAura, v -> environmentAura = v));
         container.track(SyncableBoolean.create(() -> environmentOutput, v -> environmentOutput = v));
     }
 

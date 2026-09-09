@@ -24,13 +24,15 @@ en = {"itemGroup.naturesmekanism": "Nature's Mekanism", "chemical.naturesmekanis
 descriptions = [
     ("用 FE 生产灵气。可通过加压管道输出，也可开启环境释放。", "Produces Aura from FE. Supports pressurized tubes and optional environmental release."),
     ("消耗原料、树苗、金叶粉和 FE，执行森林仪式。", "Processes forest recipes using ingredients, a sapling, gold powder and FE."),
-    ("消耗原料、灵气和 FE 进行灌注；催化物不消耗。", "Infuses ingredients using Aura and FE. Catalysts are retained."),
+    ("消耗原料、灵气和 FE 进行灌注；优先使用储罐灵气，不足时使用环境灵气。催化物不消耗。", "Infuses ingredients using Aura and FE. Uses stored Aura first, then environmental Aura. Catalysts are retained."),
     ("替换原版祭祀台，周围仍须保留完整花阵。一份呼唤物处理一批供品。", "Replaces the Offering Table and requires its flower arrangement. One calling item starts a batch."),
 ]
 
 for (name, (cn, english, accent, core)), (desc_cn, desc_en) in zip(MACHINES.items(), descriptions):
     zh[f"block.{ID}.{name}"] = cn
     en[f"block.{ID}.{name}"] = english
+    zh[f"container.{ID}.{name}"] = cn
+    en[f"container.{ID}.{name}"] = english
     zh[f"description.{ID}.{name}"] = desc_cn
     en[f"description.{ID}.{name}"] = desc_en
     # Models reference installed Minecraft/Mekanism textures; no external texture files are copied.
@@ -59,11 +61,29 @@ for key, cn, english in [
     ("environment_on", "输出：管道 + 环境", "Output: tubes + environment"),
     ("environment_off", "输出：管道", "Output: tubes"),
     ("toggle_environment", "切换释放", "Release toggle"),
+    ("gold_module_count", "金叶无限模块：%s / 1", "Infinite Gold Leaf: %s / 1"),
+    ("gold_module_power", "装入后总功耗 ×%s", "Installed: total energy use x%s"),
+    ("environment_aura", "周围灵气（%s 格）：%s", "Aura within %s blocks: %s"),
 ]:
     zh[f"gui.{ID}.{key}"] = cn
     en[f"gui.{ID}.{key}"] = english
+zh[f"item.{ID}.infinite_gold_module"] = "金叶无限模块"
+en[f"item.{ID}.infinite_gold_module"] = "Infinite Gold Leaf Module"
+zh[f"tooltip.{ID}.infinite_gold_module"] = "免除森林仪式专用槽的金叶粉消耗，提高耗电；最多安装 1 个。"
+en[f"tooltip.{ID}.infinite_gold_module"] = "Replaces the forest ritual's dedicated gold powder supply at increased energy cost. Maximum: 1."
+zh[f"tooltip.{ID}.infinite_gold_module.install"] = "放入升级窗口的模块槽，或潜行右键森林仪式机安装。树苗和配方材料仍会消耗。"
+en[f"tooltip.{ID}.infinite_gold_module.install"] = "Insert into the upgrade window's module slot, or sneak-use on a forest ritual machine. Saplings and recipe ingredients are still consumed."
 write(f"assets/{ID}/lang/zh_cn.json", zh)
 write(f"assets/{ID}/lang/en_us.json", en)
+write(f"assets/{ID}/models/item/infinite_gold_module.json", {
+    "parent": "minecraft:item/generated",
+    "textures": {"layer0": "mekanism:item/upgrade_energy", "layer1": "naturesaura:item/gold_leaf"},
+})
+write(f"data/{ID}/recipe/infinite_gold_module.json", {
+    "type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["AGA", "GCG", "AGA"],
+    "key": {"A": {"item": "mekanism:alloy_reinforced"}, "G": {"item": "naturesaura:gold_leaf"}, "C": {"item": "mekanism:advanced_control_circuit"}},
+    "result": {"id": f"{ID}:infinite_gold_module", "count": 1},
+})
 write("data/minecraft/tags/block/mineable/pickaxe.json", {"replace": False, "values": [f"{ID}:{n}" for n in MACHINES]})
 write("data/minecraft/tags/block/needs_iron_tool.json", {"replace": False, "values": [f"{ID}:{n}" for n in MACHINES]})
 
