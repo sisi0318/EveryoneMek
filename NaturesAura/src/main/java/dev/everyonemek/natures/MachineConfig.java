@@ -8,6 +8,7 @@ public final class MachineConfig {
     public static final ModConfigSpec.IntValue OFFERING_TICKS, FOREST_GOLD, EMIT_RATE, EMIT_LIMIT;
     public static final ModConfigSpec.IntValue INFINITE_GOLD_POWER_MULTIPLIER;
     public static final ModConfigSpec.IntValue ALTAR_ENVIRONMENT_RADIUS;
+    public static final ModConfigSpec.IntValue BOTTLER_FE, BOTTLER_TICKS, SIMULATION_POWER_MULTIPLIER;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -17,6 +18,10 @@ public final class MachineConfig {
         FOREST_FE = b.defineInRange("forestFEPerTick", 100, 1, 1_000_000);
         ALTAR_FE = b.defineInRange("altarFEPerTick", 100, 1, 1_000_000);
         OFFERING_FE = b.defineInRange("offeringFEPerTick", 200, 1, 1_000_000);
+        BOTTLER_FE = b.defineInRange("bottlerFEPerTick", 100, 1, 1_000_000);
+        BOTTLER_TICKS = b.defineInRange("bottlerTicks", 40, 1, 12000);
+        SIMULATION_POWER_MULTIPLIER = b.comment("Bottler total energy multiplier with one environment simulation module; Aura cost is unchanged.")
+              .defineInRange("simulationPowerMultiplier", 2, 2, 100);
         OFFERING_TICKS = b.comment("OfferingRecipe has no time field; this is the machine's base batch duration.")
               .defineInRange("offeringTicks", 100, 1, 12000);
         FOREST_GOLD = b.comment("Gold powder consumed per forest ritual, replacing the original 16 powder positions.")
@@ -38,6 +43,7 @@ public final class MachineConfig {
             case FOREST_RITUAL -> FOREST_FE.get();
             case NATURAL_ALTAR -> ALTAR_FE.get();
             case OFFERING -> OFFERING_FE.get();
+            case AURA_BOTTLER -> BOTTLER_FE.get();
         };
     }
 

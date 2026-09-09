@@ -50,12 +50,14 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     private List<OutputInventorySlot> outputs;
     private EnergyInventorySlot energySlot;
     private GoldModuleSlot goldModuleSlot;
+    private SimulationModuleSlot simulationModuleSlot;
     private MachineEnergyContainer<AuraMachine> energy;
     private IChemicalTank auraTank;
     private int progress, duration = 20, batch;
     private long paidAura;
     private CompoundTag workSignature;
     private boolean environmentOutput;
+    private BottlingMode bottlingMode = BottlingMode.AUTO;
     private int status;
     private int environmentAura;
     private int environmentRefreshTicks;
@@ -100,7 +102,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
 
     @Override
     public IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
-        if (kind() != MachineKind.AURA_GENERATOR && kind() != MachineKind.NATURAL_ALTAR) return null;
+        if (!kind().hasChemicalTank()) return null;
         var builder = ChemicalTankHelper.forSideWithConfig(this);
         auraTank = kind() == MachineKind.AURA_GENERATOR
               ? BasicChemicalTank.output(AURA_CAPACITY, listener)
@@ -117,7 +119,8 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         int count = kind().inputCount();
         for (int i = 0; i < count; i++) {
             final int slot = i;
-            int x = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 18 + i % 4 * 18 : 104) : 42 + i * 40;
+            int x = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 18 + i % 4 * 18 : 104)
+                  : kind() == MachineKind.AURA_BOTTLER ? 82 : 42 + i * 40;
             int y = kind() == MachineKind.FOREST_RITUAL ? (i < 8 ? 30 + i / 4 * 18 : 30 + (i - 8) * 22) : 39;
             var input = BasicInventorySlot.at((stack, automation) -> automation != AutomationType.EXTERNAL,
                   (stack, automation) -> true, stack -> RecipeAdapter.accepts(getLevel(), kind(), slot, stack), listener, x, y);
@@ -137,6 +140,11 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
                 refreshModuleEnergy();
             }));
         }
+        if (kind() == MachineKind.AURA_BOTTLER)
+            builder.addSlot(simulationModuleSlot = new SimulationModuleSlot(() -> {
+                listener.onContentsChanged();
+                refreshModuleEnergy();
+            }));
         return builder.build();
     }
 
@@ -146,7 +154,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         refreshModuleEnergy();
         energySlot.fillContainerOrConvert();
         setActive(false);
-        if (kind() == MachineKind.NATURAL_ALTAR && --environmentRefreshTicks <= 0) {
+        if (kind().usesEnvironmentAura() && --environmentRefreshTicks <= 0) {
             environmentAura = readEnvironmentAura();
             environmentRefreshTicks = 10;
         }
@@ -196,7 +204,12 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     private void tickRecipe() {
         RecipeAdapter.Plan plan = RecipeAdapter.find(this, batch);
         if (plan == null && batch > 0) { resetWork(); plan = RecipeAdapter.find(this, 0); }
-        if (plan == null) { resetWork(); status = 4; return; }
+        if (plan == null) {
+            resetWork();
+            status = kind() == MachineKind.AURA_BOTTLER && !inputs.getFirst().isEmpty()
+                  ? bottlingMode.requiresSimulation() && !hasSimulationModule() ? 8 : 7 : 4;
+            return;
+        }
         if (!plan.signature().equals(workSignature)) {
             resetWork();
             workSignature = plan.signature();
@@ -204,8 +217,15 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
             batch = plan.batch();
         }
         if (!canFit(plan.outputs(), true)) { status = 3; return; }
+        if (kind() == MachineKind.AURA_BOTTLER) {
+            long missing = plan.aura() - auraTank.getStored();
+            if (missing > 0 && prepareEnvironmentDraw(missing) == null) { status = 5; return; }
+        }
         int next = Math.min(progress + 1, duration);
-        long totalDue = IngredientAssignment.due(plan.aura(), next, duration);
+        // Pay a whole bottle at completion, as the native bottle does. Paying earlier could invalidate
+        // the environment threshold partway through a bottle that started at exactly 100000 Aura.
+        long totalDue = kind() == MachineKind.AURA_BOTTLER ? (next >= duration ? plan.aura() : 0)
+              : IngredientAssignment.due(plan.aura(), next, duration);
         long toPay = Math.max(0, totalDue - paidAura);
         long fromTank = auraTank == null ? 0 : Math.min(toPay, auraTank.getStored());
         long fromEnvironment = toPay - fromTank;
@@ -240,14 +260,15 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
 
     private int readEnvironmentAura() {
         // The API queries NaturesAura's indexed chunks; it does not request neighbouring chunks to load.
-        return Math.max(0, IAuraChunk.getAuraInArea(level, worldPosition, MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get()));
+        int amount = IAuraChunk.getAuraInArea(level, worldPosition, environmentRadius());
+        return kind() == MachineKind.AURA_BOTTLER ? amount : Math.max(0, amount);
     }
 
     private EnvironmentDraw prepareEnvironmentDraw(long amount) {
-        if (kind() != MachineKind.NATURAL_ALTAR || amount > Integer.MAX_VALUE) return null;
+        if (!kind().usesEnvironmentAura() || amount > Integer.MAX_VALUE) return null;
         environmentAura = readEnvironmentAura();
         if (environmentAura < amount) return null;
-        BlockPos spot = IAuraChunk.getHighestSpot(level, worldPosition, MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get(), worldPosition);
+        BlockPos spot = IAuraChunk.getHighestSpot(level, worldPosition, environmentRadius(), worldPosition);
         if (!level.hasChunkAt(spot)) return null;
         IAuraChunk chunk = IAuraChunk.getAuraChunk(level, spot);
         return chunk.drainAura(spot, (int) amount, false, true) == amount ? new EnvironmentDraw(chunk, spot, (int) amount) : null;
@@ -294,15 +315,29 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     public double progress() { return progress / (double) Math.max(1, duration); }
     public int status() { return status; }
     public int environmentAura() { return environmentAura; }
+    public int environmentRadius() { return kind() == MachineKind.AURA_BOTTLER ? BottlingRules.RANGE : MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get(); }
     public IChemicalTank auraTank() { return auraTank; }
     public MachineEnergyContainer<AuraMachine> energy() { return energy; }
     public GoldModuleSlot goldModuleSlot() { return goldModuleSlot; }
     public boolean hasInfiniteGold() { return goldModuleSlot != null && goldModuleSlot.getStack().is(Content.INFINITE_GOLD_MODULE); }
+    public SimulationModuleSlot simulationModuleSlot() { return simulationModuleSlot; }
+    public boolean hasSimulationModule() { return simulationModuleSlot != null && simulationModuleSlot.getStack().is(Content.SIMULATION_MODULE); }
+    public BottlingMode bottlingMode() { return bottlingMode; }
+    public void cycleBottlingMode() { setBottlingMode(bottlingMode.next(hasSimulationModule())); }
+    public void setBottlingMode(BottlingMode mode) {
+        if (kind() != MachineKind.AURA_BOTTLER || mode == bottlingMode) return;
+        bottlingMode = mode;
+        resetWork();
+        markForSave();
+    }
 
     private void refreshModuleEnergy() {
-        if (kind() != MachineKind.FOREST_RITUAL || energy == null || getComponent() == null || level != null && level.isClientSide) return;
+        if ((kind() != MachineKind.FOREST_RITUAL && kind() != MachineKind.AURA_BOTTLER)
+              || energy == null || getComponent() == null || level != null && level.isClientSide) return;
         long normal = MekanismUtils.getEnergyPerTick(this, energy.getBaseEnergyPerTick());
-        energy.setEnergyPerTick(hasInfiniteGold() ? MathUtils.multiplyClamped(normal, MachineConfig.INFINITE_GOLD_POWER_MULTIPLIER.get()) : normal);
+        int multiplier = hasInfiniteGold() ? MachineConfig.INFINITE_GOLD_POWER_MULTIPLIER.get()
+              : hasSimulationModule() ? MachineConfig.SIMULATION_POWER_MULTIPLIER.get() : 1;
+        energy.setEnergyPerTick(MathUtils.multiplyClamped(normal, multiplier));
     }
 
     @Override
@@ -315,12 +350,15 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
     protected void collectImplicitComponents(DataComponentMap.Builder builder) {
         super.collectImplicitComponents(builder);
         builder.set(Content.ENVIRONMENT_OUTPUT, environmentOutput);
+        if (kind() == MachineKind.AURA_BOTTLER) builder.set(Content.BOTTLING_MODE, bottlingMode.ordinal());
     }
 
     @Override
     protected void applyImplicitComponents(BlockEntity.DataComponentInput input) {
         super.applyImplicitComponents(input);
         environmentOutput = Boolean.TRUE.equals(input.get(Content.ENVIRONMENT_OUTPUT));
+        Integer mode = input.get(Content.BOTTLING_MODE);
+        bottlingMode = BottlingMode.byId(mode == null ? 0 : mode);
     }
 
     @Override
@@ -343,8 +381,10 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         container.track(SyncableInt.create(() -> progress, v -> progress = v));
         container.track(SyncableInt.create(() -> duration, v -> duration = v));
         container.track(SyncableInt.create(() -> status, v -> status = v));
-        if (kind() == MachineKind.NATURAL_ALTAR)
+        if (kind().usesEnvironmentAura())
             container.track(SyncableInt.create(() -> environmentAura, v -> environmentAura = v));
+        if (kind() == MachineKind.AURA_BOTTLER)
+            container.track(SyncableInt.create(() -> bottlingMode.ordinal(), v -> bottlingMode = BottlingMode.byId(v)));
         container.track(SyncableBoolean.create(() -> environmentOutput, v -> environmentOutput = v));
     }
 
@@ -356,6 +396,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         tag.putInt("work_batch", batch);
         tag.putLong("work_aura", paidAura);
         tag.putBoolean("environment_output", environmentOutput);
+        if (kind() == MachineKind.AURA_BOTTLER) tag.putInt("bottling_mode", bottlingMode.ordinal());
         if (workSignature != null) tag.put("work_signature", workSignature);
     }
 
@@ -367,6 +408,7 @@ public final class AuraMachine extends TileEntityConfigurableMachine {
         batch = Math.clamp(tag.getInt("work_batch"), 0, 16);
         paidAura = Math.max(0, tag.getLong("work_aura"));
         environmentOutput = tag.getBoolean("environment_output");
+        bottlingMode = BottlingMode.byId(tag.getInt("bottling_mode"));
         workSignature = tag.contains("work_signature") ? tag.getCompound("work_signature") : null;
     }
 }

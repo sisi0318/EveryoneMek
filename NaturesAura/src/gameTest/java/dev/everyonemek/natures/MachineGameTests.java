@@ -56,6 +56,7 @@ public final class MachineGameTests {
                     case FOREST_RITUAL -> new ItemStack(i == 8 ? Items.OAK_SAPLING : i == 9 ? ModBlocks.GOLD_POWDER : Items.STONE, i + 1);
                     case NATURAL_ALTAR -> new ItemStack(i == 0 ? Items.BONE : ModBlocks.CRUSHING_CATALYST, i + 1);
                     case OFFERING -> new ItemStack(i == 0 ? ModItems.INFUSED_IRON : ModItems.CALLING_SPIRIT, i + 1);
+                    case AURA_BOTTLER -> new ItemStack(ModItems.BOTTLE_TWO_THE_REBOTTLING, 3);
                     default -> ItemStack.EMPTY;
                 };
                 slots.get(i).setStack(ingredient);
@@ -67,6 +68,7 @@ public final class MachineGameTests {
             }
             slots.get(energySlot).setStack(new ItemStack(MekanismItems.ENERGY_TABLET.get()));
             if (m.goldModuleSlot() != null) m.goldModuleSlot().setStack(new ItemStack(Content.INFINITE_GOLD_MODULE.get()));
+            if (m.simulationModuleSlot() != null) m.simulationModuleSlot().setStack(new ItemStack(Content.SIMULATION_MODULE.get()));
             if (m.auraTank() != null) m.auraTank().setStack(new ChemicalStack(Content.AURA, 1234));
             var expected = slots.stream().map(s -> s.getStack().copy()).toList();
             ItemStack drop = Block.getDrops(m.getBlockState(), h.getLevel(), m.getBlockPos(), m, null,

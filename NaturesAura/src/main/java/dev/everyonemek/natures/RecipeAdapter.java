@@ -2,6 +2,8 @@ package dev.everyonemek.natures;
 
 import de.ellpeck.naturesaura.Helper;
 import de.ellpeck.naturesaura.blocks.ModBlocks;
+import de.ellpeck.naturesaura.api.aura.chunk.IAuraChunk;
+import de.ellpeck.naturesaura.items.ModItems;
 import de.ellpeck.naturesaura.recipes.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,6 +27,7 @@ public final class RecipeAdapter {
         if (level == null) return true;
         return switch (kind) {
             case AURA_GENERATOR -> false;
+            case AURA_BOTTLER -> stack.is(ModItems.BOTTLE_TWO_THE_REBOTTLING);
             case FOREST_RITUAL -> slot == 9 ? stack.is(ModBlocks.GOLD_POWDER.asItem())
                   : recipes(level, ModRecipes.TREE_RITUAL_TYPE).stream().anyMatch(h -> slot == 8
                         ? h.value().saplingType.test(stack) : h.value().ingredients.stream().anyMatch(i -> i.test(stack)));
@@ -44,6 +47,18 @@ public final class RecipeAdapter {
         Level level = machine.getLevel();
         List<BasicInventorySlot> in = machine.inputs;
         switch (machine.kind()) {
+            case AURA_BOTTLER -> {
+                if (!in.getFirst().getStack().is(ModItems.BOTTLE_TWO_THE_REBOTTLING)) return null;
+                int environment = IAuraChunk.getAuraInArea(level, machine.getBlockPos(), BottlingRules.RANGE);
+                ItemStack output = BottlingRules.output(level, environment, machine.bottlingMode(), machine.hasSimulationModule());
+                if (output.isEmpty()) return null;
+                int cost = output.is(ModItems.VACUUM_BOTTLE) ? 0 : BottlingRules.AURA_PER_BOTTLE;
+                Plan result = plan(machine, ResourceLocation.fromNamespaceAndPath(NaturesMekanism.ID, "bottling"),
+                      new int[]{1}, output, MachineConfig.BOTTLER_TICKS.get(), cost, 1);
+                result.signature().putInt("bottling_mode", machine.bottlingMode().ordinal());
+                result.signature().putBoolean("simulated", machine.hasSimulationModule());
+                return result;
+            }
             case FOREST_RITUAL -> {
                 for (var holder : recipes(level, ModRecipes.TREE_RITUAL_TYPE)) {
                     TreeRitualRecipe r = holder.value();

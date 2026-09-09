@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "mekanism:item/upgrade_filter",
+    "layer1": "naturesaura:item/aura_bottle"
+  }
+}

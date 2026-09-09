@@ -1,0 +1,51 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SAG",
+    "ACA",
+    "DAV"
+  ],
+  "key": {
+    "S": {
+      "type": "neoforge:components",
+      "items": "naturesaura:aura_bottle",
+      "components": {
+        "naturesaura:aura_bottle_data": {
+          "aura_type": "naturesaura:overworld"
+        }
+      }
+    },
+    "G": {
+      "type": "neoforge:components",
+      "items": "naturesaura:aura_bottle",
+      "components": {
+        "naturesaura:aura_bottle_data": {
+          "aura_type": "naturesaura:nether"
+        }
+      }
+    },
+    "D": {
+      "type": "neoforge:components",
+      "items": "naturesaura:aura_bottle",
+      "components": {
+        "naturesaura:aura_bottle_data": {
+          "aura_type": "naturesaura:end"
+        }
+      }
+    },
+    "V": {
+      "item": "naturesaura:vacuum_bottle"
+    },
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    }
+  },
+  "result": {
+    "id": "naturesmekanism:environment_simulation_module",
+    "count": 1
+  }
+}

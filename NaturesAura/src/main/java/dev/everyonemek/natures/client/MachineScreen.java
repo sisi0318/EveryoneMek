@@ -3,7 +3,6 @@ package dev.everyonemek.natures.client;
 import dev.everyonemek.natures.AuraMachine;
 import dev.everyonemek.natures.MachineKind;
 import dev.everyonemek.natures.MachineMenu;
-import dev.everyonemek.natures.MachineConfig;
 import java.util.List;
 import mekanism.client.gui.GuiConfigurableTile;
 import mekanism.client.gui.element.GuiInnerScreen;
@@ -22,7 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 public final class MachineScreen extends GuiConfigurableTile<AuraMachine, MachineMenu> {
-    private GuiUpgradeWindowTab forestUpgradeTab;
+    private GuiUpgradeWindowTab moduleUpgradeTab;
     public MachineScreen(MachineMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         imageWidth = 238;
@@ -35,14 +34,16 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
     @Override
     protected void addGenericTabs() {
         super.addGenericTabs();
-        if (tile.kind() == MachineKind.FOREST_RITUAL) {
+        if (tile.kind() == MachineKind.FOREST_RITUAL || tile.kind() == MachineKind.AURA_BOTTLER) {
             // Keep the native security/redstone tabs and swap only the upgrade-window factory.
             var original = children().stream().filter(GuiUpgradeWindowTab.class::isInstance).findFirst().orElseThrow();
             removeWidget(original);
-            forestUpgradeTab = addRenderableWidget(new GuiUpgradeWindowTab(this, tile, () -> forestUpgradeTab) {
+            moduleUpgradeTab = addRenderableWidget(new GuiUpgradeWindowTab(this, tile, () -> moduleUpgradeTab) {
                 @Override
                 protected GuiWindow createWindow(SelectedWindowData data) {
-                    return new ForestUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
+                    return tile.kind() == MachineKind.FOREST_RITUAL
+                          ? new ForestUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data)
+                          : new BottlerUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
                 }
             });
         }
@@ -73,10 +74,23 @@ public final class MachineScreen extends GuiConfigurableTile<AuraMachine, Machin
             int progressY = 47 - progressType.getHeight() / 2;
             addRenderableWidget(new GuiProgress(tile::progress, progressType, this, progressX, progressY));
         }
-        boolean altar = tile.kind() == MachineKind.NATURAL_ALTAR;
-        addRenderableWidget(new GuiInnerScreen(this, 18, 94, tile.kind() == MachineKind.AURA_GENERATOR ? 108 : 180, altar ? 28 : 18,
-              () -> altar ? List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()),
-                    Component.translatable("gui.naturesmekanism.environment_aura", MachineConfig.ALTAR_ENVIRONMENT_RADIUS.get(), TextUtils.format(tile.environmentAura())))
+        if (tile.kind() == MachineKind.AURA_BOTTLER) {
+            addRenderableWidget(new MekanismButton(this, 18, 39, 58, 16,
+                  Component.translatable(tile.bottlingMode().translationKey()), (button, x, y) -> {
+                      minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 1);
+                      return true;
+                  }) {
+                @Override
+                public void tick() {
+                    super.tick();
+                    setMessage(Component.translatable(tile.bottlingMode().translationKey()));
+                }
+            });
+        }
+        boolean environment = tile.kind().usesEnvironmentAura();
+        addRenderableWidget(new GuiInnerScreen(this, 18, 94, tile.kind() == MachineKind.AURA_GENERATOR ? 108 : 180, environment ? 28 : 18,
+              () -> environment ? List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()),
+                    Component.translatable("gui.naturesmekanism.environment_aura", tile.environmentRadius(), TextUtils.format(tile.environmentAura())))
                     : List.of(Component.translatable("gui.naturesmekanism.status." + tile.status()))));
     }
 

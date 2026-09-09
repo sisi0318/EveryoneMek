@@ -1,0 +1,6 @@
+{
+  "parent": "naturesmekanism:block/aura_bottler",
+  "textures": {
+    "north": "naturesmekanism:block/aura_bottler/front_active"
+  }
+}

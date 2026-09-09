@@ -36,8 +36,11 @@ public final class Content {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NaturesMekanism.ID);
     public static final DeferredItem<InfiniteGoldModuleItem> INFINITE_GOLD_MODULE = ITEMS.register("infinite_gold_module",
           () -> new InfiniteGoldModuleItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
+    public static final DeferredItem<SimulationModuleItem> SIMULATION_MODULE = ITEMS.register("environment_simulation_module",
+          () -> new SimulationModuleItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
     public static final DataComponentDeferredRegister COMPONENTS = new DataComponentDeferredRegister(NaturesMekanism.ID);
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> ENVIRONMENT_OUTPUT = COMPONENTS.registerBoolean("environment_output");
+    public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<Integer>> BOTTLING_MODE = COMPONENTS.registerInt("bottling_mode");
     public static final DeferredChemical<Chemical> AURA = CHEMICALS.register("aura", () -> new Chemical(ChemicalBuilder.builder().tint(0x89CC37)));
     public static final ContainerTypeRegistryObject<MachineMenu> MENU = MENUS.register("machine", AuraMachine.class, MachineMenu::new);
     public static final Map<MachineKind, BlockRegistryObject<MachineBlock, ItemBlockTooltip<MachineBlock>>> MACHINES = new EnumMap<>(MachineKind.class);
@@ -51,7 +54,7 @@ public final class Content {
                   .withEnergyConfig(() -> EnergyUnit.FORGE_ENERGY.convertTo(MachineConfig.baseFE(kind)),
                         () -> EnergyUnit.FORGE_ENERGY.convertTo(4_000_000L))
                   .withSupportedUpgrades(Upgrade.SPEED, Upgrade.ENERGY)
-                  .with(kind == MachineKind.AURA_GENERATOR || kind == MachineKind.NATURAL_ALTAR
+                  .with(kind.hasChemicalTank()
                         ? AttributeSideConfig.ADVANCED_ELECTRIC_MACHINE : AttributeSideConfig.ELECTRIC_MACHINE)
                   .build();
             var block = BLOCKS.registerDetails(kind.id, () -> new MachineBlock(kind, type));
@@ -62,14 +65,14 @@ public final class Content {
                     var slots = ItemSlotsBuilder.builder().addInput(kind.inputCount());
                     if (kind.inputCount() > 0) slots.addOutput(4);
                     slots.addEnergy();
-                    if (kind == MachineKind.FOREST_RITUAL)
+                    if (kind == MachineKind.FOREST_RITUAL || kind == MachineKind.AURA_BOTTLER)
                         slots.addSlot((containerType, stack, index) -> new ComponentBackedInventorySlot(stack, index,
                               (item, automation) -> automation != AutomationType.EXTERNAL,
                               (item, automation) -> automation != AutomationType.EXTERNAL,
-                              item -> item.is(INFINITE_GOLD_MODULE), true, 1));
+                              item -> item.is(kind == MachineKind.FOREST_RITUAL ? INFINITE_GOLD_MODULE : SIMULATION_MODULE), true, 1));
                     return slots.build();
                 });
-                if (kind == MachineKind.AURA_GENERATOR || kind == MachineKind.NATURAL_ALTAR)
+                if (kind.hasChemicalTank())
                     holder.addAttachmentOnlyContainers(ContainerType.CHEMICAL, () -> ChemicalTanksBuilder.builder()
                           .addBasic(AuraMachine.AURA_CAPACITY, stack -> stack.is(AURA)).build());
                 // ItemBlockTooltip already registers its energy attachment and capability.
@@ -85,6 +88,7 @@ public final class Content {
               .displayItems((parameters, output) -> {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind).asItem());
                   output.accept(INFINITE_GOLD_MODULE);
+                  output.accept(SIMULATION_MODULE);
               }).build());
     }
 

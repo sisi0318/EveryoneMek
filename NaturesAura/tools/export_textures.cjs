@@ -4,7 +4,7 @@ const path = require('node:path');
 const {createRequire} = require('node:module');
 const sharp = createRequire(path.resolve(__dirname, '../art/package.json'))('sharp');
 const root = path.resolve(__dirname, '..');
-const machines = ['universal_aura_generator', 'universal_forest_ritual', 'universal_natural_altar', 'universal_offering'];
+const machines = ['universal_aura_generator', 'universal_forest_ritual', 'universal_natural_altar', 'universal_offering', 'aura_bottler'];
 const faces = {front: [0, 0], top: [1, 0], side: [0, 1], front_active: [1, 1]};
 
 async function pixelFace(machine, face, transform, shade) {
@@ -20,8 +20,8 @@ async function pixelFace(machine, face, transform, shade) {
 }
 
 async function renderPreview() {
-  const titles = ['通用灵气发生器', '通用森林仪式', '通用自然祭坛', '通用呼唤仪式'];
-  const subtitles = ['电力转化 · 绿色能量条', '树苗 · 金叶粉 · 八方原料', '灵气灌注 · 催化接口', '供品托盘 · 呼唤指示灯'];
+  const titles = ['通用灵气发生器', '通用森林仪式', '通用自然祭坛', '通用呼唤仪式', '灵气装瓶机'];
+  const subtitles = ['电力转化 · 绿色能量条', '树苗 · 金叶粉 · 八方原料', '灵气灌注 · 催化接口', '供品托盘 · 呼唤指示灯', '灌装喷嘴 · 玻璃瓶 · 模拟环境'];
   const content = [];
   for (let i = 0; i < machines.length; i++) {
     const x = 48 + i * 320;
@@ -33,13 +33,14 @@ async function renderPreview() {
     content.push(`</g><text x="${x + 128}" y="403" text-anchor="middle" font-size="22" font-weight="600">${titles[i]}</text>`);
     content.push(`<text x="${x + 128}" y="434" text-anchor="middle" font-size="15" fill="#576359">${subtitles[i]}</text>`);
   }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1376" height="520" viewBox="0 0 1376 520">
-    <rect width="1376" height="520" fill="#edf0eb"/>
+  const width = 96 + machines.length * 320;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="520" viewBox="0 0 ${width} 520">
+    <rect width="${width}" height="520" fill="#edf0eb"/>
     <g font-family="Microsoft YaHei,Arial,sans-serif" fill="#24302b">
       <text x="48" y="46" font-size="25" font-weight="700">Nature's Mekanism</text>
-      <text x="1328" y="44" text-anchor="end" font-size="17" fill="#576359">16×16 · 原版 Mek 像素风格</text>
+      <text x="${width - 48}" y="44" text-anchor="end" font-size="17" fill="#576359">16×16 · 原版 Mek 像素风格</text>
       ${content.join('')}
-      <text x="688" y="491" text-anchor="middle" font-size="15" fill="#576359">方块材质预览 · 运行状态</text>
+      <text x="${width / 2}" y="491" text-anchor="middle" font-size="15" fill="#576359">方块材质预览 · 运行状态</text>
     </g></svg>`;
   await fs.writeFile(path.join(root, 'art/block-preview.svg'), svg);
   await sharp(Buffer.from(svg)).png().toFile(path.join(root, 'art/block-preview.png'));
@@ -68,9 +69,9 @@ async function main() {
       });
     }
   }
-  await sharp({create: {width: 720, height: 720, channels: 3, background: '#b4b9b5'}})
+  await sharp({create: {width: 720, height: 16 + machines.length * 176, channels: 3, background: '#b4b9b5'}})
     .composite(images).png().toFile(path.join(root, 'art/texture-sheet.png'));
   await renderPreview();
-  console.log('Exported 16 original 16x16 block face PNGs and a nearest-neighbour review sheet.');
+  console.log(`Exported ${machines.length * 4} original 16x16 block face PNGs and a nearest-neighbour review sheet.`);
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
