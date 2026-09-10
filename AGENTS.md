@@ -149,6 +149,7 @@ Flat opaque atlas; no perspective, text, bloom, gradients, fine noise or fantasy
 - 打包检查版本、资源与类，不能含 GameTest、开发世界、源图、私人文档；语言资源变化也要重新打包。
 - 功能发布更新版本、README、CHANGELOG；纯开发文档修改不提升模组版本，不生成新 JAR。
 - 远程入口是 `.github/workflows/build.yml`。按当前提交 SHA 检查 CI，不能拿旧提交的成功当本次成功。
+- CI 模组列表复用 `.github/scripts/prepare_release.py`，目录选择由 `.github/scripts/select_builds.py` 负责：push 比较整个推送范围，PR 比较 merge-base；删除与跨目录重命名都应覆盖，无法确定差异时检查全部模组。只改文档跳过编译，共享配置检查全部；新增模组时同步手动构建与发布选项。
 - `gh run watch` 网络超时不代表 CI 失败；可用一次 `gh run view ... --json status,conclusion,url` 重查，准确报告结果。
 - 交付提供 JAR、使用方法、验证结果和必要更新步骤，说明尽量简短。
 

@@ -3,32 +3,57 @@ name: Build
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
   workflow_dispatch:
+    inputs:
+      module:
+        description: 要构建的模组（all 为全部）
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - NaturesAura
+          - Ars-Nouveau
 
 permissions:
   contents: read
 
-concurrency:
-  group: build-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  select:
+    name: Select changed modules
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.modules.outputs.matrix }}
+      has_changes: ${{ steps.modules.outputs.has_changes }}
+    steps:
+      - name: Check out source and diff history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check module selection rules
+        run: python3 -B -m unittest discover -s .github/scripts -p 'test_select_builds.py'
+
+      - name: Select build matrix
+        id: modules
+        run: python3 -B .github/scripts/select_builds.py
+
   mod:
+    needs: select
+    if: ${{ needs.select.outputs.has_changes == 'true' }}
     name: ${{ matrix.mod.archive }} / Java 21
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        mod:
-          - { directory: NaturesAura, archive: NaturesMekanism }
-          - { directory: Ars-Nouveau, archive: ArsMekanism }
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    concurrency:
+      group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.mod.directory }}
+      cancel-in-progress: true
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/${{ matrix.mod.directory }}/.gradle-home
     defaults:
