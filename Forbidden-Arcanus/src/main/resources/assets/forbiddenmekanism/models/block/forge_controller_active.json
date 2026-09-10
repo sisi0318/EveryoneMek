@@ -1,0 +1,6 @@
+{
+  "parent": "forbiddenmekanism:block/forge_controller",
+  "textures": {
+    "north": "forbiddenmekanism:block/forge_controller/front_active"
+  }
+}

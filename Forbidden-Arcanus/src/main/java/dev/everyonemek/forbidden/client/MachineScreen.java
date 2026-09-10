@@ -1,0 +1,99 @@
+package dev.everyonemek.forbidden.client;
+
+import dev.everyonemek.forbidden.*;
+import java.util.*;
+import java.util.function.Supplier;
+import mekanism.client.gui.GuiConfigurableTile;
+import mekanism.client.gui.element.GuiInnerScreen;
+import mekanism.client.gui.element.bar.GuiVerticalPowerBar;
+import mekanism.client.gui.element.button.MekanismButton;
+import mekanism.client.gui.element.progress.GuiProgress;
+import mekanism.client.gui.element.progress.ProgressType;
+import mekanism.client.gui.element.slot.GuiSlot;
+import mekanism.client.gui.element.slot.SlotType;
+import mekanism.client.gui.element.tab.GuiEnergyTab;
+import mekanism.client.gui.element.tab.window.GuiUpgradeWindowTab;
+import mekanism.client.gui.element.window.GuiWindow;
+import mekanism.common.inventory.container.SelectedWindowData;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+
+public final class MachineScreen extends GuiConfigurableTile<Controller, MachineMenu> {
+    private GuiUpgradeWindowTab upgradeTab;
+    private List<Recipes.Choice> choices;
+    public MachineScreen(MachineMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
+        imageWidth = 258; imageHeight = 324; inventoryLabelX = 48; inventoryLabelY = 228; dynamicSlots = true;
+    }
+    public static Component text(String key, Object... args) { return Component.translatable("gui.forbiddenmekanism." + key, args); }
+    @Override protected void addGenericTabs() {
+        super.addGenericTabs();
+        if (tile.kind().forge()) {
+            var original = children().stream().filter(GuiUpgradeWindowTab.class::isInstance).findFirst().orElseThrow();
+            removeWidget(original);
+            upgradeTab = addRenderableWidget(new GuiUpgradeWindowTab(this, tile, () -> upgradeTab) {
+                @Override protected GuiWindow createWindow(SelectedWindowData data) {
+                    return new HammerUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
+                }
+            });
+        }
+    }
+    private void button(int x, int y, int width, Supplier<Component> label, int action) {
+        addRenderableWidget(new MekanismButton(this, x, y, width, 16, label.get(), (button, mx, my) -> {
+            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, action); return true;
+        }) { @Override public void tick() { super.tick(); setMessage(label.get()); } });
+    }
+    @Override protected void addGuiElements() {
+        super.addGuiElements();
+        addRenderableWidget(new GuiVerticalPowerBar(this, tile.energy(), 242, 24, 94));
+        addRenderableWidget(new GuiEnergyTab(this, tile.energy(), tile::getActive));
+        for (int i = 0; i < (tile.kind().forge() ? 9 : 7); i++) {
+            int[] xy = MachineMenu.nativeCoordinates(tile.kind(), i);
+            addRenderableWidget(new GuiSlot(SlotType.NORMAL, this, xy[0] - 1, xy[1] - 1));
+        }
+        ProgressType arrow = ProgressType.SMALL_RIGHT;
+        addRenderableWidget(new GuiProgress(() -> Math.min(1, tile.progress / (double) tile.duration), arrow, this,
+              (89 + 143 - arrow.getWidth()) / 2, 110 - arrow.getHeight() / 2));
+        addRenderableWidget(new GuiInnerScreen(this, 18, 126, 220, 18,
+              () -> List.of(text("status." + tile.status))));
+        addRenderableWidget(new GuiInnerScreen(this, 18, 148, 220, 54, this::nativeDetails));
+        button(18, 207, 60, () -> text("bind"), 0);
+        button(82, 207, 50, () -> text(tile.enabled ? "pause" : "resume"), 1);
+        addRenderableWidget(new MekanismButton(this, 136, 207, 58, 16, text("recipes"),
+              (button, mx, my) -> { addWindow(new GuiRecipeSelector(this, tile, menu.containerId)); return true; }));
+        button(198, 207, 40, () -> text(tile.kind().forge() ? "reset" : "xp"), tile.kind().forge() ? 2 : 3);
+    }
+    private List<Component> nativeDetails() {
+        var lines = new ArrayList<Component>();
+        lines.add(text("target", tile.binding.label().isEmpty() ? text("unbound") : tile.binding.label()));
+        if (tile.observed[0] < 0) { lines.add(text("unmeasured")); return lines; }
+        if (tile.kind().forge()) {
+            lines.add(text("tier_progress", tile.nativeTier, tile.progress, tile.duration));
+            for (int i = 0; i < 4; i += 2) lines.add(text("resource_pair", text("resource." + i), value(i), tile.capacities[i],
+                  text("resource." + (i + 1)), value(i + 1), tile.capacities[i + 1]));
+        } else {
+            lines.add(text("fire_fuel", text("fire." + Math.max(0, tile.observed[7])), Math.max(0, tile.observed[1]) / 20, Math.max(0, tile.observed[0]) / 20));
+            lines.add(text("clibano_progress", Math.max(0, tile.observed[3]), Math.max(0, tile.observed[5]), Math.max(0, tile.observed[4]), Math.max(0, tile.observed[6])));
+            lines.add(text("residues", value(8), 64));
+        }
+        if (choices == null) choices = Recipes.choices(tile.getLevel(), tile.kind());
+        String selected = tile.recipeLock.isEmpty() ? tile.selectedRecipe : tile.recipeLock;
+        var choice = choices.stream().filter(c -> c.id().toString().equals(selected)).findFirst().orElse(null);
+        lines.add(choice == null ? text("automatic") : choice.name());
+        return lines;
+    }
+    private Object value(int index) { return tile.observed[index] < 0 ? "—" : tile.observed[index]; }
+    @Override protected void drawForegroundText(GuiGraphics graphics, int mouseX, int mouseY) {
+        super.drawForegroundText(graphics, mouseX, mouseY);
+        renderTitleText(graphics);
+        renderInventoryText(graphics);
+        graphics.drawString(font, text("stock"), 18, 19, titleTextColor(), false);
+        graphics.drawString(font, text("output"), 200, 19, titleTextColor(), false);
+        graphics.drawString(font, text("supplies"), 18, 90, titleTextColor(), false);
+        graphics.drawString(font, text("enhancers"), 112, 19, titleTextColor(), false);
+        graphics.drawString(font, text(tile.kind().forge() ? "resources" : "fuel_soul"), 112, 54, titleTextColor(), false);
+        graphics.drawString(font, text(tile.kind().forge() ? "ritual" : "products"), 130, 90, titleTextColor(), false);
+        if (tile.kind().forge()) graphics.drawString(font, text("hammer"), 180, 72, titleTextColor(), false);
+    }
+}

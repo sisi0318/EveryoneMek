@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ASA",
+    "CKC",
+    "AGA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "K": {
+      "item": "forbidden_arcanus:mundabitur_dust"
+    },
+    "G": {
+      "item": "forbidden_arcanus:arcane_crystal_block"
+    }
+  },
+  "result": {
+    "id": "forbiddenmekanism:forge_controller",
+    "count": 1
+  }
+}

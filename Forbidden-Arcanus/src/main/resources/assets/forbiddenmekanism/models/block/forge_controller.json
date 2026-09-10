@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "forbiddenmekanism:block/forge_controller/side",
+    "north": "forbiddenmekanism:block/forge_controller/front",
+    "up": "forbiddenmekanism:block/forge_controller/top",
+    "south": "forbiddenmekanism:block/forge_controller/side",
+    "east": "forbiddenmekanism:block/forge_controller/side",
+    "west": "forbiddenmekanism:block/forge_controller/side",
+    "down": "forbiddenmekanism:block/forge_controller/side"
+  }
+}

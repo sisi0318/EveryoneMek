@@ -1,0 +1,6 @@
+{
+  "parent": "forbiddenmekanism:block/clibano_controller",
+  "textures": {
+    "north": "forbiddenmekanism:block/clibano_controller/front_active"
+  }
+}

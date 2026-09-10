@@ -1,0 +1,13 @@
+Forbidden Mekanism is original addon code licensed under MIT.
+
+Mekanism is a separate MIT-licensed runtime dependency. Its notice is retained in META-INF/licenses/Mekanism.txt.
+Forbidden & Arcanus 2.6.1 and Valhelsia Core 1.1.4 declare All Rights Reserved in their release metadata.
+They are separate dependencies and are not bundled in this addon. This addon calls their public APIs and applies narrow state/completion hooks.
+Their implementation source, textures and models are not included.
+
+Project: https://github.com/sisi0318/EveryoneMek
+Forbidden & Arcanus: https://github.com/stal111/Forbidden-Arcanus/tree/1.21.1
+Valhelsia Core: https://github.com/ValhelsiaTeam/Valhelsia-Core
+Mekanism: https://github.com/mekanism/Mekanism
+
+The controller and module artwork was generated with the built-in image_gen tool. Source art, prompts and export instructions are available in the repository's Forbidden-Arcanus/art directory.
