@@ -12,6 +12,7 @@ on:
         options:
           - NaturesAura
           - Ars-Nouveau
+          - Forbidden-Arcanus
       draft:
         description: 仅创建草稿（勾选后不会公开发布）
         type: boolean

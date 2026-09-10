@@ -17,7 +17,7 @@ def modules_for_paths(paths):
         if directory in MODULES:
             selected.add(directory)
         else:
-            # Shared workflows, scripts and root configuration can affect either addon.
+            # Shared workflows, scripts and root configuration can affect every addon.
             return list(MODULES)
     return [module for module in MODULES if module in selected]
 

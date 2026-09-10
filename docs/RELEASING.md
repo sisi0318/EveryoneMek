@@ -23,9 +23,10 @@ GitHub 的 `Latest` 是整个仓库共用的标记，本工作流不自动设置
 
 ## 新增可发布模组
 
-同时更新以下两处即可接入：
+同时更新以下三处即可接入：
 
 - `.github/workflows/release.yml` 中 `module.options` 的选项。
+- `.github/workflows/build.yml` 中 `module.options` 的选项。
 - `.github/scripts/prepare_release.py` 中 `MODULES` 的目录、显示名、归档名前缀、mod ID 和 Java 版本。
 
 目前支持的项目使用独立 Gradle Wrapper、`mod_version` 属性和 NeoForge 模组元数据。接入结构不同的项目时，应同步调整打包元数据校验。

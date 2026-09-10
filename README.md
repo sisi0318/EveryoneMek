@@ -8,13 +8,15 @@
 
 - [Nature's Mekanism](NaturesAura/README.md)：自然灵气供给、仪式加工、装瓶、环境调控、生物生产与矿物凝聚室。
 - [Ars Mekanism](Ars-Nouveau/README.md)：魔源供给与转换、灌注与附魔、萃取与粉碎、魔符抄写、药水加工，以及德格米、风转草和仪式火盆自动化。
+- [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻台与炽炉控制器，自动备料、补给、挥锤和出料，支持无限锤子模块。
 
 开发资料：
 
 - [NaturesAura 适配与机器设计](docs/NATURES_AURA_DESIGN.md)
 - [Ars Nouveau 机器设计提案](Ars-Nouveau/DESIGN.md)
+- [Forbidden & Arcanus 赫菲斯托斯锻台与炽炉自动化方案](Forbidden-Arcanus/DESIGN.md)
 
-推送到 `main` 或提交 PR 时，CI 按实际改动选择模组：只改 `Ars-Nouveau/` 就只构建 Ars Mekanism，只改 `NaturesAura/` 就只构建 Nature's Mekanism；同时改两个目录或共享构建配置时构建两者。纯 Markdown 或 `docs/` 改动只进行轻量检查，不启动模组编译。Actions 的 **Build → Run workflow** 可手动选择单个模组或 `all`。
+推送到 `main` 或提交 PR 时，CI 按实际改动选择模组：只改某个模组目录，就只构建该模组；跨目录改动检查涉及的模组，共享构建配置改动检查全部模组。纯 Markdown 或 `docs/` 改动只进行轻量检查，不启动模组编译。Actions 的 **Build → Run workflow** 可手动选择单个模组或 `all`。
 
 成功后可在对应运行的 Artifacts 中按模组名称下载 JAR，测试报告单独保存。构建并发按模组区分，新提交只取消同一模组的旧构建。
 

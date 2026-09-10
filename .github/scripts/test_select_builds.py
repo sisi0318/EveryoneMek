@@ -12,7 +12,9 @@ class BuildSelectionTest(unittest.TestCase):
         cases = [
             (["Ars-Nouveau/src/main/java/Machine.java", "NaturesAura/README.md"], ["Ars-Nouveau"]),
             (["NaturesAura/src/main/resources/data/deleted.json"], ["NaturesAura"]),
-            (["Ars-Nouveau/old.java", "NaturesAura/new.java"], list(MODULES)),
+            (["Ars-Nouveau/old.java", "NaturesAura/new.java"], ["NaturesAura", "Ars-Nouveau"]),
+            (["Forbidden-Arcanus/src/main/java/Controller.java"], ["Forbidden-Arcanus"]),
+            (["Ars-Nouveau/old.java", "Forbidden-Arcanus/new.java"], ["Ars-Nouveau", "Forbidden-Arcanus"]),
             (["README.md", "Ars-Nouveau/AGENTS.md", "docs/diagram.svg"], []),
             ([".github/workflows/build.yml"], list(MODULES)),
             ([".gitattributes"], list(MODULES)),
@@ -66,13 +68,13 @@ class GitDiffSelectionTest(unittest.TestCase):
         self.write("Ars-Nouveau/other.java", "another machine\n")
         second = self.commit()
         event = {"before": self.initial, "after": second}
-        self.assertEqual(select_modules(event, "push", self.repo), list(MODULES))
+        self.assertEqual(select_modules(event, "push", self.repo), ["NaturesAura", "Ars-Nouveau"])
         (self.repo / "NaturesAura/space name.java").rename(self.repo / "Ars-Nouveau/moved.java")
         moved = self.commit()
         paths = changed_paths({"before": second, "after": moved}, "push", self.repo)
         self.assertIn("NaturesAura/space name.java", paths)
         self.assertIn("Ars-Nouveau/moved.java", paths)
-        self.assertEqual(modules_for_paths(paths), list(MODULES))
+        self.assertEqual(modules_for_paths(paths), ["NaturesAura", "Ars-Nouveau"])
         self.assertEqual(select_modules({"before": first, "after": second}, "push", self.repo), ["Ars-Nouveau"])
 
     def test_pull_request_excludes_changes_only_on_base_branch(self):
@@ -85,7 +87,7 @@ class GitDiffSelectionTest(unittest.TestCase):
         event = {"pull_request": {"base": {"sha": base}, "head": {"sha": head}}}
         self.assertEqual(select_modules(event, "pull_request", self.repo), ["Ars-Nouveau"])
 
-    def test_unavailable_old_revision_falls_back_to_both(self):
+    def test_unavailable_old_revision_falls_back_to_all(self):
         event = {"before": "f" * 40, "after": self.initial}
         self.assertEqual(select_modules(event, "push", self.repo), list(MODULES))
 

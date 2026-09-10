@@ -8,7 +8,7 @@ import shutil
 import tomllib
 from zipfile import ZipFile
 
-# Add new projects here and to release.yml's module choices.
+# Add new projects here and to build.yml/release.yml's module choices.
 MODULES = {
     "NaturesAura": {
         "directory": "NaturesAura",
@@ -22,6 +22,13 @@ MODULES = {
         "name": "Ars Mekanism",
         "archive": "ArsMekanism",
         "mod_id": "arsmekanism",
+        "java": "21",
+    },
+    "Forbidden-Arcanus": {
+        "directory": "Forbidden-Arcanus",
+        "name": "Forbidden Mekanism",
+        "archive": "ForbiddenMekanism",
+        "mod_id": "forbiddenmekanism",
         "java": "21",
     },
 }

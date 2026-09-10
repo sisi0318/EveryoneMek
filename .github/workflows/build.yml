@@ -16,6 +16,7 @@ on:
           - all
           - NaturesAura
           - Ars-Nouveau
+          - Forbidden-Arcanus
 
 permissions:
   contents: read
