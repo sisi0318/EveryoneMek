@@ -9,7 +9,7 @@ config="forbiddenmekanism.mixins.json"
 modId="forbiddenmekanism"
 version="${version}"
 displayName="Forbidden Mekanism"
-description='''Mekanism automation controllers for the Hephaestus Forge and Clibano.'''
+description='''A Mekanism forging chamber with internal Aureal production and tier installers, plus native Clibano automation.'''
 
 [[dependencies.forbiddenmekanism]]
 modId="minecraft"

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "forbidden_arcanus:arcane_crystal_block"
+    },
+    {
+      "item": "forbidden_arcanus:arcane_crystal_block"
+    },
+    {
+      "item": "forbidden_arcanus:arcane_polished_darkstone"
+    },
+    {
+      "item": "forbidden_arcanus:mundabitur_dust"
+    }
+  ],
+  "result": {
+    "id": "forbiddenmekanism:glow_module",
+    "count": 1
+  }
+}

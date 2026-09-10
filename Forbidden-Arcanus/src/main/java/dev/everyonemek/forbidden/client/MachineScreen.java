@@ -34,7 +34,7 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
             removeWidget(original);
             upgradeTab = addRenderableWidget(new GuiUpgradeWindowTab(this, tile, () -> upgradeTab) {
                 @Override protected GuiWindow createWindow(SelectedWindowData data) {
-                    return new HammerUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
+                    return new GlowUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
                 }
             });
         }
@@ -48,26 +48,28 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         super.addGuiElements();
         addRenderableWidget(new GuiVerticalPowerBar(this, tile.energy(), 242, 24, 94));
         addRenderableWidget(new GuiEnergyTab(this, tile.energy(), tile::getActive));
-        for (int i = 0; i < (tile.kind().forge() ? 9 : 7); i++) {
+        for (int i = 0; i < (tile.kind().forge() ? 0 : 7); i++) {
             int[] xy = MachineMenu.nativeCoordinates(tile.kind(), i);
             addRenderableWidget(new GuiSlot(SlotType.NORMAL, this, xy[0] - 1, xy[1] - 1));
         }
         ProgressType arrow = ProgressType.SMALL_RIGHT;
         addRenderableWidget(new GuiProgress(() -> Math.min(1, tile.progress / (double) tile.duration), arrow, this,
-              (89 + 143 - arrow.getWidth()) / 2, 110 - arrow.getHeight() / 2));
+              tile.kind().forge() ? (71 + 199 - arrow.getWidth()) / 2 : (89 + 143 - arrow.getWidth()) / 2, 110 - arrow.getHeight() / 2));
         addRenderableWidget(new GuiInnerScreen(this, 18, 126, 220, 18,
-              () -> List.of(text("status." + tile.status))));
+              () -> List.of(text(tile.kind().forge() && tile.status == Controller.STRUCTURE ? "platform_missing" : "status." + tile.status))));
         addRenderableWidget(new GuiInnerScreen(this, 18, 148, 220, 54, this::nativeDetails));
-        button(18, 207, 60, () -> text("bind"), 0);
-        button(82, 207, 50, () -> text(tile.enabled ? "pause" : "resume"), 1);
-        addRenderableWidget(new MekanismButton(this, 136, 207, 58, 16, text("recipes"),
+        if (!tile.kind().forge()) button(18, 207, 60, () -> text("bind"), 0);
+        button(tile.kind().forge() ? 18 : 82, 207, tile.kind().forge() ? 106 : 50, () -> text(tile.enabled ? "pause" : "resume"), 1);
+        addRenderableWidget(new MekanismButton(this, tile.kind().forge() ? 132 : 136, 207, tile.kind().forge() ? 106 : 58, 16, text("recipes"),
               (button, mx, my) -> { addWindow(new GuiRecipeSelector(this, tile, menu.containerId)); return true; }));
-        button(198, 207, 40, () -> text(tile.kind().forge() ? "reset" : "xp"), tile.kind().forge() ? 2 : 3);
+        if (!tile.kind().forge()) button(198, 207, 40, () -> text("xp"), 3);
     }
     private List<Component> nativeDetails() {
         var lines = new ArrayList<Component>();
-        lines.add(text("target", tile.binding.label().isEmpty() ? text("unbound") : tile.binding.label()));
-        if (tile.observed[0] < 0) { lines.add(text("unmeasured")); return lines; }
+        if (!tile.kind().forge()) {
+            lines.add(text("target", tile.binding.label().isEmpty() ? text("unbound") : tile.binding.label()));
+            if (tile.observed[0] < 0) { lines.add(text("unmeasured")); return lines; }
+        }
         if (tile.kind().forge()) {
             lines.add(text("tier_progress", tile.nativeTier, tile.progress, tile.duration));
             for (int i = 0; i < 4; i += 2) lines.add(text("resource_pair", text("resource." + i), value(i), tile.capacities[i],
@@ -90,10 +92,9 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         renderInventoryText(graphics);
         graphics.drawString(font, text("stock"), 18, 19, titleTextColor(), false);
         graphics.drawString(font, text("output"), 200, 19, titleTextColor(), false);
-        graphics.drawString(font, text("supplies"), 18, 90, titleTextColor(), false);
+        if (!tile.kind().forge()) graphics.drawString(font, text("supplies"), 18, 90, titleTextColor(), false);
         graphics.drawString(font, text("enhancers"), 112, 19, titleTextColor(), false);
         graphics.drawString(font, text(tile.kind().forge() ? "resources" : "fuel_soul"), 112, 54, titleTextColor(), false);
-        graphics.drawString(font, text(tile.kind().forge() ? "ritual" : "products"), 130, 90, titleTextColor(), false);
-        if (tile.kind().forge()) graphics.drawString(font, text("hammer"), 180, 72, titleTextColor(), false);
+        if (!tile.kind().forge()) graphics.drawString(font, text("products"), 130, 90, titleTextColor(), false);
     }
 }

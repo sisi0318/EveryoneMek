@@ -8,27 +8,96 @@
       "id": "forge_controller",
       "source": "Forbidden-Arcanus/art/source/forge_controller.png",
       "generated_file": "exec-4a14896f-c7db-493a-b964-ff8993db84be.png",
-      "references": ["Ars-Nouveau/art/source/ritual_controller.png"],
+      "references": [
+        "Ars-Nouveau/art/source/ritual_controller.png"
+      ],
       "reference_role": "Original repository artwork used only as a neutral gray casing and coarse pixel style reference.",
       "prompt": "Use case: stylized-concept. Asset type: ORIGINAL Minecraft Mekanism-style Hephaestus Forge automation controller texture atlas for a new mod. The attached atlas is ONLY a style reference for neutral gray casing and coarse pixels, not an edit target. Generate a NEW square flat opaque atlas in an exact equal 2x2 grid, no margins, no text: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of precisely 16x16 large solid-color pixel cells. At least 90% charcoal and neutral gray. Heavy gray casing, thick simple corners, recessed black mechanical work area. Front feature: a very small gray anvil silhouette under a short vertical hammer mechanism, with four tiny status pixels along the bottom in subdued yellow, teal, red, green to indicate native forge resources. Top has a single square mechanical socket and two vents. Side is a simple gray industrial grille. Idle and active front geometry MUST be identical, only the four status pixels become brighter. No golden border, fantasy decoration, glyphs, foliage, wood, gradient, bloom, noise, perspective, scene, white gaps, transparency or watermark. Full block faces fill each quadrant edge to edge. Crisp coarse pixel art readable at actual 16x16.",
-      "export": {"grid": "2x2", "faces": {"front": [0, 0], "top": [1, 0], "side": [0, 1], "front_active": [1, 1]}, "size": [16, 16], "resampling": "nearest", "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/forge_controller/"}
+      "export": {
+        "grid": "2x2",
+        "faces": {
+          "front": [
+            0,
+            0
+          ],
+          "top": [
+            1,
+            0
+          ],
+          "side": [
+            0,
+            1
+          ],
+          "front_active": [
+            1,
+            1
+          ]
+        },
+        "size": [
+          16,
+          16
+        ],
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/forge_controller/"
+      }
     },
     {
       "id": "clibano_controller",
       "source": "Forbidden-Arcanus/art/source/clibano_controller.png",
       "generated_file": "exec-b34a725d-5e18-4c36-afc4-1cfd515ac5b9.png",
-      "references": ["Ars-Nouveau/art/source/ritual_controller.png"],
+      "references": [
+        "Ars-Nouveau/art/source/ritual_controller.png"
+      ],
       "reference_role": "Original repository artwork used only as an industrial casing and coarse pixel style reference.",
       "prompt": "Use case: stylized-concept. Asset type: ORIGINAL Minecraft Mekanism-style Clibano furnace automation controller texture atlas. The attached atlas is ONLY a reference for coarse pixels, heavy neutral gray casing and inset industrial mechanical panels. Generate a NEW square flat opaque atlas, exact equal 2x2 grid, no gaps or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant has the visual simplicity of a true 16x16 pixel block face, with large solid-color cells. At least 90% charcoal and neutral gray. Front is a recessed rectangular furnace port split into TWO small dark openings, one has a few dull amber pixels and the other a few dull cyan pixels, plus a thick low gray hatch. Active front must match idle geometry and position exactly, only amber and cyan pixels brighten. Top is a square steel vent plate. Side is a recessed three-slot industrial grille. Distinct simple outline, full faces extend to quadrant edges, no margins. No fantasy decorations, golden frames, magic circles, wood, foliage, text, perspective, gradients, bloom, fine noise, antialiasing or transparency. Coarse flat pixel art readable when each face is exported to actual 16x16.",
-      "export": {"grid": "2x2", "faces": {"front": [0, 0], "top": [1, 0], "side": [0, 1], "front_active": [1, 1]}, "size": [16, 16], "resampling": "nearest", "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_controller/"}
+      "export": {
+        "grid": "2x2",
+        "faces": {
+          "front": [
+            0,
+            0
+          ],
+          "top": [
+            1,
+            0
+          ],
+          "side": [
+            0,
+            1
+          ],
+          "front_active": [
+            1,
+            1
+          ]
+        },
+        "size": [
+          16,
+          16
+        ],
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_controller/"
+      }
     },
     {
-      "id": "infinite_hammer_module",
-      "source": "Forbidden-Arcanus/art/source/infinite_hammer_module-v4.png",
-      "generated_file": "exec-94af84a9-248b-4a48-a63e-75cc62f8f058.png",
+      "id": "glow_module",
+      "source": "Forbidden-Arcanus/art/source/glow_module.png",
+      "generated_file": "exec-ad032633-4de9-48c3-be1c-ea7f195cc103.png",
       "references": [],
-      "prompt": "Generate a NEW isolated pixel-art game inventory item on a GENUINELY TRANSPARENT background (PNG alpha), no checkerboard pixels. The item is a gray Mekanism industrial upgrade cartridge with a large cyan upright hammer emblem. The central hammer is extremely simple: a horizontal cyan rectangular head and a vertical thick cyan handle, like a blacksmith mallet. Gray thick frame, black recessed center, two tiny cyan status lights. Square icon, flat front view. It will be reduced to exactly 16x16 pixels, so all edges must align to a coarse 16x16 grid: visible cartridge fills a centered 14x14 region, transparent one-cell outer border; hammer head about 6 cells wide and 2 high, handle 2 cells wide and 4 high. No diagonal emblem, no text, no gradients, no glow, no small repeated notches or details finer than one pixel cell. Strong readable silhouette. The exterior surrounding the item must be fully transparent, not solid, not white, not black, not a checkerboard.",
-      "export": {"crop": "trim transparent exterior only", "content_size": [14, 14], "transparent_border": 1, "size": [16, 16], "resampling": "nearest", "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/infinite_hammer_module.png"}
+      "prompt": "Use case: stylized-concept. Generate a NEW isolated pixel-art Minecraft inventory item on a GENUINELY TRANSPARENT background with PNG alpha, never draw a checkerboard. The item is an ORIGINAL gray Mekanism-style industrial upgrade cartridge containing an Aureal crystal obelisk generator. Thick charcoal gray square frame, dark recessed center, a single simple upright pale yellow crystal COLUMN: three broad rectangular stacked cells, not a gem cluster, mounted on a gray base. Very few pale yellow status pixels. Square icon, flat frontal view. It will be mechanically reduced to exactly 16x16 pixels, so the visual simplicity must match 16x16 coarse large solid-color cells. Cartridge occupies centered 14x14 cells, with genuinely transparent one-cell outer border. Column silhouette approximately four cells wide and eight high. At least 80 percent gray/charcoal, only the column is muted warm yellow. No text, numbers, letters, hammer, perspective, gradient, bloom, noise, antialiasing, small notches, fantasy ornament, gold frame or decorative background. Return a true alpha PNG.",
+      "export": {
+        "trim": "transparent padding",
+        "size": [
+          16,
+          16
+        ],
+        "inner_size": [
+          14,
+          14
+        ],
+        "padding": 1,
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/glow_module.png"
+      }
     }
   ]
 }

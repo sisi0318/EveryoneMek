@@ -13,7 +13,7 @@ public record SetRecipePayload(int containerId, String recipe) implements Custom
           ByteBufCodecs.VAR_INT, SetRecipePayload::containerId, ByteBufCodecs.stringUtf8(256), SetRecipePayload::recipe, SetRecipePayload::new);
     @Override public Type<SetRecipePayload> type() { return TYPE; }
     public static void register(RegisterPayloadHandlersEvent event) {
-        event.registrar("1").playToServer(TYPE, STREAM_CODEC, (message, context) -> {
+        event.registrar("2").playToServer(TYPE, STREAM_CODEC, (message, context) -> {
             if (context.player().containerMenu instanceof MachineMenu menu && menu.containerId == message.containerId())
                 menu.setRecipe(context.player(), message.recipe());
         });

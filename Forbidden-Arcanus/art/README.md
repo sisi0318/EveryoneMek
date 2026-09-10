@@ -4,9 +4,9 @@
 
 | 原稿 | 用途 |
 | --- | --- |
-| `source/forge_controller.png` | 锻台控制器，锤头与砧座、四个资源状态灯 |
+| `source/forge_controller.png` | 锻造室，冲压机构与砧座、四个资源状态灯 |
 | `source/clibano_controller.png` | 炽炉控制器，橙色与青色双炉口 |
-| `source/infinite_hammer_module-v4.png` | 无限锤子模块，青色锤形标记与透明外围 |
+| `source/glow_module.png` | 辉光柱插件，淡黄色柱形标记、灰色模块壳与透明外围 |
 
 两张图集按等分 2×2 布局：左上静止正面、右上顶部、左下侧面、右下工作正面。侧面复用于背面与底面。模块原稿机械裁掉透明余量，最近邻缩为 14×14，再保留一圈透明像素，输出 16×16 图标。
 
@@ -24,3 +24,5 @@ Sharp 从 `art/package.json` 所在目录解析。导出器只裁切、最近邻
 - 游戏资源：`src/main/resources/assets/forbiddenmekanism/textures/`
 
 `art/` 原稿、提示词与预览不进入游戏 JAR。
+
+2–5 级插件直接引用 Mek 的 basic / advanced / elite / ultimate tier installer 物品模型；不复制对应 PNG。0.2.0 删除旧无限锤模块图稿及运行资源。

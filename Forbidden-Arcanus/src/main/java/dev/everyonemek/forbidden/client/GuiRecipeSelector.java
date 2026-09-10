@@ -71,7 +71,6 @@ public final class GuiRecipeSelector extends GuiWindow {
             counts.merge(name, 1, Integer::sum);
         }
         var result = new ArrayList<Component>();
-        if (choice.upgrade()) result.add(text("upgrade_once"));
         counts.forEach((name, count) -> result.add(text("material", name, count)));
         return result;
     }
@@ -102,7 +101,7 @@ public final class GuiRecipeSelector extends GuiWindow {
                 var choice = filtered.get(getCurrentSelection() + row); int y = 3 + row * elementHeight;
                 gui().renderItem(graphics, choice.icon(), relativeX + 3, relativeY + y);
                 drawScaledScrollingString(graphics, choice.name(), 24, y, TextAlignment.LEFT, 0xEEEEEE, barXShift - 24, 9, 2, false, .85F, getTimeOpened());
-                drawScaledScrollingString(graphics, text(choice.upgrade() ? "upgrade_once" : "batch_production"), 24, y + 10,
+                drawScaledScrollingString(graphics, text("batch_production"), 24, y + 10,
                       TextAlignment.LEFT, 0xB5B5C8, barXShift - 24, 9, 2, false, .75F, getTimeOpened());
             }
         }

@@ -15,6 +15,7 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
     public MachineMenu(int id, Inventory inventory, Controller tile) {
         super(Content.MENU, id, inventory, tile);
         nativeStart = slots.size();
+        if (tile.kind().forge()) return;
         var handler = NativeInventory.menu(tile);
         for (int i = 0; i < handler.getSlots(); i++) {
             final int index = i;
@@ -37,11 +38,6 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
         }
     }
     public static int[] nativeCoordinates(MachineKind kind, int index) {
-        if (kind.forge()) {
-            if (index < 4) return new int[]{112 + index * 18, 30};
-            if (index == 4) return new int[]{144, 102};
-            return new int[]{112 + (index - 5) * 18, 66};
-        }
         return switch (index) {
             case 0 -> new int[]{112, 30};
             case 1 -> new int[]{112, 66};
@@ -85,9 +81,8 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
     }
     @Override public boolean clickMenuButton(Player player, int id) {
         if (!canConfigure(player) || !(player instanceof ServerPlayer serverPlayer)) return false;
-        if (id == 0) return tile.binding.bindNearby(serverPlayer);
+        if (id == 0 && !tile.kind().forge()) return tile.binding.bindNearby(serverPlayer);
         if (id == 1) { tile.enabled = !tile.enabled; tile.markForSave(); return true; }
-        if (id == 2) return ForgeAutomation.reset(tile);
         if (id == 3 && tile.binding.resolve() instanceof ClibanoMainBlockEntity clibano) {
             clibano.awardUsedRecipesAndPopExperience(serverPlayer); clibano.setChanged(); return true;
         }

@@ -2,7 +2,6 @@ package dev.everyonemek.forbidden;
 
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoFireType;
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoMainBlockEntity;
-import com.stal111.forbidden_arcanus.common.block.entity.forge.HephaestusForgeBlockEntity;
 import com.stal111.forbidden_arcanus.common.block.entity.forge.essence.EssenceType;
 import com.stal111.forbidden_arcanus.common.item.enhancer.EnhancerHelper;
 import com.stal111.forbidden_arcanus.core.registry.FARegistries;
@@ -24,7 +23,7 @@ public final class NativeInventory {
     public static boolean supply(Controller controller, ValhelsiaContainerBlockEntity<?> target) {
         boolean changed = false;
         for (int i = 0; i < controller.supplies.size(); i++) {
-            int slot = controller.kind().forge() ? 5 + i : i == 0 ? 2 : 1;
+            int slot = i == 0 ? 2 : 1;
             ItemStack present = target.getStack(slot);
             if (!present.isEmpty() && !acceptsSupply(controller.getLevel(), controller.kind(), i, present)) {
                 if (!controller.storeOutput(present)) continue;
@@ -41,23 +40,16 @@ public final class NativeInventory {
     }
     public static boolean acceptsNative(Controller controller, int slot, ItemStack stack) {
         if (stack.isEmpty()) return false;
-        if (controller.kind().forge()) {
-            if (slot < 4) return EnhancerHelper.getEnhancer(controller.getLevel().registryAccess(), stack).isPresent();
-            if (slot == 4) return true;
-            return acceptsSupply(controller.getLevel(), controller.kind(), slot - 5, stack);
-        }
         if (slot == 0) return EnhancerHelper.getEnhancer(controller.getLevel().registryAccess(), stack).isPresent();
         if (slot == 1 || slot == 2) return acceptsSupply(controller.getLevel(), controller.kind(), slot == 2 ? 0 : 1, stack);
         return slot == 3 || slot == 4;
     }
     public static boolean editable(Controller controller, ValhelsiaContainerBlockEntity<?> block, int slot) {
-        if (block == null) return false;
-        return !(block instanceof HephaestusForgeBlockEntity forge)
-              || slot >= 5 || controller.phase == 0 && !forge.getRitualManager().isRitualActive();
+        return block != null && !controller.kind().forge();
     }
     /** Menu-only facade. The controller's persistent inventory never contains these native items. */
     public static ItemStackHandler menu(Controller controller) {
-        int size = controller.kind().forge() ? 9 : 7;
+        int size = 7;
         if (controller.getLevel().isClientSide) return new ItemStackHandler(size);
         return new ItemStackHandler(size) {
             @Override public ItemStack getStackInSlot(int slot) {
@@ -67,7 +59,7 @@ public final class NativeInventory {
                 var block = controller.binding.resolve();
                 if (editable(controller, block, slot)) { block.setStack(slot, stack); block.setChanged(); }
             }
-            @Override public int getSlotLimit(int slot) { return controller.kind().forge() && slot <= 4 || slot == 0 ? 1 : 64; }
+            @Override public int getSlotLimit(int slot) { return slot == 0 ? 1 : 64; }
             @Override public boolean isItemValid(int slot, ItemStack stack) {
                 return editable(controller, controller.binding.resolve(), slot) && acceptsNative(controller, slot, stack);
             }

@@ -8,7 +8,7 @@
 
 - [Nature's Mekanism](NaturesAura/README.md)：自然灵气供给、仪式加工、装瓶、环境调控、生物生产与矿物凝聚室。
 - [Ars Mekanism](Ars-Nouveau/README.md)：魔源供给与转换、灌注与附魔、萃取与粉碎、魔符抄写、药水加工，以及德格米、风转草和仪式火盆自动化。
-- [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻台与炽炉控制器，自动备料、补给、挥锤和出料，支持无限锤子模块。
+- [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻造室与炽炉控制器，内部锻造、辉光柱插件、逐级升级和六面物流。
 
 开发资料：
 

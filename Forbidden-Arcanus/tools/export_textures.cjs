@@ -33,9 +33,9 @@ async function main() {
       if (!stats.isOpaque) throw new Error(`Block face must be opaque: ${machine}/${face}`);
     }
   }
-  const item = path.join(root, `src/main/resources/assets/${id}/textures/item/infinite_hammer_module.png`);
+  const item = path.join(root, `src/main/resources/assets/${id}/textures/item/glow_module.png`);
   await fs.mkdir(path.dirname(item), {recursive: true});
-  await sharp(path.join(root, 'art/source/infinite_hammer_module-v4.png')).trim()
+  await sharp(path.join(root, 'art/source/glow_module.png')).trim()
     .resize(14, 14, {kernel: 'nearest', fit: 'contain', background: {r: 0, g: 0, b: 0, alpha: 0}})
     .extend({top: 1, bottom: 1, left: 1, right: 1, background: {r: 0, g: 0, b: 0, alpha: 0}}).png().toFile(item);
   if ((await sharp(item).stats()).isOpaque) throw new Error('Module icon must retain its generated transparency');
@@ -46,7 +46,7 @@ async function main() {
   }
   images.push({input: await sharp(item).resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16, top: 368});
   await sharp({create: {width: 720, height: 544, channels: 3, background: '#aeb4b3'}}).composite(images).png().toFile(path.join(root, 'art/texture-sheet.png'));
-  const names = ['赫菲斯托斯锻台控制器', '炽炉控制器'];
+  const names = ['赫菲斯托斯锻造室', '炽炉控制器'];
   const content = [];
   for (let i = 0; i < machines.length; i++) {
     content.push(`<g transform="translate(${48 + 320 * i},160)">`);

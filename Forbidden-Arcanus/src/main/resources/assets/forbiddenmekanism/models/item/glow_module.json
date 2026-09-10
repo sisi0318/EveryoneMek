@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "forbiddenmekanism:item/infinite_hammer_module"
+    "layer0": "forbiddenmekanism:item/glow_module"
   }
 }

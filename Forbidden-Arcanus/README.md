@@ -1,82 +1,95 @@
 # Forbidden Mekanism
 
-为 Forbidden & Arcanus 的**赫菲斯托斯锻台**和**炽炉（Clibano）**提供 Mekanism 自动化控制器。保留原机器、结构、等级与加工规则，通过控制器集中备料、补给和收取成品。
+为 Forbidden & Arcanus 提供**赫菲斯托斯锻造室**与**炽炉控制器**，支持 Mekanism 的供电、升级、六面物流、红石与安全设置。
 
-当前版本 **0.1.0**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选，沿用原模组的锻台、升级和炽炉配方分类。
+当前版本 **0.2.0**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
 
-![控制器材质预览](art/block-preview.png)
+![机器材质预览](art/block-preview.png)
 
-## 安装与绑定
+## 赫菲斯托斯锻造室
 
-将 `ForbiddenMekanism-0.1.0.jar` 与上述依赖一起放入客户端和服务端的 `mods` 文件夹。无需替换已建造的原机器。
+1. 建造原锻台的 **9×9 地面平台**，将锻造室放在平台中心、地面上方一格。
+2. 连接 FE，将配方材料放入左侧九格“原料”，在中部放入所需增强器。
+3. 补充**辉光、灵魂、血液、经验点**，选择配方或使用自动匹配，即可连续加工。
 
-1. 按原模组方式完成并激活锻台平台与基座，或建造完整的 3×3×3 炽炉。
-2. 将对应控制器放在原机 **8 格**内，避免占用原结构；连接 FE。
-3. 手持 Mek **配置器**，潜行右键原锻台或炽炉外壳，再潜行右键控制器。附近只有一台对应原机时，也可点击界面中的“绑定原机”。每台原机只能绑定一个控制器。
-4. 在控制器中选择配方、装填材料并配置六面物流。
+原料、增强器、等级和四种资源都保存在锻造室内部。无需绑定原锻台、给外部基座摆料或使用锤子。材料按原配方检查；多批原料可以堆叠存放。装备转化保留名称、耐久和其他物品数据。
 
-所有方向都相对于控制器正面。默认右侧自动输出、底面为能量物品槽；FE 可以从任意面输入。绑定不会强制加载区块，原机结构或绑定失效时停止调度；修复后可恢复。
+资源槽从左到右为**辉光、灵魂、血液、经验**，接受原模组对应的资源物品。血液容器用空后进入输出；输出已满时先留在资源槽中。外部原版方尖碑和注入器仍用于原锻台，新锻造室通过内部插件与物品补给工作。
 
-## 赫菲斯托斯锻台控制器
-
-左侧九格“备料”可以存放多批原料。控制器每次只给真实锻台和基座摆放一批，自动挥锤，等待原仪式结束后收取成品，再准备下一批。
-
-中部增强器、资源和仪式槽直接对应原锻台库存，下面显示原锻台的等级、进度，以及**耀光／灵魂／血液／经验点**的实际储量与容量。增强器和仪式材料在自动批次中锁定，资源可以继续补充。Shift 点击原机槽位会取回玩家背包。
-
-| 配置类型 | 默认面 | 用途 |
+| 六面配置 | 默认面 | 用途 |
 | --- | --- | --- |
-| 输入 | 前、左 | 九格配方备料 |
-| 额外 | 后 | 四格资源补给，依次为耀光、灵魂、血液、经验 |
-| 输入 2 | 上 | 普通锤补充 |
-| 输出 | 右 | 已收取的成品、用空的资源容器 |
+| 输入 | 前、左、上 | 九格配方原料 |
+| 额外 | 后 | 四格资源补给 |
+| 输出 | 右 | 成品和用空的资源容器，默认自动弹出 |
 | 能量 | 下 | 能量物品 |
 
-四种资源通过原模组的资源物品补给，例如灵魂、血液容器和经验材料；具体可用材料仍由原模组决定。原方尖碑、瓶罐和量子注入器继续供给原锻台。本版提供物品管道补给和实际储量显示，没有新增化学资源或额外资源制造机。
+方向相对于机器正面；FE 可从任意面输入。增强器和辉光柱插件通过界面安装。
 
-普通锤放入独立工具槽，成功启动时按原物品的耐久与附魔规则损耗。锤子当次破损后，已经启动的仪式仍会完成；下一批等待补锤。
+### 辉光柱插件
 
-**无限锤子模块**以 `forbidden_arcanus:diamond_blacksmith_gavel` 合成，在 Mek 升级窗口底部安装一个即可。安装后无需普通锤，也不消耗锤子或模块；已有锤子留在原槽。卸下模块后，下一次启动恢复普通锤要求。
+在 Mek 升级窗口底部安装，最多 **8 个**。基础每个插件每 **5 秒产生 1 点辉光**，消耗 FE；Mek 速度升级缩短间隔。辉光满时停止生产。
 
-“自动匹配”用于物品连续生产。升级配方需明确选择，例如“升级至 2 级锻台”；成功后自动暂停，只升级一次。等级、增强器、原料和四项资源条件照常检查。如果原机匹配到另一个重叠配方，控制器会停止并显示原因。
+使用 **2 个神秘水晶方块、1 个神秘磨制暗石、1 份洁净粉末**合成，摆放见 JEI。
 
-原机已由玩家摆好有效材料时，也可自动启动所选普通配方。中途手动改变材料、原机仪式失败或成品被取走时，不会复制或补发物品；检查原锻台后点击“复位”，再整理材料。
+### 等级插件
+
+机器初始为 **1 级**。在工作台中用原升级仪式的完整九份材料直接合成插件，再右键机器逐级升级：**1 → 2 → 3 → 4 → 5**。
+
+| 插件 | 中心一份材料 | 周围八份材料 |
+| --- | --- | --- |
+| 2 级 | Edelwood 木板 | 4 神秘水晶 + 4 刷怪笼碎片 |
+| 3 级 | 錾制磨制暗石 | 4 神秘水晶 + 4 Deorum 锭 |
+| 4 级 | 錾制磨制暗石 | 4 Stellarite 碎片 + 4 符文 |
+| 5 级 | Stellarite 方块 | 4 幽匿催发体 + 2 暗黑下界之星 + 2 龙鳞 |
+
+表为 Forbidden & Arcanus 2.6.1 默认材料，实际配方跟随原仪式数据包，JEI 显示完整 3×3 配方。周围八份材料的相对顺序不限；中心材料必须保留。合成插件不额外加入工作台或中间核心。
+
+插件仅用于相邻前一级的锻造室，成功消耗一个；升级保留库存、设置、进度和四项资源，不再支付原升级仪式的资源点数。资源容量与对应的原锻台等级一致。等级升级不出现在机器生产列表中。
+
+### 加工、供电与保存
+
+加工检查原材料、等级、增强器、四项资源和输出空间。四种资源不足时分别显示原因。增强器的资源消耗修正生效，检查和实际扣除使用同一组成本。
+
+基础加工时长取自原仪式，Mek 速度升级可以加快加工。基础消耗 **100 FE/tick**；辉光柱每生成一点也消耗基础 **100 FE**，升级后的能耗遵循 Mek 规则，服务端配置项为 `forgeFE`。
+
+材料和资源在每批完成时统一扣除。暂停、红石禁止、断电、输出堵塞或平台不完整时停止推进；补齐条件后继续。更换配方、参与加工的物品数据、增强器或速度设置会重新计时。工作灯对应实际加工。
+
+拆装和重载保存机器的原料、输出、资源物品、增强器、插件、等级、储能、Mek 升级、设置及有效加工进度。管道仍可取出已有成品。
 
 ## 炽炉控制器
 
-九格备料存放待加工原料；中部七个槽直接操作原炽炉的增强器、灵魂、燃料、两个原料槽和两个结果槽。控制器自动补给与收取，原炽炉负责实际燃烧、加工和残渣合成。
+先建造完整的原 **3×3×3 炽炉**，在其 **8 格**内放置控制器并连接 FE。用 Mek 配置器潜行右键炽炉外壳，再潜行右键控制器；附近只有一台炽炉时也可点击“绑定原机”。每台炽炉仅允许一个控制器。
 
-| 配置类型 | 默认面 | 用途 |
+左侧九格存放原料；中部七个槽直接操作原炽炉的增强器、灵魂、燃料、两个原料槽和两个结果槽。Shift 点击原机槽位取回玩家背包。控制器补给、收取，原炽炉负责实际燃烧和加工。
+
+| 六面配置 | 默认面 | 用途 |
 | --- | --- | --- |
-| 输入 | 前、左 | 配方备料 |
+| 输入 | 前、左 | 配方原料 |
 | 额外 | 后 | 燃料补给 |
 | 输入 2 | 上 | 灵魂补给 |
 | 输出 | 右 | 成品与残渣合成产物 |
 | 能量 | 下 | 能量物品 |
 
-保留双槽独立加工、双材料合金、所需增强器、普通火／灵魂火／附魔火及其原加工时间。**FE 只驱动控制器，不替代炽炉燃料或灵魂。** 普通火不产生残渣；残渣仍在原炽炉中积累，达到原数量要求后合成为物品。
+保留双槽独立加工、双材料合金、增强器、普通火／灵魂火／附魔火、残渣和经验。**FE 用于控制器调度，炽炉仍需要燃料和灵魂。** 基础每次有效调度消耗 200 FE，配置项为 `operationFE`。速度升级缩短调度间隔，原炉的加工、燃料与灵魂计时保持原规则。
 
-界面显示两槽进度、火焰、剩余燃料／灵魂时间及残渣总量。“经验”按钮领取原炽炉记录的加工经验，自动输出不会重复领取。
+界面显示两槽进度、火焰、燃料／灵魂剩余秒数及残渣总量。“经验”按钮领取原炉记录的加工经验。暂停或控制器断电时，已启动的原炉继续工作。结构损坏后停止远程访问，修复后恢复；查询不强制加载区块。
 
-## 升级、暂停与保存
+控制器拆下保存自己的库存与设置；原炉库存和资源留在原炉。搬移控制器后重新绑定。
 
-支持 Mek 的速度、能量、红石、安全和六面配置。速度升级缩短备料与收取间隔，**不修改原仪式时长、燃料速度或灵魂寿命**。基础每次有实际物流或成功启动的调度消耗 200 FE，可在服务端配置中调整，升级耗能遵循 Mek 规则。
+## 安装与验证
 
-暂停、红石禁止或控制器断电时，停止新的备料、挥锤与收取；已经启动的原机器继续遵循其自身规则，燃料和灵魂计时不会被冻结。控制器缓冲区中的成品仍可由 Mek 物流取出。
+将 `ForbiddenMekanism-0.2.0.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**0.2.0 直接替换旧锻台实现，不提供 0.1.0 锻台数据迁移；旧锤槽与无限锤模块已删除。** 测试新版时请重新放置锻造室。炽炉控制器继续沿用原有机制。
 
-拆下控制器会保存自己的库存、普通锤、模块、升级、能量、设置和批次状态。原机库存与资源留在原机中，不会复制到控制器掉落物。搬到新位置后，用配置器重新绑定同一台原机即可接续未完成批次。
+普通锻造和炽炉加工沿用原 JEI 分类；等级插件放在工作台合成分类。两种机器的合成可在 JEI 查看。
 
-## 合成与验证
+9 项无界面服务端 GameTest 已通过，覆盖内部连续加工与成本、实际工作台九格合成与右键升级、辉光供电及容器回收、暂停与平台检查、装备数据与拆装保存、锻造室与炽炉实际箱子输出，以及炽炉双槽／合金／火焰／残渣和菜单权限。客户端界面视觉及整合包体验由玩家在游戏内验收。
 
-两种控制器均使用 4 个原子合金、2 个终极控制电路、1 个钢制机壳、1 个神秘水晶方块；核心分别为洁净粉末（`mundabitur_dust`）和炽炉核心。无限锤子模块使用钻石锻工锤、4 个原子合金、2 个终极控制电路和 2 个金锭。完整摆放见 JEI。
-
-9 项无界面服务端 GameTest 验证了连续仪式、原资源消耗和锤子损耗、破锤与无限模块、原机升级、物品数据与加工中搬移恢复、库存与掉落保存、结构失效后的旧接口、炽炉双槽／合金／火焰／残渣、六面实际弹出到箱子，以及原机菜单转移和距离检查。客户端界面视觉及整合包体验由玩家游戏内验收。
-
-开发入口见 [AGENTS.md](AGENTS.md)，原设计与上游契约见 [DESIGN.md](DESIGN.md)，材质原稿和提示词见 [art/README.md](art/README.md)。
+开发入口见 [AGENTS.md](AGENTS.md)，实现取舍和上游契约见 [DESIGN.md](DESIGN.md)，图稿与提示词见 [art/README.md](art/README.md)。
 
 ## English quick start
 
-Build and activate the original Hephaestus Forge or complete Clibano. Place its controller within 8 blocks and supply FE. Sneak-use a Mekanism Configurator on the native machine, then on the controller. Add stock, native supplies and the required enhancers, and select a recipe.
+Place the Hephaestus Forging Chamber at the center of the original 9×9 forge floor. Supply FE, put materials in its nine internal input slots, install the required enhancers and supply Aureal, souls, blood and experience. The chamber owns all inventory and essence storage. Craft four tier installers from the native upgrade rituals' complete nine materials and use them sequentially on the chamber. Install up to eight Aureal Obelisk Modules in the Mek upgrade window. Speed upgrades accelerate forging and Aureal generation.
 
-The forge controller automatically places one batch on the real forge and pedestals, operates a stored hammer and collects the completed result. A diamond blacksmith gavel crafts the Infinite Hammer Module; install it in the bottom of the Mek upgrade window for unlimited automatic starts. Tier upgrades run once and pause. Native tier, essence and enhancer requirements still apply.
+The Clibano Controller still binds an existing complete Clibano within eight blocks. Sneak-use a Mekanism Configurator on the furnace and then the controller. Native fuel, soul flames, enhancers, residues and experience retain their original behavior.
 
-The Clibano controller retains both native inputs, fuel, soul flames, enhancers and residue processing. FE pays for logistics, not native fuel or souls. Speed upgrades improve controller scheduling only. Native inventories and resources stay in their original machines; controller drops contain only the controller's own inventory and settings.
+Version 0.2.0 removes the old remote forge, hammer slot and Infinite Hammer Module without legacy migration. Place a fresh chamber when updating. Nine headless server tests pass; client visual acceptance remains in-game.

@@ -2,8 +2,6 @@ package dev.everyonemek.forbidden;
 
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoMainBlockEntity;
 import com.stal111.forbidden_arcanus.common.block.entity.forge.ritual.Ritual;
-import com.stal111.forbidden_arcanus.common.block.entity.forge.ritual.result.UpgradeTierResult;
-import com.stal111.forbidden_arcanus.core.init.ModBlocks;
 import com.stal111.forbidden_arcanus.core.registry.FARegistries;
 import java.util.*;
 import net.minecraft.core.Holder;
@@ -14,28 +12,29 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 
 public final class Recipes {
-    public record Choice(ResourceLocation id, ItemStack icon, Component name, List<Ingredient> materials, boolean upgrade, int tier) { }
+    public record Choice(ResourceLocation id, ItemStack icon, Component name, List<Ingredient> materials) { }
     public static List<Holder.Reference<Ritual>> rituals(Level level) {
         return level.registryAccess().registryOrThrow(FARegistries.RITUAL).holders().toList();
     }
     public static boolean exists(Level level, MachineKind kind, ResourceLocation id) {
         if (id == null || level == null) return false;
-        return kind.forge() ? level.registryAccess().registryOrThrow(FARegistries.RITUAL).containsKey(id)
-              : level.getRecipeManager().getAllRecipesFor(ClibanoMainBlockEntity.RECIPE_TYPE).stream().anyMatch(r -> r.id().equals(id));
+        if (kind.forge()) {
+            Ritual ritual = level.registryAccess().registryOrThrow(FARegistries.RITUAL).get(id);
+            return ritual != null && InternalForge.supports(ritual);
+        }
+        return level.getRecipeManager().getAllRecipesFor(ClibanoMainBlockEntity.RECIPE_TYPE).stream().anyMatch(r -> r.id().equals(id));
     }
     public static List<Choice> choices(Level level, MachineKind kind) {
         var result = new ArrayList<Choice>();
         if (kind.forge()) for (var holder : rituals(level)) {
             Ritual ritual = holder.value();
-            boolean upgrade = ritual.result() instanceof UpgradeTierResult;
+            if (!InternalForge.supports(ritual)) continue;
             ItemStack input = Arrays.stream(ritual.mainIngredient().getItems()).findFirst().orElse(ItemStack.EMPTY);
-            ItemStack icon = upgrade ? new ItemStack(ModBlocks.HEPHAESTUS_FORGE_TIER_1.get()) : ritual.result().getResultItem(input);
-            int tier = upgrade ? ((UpgradeTierResult) ritual.result()).resultTier() : 0;
-            Component name = upgrade ? Component.translatable("gui.forbiddenmekanism.upgrade_to", tier) : icon.getHoverName();
-            result.add(new Choice(holder.key().location(), icon, name, ingredients(ritual), upgrade, tier));
+            ItemStack icon = ritual.result().getResultItem(input.copyWithCount(1));
+            result.add(new Choice(holder.key().location(), icon, icon.getHoverName(), ingredients(ritual)));
         } else for (var recipe : level.getRecipeManager().getAllRecipesFor(ClibanoMainBlockEntity.RECIPE_TYPE)) {
             ItemStack icon = recipe.value().getResultItem(level.registryAccess()).copy();
-            result.add(new Choice(recipe.id(), icon, icon.getHoverName(), recipe.value().getIngredients(), false, 0));
+            result.add(new Choice(recipe.id(), icon, icon.getHoverName(), recipe.value().getIngredients()));
         }
         return result;
     }

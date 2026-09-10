@@ -31,24 +31,31 @@ public final class Content {
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> SETTINGS = COMPONENTS.simple("settings",
           builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ForbiddenMekanism.ID);
-    public static final net.neoforged.neoforge.registries.DeferredItem<InfiniteHammerModuleItem> INFINITE_HAMMER_MODULE = ITEMS.register("infinite_hammer_module", InfiniteHammerModuleItem::new);
+    public static final net.neoforged.neoforge.registries.DeferredItem<GlowModuleItem> GLOW_MODULE = ITEMS.register("glow_module", GlowModuleItem::new);
+    public static final Map<Integer, net.neoforged.neoforge.registries.DeferredItem<ForgeTierInstallerItem>> INSTALLERS = new java.util.LinkedHashMap<>();
+    private static final DeferredRegister<net.minecraft.world.item.crafting.RecipeSerializer<?>> SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, ForbiddenMekanism.ID);
+    public static final java.util.function.Supplier<ForgeUpgradeRecipe.Serializer> FORGE_UPGRADE_RECIPE = SERIALIZERS.register("forge_upgrade_crafting", ForgeUpgradeRecipe.Serializer::new);
     public static final ContainerTypeRegistryObject<MachineMenu> MENU = MENUS.register("controller", Controller.class, MachineMenu::new);
     public static final Map<MachineKind, BlockRegistryObject<MachineBlock, ItemBlockTooltip<MachineBlock>>> MACHINES = new EnumMap<>(MachineKind.class);
     public static final Map<MachineKind, TileEntityTypeRegistryObject<Controller>> MACHINE_TILES = new EnumMap<>(MachineKind.class);
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ForbiddenMekanism.ID);
 
     static {
+        for (int tier = 2; tier <= 5; tier++) {
+            final int target = tier;
+            INSTALLERS.put(tier, ITEMS.register("forge_tier_" + tier + "_installer", () -> new ForgeTierInstallerItem(target)));
+        }
         for (MachineKind kind : MachineKind.values()) {
             Machine<Controller> type = Machine.MachineBuilder.<Controller>createMachine(() -> MACHINE_TILES.get(kind), kind)
                   .withGui(() -> MENU)
-                  .withEnergyConfig(() -> EnergyUnit.FORGE_ENERGY.convertTo(MachineConfig.OPERATION_FE.get()),
+                  .withEnergyConfig(() -> EnergyUnit.FORGE_ENERGY.convertTo((kind.forge() ? MachineConfig.FORGE_FE : MachineConfig.OPERATION_FE).get()),
                         () -> EnergyUnit.FORGE_ENERGY.convertTo(1_000_000L))
                   .withSupportedUpgrades(Upgrade.SPEED, Upgrade.ENERGY)
                   .with(AttributeSideConfig.ADVANCED_ELECTRIC_MACHINE).build();
             var block = BLOCKS.registerDetails(kind.id, () -> new MachineBlock(kind, type));
             block.forItemHolder(holder -> holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
                 var slots = ItemSlotsBuilder.builder().addInput(9).addOutput(4).addInput(kind.supplies()).addEnergy();
-                if (kind.forge()) slots.addInput(2);
+                if (kind.forge()) slots.addInput(5);
                 return slots.build();
             }));
             MACHINES.put(kind, block);
@@ -59,11 +66,12 @@ public final class Content {
               .icon(() -> new ItemStack(MACHINES.get(MachineKind.FORGE)))
               .displayItems((parameters, output) -> {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind));
-                  output.accept(INFINITE_HAMMER_MODULE);
+                  output.accept(GLOW_MODULE);
+                  INSTALLERS.values().forEach(output::accept);
               }).build());
     }
     public static void register(IEventBus bus) {
-        COMPONENTS.register(bus); ITEMS.register(bus); BLOCKS.register(bus); TILES.register(bus); MENUS.register(bus); TABS.register(bus);
+        COMPONENTS.register(bus); ITEMS.register(bus); BLOCKS.register(bus); TILES.register(bus); MENUS.register(bus); TABS.register(bus); SERIALIZERS.register(bus);
     }
     private Content() { }
 }

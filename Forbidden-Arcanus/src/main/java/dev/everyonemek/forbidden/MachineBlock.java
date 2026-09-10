@@ -9,4 +9,12 @@ public final class MachineBlock extends BlockTile<Controller, Machine<Controller
         super(type, properties -> properties.strength(4, 12));
         this.kind = kind;
     }
+    @Override protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
+          net.minecraft.world.level.block.state.BlockState state, net.minecraft.world.level.Level level,
+          net.minecraft.core.BlockPos pos, net.minecraft.world.entity.player.Player player,
+          net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
+        if (kind.forge() && stack.getItem() instanceof ForgeTierInstallerItem installer && level.getBlockEntity(pos) instanceof Controller machine)
+            return installer.install(machine, player, stack);
+        return super.useItemOn(stack, state, level, pos, player, hand, hit);
+    }
 }

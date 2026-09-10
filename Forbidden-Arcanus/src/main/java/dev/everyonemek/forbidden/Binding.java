@@ -4,7 +4,6 @@ import com.mojang.authlib.GameProfile;
 import com.stal111.forbidden_arcanus.common.block.ModBlockPatterns;
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoFrameBlockEntity;
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoMainBlockEntity;
-import com.stal111.forbidden_arcanus.common.block.entity.forge.HephaestusForgeBlockEntity;
 import java.util.*;
 import mekanism.api.security.IBlockSecurityUtils;
 import mekanism.common.registries.MekanismItems;
@@ -43,40 +42,32 @@ public final class Binding {
             if (!level.hasChunkAt(main) || pos.distSqr(main) > 3) return null;
             block = level.getBlockEntity(main);
         }
-        return block instanceof HephaestusForgeBlockEntity || block instanceof ClibanoMainBlockEntity
+        return block instanceof ClibanoMainBlockEntity
               ? (ValhelsiaContainerBlockEntity<?>) block : null;
     }
     public static boolean structure(ValhelsiaContainerBlockEntity<?> block) {
         Level level = block.getLevel(); BlockPos pos = block.getBlockPos();
-        int radius = block instanceof HephaestusForgeBlockEntity ? 4 : 1;
-        for (int x = -radius; x <= radius; x++) for (int z = -radius; z <= radius; z++)
+        for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++)
             if (!level.hasChunkAt(pos.offset(x, 0, z))) return false;
-        return block instanceof HephaestusForgeBlockEntity
-              ? ModBlockPatterns.BASE_HEPHAESTUS_PATTERN.matches(level, pos.offset(4, -1, -4), Direction.SOUTH, Direction.UP) != null
-              : ModBlockPatterns.CLIBANO_COMBUSTION.matches(level, pos.offset(1, 1, -1), Direction.SOUTH, Direction.UP) != null;
+        return ModBlockPatterns.CLIBANO_COMBUSTION.matches(level, pos.offset(1, 1, -1), Direction.SOUTH, Direction.UP) != null;
     }
     public ValhelsiaContainerBlockEntity<?> resolve() {
         Level level = controller.getLevel();
-        if (level == null || level.isClientSide || controller.isRemoved() || target == null || targetId == null || owner == null
+        if (controller.kind().forge() || level == null || level.isClientSide || controller.isRemoved() || target == null || targetId == null || owner == null
               || controller.getBlockPos().distSqr(target) > 64 || !level.hasChunkAt(controller.getBlockPos())
               || level.getBlockEntity(controller.getBlockPos()) != controller) return null;
         var block = nativeAt(level, target);
-        if (block == null || !block.getBlockPos().equals(target) || block.isRemoved()
-              || controller.kind().forge() != (block instanceof HephaestusForgeBlockEntity)) return null;
+        if (block == null || !block.getBlockPos().equals(target) || block.isRemoved()) return null;
         CompoundTag claim = block.getPersistentData().getCompound(CLAIM);
         if (!claim.hasUUID("target") || !targetId.equals(claim.getUUID("target")) || !claim.hasUUID("id")
               || !id.equals(claim.getUUID("id")) || claim.getLong("pos") != controller.getBlockPos().asLong()) return null;
         return structure(block) && block.canOpen(actor()) ? block : null;
     }
     public boolean bind(ServerPlayer player, BlockPos pos) {
-        if (controller.getBlockPos().distSqr(pos) > 64) return false;
+        if (controller.kind().forge() || controller.getBlockPos().distSqr(pos) > 64) return false;
         var block = nativeAt(player.level(), pos);
-        if (block == null || controller.kind().forge() != (block instanceof HephaestusForgeBlockEntity)
-              || !structure(block) || !block.canOpen(player)) { controller.status = Controller.STRUCTURE; return false; }
+        if (block == null || !structure(block) || !block.canOpen(player)) { controller.status = Controller.STRUCTURE; return false; }
         CompoundTag old = block.getPersistentData().getCompound(CLAIM);
-        // A picked-up controller keeps its batch. It may resume that same native machine at a new controller position.
-        if (controller.phase != 0 && (target == null || !target.equals(block.getBlockPos()) || targetId == null
-              || !old.hasUUID("target") || !targetId.equals(old.getUUID("target")))) return false;
         if (old.hasUUID("id")) {
             BlockPos previous = BlockPos.of(old.getLong("pos"));
             if (!player.level().hasChunkAt(previous)) { controller.status = Controller.OCCUPIED; return false; }
@@ -105,12 +96,13 @@ public final class Binding {
         target = null; targetId = null;
     }
     public boolean bindNearby(ServerPlayer player) {
+        if (controller.kind().forge()) return false;
         var found = new LinkedHashMap<BlockPos, ValhelsiaContainerBlockEntity<?>>();
         BlockPos pos = controller.getBlockPos();
         for (BlockPos candidate : BlockPos.betweenClosed(pos.offset(-8, -8, -8), pos.offset(8, 8, 8))) {
             if (candidate.distSqr(pos) > 64) continue;
             var block = nativeAt(player.level(), candidate);
-            if (block != null && controller.kind().forge() == (block instanceof HephaestusForgeBlockEntity)) found.put(block.getBlockPos(), block);
+            if (block != null) found.put(block.getBlockPos(), block);
         }
         if (found.size() == 1) return bind(player, found.keySet().iterator().next());
         player.displayClientMessage(Component.translatable("gui.forbiddenmekanism.bind_hint"), true);
@@ -138,6 +130,7 @@ public final class Binding {
             player.displayClientMessage(Component.translatable("gui.forbiddenmekanism.target_selected"), true);
             event.setCanceled(true); event.setCancellationResult(InteractionResult.SUCCESS);
         } else if (player.level().getBlockEntity(event.getPos()) instanceof Controller controller
+              && !controller.kind().forge()
               && IBlockSecurityUtils.INSTANCE.canAccess(player, player.level(), event.getPos(), controller)
               && player.getPersistentData().contains(PENDING)) {
             var tag = player.getPersistentData().getCompound(PENDING);
