@@ -88,10 +88,13 @@ for name, (cn, english, core, description_cn, description_en) in MACHINES.items(
             ],
         }]}],
     })
+    alloy, circuit = ("mekanism:alloy_atomic", "mekanism:ultimate_control_circuit") if name in (
+        "drygmy_station", "whirlisprig_station",
+    ) else ("mekanism:alloy_infused", "mekanism:advanced_control_circuit")
     write(f"data/{ID}/recipe/{name}.json", {
         "type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ASA", "CKC", "AGA"],
-        "key": {"A": {"item": "mekanism:alloy_infused"}, "S": {"item": "mekanism:steel_casing"},
-                "C": {"item": "mekanism:advanced_control_circuit"}, "K": {"item": core},
+        "key": {"A": {"item": alloy}, "S": {"item": "mekanism:steel_casing"},
+                "C": {"item": circuit}, "K": {"item": core},
                 "G": {"item": "ars_nouveau:source_gem_block"}},
         "result": {"id": f"{ID}:{name}", "count": 1},
     })
