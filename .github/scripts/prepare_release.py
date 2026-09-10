@@ -17,6 +17,13 @@ MODULES = {
         "mod_id": "naturesmekanism",
         "java": "21",
     },
+    "Ars-Nouveau": {
+        "directory": "Ars-Nouveau",
+        "name": "Ars Mekanism",
+        "archive": "ArsMekanism",
+        "mod_id": "arsmekanism",
+        "java": "21",
+    },
 }
 
 

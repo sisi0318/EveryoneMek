@@ -19,13 +19,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  natures-mekanism:
-    name: Nature's Mekanism / Java 21
+  mod:
+    name: ${{ matrix.mod.archive }} / Java 21
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        mod:
+          - { directory: NaturesAura, archive: NaturesMekanism }
+          - { directory: Ars-Nouveau, archive: ArsMekanism }
+    env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/${{ matrix.mod.directory }}/.gradle-home
     defaults:
       run:
-        working-directory: NaturesAura
+        working-directory: ${{ matrix.mod.directory }}
 
     steps:
       - name: Check out source
@@ -52,8 +60,8 @@ jobs:
       - name: Upload mod JAR
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: NaturesMekanism-${{ github.sha }}
-          path: NaturesAura/build/libs/*.jar
+          name: ${{ matrix.mod.archive }}-${{ github.sha }}
+          path: ${{ matrix.mod.directory }}/build/libs/*.jar
           if-no-files-found: error
           retention-days: 14
 
@@ -61,11 +69,11 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: NaturesMekanism-test-reports-${{ github.sha }}
+          name: ${{ matrix.mod.archive }}-test-reports-${{ github.sha }}
           path: |
-            NaturesAura/build/reports/tests/
-            NaturesAura/build/test-results/
-            NaturesAura/run/logs/
-            NaturesAura/runs/**/logs/
+            ${{ matrix.mod.directory }}/build/reports/tests/
+            ${{ matrix.mod.directory }}/build/test-results/
+            ${{ matrix.mod.directory }}/run/logs/
+            ${{ matrix.mod.directory }}/runs/**/logs/
           if-no-files-found: warn
           retention-days: 7

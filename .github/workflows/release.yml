@@ -11,6 +11,7 @@ on:
         default: NaturesAura
         options:
           - NaturesAura
+          - Ars-Nouveau
       draft:
         description: 仅创建草稿（勾选后不会公开发布）
         type: boolean
@@ -32,6 +33,8 @@ jobs:
     name: Build ${{ inputs.module }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/${{ inputs.module }}/.gradle-home
     outputs:
       tag: ${{ steps.mod.outputs.tag }}
       title: ${{ steps.mod.outputs.title }}
