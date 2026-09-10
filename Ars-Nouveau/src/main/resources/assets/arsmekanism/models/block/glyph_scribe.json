@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/glyph_scribe/side",
+    "north": "arsmekanism:block/glyph_scribe/front",
+    "up": "arsmekanism:block/glyph_scribe/top",
+    "south": "arsmekanism:block/glyph_scribe/side",
+    "east": "arsmekanism:block/glyph_scribe/side",
+    "west": "arsmekanism:block/glyph_scribe/side",
+    "down": "arsmekanism:block/glyph_scribe/side"
+  }
+}

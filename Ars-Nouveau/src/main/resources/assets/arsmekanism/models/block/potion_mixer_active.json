@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/potion_mixer",
+  "textures": {
+    "north": "arsmekanism:block/potion_mixer/front_active"
+  }
+}

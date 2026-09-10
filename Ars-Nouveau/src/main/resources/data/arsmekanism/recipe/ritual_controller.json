@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ASA",
+    "CKC",
+    "AGA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_infused"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "K": {
+      "item": "ars_nouveau:ritual_brazier"
+    },
+    "G": {
+      "item": "ars_nouveau:source_gem_block"
+    }
+  },
+  "result": {
+    "id": "arsmekanism:ritual_controller",
+    "count": 1
+  }
+}

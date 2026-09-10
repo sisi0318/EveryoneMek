@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/whirlisprig_station",
+  "textures": {
+    "north": "arsmekanism:block/whirlisprig_station/front_active"
+  }
+}

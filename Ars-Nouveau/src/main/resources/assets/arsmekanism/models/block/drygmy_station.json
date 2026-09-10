@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/drygmy_station/side",
+    "north": "arsmekanism:block/drygmy_station/front",
+    "up": "arsmekanism:block/drygmy_station/top",
+    "south": "arsmekanism:block/drygmy_station/side",
+    "east": "arsmekanism:block/drygmy_station/side",
+    "west": "arsmekanism:block/drygmy_station/side",
+    "down": "arsmekanism:block/drygmy_station/side"
+  }
+}

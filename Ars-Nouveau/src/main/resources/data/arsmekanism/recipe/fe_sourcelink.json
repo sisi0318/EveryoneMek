@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ACA",
+    " S ",
+    "AGA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_infused"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "S": {
+      "item": "ars_nouveau:agronomic_sourcelink"
+    },
+    "G": {
+      "item": "ars_nouveau:source_gem"
+    }
+  },
+  "result": {
+    "id": "arsmekanism:fe_sourcelink",
+    "count": 1
+  }
+}

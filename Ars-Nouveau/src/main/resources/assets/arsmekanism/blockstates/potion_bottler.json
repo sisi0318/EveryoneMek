@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "facing=north,active=false": {
+      "model": "arsmekanism:block/potion_bottler",
+      "y": 0
+    },
+    "facing=north,active=true": {
+      "model": "arsmekanism:block/potion_bottler_active",
+      "y": 0
+    },
+    "facing=east,active=false": {
+      "model": "arsmekanism:block/potion_bottler",
+      "y": 90
+    },
+    "facing=east,active=true": {
+      "model": "arsmekanism:block/potion_bottler_active",
+      "y": 90
+    },
+    "facing=south,active=false": {
+      "model": "arsmekanism:block/potion_bottler",
+      "y": 180
+    },
+    "facing=south,active=true": {
+      "model": "arsmekanism:block/potion_bottler_active",
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "arsmekanism:block/potion_bottler",
+      "y": 270
+    },
+    "facing=west,active=true": {
+      "model": "arsmekanism:block/potion_bottler_active",
+      "y": 270
+    }
+  }
+}

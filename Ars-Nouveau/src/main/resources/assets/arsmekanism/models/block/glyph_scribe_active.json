@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/glyph_scribe",
+  "textures": {
+    "north": "arsmekanism:block/glyph_scribe/front_active"
+  }
+}

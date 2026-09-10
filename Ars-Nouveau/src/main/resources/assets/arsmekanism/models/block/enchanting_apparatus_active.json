@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/enchanting_apparatus",
+  "textures": {
+    "north": "arsmekanism:block/enchanting_apparatus/front_active"
+  }
+}

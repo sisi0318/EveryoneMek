@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/magic_crusher",
+  "textures": {
+    "north": "arsmekanism:block/magic_crusher/front_active"
+  }
+}

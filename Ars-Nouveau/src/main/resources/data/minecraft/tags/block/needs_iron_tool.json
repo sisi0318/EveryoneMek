@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "arsmekanism:source_generator",
+    "arsmekanism:source_converter",
+    "arsmekanism:imbuement_chamber",
+    "arsmekanism:enchanting_apparatus",
+    "arsmekanism:source_extractor",
+    "arsmekanism:magic_crusher",
+    "arsmekanism:glyph_scribe",
+    "arsmekanism:potion_mixer",
+    "arsmekanism:potion_bottler",
+    "arsmekanism:drygmy_station",
+    "arsmekanism:whirlisprig_station",
+    "arsmekanism:ritual_controller",
+    "arsmekanism:fe_sourcelink"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "ars_nouveau:crush",
+  "input": {
+    "item": "minecraft:raw_iron"
+  },
+  "output": [
+    {
+      "stack": {
+        "id": "minecraft:gold_nugget",
+        "count": 1
+      },
+      "chance": 1.0,
+      "maxRange": 3
+    },
+    {
+      "stack": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      },
+      "chance": 1.0,
+      "maxRange": 1
+    }
+  ]
+}

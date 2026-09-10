@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "facing=north,active=false": {
+      "model": "arsmekanism:block/magic_crusher",
+      "y": 0
+    },
+    "facing=north,active=true": {
+      "model": "arsmekanism:block/magic_crusher_active",
+      "y": 0
+    },
+    "facing=east,active=false": {
+      "model": "arsmekanism:block/magic_crusher",
+      "y": 90
+    },
+    "facing=east,active=true": {
+      "model": "arsmekanism:block/magic_crusher_active",
+      "y": 90
+    },
+    "facing=south,active=false": {
+      "model": "arsmekanism:block/magic_crusher",
+      "y": 180
+    },
+    "facing=south,active=true": {
+      "model": "arsmekanism:block/magic_crusher_active",
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "arsmekanism:block/magic_crusher",
+      "y": 270
+    },
+    "facing=west,active=true": {
+      "model": "arsmekanism:block/magic_crusher_active",
+      "y": 270
+    }
+  }
+}

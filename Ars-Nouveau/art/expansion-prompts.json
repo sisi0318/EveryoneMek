@@ -1,0 +1,58 @@
+[
+  {
+    "id": "source_extractor",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style food and fuel Source extractor texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: one stout purple extraction vessel under a gray hopper mouth. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/source_extractor.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "magic_crusher",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style magical crushing mill texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: two chunky gray opposing crushing jaws with a small purple fragment between them. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/magic_crusher.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "glyph_scribe",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style glyph scribing printer texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: a pale-gray horizontal writing plate with a single short purple stylus above. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/glyph_scribe.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "potion_mixer",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style potion mixing machine texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: two compact purple vial chambers linked to one central short gray nozzle. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/potion_mixer.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "potion_bottler",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style potion bottling machine texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: one small purple bottle silhouette under a gray filling nozzle. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/potion_bottler.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "drygmy_station",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style Drygmy creature harvesting controller texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: a tiny flat gray antler-like fork emblem over a dark recessed collection hatch and two purple status pixels. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/drygmy_station.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "whirlisprig_station",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style Whirlisprig grove cultivation controller texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: one compact purple four-blade mechanical rotor in a recessed gray frame. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/whirlisprig_station.png",
+    "tool": "built-in image_gen"
+  },
+  {
+    "id": "ritual_controller",
+    "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft Mekanism-style ritual brazier automation controller texture atlas. Use the attached image only as a STYLE REFERENCE for the gray casing, NOT as an edit target. Exact equal 2x2 square atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of 16x16 LARGE SOLID-COLOR PIXEL CELLS, suitable for nearest-neighbor export to 16x16. At least 85% charcoal and neutral gray; thick gray rim and recessed mechanical work area. Front feature: a squat gray crucible silhouette with a small purple flame-shaped indicator. Keep idle and active geometry IDENTICAL; only two or three purple status pixels become brighter. Top a simple steel hatch with purple center pixel, side simple gray ventilation slots. Flat opaque atlas edge-to-edge; no perspective, no text, no bloom, no gradients, no fine noise, no foliage, no fantasy ornament. Do not reuse the reference's central crystal geometry.",
+    "reference": "source/imbuement_chamber.png",
+    "source": "source/ritual_controller.png",
+    "tool": "built-in image_gen"
+  }
+]

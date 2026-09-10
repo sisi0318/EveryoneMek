@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/source_generator/side",
+    "north": "arsmekanism:block/source_generator/front",
+    "up": "arsmekanism:block/source_generator/top",
+    "south": "arsmekanism:block/source_generator/side",
+    "east": "arsmekanism:block/source_generator/side",
+    "west": "arsmekanism:block/source_generator/side",
+    "down": "arsmekanism:block/source_generator/side"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "type": "ars_nouveau:enchanting_apparatus",
+  "reagent": {
+    "item": "minecraft:diamond_sword"
+  },
+  "result": {
+    "id": "minecraft:diamond_sword",
+    "count": 1
+  },
+  "sourceCost": 250,
+  "keepNbtOfReagent": true,
+  "pedestalItems": [
+    {
+      "item": "minecraft:gold_ingot"
+    },
+    {
+      "item": "minecraft:gold_ingot"
+    },
+    {
+      "item": "minecraft:water_bucket"
+    },
+    {
+      "item": "ars_nouveau:spell_parchment"
+    }
+  ]
+}

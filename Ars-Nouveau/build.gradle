@@ -1,0 +1,67 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.146'
+}
+
+group = 'dev.everyonemek'
+version = mod_version
+base { archivesName = 'ArsMekanism' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+sourceSets {
+    gameTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations {
+    gameTestImplementation.extendsFrom implementation
+    gameTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+repositories {
+    maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
+    maven { url = 'https://maven.blamejared.com/'; content { includeGroup 'mezz.jei'; includeGroup 'vazkii.patchouli' } }
+    mavenCentral()
+}
+
+neoForge {
+    version = project.neo_version
+    addModdingDependenciesTo sourceSets.gameTest
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'arsmekanism'
+        }
+    }
+    mods {
+        arsmekanism { sourceSet sourceSets.main; sourceSet sourceSets.gameTest }
+    }
+}
+
+dependencies {
+    implementation "mekanism:Mekanism:${mekanism_version}"
+    implementation "maven.modrinth:ars-nouveau:${ars_version}"
+    // Pin the loader-specific releases; Modrinth's POMs do not declare runtime dependencies.
+    implementation 'maven.modrinth:geckolib:qj2pTqCr'
+    implementation 'maven.modrinth:curios:BOIl0oEz'
+    runtimeOnly 'vazkii.patchouli:Patchouli:1.21-87-NEOFORGE'
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.22.1.316'
+    runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.22.1.316'
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test) { useJUnitPlatform() }
+tasks.named('check') { dependsOn 'compileGameTestJava' }
+tasks.named('jar', Jar) { from('LICENSE') }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def resourceProperties = [version: project.version.toString()]
+tasks.named('processResources', ProcessResources) {
+    inputs.properties(resourceProperties)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(resourceProperties) }
+}

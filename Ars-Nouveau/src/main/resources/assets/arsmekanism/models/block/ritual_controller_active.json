@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/ritual_controller",
+  "textures": {
+    "north": "arsmekanism:block/ritual_controller/front_active"
+  }
+}

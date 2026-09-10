@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/drygmy_station",
+  "textures": {
+    "north": "arsmekanism:block/drygmy_station/front_active"
+  }
+}

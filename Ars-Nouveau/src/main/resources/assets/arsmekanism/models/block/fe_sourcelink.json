@@ -1,0 +1,4 @@
+{
+  "parent": "ars_nouveau:block/agronomic_sourcelink",
+  "render_type": "minecraft:cutout"
+}

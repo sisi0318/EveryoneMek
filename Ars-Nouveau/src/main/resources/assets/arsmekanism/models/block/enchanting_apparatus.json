@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/enchanting_apparatus/side",
+    "north": "arsmekanism:block/enchanting_apparatus/front",
+    "up": "arsmekanism:block/enchanting_apparatus/top",
+    "south": "arsmekanism:block/enchanting_apparatus/side",
+    "east": "arsmekanism:block/enchanting_apparatus/side",
+    "west": "arsmekanism:block/enchanting_apparatus/side",
+    "down": "arsmekanism:block/enchanting_apparatus/side"
+  }
+}

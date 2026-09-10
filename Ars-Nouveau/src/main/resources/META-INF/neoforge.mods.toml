@@ -1,0 +1,37 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="arsmekanism"
+version="${version}"
+displayName="Ars Mekanism"
+description='''Source processing, glyphs, potions and Ars Nouveau automation with Mekanism machines.'''
+
+[[dependencies.arsmekanism]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.241,21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.arsmekanism]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.arsmekanism]]
+modId="mekanism"
+type="required"
+versionRange="[10.7.19,10.8)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.arsmekanism]]
+modId="ars_nouveau"
+type="required"
+versionRange="[5.13.1,5.14)"
+ordering="AFTER"
+side="BOTH"

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/potion_mixer/side",
+    "north": "arsmekanism:block/potion_mixer/front",
+    "up": "arsmekanism:block/potion_mixer/top",
+    "south": "arsmekanism:block/potion_mixer/side",
+    "east": "arsmekanism:block/potion_mixer/side",
+    "west": "arsmekanism:block/potion_mixer/side",
+    "down": "arsmekanism:block/potion_mixer/side"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/source_converter",
+  "textures": {
+    "north": "arsmekanism:block/source_converter/front_active"
+  }
+}

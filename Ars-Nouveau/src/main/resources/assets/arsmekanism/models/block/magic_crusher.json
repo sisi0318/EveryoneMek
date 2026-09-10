@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/magic_crusher/side",
+    "north": "arsmekanism:block/magic_crusher/front",
+    "up": "arsmekanism:block/magic_crusher/top",
+    "south": "arsmekanism:block/magic_crusher/side",
+    "east": "arsmekanism:block/magic_crusher/side",
+    "west": "arsmekanism:block/magic_crusher/side",
+    "down": "arsmekanism:block/magic_crusher/side"
+  }
+}

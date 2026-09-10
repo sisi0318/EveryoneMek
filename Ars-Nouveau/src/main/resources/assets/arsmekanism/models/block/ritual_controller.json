@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/ritual_controller/side",
+    "north": "arsmekanism:block/ritual_controller/front",
+    "up": "arsmekanism:block/ritual_controller/top",
+    "south": "arsmekanism:block/ritual_controller/side",
+    "east": "arsmekanism:block/ritual_controller/side",
+    "west": "arsmekanism:block/ritual_controller/side",
+    "down": "arsmekanism:block/ritual_controller/side"
+  }
+}

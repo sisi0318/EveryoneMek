@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/imbuement_chamber",
+  "textures": {
+    "north": "arsmekanism:block/imbuement_chamber/front_active"
+  }
+}

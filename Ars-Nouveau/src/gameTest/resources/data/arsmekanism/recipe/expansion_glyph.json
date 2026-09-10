@@ -1,0 +1,19 @@
+{
+  "type": "ars_nouveau:glyph",
+  "output": {
+    "id": "ars_nouveau:glyph_light",
+    "count": 1
+  },
+  "inputs": [
+    {
+      "item": "minecraft:gold_ingot"
+    },
+    {
+      "item": "minecraft:gold_ingot"
+    },
+    {
+      "item": "minecraft:water_bucket"
+    }
+  ],
+  "exp": 21
+}

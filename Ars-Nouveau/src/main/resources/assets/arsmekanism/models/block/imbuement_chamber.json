@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/imbuement_chamber/side",
+    "north": "arsmekanism:block/imbuement_chamber/front",
+    "up": "arsmekanism:block/imbuement_chamber/top",
+    "south": "arsmekanism:block/imbuement_chamber/side",
+    "east": "arsmekanism:block/imbuement_chamber/side",
+    "west": "arsmekanism:block/imbuement_chamber/side",
+    "down": "arsmekanism:block/imbuement_chamber/side"
+  }
+}

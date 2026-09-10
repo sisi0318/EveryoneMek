@@ -1,0 +1,10 @@
+{
+  "name": "arsmekanism-texture-tools",
+  "private": true,
+  "scripts": {
+    "export": "node ../tools/export_textures.cjs"
+  },
+  "devDependencies": {
+    "sharp": "0.35.4"
+  }
+}

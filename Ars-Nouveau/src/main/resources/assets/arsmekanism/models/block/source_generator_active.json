@@ -1,0 +1,6 @@
+{
+  "parent": "arsmekanism:block/source_generator",
+  "textures": {
+    "north": "arsmekanism:block/source_generator/front_active"
+  }
+}

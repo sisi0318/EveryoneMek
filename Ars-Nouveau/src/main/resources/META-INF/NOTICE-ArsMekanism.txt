@@ -1,0 +1,12 @@
+Ars Mekanism
+
+DrygmyHarvest.java adapts the harvest calculation from Ars Nouveau's DrygmyTile,
+by the Ars Nouveau contributors, under the GNU Lesser General Public License v3.0.
+The changes support inventory-based captive jars, processing upgrades, preserved
+jar data, and persistent output batches. Other original addon code is MIT licensed.
+
+Upstream: https://github.com/baileyholl/Ars-Nouveau
+Project: https://github.com/sisi0318/EveryoneMek
+Modified source in the project source tree:
+Ars-Nouveau/src/main/java/dev/everyonemek/ars/DrygmyHarvest.java
+License: META-INF/licenses/ArsNouveau.txt

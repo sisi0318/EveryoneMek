@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "arsmekanism:block/whirlisprig_station/side",
+    "north": "arsmekanism:block/whirlisprig_station/front",
+    "up": "arsmekanism:block/whirlisprig_station/top",
+    "south": "arsmekanism:block/whirlisprig_station/side",
+    "east": "arsmekanism:block/whirlisprig_station/side",
+    "west": "arsmekanism:block/whirlisprig_station/side",
+    "down": "arsmekanism:block/whirlisprig_station/side"
+  }
+}
