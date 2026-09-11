@@ -28,7 +28,7 @@
 
 Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` 对 0.2.0 已发布的 23 槽掉落附件追加 3 个空槽后交给父类，否则重新放置会跳过整份库存。此处仅补齐当前内部机器的新增槽，不能恢复已删除的 0.1.0 远程锻台布局。
 
-## 原模组与物流契约
+## 锻造室的上游契约
 
 - `ModBlockPatterns.BASE_HEPHAESTUS_PATTERN` 只检查锻台 9×9 地面，先检查全部相关区块已加载。锻造室不创建、驱动或绑定 `HephaestusForgeBlockEntity`。
 - `Ritual.requirements()` 检查原等级与增强器；`EssencesDefinition.applyModifiers` 计算实际资源成本。原模组启动检查和扣费对增强器修正存在差异，本机明确让检查和扣除采用同一修正成本，避免负资源。
@@ -36,12 +36,18 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 - `TransmuteInputResult.getResultItem` 输入单件副本，保留名称、耐久及组件；所有产物先合并相同组件堆叠，再用空槽。
 - 锻造室默认前、左、上输入原料，后面四资源补给，右面自动输出，底面能量物品；FE 六面输入。增强器和四种资源插件不暴露给管道。
 - 暂停、断电、红石禁止、平台损坏或输出满时不能推进锻造；已有库存仍遵循普通 Mek 物流设置。资源插件生产不使加工状态灯短暂闪亮。
+
+## 炽炉嵌入与端口
+
 - `Binding` 只负责炉体内关联：bind 和 resolve 均强制控制器在原中心水平相邻一格，检查 UUID、完整结构、已加载区块和权限。已删除配置器选机、附近搜索、按钮 0 和坐标标签；旧远程认领按保存位置退役，不强制加载区块，不能阻挡原炉或新控制器。
 - `ClibanoEmbedding` 包装原 `BlockPattern.getPattern()` 中允许替换的中心格谓词，不复制整套结构；原 C 核心格只允许控制器，端口不能代替核心。`ClibanoPatternMixin` 仅为本控制器放宽原激活对象，仍核对完整炉壳、点击方向和最多一个控制器。`MachineBlock.useItemOn` 在 Mek 打开菜单前处理洁净粉末，校验权限，再调用原物品激活。不能只测试 item.useOn 而漏掉方块截获右键的流程。
 - 原始核心与已成型炉壳安装均走真实 `BlockItem.place`，保留 Mek item attachments 和归属；已成型安装的 `ClibanoFrameMixin` 仅在当前线程、指定位置期间跳过原 `Level.removeBlock(main)`，其余 `onRemove` 正常执行，finally 清除上下文。返还被替换的原核心或砖块，拒绝棱角、重复控制器和越权替换。
 - `ClibanoPort` 不存资源。`ClibanoPorts` 为端口外侧转发控制器对应世界方向的 item／FE capability；每个操作检查端口实体、已加载区块、认领与完整结构，不能缓存绕过检查的真实 handler。FE 使用 Mek 的既有转换。自动弹出使用 `TransitRequest`，从端口位置送往箱子或 Mek 物流管道，并沿用控制器输出颜色。
 - 拆除嵌入控制器或端口时移除原中心，从而触发原炉库存／经验掉落和其他炉壳还原。未拆下的控制器／端口保留，修复砖壳并重新激活后自动认领新中心 UUID；不能保留旧原机 handler 或复制原炉库存。`embedded` 保存于现有 settings，不改 16 槽布局。
 - 控制器移除根据实际相邻原中心处理，不能只依赖 `embedded` 标记：原炉可能在激活的同一 tick 就被拆除，尚未来得及自动认领。回归同时检查原炉物品正常掉落、控制器物品附件保存自己的库存。
+
+## 炽炉库存与电热
+
 - 炽炉原中心仍有七槽：增强器 0、灵魂 1、燃料 2、加工输入 3–4、临时结果 5–6。菜单只显示增强器和灵魂两槽，其余由加工引擎使用。`ClibanoSoulSlot` 是原槽 1 的 IInventorySlot 视图，EXTRA／INPUT_2 都指向同一个对象；不放入持久化 builder 的 all-slots 列表，也不单独序列化，否则拆控制器会复制原炉灵魂。
 - Mek `IMekanismInventory.getSlotLimit` 用 `ItemStack.EMPTY` 查询 `IInventorySlot.getLimit`，此时必须返回槽位容量 64；只有非空参数才按物品堆叠上限取最小值。EMPTY 的物品上限为 1，直接取最小值会让漏斗在一个灵魂后判断已满。现有端口回归覆盖真实漏斗连续供魂、共享满叠容量、模拟无副作用和溢出保留。
 - `ClibanoInventoryMixin` 在原 canSmelt 后核对四格输出及旧待取物品的总容量，finishRecipe 返回前立即收取产物。`ClibanoResiduesMixin` 包装原 forEach 回调，逐种检查容量、执行原转换并即时收取，不能要求所有种类一次装下，否则五种残渣会卡死在四格输出前。原加工和残渣结果生成逻辑不复制。
@@ -49,10 +55,11 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 - `ClibanoHeatingMixin` 在原 serverTick 更新配方之后判断能否推进并支付电热 FE，随后仍执行原双槽／合金／火焰／残渣逻辑。默认 50 FE／有效加工 tick，配置 `clibanoHeatFE`，只按 Mek 能量升级提高效率；速度仍只影响调度。原料调度使用 `operationFE`，默认 200 FE／有效操作；成品与灵魂不收中转能耗。
 - 电热只在本模组已认领的炽炉启用，认领方失效或区块未加载时停热，不退回烧煤。未认领的原炽炉不变。仅在一次原 tick 内暂借 burnTime／burnDuration 表示热源，使用 MixinExtras WrapMethod 的 finally 恢复原燃烧余额；燃料 getStack(2) 在原 tick 内视为空，实际库存不改。断电、暂停或无法加工时跳过原 logic.tick，避免原 tick(false) 重置进度。原灵魂计时和残渣转换照常运行。
 - `NativeInventory.migrateLegacy` 在暂停／供电检查前，将原槽 2 和旧补给槽遗留燃料合并到输出；满时原样保留。退回原燃料时只减堆叠数量并标记保存，沿用原消耗方式，避免 setStack 触发原 onSlotChanged 改写未用燃烧时长。Mek BasicInventorySlot.deserializeNBT 使用 setStackUnchecked，旧燃料不会被新灵魂筛选器丢弃。
-- `ClibanoAccess` 读取原炽炉同步数据与配方缓存。Mek 升级整合使用 common `UpgradeSlotAccess`、`ForgeUpgradeComponentMixin`，只为本模组锻造室增加资源插件；原 Forge/Ritual Mixin 仍全部删除。client 列表包含 `GuiUpgradeScrollListAccess` 和 `ForgeUpgradeWindowMixin`，不得放入 common。
+- `ClibanoAccess` 读取原炽炉同步数据与配方缓存。
 
-## UI、资源与测试
+## 界面与升级
 
+- Mek 升级整合使用 common `UpgradeSlotAccess`、`ForgeUpgradeComponentMixin`，只为本模组锻造室增加资源插件；原 Forge/Ritual Mixin 仍全部删除。client 列表包含 `GuiUpgradeScrollListAccess` 和 `ForgeUpgradeWindowMixin`，不得放入 common。
 - 界面 258×324，玩家槽起点 (48,240)、标签 (48,228)。锻造室：原料 (18,30) 3×3，输出 (200,30) 2×2，增强器 (112,30) 一行四格，资源 (112,66) 一行四格，能量 (218,66)。四根资源条内容宽 4、高 52，外框各加 2，位于 (18+55×i,98)，旁边放名称和速率；状态 (18,154) 220×18，等级／配方信息 (18,176) 220×26。不再显示锤子、绑定、复位或单独仪式槽。
 - `client/GuiSupportedResourceUpgrades` 继承原 `GuiSupportedUpgrades`，在原“可用升级”框中追加四个资源物品图标，沿用 `EnumUtils.UPGRADES` 的数量、本地化标题宽度、12 像素间距和每行容量，子元素使用原物品提示。追加图标不依赖已安装数量，不能与上方“已安装升级”列表混淆；只按需要增高底部区域和窗口，不新增 Mixin。
 - 炽炉界面 258×300，玩家标签 (48,204)、槽位起点 (48,216)。原料与输出仍为 (18,30) 和 (200,30)；增强器 (108,30)、唯一灵魂 (156,30)，能源物品 (218,84)。灵魂横条 (100,65) 宽 86，两路加工横条 (94,92)、(94,106) 宽 92，内容高 8；合金隐藏第二条。状态 (18,120) 220×18，摘要 (18,142) 220×28，按钮 y=178。锻造室保持原坐标。
@@ -60,10 +67,16 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 - `GuiClibanoBar` 复用 Mek GuiBar.BAR；灵魂总时长由 consumeSoul 返回时记录增强器修正后的实际值，旧存档用当前增强器和剩余时间补齐。输入物品仅同步两份显示快照，给加工条提供本地化悬停提示，不是库存。无结构显示未测量，不能假装有零资源。
 - 仅保留暂停、配方和经验按钮，移除连接按钮、坐标与重复成品标签。`ClibanoSideIconMixin` 仍只在 client 列表，目标位置同步只用于对应结构面的图标，不提供远程连接入口。
 - `ClibanoEmbedding.openFromPart` 从炉壳 FrameData 或端口相邻格定位原中心，再找实际炉体控制器并调用 Mek openGui。原炉壳 useWithoutItem 在有控制器时必须取消旧逻辑，即使 Mek 返回拒绝也不能回落旧 GUI；端口使用同一入口。没有控制器的原炉保持原菜单。
+
+## 美术与生成资源
+
 - `ClibanoControllerBlock` 只用于炽炉，增加 shell 状态；锻造室不增加该属性。控制器按原炉前向和实际电热状态选择 side／front_off／三种 front 火焰，自动保持朝外；端口分开同步 formed 与 connected，顶部用 top，其余面用 side。生成的 multipart 直接引用依赖的 clibano_center 模型，不复制原资源；中央两个像素的标记采样本项目既有端口灯像素，不能再加破坏接缝的外框。
 - `tools/generate_resources.py` 维护所有运行 JSON 和测试模板；改生成器后重新生成。四种资源插件均为无序合成，两份水晶块／灵魂块／满血试管／石化经验块，加一份奥术磨制暗石和净化粉。`soul_block` 与 `xpetrified_block` 分别由九个原灵魂与石化经验球压缩，支持单块拆回九份；通过普通方块注册，无方块实体。血液核心采用 `neoforge:components`，限定 `blood_test_tube` 的 `essence_storage` 为 BLOOD 3000/3000，`strict: false` 允许额外名称组件；不能只按物品 ID 接受空管。JEI 展示的代表 ItemStack 也必须装满。
 - 用户明确授权本模组两台机器的外部贴图放弃 Mek 灰银机壳，采用禁忌与奥秘暗石、织纹、符印和炉砖风格；保留方块形状与 Mek 界面。另明确追加炽炉真实嵌入、自动连接及独立管道端口。当前原稿为 `art/source/forge_controller-arcanus.png`、`clibano_controller-arcanus.png` 和 `clibano_port-arcanus.png`，旧工业风原稿仅作历史参考。
 - 内置 ImageGen 图稿与提示词在 `art/source/`、`art/prompts.json`，机械导出见 [art/README.md](art/README.md)。14 张完整方块贴图不透明，八种插件图标保留真实 alpha，运行 PNG 均为 16×16。炽炉和端口的原创四面图用于独立方块与物品，嵌入状态引用对应原炉壳模型，自动跟随资源包；依赖材质仅用于本地预览，不能复制进仓库或 JAR。
+
+## 验证与交付
+
 - 14 项服务端 GameTest 位于 `src/gameTest/java/dev/everyonemek/forbidden/ControllerGameTests.java`：9 项锻造室／材料、5 项炽炉。已验证真实工作台九份消耗及方块右键升级、资源守恒、保存与组件、平台/电力/暂停和真实六面出料。覆盖三插件真实工作台合成与双满管判定、四插件并行生成、独立计时/耗电/容量/26 槽掉落保存、原 Mek 槽真实点击安装与卸载／上限／距离／组件，以及两种压缩块合成、掉落和完整拆回。`UpgradeIntegrationContractTest` 的 2 项 JUnit 检查读取 Mek 字节码验证升级组件字段、原窗口绘制顺序与客户端选择桥接。
 - `check` 只编译 GameTest；逻辑需要时显式运行 `runGameTestServer`。不启动客户端。相关测试通过后不为文档或贴图重复全套测试。
 - `ClibanoEmbeddingGameTests` 有 3 项回归，总计 17 项服务端测试：四朝向侧面／核心安装与洁净粉末右键、完整结构和方向校验、五端口、真实 Mek 管道出料、接缝外观状态、损坏修复与库存保留。原电热回归覆盖准确扣 FE、暂停／断电／堵塞保进度、旧库存整理、燃烧余额和原炉行为；另验证全部 26 个外部方块打开同一菜单、私有权限无旧 GUI 回退、唯一灵魂不进入控制器掉落附件、五种残渣在四格输出中分批完成，以及旧远程数据失效。`ClibanoIntegrationContractTest` 有 3 项字节码检查，加原升级集成 2 项共 5 项，核对组装、移除、电热、产物、灵魂时长、逐类残渣和统一菜单注入点，以及客户端六面按钮入口。
