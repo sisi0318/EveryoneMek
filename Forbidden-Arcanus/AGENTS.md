@@ -4,7 +4,7 @@
 
 ## 版本与已确认范围
 
-- 0.2.2；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
+- 0.2.3；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
 - Java 21、Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。
 - Forbidden & Arcanus 发布版 2.6.1，Modrinth artifact `fNjxgZPH`；Valhelsia Core 1.1.4，artifact `cttRekq9`。后者必须显式声明，不能用上游源码的 1.1.5 代替实际发布 JAR 契约。
 - JEI 19.22.1.316 可选；不要求 Ponder。
@@ -44,6 +44,7 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 ## UI、资源与测试
 
 - 界面 258×324，玩家槽起点 (48,240)、标签 (48,228)。锻造室：原料 (18,30) 3×3，输出 (200,30) 2×2，增强器 (112,30) 一行四格，资源 (112,66) 一行四格，能量 (218,66)。四根资源条内容宽 4、高 52，外框各加 2，位于 (18+55×i,98)，旁边放名称和速率；状态 (18,154) 220×18，等级／配方信息 (18,176) 220×26。不再显示锤子、绑定、复位或单独仪式槽。
+- `client/GuiSupportedResourceUpgrades` 继承原 `GuiSupportedUpgrades`，在原“可用升级”框中追加四个资源物品图标，沿用 `EnumUtils.UPGRADES` 的数量、本地化标题宽度、12 像素间距和每行容量，子元素使用原物品提示。追加图标不依赖已安装数量，不能与上方“已安装升级”列表混淆；只按需要增高底部区域和窗口，不新增 Mixin。
 - 炽炉远程槽坐标集中在 `MachineMenu.nativeCoordinates`；原机未连接显示未测量值，不伪装成零。
 - `tools/generate_resources.py` 维护所有运行 JSON 和测试模板；改生成器后重新生成。四种资源插件均为无序合成，两份水晶块／灵魂块／满血试管／石化经验块，加一份奥术磨制暗石和净化粉。`soul_block` 与 `xpetrified_block` 分别由九个原灵魂与石化经验球压缩，支持单块拆回九份；通过普通方块注册，无方块实体。血液核心采用 `neoforge:components`，限定 `blood_test_tube` 的 `essence_storage` 为 BLOOD 3000/3000，`strict: false` 允许额外名称组件；不能只按物品 ID 接受空管。JEI 展示的代表 ItemStack 也必须装满。
 - 内置 ImageGen 图稿与提示词在 `art/source/`、`art/prompts.json`，机械导出见 [art/README.md](art/README.md)。10 张完整方块贴图不透明，八种插件图标保留真实 alpha，运行 PNG 均为 16×16。四种等级插件采用禁忌与奥秘配色的原创暗石符印，不复制依赖图稿。

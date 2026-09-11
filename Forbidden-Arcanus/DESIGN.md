@@ -1,6 +1,6 @@
 # Forbidden & Arcanus：锻造室与炽炉自动化
 
-0.2.2 已实现并通过 13 项服务端验收和 2 项 Mek 字节码契约检查。玩家说明以 [README.md](README.md) 为准，源码入口及维护要求见 [AGENTS.md](AGENTS.md)。客户端视觉由玩家验收。
+0.2.3 在已通过 13 项服务端验收的 0.2.2 基础上补全“可用升级”图标，编译和 2 项 Mek 字节码契约检查通过。玩家说明以 [README.md](README.md) 为准，源码入口及维护要求见 [AGENTS.md](AGENTS.md)。客户端视觉由玩家验收。
 
 ## 架构取舍
 
@@ -46,6 +46,8 @@ Forbidden & Arcanus 与 Valhelsia Core 均声明 All Rights Reserved。本项目
 生成按有效插件次数收费，不按资源点数收费。有效数量同时受安装数、剩余容量和可用 FE 限制；最后一次不足整份产量仍计一次，满储量不收费。四种独立计时器和资源数量保持原保存方式。锻造室基础每加工 tick 和每个有效插件生成周期均耗 100 FE，受 Mek 升级和 `forgeFE` 配置影响；炽炉仍为 `operationFE` 控制的基础 200 FE／有效调度。
 
 `UpgradeSlotAccess` 仅为锻造室的原安装输入与卸载输出放宽这四种物品的校验。`ForgeUpgradeComponentMixin` 在原 `TileComponentUpgrade.tickServer` 中为资源插件复用 20 tick 安装进度，其他 Mek 升级仍走原逻辑。安装后的物品保留在原有 22–25 库存索引，但不再暴露第二组菜单槽；数量和当前生产速率通过菜单单独同步。卸载通过带菜单 ID 的标准按钮数据包处理，校验权限与距离，并先模拟原输出槽容量。
+
+`GuiSupportedResourceUpgrades` 继承原 `GuiSupportedUpgrades`，在同一边框内追加四个资源物品图标；使用原本地化标题宽度和 12 像素图标间距计算位置，溢出后换行并增高窗口。保留原 Mek 升级的显示、禁用色和提示，资源图标直接使用物品提示。
 
 客户端继承原 `GuiUpgradeWindow`，以原 `GuiInstallableScrollList` 显示两类升级，共用原槽位、进度和卸载位置。两个 client Mixin 仅桥接原列表选择和资源详情区，不扩展 Mek 的 `Upgrade` 枚举。`GuiResourceBar` 使用冶金灌注机同款 `GuiBar.BAR` 边框，显示服务器计算的每秒生成量；剩余空间不足一轮时显示受容量限制的速率。
 

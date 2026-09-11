@@ -2,7 +2,7 @@
 
 为 Forbidden & Arcanus 提供**赫菲斯托斯锻造室**与**炽炉控制器**，支持 Mekanism 的供电、升级、六面物流、红石与安全设置。
 
-当前版本 **0.2.2**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
+当前版本 **0.2.3**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
 
 ![机器材质预览](art/block-preview.png)
 
@@ -27,7 +27,7 @@
 
 ### 四种资源插件
 
-打开 Mek 升级窗口，将插件放入原来的安装槽。安装后与速度、能量升级显示在同一列表；选中后点击“卸载”取回一个，Shift 点击取回该种全部插件，物品进入原卸载输出槽。每种最多 **8 个**，超过上限的插件留在安装槽；已有插件自动保留。
+打开 Mek 升级窗口，“可用升级”中会显示辉光、灵魂、血液、经验四种插件的图标，悬停查看名称和用途。将插件放入原来的安装槽。安装后与速度、能量升级显示在同一列表；选中后点击“卸载”取回一个，Shift 点击取回该种全部插件，物品进入原卸载输出槽。每种最多 **8 个**，超过上限的插件留在安装槽；已有插件自动保留。
 
 四种插件同时工作，基础每 **5 秒**生成一次，速度升级缩短间隔。主界面用四条竖直资源条显示储量，旁边显示 **+x/秒**；悬停查看准确储量、容量和产速。产速由服务器按当前安装数量、速度、供电和剩余空间计算，满储量、断电、暂停或平台不完整时显示零。
 
@@ -89,7 +89,7 @@
 
 ## 安装与验证
 
-将 `ForbiddenMekanism-0.2.2.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0／0.2.1 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移；炽炉控制器继续沿用原有机制。
+将 `ForbiddenMekanism-0.2.3.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0／0.2.1 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移；炽炉控制器继续沿用原有机制。
 
 普通锻造和炽炉加工沿用原 JEI 分类；等级插件放在工作台合成分类。两种机器的合成可在 JEI 查看。
 
@@ -99,8 +99,8 @@
 
 ## English quick start
 
-Place the Hephaestus Forging Chamber at the center of the original 9×9 forge floor. Supply FE, put materials in its nine internal input slots, install the required enhancers and supply Aureal, souls, blood and experience. The chamber owns all inventory and essence storage. Craft four tier installers from the native upgrade rituals' complete nine materials and use them sequentially on the chamber. Install up to eight modules of each resource type in the Mek upgrade window. The shared Mek installation slot, installed-upgrade list and uninstall output handle all four resource modules. Aureal, Soul, Blood and Experience Modules produce 100, 1, 150 and 100 points per five seconds respectively, using FE without further consumable materials. Four vertical bars show storage and current production per second. All four shapeless recipes use two resource materials, one arcane polished darkstone and one mundabitur dust. Resource materials are arcane crystal blocks, soul blocks, full 3000-point blood tubes and petrified experience blocks respectively. Nine souls or xpetrified orbs compress into a placeable block and unpack without loss. Speed upgrades accelerate forging and all resource generation.
+Place the Hephaestus Forging Chamber at the center of the original 9×9 forge floor. Supply FE, put materials in its nine internal input slots, install the required enhancers and supply Aureal, souls, blood and experience. The chamber owns all inventory and essence storage. Craft four tier installers from the native upgrade rituals' complete nine materials and use them sequentially on the chamber. Install up to eight modules of each resource type in the Mek upgrade window. The supported-upgrades area displays all four resource module icons before installation, with item-name and usage tooltips. The shared Mek installation slot, installed-upgrade list and uninstall output handle all four resource modules. Aureal, Soul, Blood and Experience Modules produce 100, 1, 150 and 100 points per five seconds respectively, using FE without further consumable materials. Four vertical bars show storage and current production per second. All four shapeless recipes use two resource materials, one arcane polished darkstone and one mundabitur dust. Resource materials are arcane crystal blocks, soul blocks, full 3000-point blood tubes and petrified experience blocks respectively. Nine souls or xpetrified orbs compress into a placeable block and unpack without loss. Speed upgrades accelerate forging and all resource generation.
 
 The Clibano Controller still binds an existing complete Clibano within eight blocks. Sneak-use a Mekanism Configurator on the furnace and then the controller. Native fuel, soul flames, enhancers, residues and experience retain their original behavior.
 
-Version 0.2.2 preserves 0.2.0 and 0.2.1 machines, inventory and installed modules. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Thirteen headless server tests and two Mek bytecode contract tests pass; client visual acceptance remains in-game.
+Version 0.2.3 preserves 0.2.0 and 0.2.1 machines, inventory and installed modules. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Thirteen headless server tests and two Mek bytecode contract tests pass; client visual acceptance remains in-game.

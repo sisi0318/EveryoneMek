@@ -11,6 +11,7 @@ import mekanism.client.gui.element.GuiElementHolder;
 import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.button.DigitalButton;
 import mekanism.client.gui.element.button.MekanismButton;
+import mekanism.client.gui.element.custom.GuiSupportedUpgrades;
 import mekanism.client.gui.element.scroll.GuiInstallableScrollList;
 import mekanism.client.gui.element.scroll.GuiUpgradeScrollList;
 import mekanism.client.gui.element.window.GuiUpgradeWindow;
@@ -41,6 +42,10 @@ public final class ResourceUpgradeWindow extends GuiUpgradeWindow {
         var originalList = children().stream().filter(GuiUpgradeScrollList.class::isInstance).map(GuiUpgradeScrollList.class::cast).findFirst().orElseThrow();
         var originalButton = children().stream().filter(DigitalButton.class::isInstance).map(DigitalButton.class::cast).findFirst().orElseThrow();
         details = children().stream().filter(GuiInnerScreen.class::isInstance).map(GuiInnerScreen.class::cast).findFirst().orElseThrow();
+        var originalSupported = children().stream().filter(GuiSupportedUpgrades.class::isInstance).map(GuiSupportedUpgrades.class::cast).findFirst().orElseThrow();
+        children().remove(originalSupported);
+        var supported = addChild(new GuiSupportedResourceUpgrades(gui, originalSupported, controller.getComponent().getSupportedTypes()));
+        setHeight(Math.max(getHeight(), supported.getRelativeBottom() - relativeY + 6));
         children().remove(originalList);
         children().remove(originalButton);
         combined = addChild(new CombinedList(gui, originalList, controller));
