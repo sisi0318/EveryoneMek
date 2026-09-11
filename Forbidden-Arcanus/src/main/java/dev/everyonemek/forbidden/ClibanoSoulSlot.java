@@ -25,7 +25,10 @@ public record ClibanoSoulSlot(Controller controller) implements IInventorySlot {
         return automation == AutomationType.EXTERNAL || controller.getLevel() == null ? ItemStack.EMPTY
               : NativeInventory.menu(controller).extractItem(1, amount, action == Action.SIMULATE);
     }
-    @Override public int getLimit(ItemStack stack) { return Math.min(64, stack.getMaxStackSize()); }
+    @Override public int getLimit(ItemStack stack) {
+        // Mek queries the slot's capacity with EMPTY, whose item stack limit is only one.
+        return stack.isEmpty() ? 64 : Math.min(64, stack.getMaxStackSize());
+    }
     @Override public boolean isItemValid(ItemStack stack) { return NativeInventory.acceptsSupply(controller.getLevel(), MachineKind.CLIBANO, 0, stack); }
     @Override public void onContentsChanged() {
         var main = controller.binding.resolve();

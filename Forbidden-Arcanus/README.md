@@ -2,7 +2,7 @@
 
 为 Forbidden & Arcanus 提供**赫菲斯托斯锻造室**与**炽炉控制器**，支持 Mekanism 的供电、升级、六面物流、红石与安全设置。
 
-当前版本 **0.2.7**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
+当前版本 **0.2.8**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
 
 ![机器材质预览](art/block-preview.png)
 
@@ -98,6 +98,8 @@
 
 已有机器的六面设置保持不变，旧“输入 2”模式仍可输入同一灵魂槽。
 
+漏斗和管道可连续补入同类灵魂，普通灵魂最多一叠 64 个；槽内已有一个时仍会继续接收。
+
 **接入控制器后使用 FE 加热，不再烧煤或其他燃料。** 保留双槽独立加工、双材料合金、增强器、残渣和经验；需要灵魂火或附魔火的配方仍需对应灵魂。
 
 基础加热消耗 **50 FE／工作 tick**，只在有可加工配方、输出空间足够且实际推进时收费，配置项为 `clibanoHeatFE`。能量升级提高加热效率。每次有效原料调度另耗基础 **200 FE**，配置项为 `operationFE`；灵魂和输出不收取中转能耗。速度升级缩短原料调度间隔，配方时长仍遵循原炉规则。
@@ -110,7 +112,7 @@
 
 ## 安装与验证
 
-将 `ForbiddenMekanism-0.2.7.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0–0.2.6 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移。
+将 `ForbiddenMekanism-0.2.8.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0–0.2.7 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移。
 
 普通锻造和炽炉加工沿用原 JEI 分类；等级插件放在工作台合成分类。两种机器的合成可在 JEI 查看。
 
@@ -126,4 +128,4 @@ Use a Clibano Controller directly on the Clibano Core or the front center of an 
 
 Controlled Clibanos use FE for heat and need no fuel. Special flames still require the appropriate souls and enhancers. Heating costs 50 FE per productive native tick before energy upgrades; material feeding costs 200 FE per effective operation. Souls and outputs need no extra transfer fee. Pausing, losing power or blocking outputs stops heating and preserves progress; the native soul timer continues. Speed upgrades accelerate material feeding while native recipe durations remain unchanged. Old soul buffers merge into the single slot, with excess souls and old fuel returned to outputs without loss. Existing external controllers retain their inventory and settings but must be moved into the furnace to work. Breaking and repairing the structure retain the established native drops and automatic reconnection rules.
 
-Version 0.2.7 marks the soul slot with Mek's orange Extra-input border and an explicit tooltip. New controllers default their top and rear item sides to Extra; existing side settings and the Input 2 compatibility mode are preserved. Machines, inventory and installed modules from 0.2.0–0.2.6 are preserved. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Seventeen headless server tests and five bytecode contract tests cover the implementation; client visual acceptance remains in-game.
+The soul slot uses Mek's orange Extra-input border and an explicit tooltip. New controllers default their top and rear item sides to Extra; existing side settings and the Input 2 compatibility mode are preserved. Version 0.2.8 fixes soul ports reporting a capacity of one: hoppers and pipes can keep adding matching souls up to their normal stack limit, including 64 regular souls. Machines, inventory and installed modules from 0.2.0–0.2.7 are preserved. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Seventeen headless server tests and five bytecode contract tests cover the implementation; client visual acceptance remains in-game.

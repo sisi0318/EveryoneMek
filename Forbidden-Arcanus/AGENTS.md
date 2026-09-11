@@ -4,7 +4,7 @@
 
 ## 版本与已确认范围
 
-- 0.2.7；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
+- 0.2.8；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
 - Java 21、Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。
 - Forbidden & Arcanus 发布版 2.6.1，Modrinth artifact `fNjxgZPH`；Valhelsia Core 1.1.4，artifact `cttRekq9`。后者必须显式声明，不能用上游源码的 1.1.5 代替实际发布 JAR 契约。
 - JEI 19.22.1.316 可选；不要求 Ponder。
@@ -43,6 +43,7 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 - 拆除嵌入控制器或端口时移除原中心，从而触发原炉库存／经验掉落和其他炉壳还原。未拆下的控制器／端口保留，修复砖壳并重新激活后自动认领新中心 UUID；不能保留旧原机 handler 或复制原炉库存。`embedded` 保存于现有 settings，不改 16 槽布局。
 - 控制器移除根据实际相邻原中心处理，不能只依赖 `embedded` 标记：原炉可能在激活的同一 tick 就被拆除，尚未来得及自动认领。回归同时检查原炉物品正常掉落、控制器物品附件保存自己的库存。
 - 炽炉原中心仍有七槽：增强器 0、灵魂 1、燃料 2、加工输入 3–4、临时结果 5–6。菜单只显示增强器和灵魂两槽，其余由加工引擎使用。`ClibanoSoulSlot` 是原槽 1 的 IInventorySlot 视图，EXTRA／INPUT_2 都指向同一个对象；不放入持久化 builder 的 all-slots 列表，也不单独序列化，否则拆控制器会复制原炉灵魂。
+- Mek `IMekanismInventory.getSlotLimit` 用 `ItemStack.EMPTY` 查询 `IInventorySlot.getLimit`，此时必须返回槽位容量 64；只有非空参数才按物品堆叠上限取最小值。EMPTY 的物品上限为 1，直接取最小值会让漏斗在一个灵魂后判断已满。现有端口回归覆盖真实漏斗连续供魂、共享满叠容量、模拟无副作用和溢出保留。
 - `ClibanoInventoryMixin` 在原 canSmelt 后核对四格输出及旧待取物品的总容量，finishRecipe 返回前立即收取产物。`ClibanoResiduesMixin` 包装原 forEach 回调，逐种检查容量、执行原转换并即时收取，不能要求所有种类一次装下，否则五种残渣会卡死在四格输出前。原加工和残渣结果生成逻辑不复制。
 - `NativeInventory.migrateLegacy` 先整理旧补给和待取结果：灵魂尽量并入唯一原槽 1，余量及旧燃料退到输出；满时保留。无结构时只整理控制器自有库存，不访问旧远端原机。直接产物与灵魂接口不再经过调度，`operationFE` 仅向原料调度收费。
 - `ClibanoHeatingMixin` 在原 serverTick 更新配方之后判断能否推进并支付电热 FE，随后仍执行原双槽／合金／火焰／残渣逻辑。默认 50 FE／有效加工 tick，配置 `clibanoHeatFE`，只按 Mek 能量升级提高效率；速度仍只影响调度。原料调度使用 `operationFE`，默认 200 FE／有效操作；成品与灵魂不收中转能耗。

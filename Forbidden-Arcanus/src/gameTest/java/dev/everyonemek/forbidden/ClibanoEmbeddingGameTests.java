@@ -20,6 +20,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -186,6 +187,8 @@ public final class ClibanoEmbeddingGameTests {
                 var souls = h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, center.below(), Direction.DOWN);
                 var energy = h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK, center.above(), Direction.UP);
                 check(input != null && fuel != null && souls != null && energy != null, "Formed port capabilities missing");
+                check(fuel.getSlotLimit(0) == 64 && souls.getSlotLimit(0) == 64,
+                      "Soul port reports an incorrect capacity: " + fuel.getSlotLimit(0));
                 check(energy.receiveEnergy(20000, true) == 20000 && controller.energy().getEnergy() == 0, "FE simulation mutated energy");
                 check(energy.receiveEnergy(20000, false) == 20000, "Top port did not accept real FE");
                 check(ItemHandlerHelper.insertItemStacked(input, new ItemStack(Items.RAW_IRON), true).isEmpty()
@@ -197,7 +200,11 @@ public final class ClibanoEmbeddingGameTests {
                 check(main.getStack(1).is(ModItems.SOUL.get()) && main.getStack(1).getCount() == 1
                       && controller.supplies.stream().allMatch(s -> s.isEmpty()), "Port stored a duplicate soul buffer instead of the furnace soul slot");
                 check(souls.getStackInSlot(0).getCount() == 1, "Two soul sides did not expose the same inventory");
+                check(fuel.getSlotLimit(0) == 64 && souls.getSlotLimit(0) == 64, "One soul made the port report a full slot");
                 check(!ItemHandlerHelper.insertItemStacked(souls, new ItemStack(Items.COAL), false).isEmpty(), "Soul port accepted coal");
+                h.getLevel().setBlockAndUpdate(center.above(2), Blocks.HOPPER.defaultBlockState());
+                var hopper = (HopperBlockEntity) h.getLevel().getBlockEntity(center.above(2));
+                hopper.setItem(0, new ItemStack(ModItems.SOUL.get(), 4));
                 h.getLevel().setBlockAndUpdate(center.south(2), mekanism.common.registries.MekanismBlocks.BASIC_LOGISTICAL_TRANSPORTER.defaultState());
                 h.getLevel().setBlockAndUpdate(center.south(3), mekanism.common.registries.MekanismBlocks.BASIC_LOGISTICAL_TRANSPORTER.defaultState());
                 h.getLevel().setBlockAndUpdate(center.south(4), Blocks.CHEST.defaultBlockState());
@@ -206,6 +213,14 @@ public final class ClibanoEmbeddingGameTests {
                     try {
                         var chest = (ChestBlockEntity) h.getLevel().getBlockEntity(center.south(4));
                         check(chest.countItem(Items.IRON_INGOT) == 1 && chest.countItem(Items.COPPER_INGOT) == 1, "Native products did not eject through configured port into chest: " + controller.status);
+                        check(hopper.isEmpty() && main.getStack(1).getCount() >= 3, "Hopper stopped replenishing the occupied soul slot");
+                        int storedSouls = main.getStack(1).getCount();
+                        var fullStack = new ItemStack(ModItems.SOUL.get(), 64);
+                        check(souls.insertItem(0, fullStack, true).getCount() == storedSouls && main.getStack(1).getCount() == storedSouls,
+                              "Soul insertion simulation changed inventory or exceeded capacity");
+                        check(souls.insertItem(0, fullStack, false).getCount() == storedSouls && fuel.getStackInSlot(0).getCount() == 64,
+                              "Soul sides did not share the full stack and preserve overflow");
+                        check(fuel.insertItem(0, new ItemStack(ModItems.SOUL.get()), false).getCount() == 1, "Full soul slot accepted another item");
                         check(controller.getBlockState().getValue(ClibanoControllerBlock.SHELL) == ClibanoControllerBlock.Shell.FRONT_OFF,
                               "Idle electric core retained the burning front model");
                         for (Direction side : new Direction[] {Direction.UP, Direction.DOWN, Direction.WEST, Direction.SOUTH, Direction.EAST}) {
