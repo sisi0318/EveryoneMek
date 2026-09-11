@@ -4,7 +4,7 @@
 
 ## 版本与已确认范围
 
-- 0.2.6；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
+- 0.2.7；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
 - Java 21、Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。
 - Forbidden & Arcanus 发布版 2.6.1，Modrinth artifact `fNjxgZPH`；Valhelsia Core 1.1.4，artifact `cttRekq9`。后者必须显式声明，不能用上游源码的 1.1.5 代替实际发布 JAR 契约。
 - JEI 19.22.1.316 可选；不要求 Ponder。
@@ -55,6 +55,7 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 - 界面 258×324，玩家槽起点 (48,240)、标签 (48,228)。锻造室：原料 (18,30) 3×3，输出 (200,30) 2×2，增强器 (112,30) 一行四格，资源 (112,66) 一行四格，能量 (218,66)。四根资源条内容宽 4、高 52，外框各加 2，位于 (18+55×i,98)，旁边放名称和速率；状态 (18,154) 220×18，等级／配方信息 (18,176) 220×26。不再显示锤子、绑定、复位或单独仪式槽。
 - `client/GuiSupportedResourceUpgrades` 继承原 `GuiSupportedUpgrades`，在原“可用升级”框中追加四个资源物品图标，沿用 `EnumUtils.UPGRADES` 的数量、本地化标题宽度、12 像素间距和每行容量，子元素使用原物品提示。追加图标不依赖已安装数量，不能与上方“已安装升级”列表混淆；只按需要增高底部区域和窗口，不新增 Mixin。
 - 炽炉界面 258×300，玩家标签 (48,204)、槽位起点 (48,216)。原料与输出仍为 (18,30) 和 (200,30)；增强器 (108,30)、唯一灵魂 (156,30)，能源物品 (218,84)。灵魂横条 (100,65) 宽 86，两路加工横条 (94,92)、(94,106) 宽 92，内容高 8；合金隐藏第二条。状态 (18,120) 220×18，摘要 (18,142) 220×28，按钮 y=178。锻造室保持原坐标。
+- 灵魂槽的 GuiSlot 使用 SlotType.EXTRA 原生橙色槽框及“额外输入：灵魂”提示；不能继续画成 NORMAL。新机器 TOP／BACK 默认 EXTRA，旧 INPUT_2 仍映射同一灵魂视图，已有配置不重置。
 - `GuiClibanoBar` 复用 Mek GuiBar.BAR；灵魂总时长由 consumeSoul 返回时记录增强器修正后的实际值，旧存档用当前增强器和剩余时间补齐。输入物品仅同步两份显示快照，给加工条提供本地化悬停提示，不是库存。无结构显示未测量，不能假装有零资源。
 - 仅保留暂停、配方和经验按钮，移除连接按钮、坐标与重复成品标签。`ClibanoSideIconMixin` 仍只在 client 列表，目标位置同步只用于对应结构面的图标，不提供远程连接入口。
 - `ClibanoEmbedding.openFromPart` 从炉壳 FrameData 或端口相邻格定位原中心，再找实际炉体控制器并调用 Mek openGui。原炉壳 useWithoutItem 在有控制器时必须取消旧逻辑，即使 Mek 返回拒绝也不能回落旧 GUI；端口使用同一入口。没有控制器的原炉保持原菜单。

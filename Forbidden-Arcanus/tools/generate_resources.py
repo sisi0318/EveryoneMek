@@ -148,6 +148,7 @@ for tag in ("mineable/pickaxe", "needs_stone_tool"):
 write("pack.mcmeta", {"pack": {"pack_format": 34, "description": "Forbidden Mekanism resources"}})
 
 labels = {
+    "soul_extra_input": ("额外输入：灵魂", "Extra input: Souls"),
     "enhancer": ("增强器", "Enhancer"), "soul_burning": ("灵魂燃烧", "Soul duration"),
     "processing": ("加工进度", "Processing"), "processing_item": ("%s · %s%%", "%s · %s%%"),
     "soul_time": ("灵魂剩余 %s / %s 秒", "Soul time: %s / %s s"),

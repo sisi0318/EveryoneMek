@@ -2,7 +2,7 @@
 
 为 Forbidden & Arcanus 提供**赫菲斯托斯锻造室**与**炽炉控制器**，支持 Mekanism 的供电、升级、六面物流、红石与安全设置。
 
-当前版本 **0.2.6**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
+当前版本 **0.2.7**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
 
 ![机器材质预览](art/block-preview.png)
 
@@ -85,17 +85,18 @@
 
 方向以**控制器正面**为准。控制器安装在核心位置时，六面配置与整座炉子的前后左右一致；两个侧面、背面、顶部和底部均可安装端口。
 
-界面只保留左侧九格原料、中央一个增强器槽和一个灵魂槽、右侧四格输出。**加工成品和残渣产物生成后直接进入右侧输出**，没有第二组“成品”槽，也没有灵魂中转槽。增强器和灵魂可 Shift 点击取回背包。
+界面只保留左侧九格原料、中央一个增强器槽和一个灵魂槽、右侧四格输出。灵魂槽使用橙色“额外”槽框，悬停显示“额外输入：灵魂”；供魂管道所在面设为“额外”，原料使用“输入”，成品抽取使用“输出”。**加工成品和残渣产物生成后直接进入右侧输出**，没有第二组“成品”槽，也没有灵魂中转槽。增强器和灵魂可 Shift 点击取回背包。
 
 灵魂燃烧时间使用横向条显示，悬停查看剩余／总时长。两路独立加工分别显示进度，合金加工只显示一条；悬停进度条可查看正在加工的材料和百分比。状态区保留工作原因、火焰、电热、残渣和配方信息，不再显示绑定坐标或连接按钮。
 
 | 六面配置 | 默认面 | 用途 |
 | --- | --- | --- |
 | 输入 | 前、左 | 配方原料 |
-| 额外 | 后 | 灵魂补给 |
-| 输入 2 | 上 | 灵魂补给 |
+| 额外 | 后、上 | 灵魂补给 |
 | 输出 | 右 | 成品与残渣合成产物 |
 | 能量 | 下 | 能量物品 |
+
+已有机器的六面设置保持不变，旧“输入 2”模式仍可输入同一灵魂槽。
 
 **接入控制器后使用 FE 加热，不再烧煤或其他燃料。** 保留双槽独立加工、双材料合金、增强器、残渣和经验；需要灵魂火或附魔火的配方仍需对应灵魂。
 
@@ -109,7 +110,7 @@
 
 ## 安装与验证
 
-将 `ForbiddenMekanism-0.2.6.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0–0.2.5 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移。
+将 `ForbiddenMekanism-0.2.7.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0–0.2.6 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移。
 
 普通锻造和炽炉加工沿用原 JEI 分类；等级插件放在工作台合成分类。两种机器的合成可在 JEI 查看。
 
@@ -125,4 +126,4 @@ Use a Clibano Controller directly on the Clibano Core or the front center of an 
 
 Controlled Clibanos use FE for heat and need no fuel. Special flames still require the appropriate souls and enhancers. Heating costs 50 FE per productive native tick before energy upgrades; material feeding costs 200 FE per effective operation. Souls and outputs need no extra transfer fee. Pausing, losing power or blocking outputs stops heating and preserves progress; the native soul timer continues. Speed upgrades accelerate material feeding while native recipe durations remain unchanged. Old soul buffers merge into the single slot, with excess souls and old fuel returned to outputs without loss. Existing external controllers retain their inventory and settings but must be moved into the furnace to work. Breaking and repairing the structure retain the established native drops and automatic reconnection rules.
 
-Version 0.2.6 consolidates inventory and the interface, removes remote operation and unifies all furnace interaction points. Machines, inventory and installed modules from 0.2.0–0.2.5 are preserved. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Seventeen headless server tests and five bytecode contract tests cover the implementation; client visual acceptance remains in-game.
+Version 0.2.7 marks the soul slot with Mek's orange Extra-input border and an explicit tooltip. New controllers default their top and rear item sides to Extra; existing side settings and the Input 2 compatibility mode are preserved. Machines, inventory and installed modules from 0.2.0–0.2.6 are preserved. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Seventeen headless server tests and five bytecode contract tests cover the implementation; client visual acceptance remains in-game.

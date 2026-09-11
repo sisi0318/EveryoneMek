@@ -76,7 +76,7 @@ public final class Controller extends TileEntityConfigurableMachine {
         if (!kind().forge()) items.addSlotInfo(DataType.INPUT_2, new InventorySlotInfo(true, false, resourceSlots));
         for (RelativeSide side : RelativeSide.values()) items.setDataType(DataType.INPUT, side);
         items.setDataType(DataType.EXTRA, RelativeSide.BACK);
-        if (!kind().forge()) items.setDataType(DataType.INPUT_2, RelativeSide.TOP);
+        if (!kind().forge()) items.setDataType(DataType.EXTRA, RelativeSide.TOP);
         items.setDataType(DataType.ENERGY, RelativeSide.BOTTOM);
         items.setDataType(DataType.OUTPUT, RelativeSide.RIGHT);
         items.setEjecting(true);

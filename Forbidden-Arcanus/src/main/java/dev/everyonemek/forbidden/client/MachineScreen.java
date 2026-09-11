@@ -51,7 +51,9 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         addRenderableWidget(new GuiEnergyTab(this, tile.energy(), tile::getActive));
         for (int i = 0; i < (tile.kind().forge() ? 0 : 2); i++) {
             int[] xy = MachineMenu.nativeCoordinates(tile.kind(), i);
-            addRenderableWidget(new GuiSlot(SlotType.NORMAL, this, xy[0] - 1, xy[1] - 1));
+            var slot = new GuiSlot(i == 1 ? SlotType.EXTRA : SlotType.NORMAL, this, xy[0] - 1, xy[1] - 1);
+            if (i == 1) slot.hover(element -> List.of(text("soul_extra_input")));
+            addRenderableWidget(slot);
         }
         if (tile.kind().forge()) {
             ProgressType arrow = ProgressType.SMALL_RIGHT;
