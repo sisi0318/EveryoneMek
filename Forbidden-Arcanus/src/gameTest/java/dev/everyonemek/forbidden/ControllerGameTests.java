@@ -31,8 +31,34 @@ import net.neoforged.neoforge.gametest.*;
 @GameTestHolder(ForbiddenMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class ControllerGameTests {
+    private static final class MenuPlayer extends net.neoforged.neoforge.common.util.FakePlayer {
+        private int opened;
+        MenuPlayer(net.minecraft.server.level.ServerLevel level) {
+            super(level, new com.mojang.authlib.GameProfile(UUID.randomUUID(), "[MenuTest]"));
+        }
+        @Override public java.util.OptionalInt openMenu(net.minecraft.world.MenuProvider provider,
+              java.util.function.Consumer<net.minecraft.network.RegistryFriendlyByteBuf> extraData) {
+            if (containerMenu != inventoryMenu) containerMenu.removed(this);
+            containerMenu = provider.createMenu(++opened, getInventory(), this);
+            return java.util.OptionalInt.of(opened);
+        }
+    }
     private static void check(boolean condition, String message) { if (!condition) throw new GameTestAssertException(message); }
     private static Controller controller(GameTestHelper h, MachineKind kind, int x) {
+        if (!kind.forge()) {
+            BlockPos wall = h.absolutePos(new BlockPos(12, 2, 11));
+            var profile = new com.mojang.authlib.GameProfile(UUID.nameUUIDFromBytes(("clibano-fixture:" + wall.asLong()).getBytes(java.nio.charset.StandardCharsets.UTF_8)), "[Clibano]");
+            var player = FakePlayerFactory.get(h.getLevel(), profile);
+            var oldPos = player.position(); var inventory = player.getInventory().save(new net.minecraft.nbt.ListTag());
+            boolean creative = player.getAbilities().instabuild;
+            try {
+                player.getInventory().clearContent(); player.getAbilities().instabuild = false;
+                ClibanoEmbeddingGameTests.install(player, wall, Direction.NORTH, new ItemStack(Content.MACHINES.get(kind)));
+                var controller = (Controller) h.getLevel().getBlockEntity(wall);
+                controller.energy().setEnergy(controller.energy().getMaxEnergy());
+                return controller;
+            } finally { player.setPos(oldPos); player.getInventory().load(inventory); player.getAbilities().instabuild = creative; }
+        }
         BlockPos pos = new BlockPos(x, 2, 12);
         h.setBlock(pos, Content.MACHINES.get(kind).defaultState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
         Controller controller = (Controller) h.getBlockEntity(pos);
@@ -106,7 +132,14 @@ public final class ControllerGameTests {
             ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
         }
     }
-    private static void stop(Controller controller) { controller.enabled = false; controller.energy().setEnergy(0); }
+    private static void stop(Controller controller) {
+        controller.enabled = false; controller.energy().setEnergy(0);
+        if (!controller.kind().forge()) {
+            var frequency = controller.getSecurity().getFrequency();
+            controller.getSecurity().setOwnerUUID(null);
+            if (frequency != null) mekanism.common.lib.frequency.FrequencyType.SECURITY.getFrequencyManager(frequency).remove(frequency.getKey(), frequency.getOwner());
+        }
+    }
 
     @GameTest(template = "empty", timeoutTicks = 60)
     public static void internalForgeConsumesNativeMaterialsAndEssencesExactlyOnce(GameTestHelper h) {
@@ -433,6 +466,7 @@ public final class ControllerGameTests {
         var clibano = clibano(h); var controller = controller(h, MachineKind.CLIBANO, 8);
         h.runAfterDelay(2, () -> {
             try {
+                controller.binding.release();
                 clibano.setStack(3, new ItemStack(Items.RAW_IRON)); clibano.setStack(2, new ItemStack(Items.COAL));
                 ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
                 var data = ((ClibanoAccess) clibano).forbiddenmekanism$data(); int savedBurn = data.get(1);
@@ -454,11 +488,12 @@ public final class ControllerGameTests {
                 long expectedCost = mekanism.common.util.UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertTo(MachineConfig.CLIBANO_HEAT_FE.get());
                 check(controller.energy().getEnergy() == energy - expectedCost && data.get(3) > progress, "Electric heat did not charge once per productive tick");
                 long beforeBlocked = controller.energy().getEnergy(); int blockedProgress = data.get(3);
-                clibano.setStack(5, new ItemStack(Items.STONE, 64)); clibano.setStack(6, new ItemStack(Items.STONE, 64));
+                var savedOutputs = controller.outputs.stream().map(s -> s.getStack().copy()).toList();
+                controller.outputs.forEach(s -> s.setStack(new ItemStack(Items.STONE, 64)));
                 try {
                     ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
                     check(controller.energy().getEnergy() == beforeBlocked && data.get(3) == blockedProgress, "Full outputs consumed heat or lost progress");
-                } finally { clibano.setStack(5, ItemStack.EMPTY); clibano.setStack(6, ItemStack.EMPTY); }
+                } finally { for (int i = 0; i < controller.outputs.size(); i++) controller.outputs.get(i).setStack(savedOutputs.get(i)); }
                 runClibano(controller, clibano, 25);
                 check(!clibano.getStack(3).isEmpty() && !clibano.getStack(4).isEmpty(), "Native independent inputs were not both fed");
                 runClibano(controller, clibano, 150);
@@ -483,7 +518,7 @@ public final class ControllerGameTests {
                 bind(h, controller, clibano.getBlockPos());
                 controller.setRecipe("forbidden_arcanus:clibano_combustion/obsidiansteel_ingot_from_clibano_combustion");
                 controller.stock.get(0).setStack(new ItemStack(Items.RAW_IRON)); controller.stock.get(1).setStack(new ItemStack(Items.OBSIDIAN));
-                controller.supplies.get(1).setStack(new ItemStack(ModItems.ENCHANTED_SOUL.get()));
+                NativeInventory.menu(controller).insertItem(1, new ItemStack(ModItems.ENCHANTED_SOUL.get()), false);
                 runClibano(controller, clibano, 20); check(clibano.getStack(3).isEmpty(), "Alloy bypassed enhancer requirement");
                 clibano.setStack(0, new ItemStack(ModItems.ARTISAN_RELIC.get())); runClibano(controller, clibano, 150);
                 check(outputs(controller, ModItems.OBSIDIANSTEEL_INGOT.get()) == 1, "Native alloy did not combine both inputs");
@@ -496,6 +531,28 @@ public final class ControllerGameTests {
                 clibano.getResiduesStorage().increaseType(residue, residue.value().combineInfo().requiredAmount());
                 controller.enabled = true; runClibano(controller, clibano, 20);
                 check(outputs(controller, Items.IRON_BLOCK) == 1, "Native residue conversion did not reach controller output");
+                var savedOutputs = controller.outputs.stream().map(s -> s.getStack().copy()).toList();
+                var addedTypes = new ArrayList<Holder<com.stal111.forbidden_arcanus.common.block.entity.clibano.residue.ResidueType>>();
+                int before = clibano.getResiduesStorage().getTotalAmount();
+                try {
+                    controller.outputs.forEach(s -> s.setEmpty());
+                    for (var item : new Item[]{Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT, Items.COPPER_INGOT, Items.AMETHYST_SHARD}) {
+                        var type = Holder.direct(new com.stal111.forbidden_arcanus.common.block.entity.clibano.residue.ResidueType(Component.literal("test"),
+                              new com.stal111.forbidden_arcanus.common.block.entity.clibano.residue.ResidueType.CombineInfo(1, new ItemStack(item))));
+                        addedTypes.add(type); clibano.getResiduesStorage().increaseType(type, 1);
+                    }
+                    clibano.getResiduesStorage().tick(clibano);
+                    check(controller.outputs.stream().mapToInt(s -> s.getCount()).sum() == 4 && clibano.getResiduesStorage().getTotalAmount() == before + 1
+                          && clibano.getStack(5).isEmpty() && clibano.getStack(6).isEmpty(), "Residue output either deadlocked or used a second result inventory");
+                    controller.outputs.forEach(s -> s.setEmpty());
+                    clibano.getResiduesStorage().tick(clibano);
+                    check(controller.outputs.stream().mapToInt(s -> s.getCount()).sum() == 1 && clibano.getResiduesStorage().getTotalAmount() == before,
+                          "Pending residue conversion did not resume after output was cleared");
+                } finally {
+                    addedTypes.forEach(clibano.getResiduesStorage().getResidueTypeAmountMap()::removeInt);
+                    clibano.getResiduesStorage().setTotalAmount(before);
+                    for (int i = 0; i < controller.outputs.size(); i++) controller.outputs.get(i).setStack(savedOutputs.get(i));
+                }
                 h.succeed();
             } finally { stop(controller); }
         });
@@ -506,7 +563,7 @@ public final class ControllerGameTests {
         h.runAfterDelay(2, () -> {
             bind(h, controller, clibano.getBlockPos());
             controller.stock.get(0).setStack(new ItemStack(Items.RAW_IRON));
-            var side = RelativeSide.fromDirections(controller.getDirection(), Direction.WEST);
+            var side = RelativeSide.fromDirections(controller.getDirection(), Direction.NORTH);
             var player = FakePlayerFactory.getMinecraft(h.getLevel());
             var context = (net.neoforged.neoforge.network.handling.IPayloadContext) java.lang.reflect.Proxy.newProxyInstance(
                   ControllerGameTests.class.getClassLoader(), new Class[]{net.neoforged.neoforge.network.handling.IPayloadContext.class},
@@ -514,11 +571,11 @@ public final class ControllerGameTests {
             for (int i = 0; i < 12 && controller.getConfig().getConfig(TransmissionType.ITEM).getDataType(side) != DataType.OUTPUT; i++)
                 new mekanism.common.network.to_server.configuration_update.PacketSideData(controller.getBlockPos(), mekanism.common.network.MekClickType.LEFT, side, TransmissionType.ITEM).handle(context);
             check(controller.getConfig().getConfig(TransmissionType.ITEM).getDataType(side) == DataType.OUTPUT, "Mek side packet did not set output");
-            h.getLevel().setBlockAndUpdate(controller.getBlockPos().west(), Blocks.CHEST.defaultBlockState());
+            h.getLevel().setBlockAndUpdate(controller.getBlockPos().north(), Blocks.CHEST.defaultBlockState());
         });
         h.runAfterDelay(210, () -> {
             try {
-                var chest = (ChestBlockEntity) h.getLevel().getBlockEntity(controller.getBlockPos().west()); int count = 0;
+                var chest = (ChestBlockEntity) h.getLevel().getBlockEntity(controller.getBlockPos().north()); int count = 0;
                 for (int i = 0; i < chest.getContainerSize(); i++) if (chest.getItem(i).is(Items.IRON_INGOT)) count += chest.getItem(i).getCount();
                 check(count == 1 && outputs(controller, Items.IRON_INGOT) == 0, "Configured output did not eject native product into chest: " + controller.status);
                 h.succeed();
@@ -526,24 +583,95 @@ public final class ControllerGameTests {
         });
     }
     @GameTest(template = "empty", timeoutTicks = 60)
-    public static void nativeMenuShiftClickReturnsEnhancerToPlayerAndChecksDistance(GameTestHelper h) {
+    public static void structureMenusShareSingleSoulAndCheckAccess(GameTestHelper h) {
         var nativeMachine = clibano(h); var controller = controller(h, MachineKind.CLIBANO, 8);
         h.runAfterDelay(2, () -> {
-            var player = FakePlayerFactory.getMinecraft(h.getLevel()); var position = player.position(); var previousMenu = player.containerMenu;
+            var player = new MenuPlayer(h.getLevel()); var position = player.position(); var previousMenu = player.containerMenu;
             var savedInventory = player.getInventory().save(new net.minecraft.nbt.ListTag());
             try {
                 bind(h, controller, nativeMachine.getBlockPos()); player.setPos(controller.getBlockPos().getCenter()); player.getInventory().clearContent();
                 var menu = new MachineMenu(52, player.getInventory(), controller); player.containerMenu = menu;
-                var remoteSlot = menu.slots.stream().filter(s -> s.x == 112 && s.y == 30).findFirst().orElseThrow();
+                check(menu.slots.stream().filter(net.neoforged.neoforge.items.SlotItemHandler.class::isInstance).count() == 2,
+                      "Menu still exposes duplicate processing or result slots");
+                var remoteSlot = menu.slots.stream().filter(s -> s.x == 108 && s.y == 30).findFirst().orElseThrow();
                 remoteSlot.set(new ItemStack(ModItems.ARTISAN_RELIC.get()));
                 check(nativeMachine.getStack(0).is(ModItems.ARTISAN_RELIC.get()), "Menu insertion did not change actual native slot");
                 menu.quickMoveStack(player, remoteSlot.index);
                 check(nativeMachine.getStack(0).isEmpty() && player.getInventory().countItem(ModItems.ARTISAN_RELIC.get()) == 1
                       && controller.stock.stream().allMatch(s -> s.isEmpty()), "Shift-click routed native item into controller stock instead of player");
+                var soulSlot = menu.slots.stream().filter(s -> s.x == 156 && s.y == 30).findFirst().orElseThrow();
+                soulSlot.set(new ItemStack(ModItems.SOUL.get(), 4));
+                check(nativeMachine.getStack(1).getCount() == 4 && controller.supplies.stream().allMatch(s -> s.isEmpty()), "Soul menu created another inventory");
+                var drop = Block.getDrops(controller.getBlockState(), h.getLevel(), controller.getBlockPos(), controller, null, new ItemStack(Items.DIAMOND_PICKAXE)).getFirst();
+                var attached = drop.get(mekanism.common.attachments.containers.ContainerType.ITEM.getComponentType());
+                check(attached != null && attached.size() == 16 && attached.containers().stream().noneMatch(s -> s.is(ModItems.SOUL.get())),
+                      "Live soul view was copied into controller item storage");
+                check(!menu.clickMenuButton(player, 0), "Removed binding button still accepted a packet");
+                for (Direction side : new Direction[]{Direction.UP, Direction.DOWN})
+                    ClibanoEmbeddingGameTests.install(player, nativeMachine.getBlockPos().relative(side), side, new ItemStack(Content.CLIBANO_PORT));
+                for (BlockPos part : BlockPos.betweenClosed(nativeMachine.getBlockPos().offset(-1, -1, -1), nativeMachine.getBlockPos().offset(1, 1, 1))) {
+                    if (part.equals(nativeMachine.getBlockPos())) continue;
+                    Direction face = part.getX() < nativeMachine.getBlockPos().getX() ? Direction.WEST : part.getX() > nativeMachine.getBlockPos().getX() ? Direction.EAST
+                          : part.getY() < nativeMachine.getBlockPos().getY() ? Direction.DOWN : part.getY() > nativeMachine.getBlockPos().getY() ? Direction.UP
+                          : part.getZ() < nativeMachine.getBlockPos().getZ() ? Direction.NORTH : Direction.SOUTH;
+                    player.setPos(part.relative(face, 2).getCenter());
+                    int opened = player.opened;
+                    h.getLevel().getBlockState(part).useWithoutItem(h.getLevel(), player, new net.minecraft.world.phys.BlockHitResult(part.getCenter(), face, part, false));
+                    check(player.opened == opened + 1 && player.containerMenu instanceof MachineMenu openedMenu && openedMenu.getTileEntity() == controller,
+                          "A furnace surface opened the old interface or another controller: " + part);
+                }
+                var oldMode = controller.getSecurity().getMode();
+                controller.getSecurity().setMode(mekanism.api.security.SecurityMode.PRIVATE);
+                try {
+                    BlockPos part = nativeMachine.getBlockPos().south(); player.setPos(part.south(2).getCenter());
+                    int opened = player.opened;
+                    h.getLevel().getBlockState(part).useWithoutItem(h.getLevel(), player, new net.minecraft.world.phys.BlockHitResult(part.getCenter(), Direction.SOUTH, part, false));
+                    check(player.opened == opened, "Private controller access fell back to the old furnace menu");
+                } finally { controller.getSecurity().setMode(oldMode); }
                 player.setPos(controller.getBlockPos().getCenter().add(9, 0, 0));
                 check(!menu.setRecipe(player, "forbidden_arcanus:clibano_combustion/iron_ingot_from_clibano_combustion") && !remoteSlot.mayPlace(new ItemStack(ModItems.ARTISAN_RELIC.get())), "Distant menu changed native inventory or recipe");
                 h.succeed();
-            } finally { player.containerMenu = previousMenu; player.setPos(position); player.getInventory().load(savedInventory); stop(controller); }
+            } finally {
+                if (player.containerMenu != player.inventoryMenu) player.containerMenu.removed(player);
+                player.containerMenu = previousMenu; player.setPos(position); player.getInventory().load(savedInventory); stop(controller);
+            }
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void legacyRemoteControllerCannotAccessFurnaceOrBlockItsMenu(GameTestHelper h) {
+        var main = clibano(h);
+        BlockPos outsidePos = h.absolutePos(new BlockPos(8, 2, 12));
+        h.getLevel().setBlockAndUpdate(outsidePos, Content.MACHINES.get(MachineKind.CLIBANO).defaultState());
+        var outside = (Controller) h.getLevel().getBlockEntity(outsidePos);
+        h.runAfterDelay(2, () -> {
+            var player = new MenuPlayer(h.getLevel());
+            try {
+                var saved = new net.minecraft.nbt.CompoundTag();
+                UUID targetId = UUID.randomUUID();
+                saved.putUUID("controller_id", outside.binding.id); saved.putUUID("owner", player.getUUID());
+                saved.putUUID("target_id", targetId); saved.putLong("target_pos", main.getBlockPos().asLong()); saved.putBoolean("embedded", false);
+                outside.binding.load(saved);
+                var claim = new net.minecraft.nbt.CompoundTag(); claim.putUUID("id", outside.binding.id); claim.putUUID("target", targetId); claim.putLong("pos", outsidePos.asLong());
+                main.getPersistentData().put("forbiddenmekanism_claim", claim);
+                outside.stock.getFirst().setStack(new ItemStack(Items.RAW_IRON, 7));
+                var oldSoul = new net.minecraft.nbt.CompoundTag(); oldSoul.put("item", new ItemStack(ModItems.SOUL.get(), 3).save(h.getLevel().registryAccess()));
+                outside.supplies.getFirst().deserializeNBT(h.getLevel().registryAccess(), oldSoul);
+                var cached = NativeInventory.menu(outside);
+                check(outside.binding.resolve() == null && !outside.binding.bind(player, main.getBlockPos()), "Legacy remote connection still works");
+                outside.onUpdateServer();
+                check(outside.binding.target == null && !Binding.hasClaim(main) && outside.stock.getFirst().getCount() == 7
+                      && outputs(outside, ModItems.SOUL.get()) == 3, "Retiring remote mode lost inventory or left a stale claim");
+                check(cached.insertItem(1, new ItemStack(ModItems.SOUL.get()), false).getCount() == 1 && main.getStack(1).isEmpty(), "Cached remote handler still changed native inventory");
+                BlockPos part = main.getBlockPos().south(); player.setPos(part.south(2).getCenter());
+                h.getLevel().getBlockState(part).useWithoutItem(h.getLevel(), player, new net.minecraft.world.phys.BlockHitResult(part.getCenter(), Direction.SOUTH, part, false));
+                check(player.containerMenu instanceof com.stal111.forbidden_arcanus.common.inventory.clibano.ClibanoMenu,
+                      "A furnace without an embedded controller lost its native interface");
+                h.succeed();
+            } finally {
+                if (player.containerMenu != player.inventoryMenu) player.containerMenu.removed(player);
+                stop(outside);
+            }
         });
     }
 }

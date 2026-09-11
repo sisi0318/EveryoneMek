@@ -10,11 +10,6 @@ import net.minecraft.world.item.ItemStack;
 public final class ClibanoAutomation {
     public static boolean tick(Controller controller, ClibanoMainBlockEntity clibano) {
         boolean changed = false;
-        for (int slot = 5; slot <= 6; slot++) {
-            ItemStack output = clibano.getStack(slot);
-            if (output.isEmpty()) continue;
-            if (controller.storeOutput(output)) { clibano.setStack(slot, ItemStack.EMPTY); changed = true; }
-        }
         var data = ((ClibanoAccess) clibano).forbiddenmekanism$data();
         var cache = ((ClibanoAccess) clibano).forbiddenmekanism$recipes();
         controller.status = clibano.getStack(3).isEmpty() && clibano.getStack(4).isEmpty() ? Controller.NEED_MATERIALS : Controller.RUNNING;

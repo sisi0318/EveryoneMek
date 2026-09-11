@@ -29,6 +29,12 @@ public final class ClibanoPortBlock extends Block implements EntityBlock {
         tooltip.add(net.minecraft.network.chat.Component.translatable("description.forbiddenmekanism.clibano_port"));
     }
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new ClibanoPort(pos, state); }
+    @Override protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+          net.minecraft.world.entity.player.Player player, net.minecraft.world.phys.BlockHitResult hit) {
+        if (level.isClientSide) return net.minecraft.world.InteractionResult.SUCCESS;
+        var result = ClibanoEmbedding.openFromPart(level, pos, player);
+        return result == null ? net.minecraft.world.InteractionResult.PASS : result;
+    }
     @Override public void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
         if (!state.is(replacement.getBlock()) && !level.isClientSide) ClibanoEmbedding.removePart(level, pos);
         super.onRemove(state, level, pos, replacement, moving);

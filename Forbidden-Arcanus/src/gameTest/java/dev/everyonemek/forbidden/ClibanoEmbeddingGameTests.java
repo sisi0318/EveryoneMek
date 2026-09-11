@@ -47,7 +47,7 @@ public final class ClibanoEmbeddingGameTests {
         }
     }
     private static BlockHitResult hit(BlockPos pos, Direction side) { return new BlockHitResult(pos.getCenter(), side, pos, false); }
-    private static void withUsername(ServerPlayer player, Runnable action) {
+    static void withUsername(ServerPlayer player, Runnable action) {
         // Headless GameTestServer has no profile service; seed only this fake player's name for real Mek placement.
         try {
             var field = net.neoforged.neoforge.common.UsernameCache.class.getDeclaredField("map"); field.setAccessible(true);
@@ -61,7 +61,7 @@ public final class ClibanoEmbeddingGameTests {
         player.setPos(pos.relative(side, 2).getCenter()); player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         withUsername(player, () -> check(((BlockItem) stack.getItem()).place(new BlockPlaceContext(player, InteractionHand.MAIN_HAND, stack, hit(pos, side))).consumesAction(), "Part placement failed"));
     }
-    private static void install(ServerPlayer player, BlockPos pos, Direction side, ItemStack stack) {
+    static void install(ServerPlayer player, BlockPos pos, Direction side, ItemStack stack) {
         var previousHand = player.getMainHandItem().copy();
         player.setPos(pos.relative(side, 2).getCenter()); player.setItemInHand(InteractionHand.MAIN_HAND, stack);
         if (!previousHand.isEmpty()) player.getInventory().add(previousHand);
@@ -194,6 +194,9 @@ public final class ClibanoEmbeddingGameTests {
                 check(ItemHandlerHelper.insertItemStacked(input, new ItemStack(Items.RAW_COPPER), false).isEmpty(), "Second material rejected");
                 check(!ItemHandlerHelper.insertItemStacked(fuel, new ItemStack(Items.COAL), false).isEmpty(), "Electric furnace still accepted fuel through the former fuel side");
                 check(ItemHandlerHelper.insertItemStacked(fuel, new ItemStack(ModItems.SOUL.get()), false).isEmpty(), "Former fuel side did not accept soul supplies");
+                check(main.getStack(1).is(ModItems.SOUL.get()) && main.getStack(1).getCount() == 1
+                      && controller.supplies.stream().allMatch(s -> s.isEmpty()), "Port stored a duplicate soul buffer instead of the furnace soul slot");
+                check(souls.getStackInSlot(0).getCount() == 1, "Two soul sides did not expose the same inventory");
                 check(!ItemHandlerHelper.insertItemStacked(souls, new ItemStack(Items.COAL), false).isEmpty(), "Soul port accepted coal");
                 h.getLevel().setBlockAndUpdate(center.south(2), mekanism.common.registries.MekanismBlocks.BASIC_LOGISTICAL_TRANSPORTER.defaultState());
                 h.getLevel().setBlockAndUpdate(center.south(3), mekanism.common.registries.MekanismBlocks.BASIC_LOGISTICAL_TRANSPORTER.defaultState());

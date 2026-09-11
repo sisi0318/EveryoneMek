@@ -19,37 +19,57 @@ public final class NativeInventory {
         return level.registryAccess().registryOrThrow(FARegistries.FORGE_INPUT).stream()
               .anyMatch(input -> input.canInput(EssenceType.values()[slot], stack));
     }
-    public static boolean supply(Controller controller, ValhelsiaContainerBlockEntity<?> target) {
+    public static void migrateLegacy(Controller controller, ValhelsiaContainerBlockEntity<?> target) {
         boolean changed = false;
-        for (int i = 0; i < controller.supplies.size(); i++) {
-            int slot = 1;
-            ItemStack present = target.getStack(slot);
-            if (!present.isEmpty() && !acceptsSupply(controller.getLevel(), controller.kind(), i, present)) {
-                if (!controller.storeOutput(present)) continue;
-                target.setStack(slot, ItemStack.EMPTY); changed = true;
-            }
-            var source = controller.supplies.get(i);
-            if (source.isEmpty() || !acceptsSupply(controller.getLevel(), controller.kind(), i, source.getStack())) continue;
-            ItemStack offered = source.getStack().copyWithCount(Math.min(16, source.getCount()));
-            ItemStack remainder = target.getItemStackHandler().insertItem(slot, offered, false);
-            int moved = offered.getCount() - remainder.getCount();
-            if (moved > 0) { source.shrinkStack(moved, Action.EXECUTE); changed = true; }
-        }
-        return changed;
-    }
-    public static void recoverFuel(Controller controller, ValhelsiaContainerBlockEntity<?> target) {
-        boolean changed = false;
-        ItemStack fuel = target.getStack(2);
-        if (!fuel.isEmpty() && controller.storeOutput(fuel)) {
-            // Like native fuel consumption, changing the count preserves its existing burn-duration metadata.
-            fuel.shrink(fuel.getCount()); changed = true;
+        if (target != null) {
+            ItemStack fuel = target.getStack(2);
+            if (!fuel.isEmpty() && controller.storeOutput(fuel)) { fuel.shrink(fuel.getCount()); changed = true; }
+            collectOutputs(controller, target);
         }
         for (var source : controller.supplies) {
-            if (!source.isEmpty() && !acceptsSupply(controller.getLevel(), controller.kind(), 0, source.getStack()) && controller.storeOutput(source.getStack())) {
-                source.setStack(ItemStack.EMPTY); changed = true;
+            if (source.isEmpty()) continue;
+            ItemStack remaining = source.getStack();
+            if (target != null && acceptsSupply(controller.getLevel(), controller.kind(), 0, remaining)) {
+                remaining = target.getItemStackHandler().insertItem(1, remaining, false);
+                if (remaining.getCount() != source.getCount()) { source.setStackUnchecked(remaining); changed = true; }
             }
+            if (!source.isEmpty() && controller.storeOutput(source.getStack())) { source.setEmpty(); changed = true; }
         }
-        if (changed) { controller.markForSave(); target.setChanged(); }
+        if (changed) { controller.markForSave(); if (target != null) target.setChanged(); }
+    }
+    public static void collectOutputs(Controller controller, ValhelsiaContainerBlockEntity<?> main) {
+        boolean changed = false;
+        for (int index = 5; index <= 6; index++) {
+            ItemStack original = main.getStack(index);
+            if (original.isEmpty()) continue;
+            ItemStack remaining = original.copy();
+            for (int pass = 0; pass < 2; pass++) for (var slot : controller.outputs) {
+                if (remaining.isEmpty()) break;
+                if (pass == 0 ? slot.isEmpty() : !slot.isEmpty()) continue;
+                remaining = slot.insertItem(remaining, Action.EXECUTE, mekanism.api.AutomationType.INTERNAL);
+            }
+            if (remaining.getCount() != original.getCount()) { main.setStack(index, remaining); changed = true; }
+        }
+        if (changed) { main.setChanged(); controller.markForSave(); }
+    }
+    public static boolean canReceive(Controller controller, ClibanoMainBlockEntity main, ItemStack result) {
+        return controller.canStoreAll(main.getStack(5), main.getStack(6), result);
+    }
+    public static final String SOUL_DURATION = "forbiddenmekanism_soul_duration";
+    public static int soulDuration(ClibanoMainBlockEntity main) {
+        var tag = main.getPersistentData();
+        int remaining = ((dev.everyonemek.forbidden.mixin.ClibanoAccess) main).forbiddenmekanism$data().get(0);
+        int duration = tag.getInt(SOUL_DURATION);
+        if (duration <= 0) {
+            duration = ClibanoMainBlockEntity.SOUL_DURATION;
+            var enhancer = EnhancerHelper.getEnhancer(main.getLevel().registryAccess(), main.getStack(0)).orElse(null);
+            if (enhancer != null) for (var effect : enhancer.getEffects(com.stal111.forbidden_arcanus.common.item.enhancer.EnhancerTarget.CLIBANO).toList())
+                if (effect instanceof com.stal111.forbidden_arcanus.common.item.enhancer.effect.MultiplySoulDurationEffect multiplier)
+                    duration = multiplier.getModifiedValue(duration);
+            duration = Math.max(1, Math.max(duration, remaining));
+            if (remaining > 0) { tag.putInt(SOUL_DURATION, duration); main.setChanged(); }
+        }
+        return Math.max(1, Math.max(duration, remaining));
     }
     public static boolean acceptsNative(Controller controller, int slot, ItemStack stack) {
         if (stack.isEmpty()) return false;

@@ -15,6 +15,5 @@ public final class ForbiddenMekanism {
         bus.addListener(ClibanoEmbedding::setup);
         bus.addListener(ClibanoPorts::register);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(ClibanoEmbedding::interact);
-        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(Binding::interact);
     }
 }

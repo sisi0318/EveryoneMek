@@ -16,8 +16,7 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
         nativeStart = slots.size();
         if (tile.kind().forge()) return;
         var handler = NativeInventory.menu(tile);
-        for (int i = 0; i < handler.getSlots(); i++) {
-            if (i == 2) continue;
+        for (int i = 0; i < 2; i++) {
             final int index = i;
             int[] coordinates = nativeCoordinates(tile.kind(), i);
             addSlot(new SlotItemHandler(handler, i, coordinates[0], coordinates[1]) {
@@ -39,17 +38,13 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
     }
     public static int[] nativeCoordinates(MachineKind kind, int index) {
         return switch (index) {
-            case 0 -> new int[]{112, 30};
-            case 1 -> new int[]{112, 66};
-            case 2 -> new int[]{130, 66};
-            case 3 -> new int[]{148, 30};
-            case 4 -> new int[]{166, 30};
-            case 5 -> new int[]{148, 102};
-            default -> new int[]{166, 102};
+            case 0 -> new int[]{108, 30};
+            case 1 -> new int[]{156, 30};
+            default -> throw new IllegalArgumentException("Only enhancer and soul slots are shown");
         };
     }
     @Override protected int getInventoryXOffset() { return 48; }
-    @Override protected int getInventoryYOffset() { return 240; }
+    @Override protected int getInventoryYOffset() { return tile.kind().forge() ? 240 : 216; }
     public boolean canConfigure(Player player) {
         return !player.level().isClientSide && stillValid(player)
               && IBlockSecurityUtils.INSTANCE.canAccess(player, player.level(), tile.getBlockPos(), tile);
@@ -78,7 +73,6 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
     @Override public boolean clickMenuButton(Player player, int id) {
         if (!canConfigure(player) || !(player instanceof ServerPlayer serverPlayer)) return false;
         if (id >= 32 && id < 40 && tile.kind().forge()) return tile.uninstallResourceModule((id - 32) % 4, id >= 36);
-        if (id == 0 && !tile.kind().forge()) return tile.binding.bindNearby(serverPlayer);
         if (id == 1) { tile.enabled = !tile.enabled; tile.markForSave(); return true; }
         if (id == 3 && tile.binding.resolve() instanceof ClibanoMainBlockEntity clibano) {
             clibano.awardUsedRecipesAndPopExperience(serverPlayer); clibano.setChanged(); return true;

@@ -9,7 +9,7 @@ public final class MachineConfig {
     public static final ModConfigSpec SPEC;
     static {
         var builder = new ModConfigSpec.Builder();
-        OPERATION_FE = builder.comment("FE per controller logistics operation, separate from Clibano electric heating.")
+        OPERATION_FE = builder.comment("FE per controller material-feed operation. Outputs and the shared soul slot require no extra transfer.")
               .defineInRange("operationFE", 200, 1, 1_000_000);
         CLIBANO_HEAT_FE = builder.comment("FE per productive Clibano heating tick. Energy upgrades improve efficiency; native recipe durations are retained.")
               .defineInRange("clibanoHeatFE", 50, 1, 1_000_000);

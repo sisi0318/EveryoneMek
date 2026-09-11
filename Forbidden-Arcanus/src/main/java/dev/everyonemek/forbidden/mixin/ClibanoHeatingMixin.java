@@ -8,6 +8,7 @@ import com.stal111.forbidden_arcanus.common.block.entity.clibano.logic.ClibanoSm
 import dev.everyonemek.forbidden.Binding;
 import dev.everyonemek.forbidden.ClibanoHeating;
 import dev.everyonemek.forbidden.Controller;
+import dev.everyonemek.forbidden.NativeInventory;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
 import net.minecraft.core.BlockPos;
@@ -43,6 +44,7 @@ public abstract class ClibanoHeatingMixin implements ClibanoHeating {
         forbiddenmekanism$savedBurn = burnTime; forbiddenmekanism$savedDuration = burnDuration;
         forbiddenmekanism$inTick = true;
         var controller = Binding.claimedController(main);
+        if (controller != null) NativeInventory.collectOutputs(controller, main);
         if (controller != null && controller.enabled && controller.canFunction() && logic.canSmelt()) {
             long cost = ClibanoHeating.energyPerTick(controller);
             if (controller.energy().extract(cost, Action.SIMULATE, AutomationType.INTERNAL) == cost) {

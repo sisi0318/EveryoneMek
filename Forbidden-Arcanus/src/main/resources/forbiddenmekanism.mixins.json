@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "dev.everyonemek.forbidden.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["ClibanoAccess", "CreateClibanoMixin", "ClibanoPatternMixin", "ClibanoFrameMixin", "ClibanoHeatingMixin", "UpgradeSlotAccess", "ForgeUpgradeComponentMixin"],
+  "mixins": ["ClibanoAccess", "CreateClibanoMixin", "ClibanoPatternMixin", "ClibanoFrameMixin", "ClibanoHeatingMixin", "ClibanoInventoryMixin", "ClibanoResiduesMixin", "UpgradeSlotAccess", "ForgeUpgradeComponentMixin"],
   "client": ["GuiUpgradeScrollListAccess", "ForgeUpgradeWindowMixin", "ClibanoSideIconMixin"],
   "injectors": {"defaultRequire": 1}
 }

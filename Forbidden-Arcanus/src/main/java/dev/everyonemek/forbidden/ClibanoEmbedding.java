@@ -75,6 +75,7 @@ public final class ClibanoEmbedding {
     public static void autoConnect(Controller controller) {
         Level level = controller.getLevel();
         if (level == null || level.isClientSide || controller.kind().forge()) return;
+        if (controller.binding.target != null && !controllerPosition(controller.getBlockPos(), controller.binding.target)) controller.binding.release();
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             var block = Binding.nativeAt(level, controller.getBlockPos().relative(direction));
             if (!(block instanceof ClibanoMainBlockEntity main) || !belongs(controller, main) || !Binding.structure(main)) continue;
@@ -98,6 +99,25 @@ public final class ClibanoEmbedding {
         Installation install = INSTALLING.get();
         return install != null && install.level == level && install.wall.equals(wall)
               && install.main.equals(main) && isPart(replacement);
+    }
+    public static net.minecraft.world.InteractionResult openFromPart(Level level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
+        if (level.isClientSide) return null;
+        ClibanoMainBlockEntity main = Binding.nativeAt(level, pos) instanceof ClibanoMainBlockEntity furnace ? furnace : null;
+        if (main == null && level.getBlockEntity(pos) instanceof ClibanoPort) {
+            for (Direction side : Direction.values()) {
+                var candidate = pos.relative(side);
+                if (level.hasChunkAt(candidate) && level.getBlockEntity(candidate) instanceof ClibanoMainBlockEntity furnace) { main = furnace; break; }
+            }
+        }
+        if (main == null) return null;
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            var candidate = main.getBlockPos().relative(side);
+            if (level.hasChunkAt(candidate) && level.getBlockEntity(candidate) instanceof Controller controller && !controller.kind().forge()) {
+                autoConnect(controller);
+                return controller.openGui(player);
+            }
+        }
+        return null;
     }
     public static void remove(Controller controller) {
         if (controller.kind().forge()) return;

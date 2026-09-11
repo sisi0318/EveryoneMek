@@ -48,6 +48,8 @@ public final class Controller extends TileEntityConfigurableMachine {
     public int status = NO_TARGET, progress, duration = 1, nativeTier;
     public final int[] observed = new int[10], capacities = new int[4];
     public final double[] resourceRates = new double[4];
+    public final ItemStack[] processingInputs = {ItemStack.EMPTY, ItemStack.EMPTY};
+    public int soulDuration = 1;
     private final int[] clientModuleCounts = new int[4];
     public String recipeLock = "", selectedRecipe = "";
     public boolean enabled = true;
@@ -69,9 +71,9 @@ public final class Controller extends TileEntityConfigurableMachine {
         }
         var items = configComponent.setupItemIOConfig(new ArrayList<IInventorySlot>(stock),
               new ArrayList<IInventorySlot>(outputs), energySlot, false);
-        items.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false,
-              kind().forge() ? new ArrayList<IInventorySlot>(supplies) : List.of(supplies.get(0))));
-        if (!kind().forge()) items.addSlotInfo(DataType.INPUT_2, new InventorySlotInfo(true, false, List.of(supplies.get(1))));
+        var resourceSlots = kind().forge() ? new ArrayList<IInventorySlot>(supplies) : List.<IInventorySlot>of(new ClibanoSoulSlot(this));
+        items.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false, resourceSlots));
+        if (!kind().forge()) items.addSlotInfo(DataType.INPUT_2, new InventorySlotInfo(true, false, resourceSlots));
         for (RelativeSide side : RelativeSide.values()) items.setDataType(DataType.INPUT, side);
         items.setDataType(DataType.EXTRA, RelativeSide.BACK);
         if (!kind().forge()) items.setDataType(DataType.INPUT_2, RelativeSide.TOP);
@@ -103,9 +105,12 @@ public final class Controller extends TileEntityConfigurableMachine {
         }
         for (int i = 0; i < kind().supplies(); i++) {
             final int index = i;
-            var slot = BasicInventorySlot.at((s, a) -> a != AutomationType.EXTERNAL, (s, a) -> true,
+            BasicInventorySlot slot = kind().forge() ? BasicInventorySlot.at((s, a) -> a != AutomationType.EXTERNAL, (s, a) -> true,
                   s -> NativeInventory.acceptsSupply(getLevel(), kind(), index, s), listener,
-                  kind().forge() ? 112 + i * 18 : 18 + i * 18, kind().forge() ? 66 : 102);
+                  112 + i * 18, 66) : new BasicInventorySlot(64, (s, a) -> a != AutomationType.EXTERNAL,
+                        (s, a) -> false, s -> false, listener, 0, 0) {
+                            @Override public mekanism.common.inventory.container.slot.InventoryContainerSlot createContainerSlot() { return null; }
+                        };
             supplies.add(slot); builder.addSlot(slot);
         }
         builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 218, kind().forge() ? 66 : 84));
@@ -161,8 +166,8 @@ public final class Controller extends TileEntityConfigurableMachine {
         var target = binding.resolve();
         readNative(target);
         ClibanoControllerBlock.updateAppearance(this, target instanceof ClibanoMainBlockEntity main ? main : null);
+        NativeInventory.migrateLegacy(this, target);
         if (target == null) { status = binding.target == null ? NO_TARGET : STRUCTURE; return update; }
-        NativeInventory.recoverFuel(this, target);
         setActive(observed[1] > 0);
         if (!enabled || !canFunction()) { status = PAUSED; return update; }
         if (cooldown-- > 0) return update;
@@ -170,8 +175,7 @@ public final class Controller extends TileEntityConfigurableMachine {
         if (energy.extract(energy.getEnergyPerTick(), Action.SIMULATE, AutomationType.INTERNAL) != energy.getEnergyPerTick()) {
             status = NEED_ENERGY; return update;
         }
-        boolean changed = NativeInventory.supply(this, target);
-        if (target instanceof ClibanoMainBlockEntity clibano) changed |= ClibanoAutomation.tick(this, clibano);
+        boolean changed = target instanceof ClibanoMainBlockEntity clibano && ClibanoAutomation.tick(this, clibano);
         if (changed) {
             energy.extract(energy.getEnergyPerTick(), Action.EXECUTE, AutomationType.INTERNAL);
             markForSave();
@@ -182,31 +186,38 @@ public final class Controller extends TileEntityConfigurableMachine {
     }
     private void readNative(ValhelsiaContainerBlockEntity<?> target) {
         Arrays.fill(observed, -1); Arrays.fill(capacities, 0); nativeTier = 0; progress = 0; duration = 1;
+        Arrays.fill(processingInputs, ItemStack.EMPTY); soulDuration = 1;
         if (target instanceof ClibanoMainBlockEntity clibano) {
             var data = ((ClibanoAccess) clibano).forbiddenmekanism$data();
             for (int i = 0; i < 10; i++) observed[i] = data.get(i);
             observed[1] = ((ClibanoHeating) clibano).forbiddenmekanism$isHeating() ? 1 : 0;
+            soulDuration = NativeInventory.soulDuration(clibano);
+            for (int i = 0; i < 2; i++) processingInputs[i] = clibano.getStack(3 + i).copy();
             progress = observed[3]; duration = Math.max(1, observed[5]);
         }
     }
     public boolean canStore(ItemStack stack) { return mergedOutputs(stack) != null; }
+    public boolean canStoreAll(ItemStack... stacks) { return mergedOutputs(stacks) != null; }
     public boolean storeOutput(ItemStack stack) {
         var merged = mergedOutputs(stack);
         if (merged == null) return false;
         for (int i = 0; i < outputs.size(); i++) outputs.get(i).setStackUnchecked(merged.get(i));
         return true;
     }
-    private List<ItemStack> mergedOutputs(ItemStack stack) {
+    private List<ItemStack> mergedOutputs(ItemStack... stacks) {
         var result = outputs.stream().map(s -> s.getStack().copy()).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
-        int remaining = stack.getCount();
-        for (int pass = 0; pass < 2; pass++) for (int i = 0; i < result.size() && remaining > 0; i++) {
-            ItemStack old = result.get(i);
-            if (pass == 0 ? old.isEmpty() : !old.isEmpty()) continue;
-            if (!old.isEmpty() && !ItemStack.isSameItemSameComponents(old, stack)) continue;
-            int moved = Math.min(remaining, Math.min(64, stack.getMaxStackSize()) - old.getCount());
-            if (moved > 0) { result.set(i, stack.copyWithCount(old.getCount() + moved)); remaining -= moved; }
+        for (ItemStack stack : stacks) {
+            int remaining = stack.getCount();
+            for (int pass = 0; pass < 2; pass++) for (int i = 0; i < result.size() && remaining > 0; i++) {
+                ItemStack old = result.get(i);
+                if (pass == 0 ? old.isEmpty() : !old.isEmpty()) continue;
+                if (!old.isEmpty() && !ItemStack.isSameItemSameComponents(old, stack)) continue;
+                int moved = Math.min(remaining, Math.min(64, stack.getMaxStackSize()) - old.getCount());
+                if (moved > 0) { result.set(i, stack.copyWithCount(old.getCount() + moved)); remaining -= moved; }
+            }
+            if (remaining != 0) return null;
         }
-        return remaining == 0 ? result : null;
+        return result;
     }
     public boolean setRecipe(String value) {
         if (value.length() > 256 || !value.isEmpty() && !Recipes.exists(level, kind(), ResourceLocation.tryParse(value))) return false;
@@ -257,6 +268,11 @@ public final class Controller extends TileEntityConfigurableMachine {
         container.track(SyncableInt.create(() -> nativeTier, v -> nativeTier = v));
         container.track(SyncableInt.create(() -> enabled ? 1 : 0, v -> enabled = v != 0));
         container.track(SyncableInt.create(() -> binding.embedded ? 1 : 0, v -> binding.embedded = v != 0));
+        container.track(SyncableInt.create(() -> soulDuration, v -> soulDuration = Math.max(1, v)));
+        for (int i = 0; i < 2; i++) {
+            final int index = i;
+            container.track(mekanism.common.inventory.container.sync.SyncableItemStack.create(() -> processingInputs[index], v -> processingInputs[index] = v));
+        }
         container.track(mekanism.common.inventory.container.sync.SyncableLong.create(() -> binding.target == null ? Long.MIN_VALUE : binding.target.asLong(),
               v -> binding.target = v == Long.MIN_VALUE ? null : BlockPos.of(v)));
         for (int i = 0; i < observed.length; i++) { final int n = i; container.track(SyncableInt.create(() -> observed[n], v -> observed[n] = v)); }
@@ -266,8 +282,8 @@ public final class Controller extends TileEntityConfigurableMachine {
             container.track(SyncableInt.create(() -> resourceModuleCount(n), v -> clientModuleCounts[n] = Math.clamp(v, 0, 8)));
             container.track(SyncableDouble.create(() -> resourceRates[n], v -> resourceRates[n] = Math.max(0, v)));
         }
-        container.track(new RecipeSelectionSync(() -> List.of(recipeLock, selectedRecipe, binding.label()), values -> {
-            if (values.size() == 3) { recipeLock = values.get(0); selectedRecipe = values.get(1); binding.clientLabel = values.get(2); }
+        container.track(new RecipeSelectionSync(() -> List.of(recipeLock, selectedRecipe), values -> {
+            if (values.size() == 2) { recipeLock = values.get(0); selectedRecipe = values.get(1); }
         }));
     }
 }
