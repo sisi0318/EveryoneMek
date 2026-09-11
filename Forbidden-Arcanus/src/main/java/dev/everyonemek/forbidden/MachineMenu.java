@@ -48,8 +48,8 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
             default -> new int[]{166, 102};
         };
     }
-    public VirtualInventoryContainerSlot moduleSlot() {
-        return slots.stream().filter(s -> s instanceof VirtualInventoryContainerSlot v && v.getInventorySlot() == tile.module)
+    public VirtualInventoryContainerSlot moduleSlot(int resource) {
+        return slots.stream().filter(s -> s instanceof VirtualInventoryContainerSlot v && v.getInventorySlot() == tile.resourceModules.get(resource))
               .map(s -> (VirtualInventoryContainerSlot) s).findFirst().orElseThrow();
     }
     @Override protected int getInventoryXOffset() { return 48; }

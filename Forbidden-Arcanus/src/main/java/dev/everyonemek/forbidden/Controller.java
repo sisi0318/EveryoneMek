@@ -37,7 +37,8 @@ public final class Controller extends TileEntityConfigurableMachine {
     // These fields are initialized during superclass callbacks, before the subclass constructor runs.
     public List<BasicInventorySlot> stock, supplies, enhancers;
     public List<OutputInventorySlot> outputs;
-    public GlowModuleSlot module;
+    public ResourceModuleSlot module;
+    public List<ResourceModuleSlot> resourceModules;
     public EnergyInventorySlot energySlot;
     private MachineEnergyContainer<Controller> energy;
     public final Binding binding = new Binding(this);
@@ -102,11 +103,21 @@ public final class Controller extends TileEntityConfigurableMachine {
                       listener, 112 + i * 18, 30) { };
                 enhancers.add(slot); builder.addSlot(slot);
             }
-            builder.addSlot(module = new GlowModuleSlot(listener));
+            resourceModules = new ArrayList<>();
+            for (int resource = 0; resource < 4; resource++) {
+                var slot = new ResourceModuleSlot(listener, resource);
+                resourceModules.add(slot); builder.addSlot(slot);
+            }
+            module = resourceModules.getFirst();
         }
         return builder.build();
     }
-    public int glowModules() { return module != null && module.getStack().is(Content.GLOW_MODULE) ? Math.min(8, module.getCount()) : 0; }
+    public int glowModules() { return resourceModuleCount(0); }
+    public int resourceModuleCount(int resource) {
+        if (resourceModules == null || resource < 0 || resource >= resourceModules.size()) return 0;
+        var slot = resourceModules.get(resource);
+        return slot.getStack().is(Content.resourceModule(resource)) ? Math.min(8, slot.getCount()) : 0;
+    }
     public MachineEnergyContainer<Controller> energy() { return energy; }
     @Override protected boolean onUpdateServer() {
         boolean update = super.onUpdateServer();
@@ -192,6 +203,16 @@ public final class Controller extends TileEntityConfigurableMachine {
         super.applyImplicitComponents(input);
         var tag = input.get(Content.SETTINGS);
         if (tag != null) readSettings(tag, level.registryAccess());
+    }
+    @Override public void applyInventorySlots(BlockEntity.DataComponentInput input, List<IInventorySlot> slots,
+          mekanism.common.attachments.containers.item.AttachedItems attached) {
+        // Mek skips unequal item lists. Preserve the released 0.2.0 layout and append only the three new slots.
+        if (kind().forge() && attached.size() == 23 && slots.size() == 26) {
+            var expanded = new ArrayList<>(attached.containers());
+            for (int i = 0; i < 3; i++) expanded.add(ItemStack.EMPTY);
+            attached = new mekanism.common.attachments.containers.item.AttachedItems(expanded);
+        }
+        super.applyInventorySlots(input, slots, attached);
     }
     @Override public List<Component> getInfo(Upgrade upgrade) { return UpgradeUtils.getMultScaledInfo(this, upgrade); }
     @Override public void addContainerTrackers(MekanismContainer container) {

@@ -6,6 +6,7 @@ const sharp = createRequire(path.resolve(__dirname, '../art/package.json'))('sha
 const root = path.resolve(__dirname, '..');
 const id = 'forbiddenmekanism';
 const machines = ['forge_controller', 'clibano_controller'];
+const modules = ['glow_module', 'soul_module', 'blood_module', 'experience_module'];
 const faces = {front: [0, 0], top: [1, 0], side: [0, 1], front_active: [1, 1]};
 const texture = (machine, face) => path.join(root, `src/main/resources/assets/${id}/textures/block`, machine, `${face}.png`);
 
@@ -33,18 +34,24 @@ async function main() {
       if (!stats.isOpaque) throw new Error(`Block face must be opaque: ${machine}/${face}`);
     }
   }
-  const item = path.join(root, `src/main/resources/assets/${id}/textures/item/glow_module.png`);
-  await fs.mkdir(path.dirname(item), {recursive: true});
-  await sharp(path.join(root, 'art/source/glow_module.png')).trim()
-    .resize(14, 14, {kernel: 'nearest', fit: 'contain', background: {r: 0, g: 0, b: 0, alpha: 0}})
-    .extend({top: 1, bottom: 1, left: 1, right: 1, background: {r: 0, g: 0, b: 0, alpha: 0}}).png().toFile(item);
-  if ((await sharp(item).stats()).isOpaque) throw new Error('Module icon must retain its generated transparency');
+  const moduleTextures = [];
+  for (const module of modules) {
+    const item = path.join(root, `src/main/resources/assets/${id}/textures/item/${module}.png`);
+    const source = path.join(root, `art/source/${module === 'soul_module' ? 'soul_module-v2' : module}.png`);
+    if ((await sharp(source).stats()).isOpaque) throw new Error(`Module source must contain genuine transparency: ${module}`);
+    await fs.mkdir(path.dirname(item), {recursive: true});
+    await sharp(source).trim()
+      .resize(14, 14, {kernel: 'nearest', fit: 'contain', background: {r: 0, g: 0, b: 0, alpha: 0}})
+      .extend({top: 1, bottom: 1, left: 1, right: 1, background: {r: 0, g: 0, b: 0, alpha: 0}}).png().toFile(item);
+    moduleTextures.push(item);
+  }
   const images = [];
   for (let row = 0; row < machines.length; row++) for (const [column, face] of Object.keys(faces).entries()) {
     images.push({input: await sharp(texture(machines[row], face)).resize(160, 160, {kernel: 'nearest'}).png().toBuffer(),
       left: column * 176 + 16, top: row * 176 + 16});
   }
-  images.push({input: await sharp(item).resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16, top: 368});
+  for (let column = 0; column < moduleTextures.length; column++)
+    images.push({input: await sharp(moduleTextures[column]).resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16 + column * 176, top: 368});
   await sharp({create: {width: 720, height: 544, channels: 3, background: '#aeb4b3'}}).composite(images).png().toFile(path.join(root, 'art/texture-sheet.png'));
   const names = ['赫菲斯托斯锻造室', '炽炉控制器'];
   const content = [];
@@ -60,6 +67,6 @@ async function main() {
     <text x="688" y="44" text-anchor="end" font-size="16">16×16 · 工作状态</text>${content.join('')}</g></svg>`;
   await fs.writeFile(path.join(root, 'art/block-preview.svg'), svg);
   await sharp(Buffer.from(svg)).png().toFile(path.join(root, 'art/block-preview.png'));
-  console.log('Exported 8 opaque 16x16 block faces, one transparent 16x16 module icon and review previews.');
+  console.log('Exported 8 opaque 16x16 block faces, 4 transparent 16x16 module icons and review previews.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

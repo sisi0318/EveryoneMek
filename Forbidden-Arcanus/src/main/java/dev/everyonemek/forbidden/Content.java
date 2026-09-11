@@ -31,7 +31,10 @@ public final class Content {
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> SETTINGS = COMPONENTS.simple("settings",
           builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ForbiddenMekanism.ID);
-    public static final net.neoforged.neoforge.registries.DeferredItem<GlowModuleItem> GLOW_MODULE = ITEMS.register("glow_module", GlowModuleItem::new);
+    public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> GLOW_MODULE = ITEMS.register("glow_module", () -> new ResourceModuleItem("glow_module"));
+    public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> SOUL_MODULE = ITEMS.register("soul_module", () -> new ResourceModuleItem("soul_module"));
+    public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> BLOOD_MODULE = ITEMS.register("blood_module", () -> new ResourceModuleItem("blood_module"));
+    public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> EXPERIENCE_MODULE = ITEMS.register("experience_module", () -> new ResourceModuleItem("experience_module"));
     public static final Map<Integer, net.neoforged.neoforge.registries.DeferredItem<ForgeTierInstallerItem>> INSTALLERS = new java.util.LinkedHashMap<>();
     private static final DeferredRegister<net.minecraft.world.item.crafting.RecipeSerializer<?>> SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, ForbiddenMekanism.ID);
     public static final java.util.function.Supplier<ForgeUpgradeRecipe.Serializer> FORGE_UPGRADE_RECIPE = SERIALIZERS.register("forge_upgrade_crafting", ForgeUpgradeRecipe.Serializer::new);
@@ -55,7 +58,7 @@ public final class Content {
             var block = BLOCKS.registerDetails(kind.id, () -> new MachineBlock(kind, type));
             block.forItemHolder(holder -> holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
                 var slots = ItemSlotsBuilder.builder().addInput(9).addOutput(4).addInput(kind.supplies()).addEnergy();
-                if (kind.forge()) slots.addInput(5);
+                if (kind.forge()) slots.addInput(8);
                 return slots.build();
             }));
             MACHINES.put(kind, block);
@@ -66,12 +69,21 @@ public final class Content {
               .icon(() -> new ItemStack(MACHINES.get(MachineKind.FORGE)))
               .displayItems((parameters, output) -> {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind));
-                  output.accept(GLOW_MODULE);
+                  for (int resource = 0; resource < 4; resource++) output.accept(resourceModule(resource));
                   INSTALLERS.values().forEach(output::accept);
               }).build());
     }
     public static void register(IEventBus bus) {
         COMPONENTS.register(bus); ITEMS.register(bus); BLOCKS.register(bus); TILES.register(bus); MENUS.register(bus); TABS.register(bus); SERIALIZERS.register(bus);
+    }
+    public static Item resourceModule(int resource) {
+        return switch (resource) {
+            case 0 -> GLOW_MODULE.get();
+            case 1 -> SOUL_MODULE.get();
+            case 2 -> BLOOD_MODULE.get();
+            case 3 -> EXPERIENCE_MODULE.get();
+            default -> throw new IllegalArgumentException("Unknown forge resource: " + resource);
+        };
     }
     private Content() { }
 }

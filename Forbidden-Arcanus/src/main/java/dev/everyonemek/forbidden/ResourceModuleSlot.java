@@ -8,11 +8,11 @@ import mekanism.common.inventory.container.slot.SlotOverlay;
 import mekanism.common.inventory.container.slot.VirtualInventoryContainerSlot;
 import mekanism.common.inventory.slot.BasicInventorySlot;
 
-public final class GlowModuleSlot extends BasicInventorySlot {
-    public GlowModuleSlot(IContentsListener listener) {
+public final class ResourceModuleSlot extends BasicInventorySlot {
+    public ResourceModuleSlot(IContentsListener listener, int resource) {
         super(8, (stack, automation) -> automation != AutomationType.EXTERNAL,
               (stack, automation) -> automation != AutomationType.EXTERNAL,
-              stack -> stack.is(Content.GLOW_MODULE), listener, 0, 0);
+              stack -> stack.is(Content.resourceModule(resource)), listener, 0, 0);
         setSlotOverlay(SlotOverlay.UPGRADE);
     }
     @Override public VirtualInventoryContainerSlot createContainerSlot() {

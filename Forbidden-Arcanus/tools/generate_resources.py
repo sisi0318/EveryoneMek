@@ -59,6 +59,23 @@ write(f"data/{ID}/recipe/glow_module.json", {"type": "minecraft:crafting_shapele
     "ingredients": [{"item": f"forbidden_arcanus:{item}"} for item in
         ("arcane_crystal_block", "arcane_crystal_block", "arcane_polished_darkstone", "mundabitur_dust")],
     "result": {"id": f"{ID}:glow_module", "count": 1}})
+resource_modules = {
+    "soul_module": ("灵魂插件", "Soul Module", "灵魂", "souls", {"item": "forbidden_arcanus:soul"}),
+    "blood_module": ("血液插件", "Blood Module", "血液", "blood", {
+        "type": "neoforge:components", "items": "forbidden_arcanus:blood_test_tube", "strict": False,
+        "components": {"forbidden_arcanus:essence_storage": {"data": {"type": "blood", "amount": 3000}, "limit": 3000}}}),
+    "experience_module": ("经验插件", "Experience Module", "经验", "experience", {"item": "forbidden_arcanus:xpetrified_orb"}),
+}
+for module_id, (cn, english, resource_cn, resource_en, core) in resource_modules.items():
+    zh[f"item.{ID}.{module_id}"] = cn
+    en[f"item.{ID}.{module_id}"] = english
+    zh[f"description.{ID}.{module_id}"] = f"装入锻造室升级槽，消耗 FE 产生{resource_cn}。基础每个每 5 秒产生 1 点，最多安装 8 个。"
+    en[f"description.{ID}.{module_id}"] = f"Install in the forging chamber to produce {resource_en} using FE. Each produces 1 point per 5 seconds before upgrades; up to 8 modules."
+    write(f"assets/{ID}/models/item/{module_id}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"{ID}:item/{module_id}"}})
+    write(f"data/{ID}/recipe/{module_id}.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ACA", "GKG", "ACA"],
+        "key": {"A": {"item": "mekanism:alloy_atomic"}, "C": {"item": "mekanism:ultimate_control_circuit"},
+                "G": {"item": "minecraft:gold_ingot"}, "K": core},
+        "result": {"id": f"{ID}:{module_id}", "count": 1}})
 for tier, model in zip(range(2, 6), ("basic", "advanced", "elite", "ultimate")):
     item_id = f"forge_tier_{tier}_installer"
     zh[f"item.{ID}.{item_id}"] = f"{tier} 级锻造室升级插件"
@@ -75,7 +92,7 @@ labels = {
     "products": ("成品", "Products"),
     "bind": ("绑定原机", "Bind"), "pause": ("暂停", "Pause"), "resume": ("继续", "Resume"),
     "recipes": ("选择配方", "Recipes"), "xp": ("经验", "XP"),
-    "glow_module": ("辉光柱插件", "Aureal Obelisk Module"), "glow_rate": ("%s 点 / %s 秒", "%s points / %s s"),
+    "module_rate": ("%s 点 / %s 秒", "%s points / %s s"),
     "installer_requires": ("需要 %s 级锻造室", "Requires a tier %s forging chamber"),
     "installer_done": ("锻造室已升至 %s 级", "Forging chamber upgraded to tier %s"),
     "platform_missing": ("锻台平台不完整", "Forge platform is incomplete"),
@@ -133,4 +150,4 @@ template += list_tag("blocks", 10, []) + b"\x00"
 destination = ROOT / f"src/gameTest/resources/data/{ID}/structure/empty.nbt"
 destination.parent.mkdir(parents=True, exist_ok=True)
 destination.write_bytes(gzip.compress(template, mtime=0))
-print(f"Generated resources for {len(MACHINES)} machines, the Aureal module and four native-material tier installers.")
+print(f"Generated resources for {len(MACHINES)} machines, four resource modules and four native-material tier installers.")

@@ -199,11 +199,98 @@ public final class ControllerGameTests {
             machine.outputs.get(0).setEmpty(); runForge(machine, 1);
             check(machine.supplies.get(2).isEmpty() && outputs(machine, ModItems.TEST_TUBE.get()) == 1, "Empty native container was not recovered");
             machine.module.setStack(new ItemStack(Content.GLOW_MODULE.get())); machine.observed[0] = 0;
-            machine.getComponent().addUpgrades(Upgrade.SPEED, 2); int interval = machine.forge.glowInterval();
+            machine.getComponent().addUpgrades(Upgrade.SPEED, 2); int interval = machine.forge.moduleInterval();
             check(interval < 100, "Speed upgrades did not affect the module"); runForge(machine, interval);
             check(machine.observed[0] == 1, "Upgraded module interval wrong");
             h.succeed();
         } finally { stop(machine); }
+    }
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void resourceModulesGenerateIndependentlyAndKeepAppendedSlotsAcrossReload(GameTestHelper h) {
+        var machine = forge(h, 3);
+        var player = FakePlayerFactory.getMinecraft(h.getLevel());
+        try {
+            Arrays.fill(machine.observed, 0);
+            var menu = new MachineMenu(72, player.getInventory(), machine);
+            for (int resource = 0; resource < 4; resource++) {
+                var slot = machine.resourceModules.get(resource);
+                check(slot.getLimit(new ItemStack(Content.resourceModule(resource))) == 8, "Module stack limit changed");
+                check(!slot.isItemValid(new ItemStack(Content.resourceModule((resource + 1) % 4))), "Module accepted by the wrong resource slot");
+                check(menu.moduleSlot(resource).getInventorySlot() == slot, "Upgrade window does not point to the actual module slot");
+                slot.setStack(new ItemStack(Content.resourceModule(resource), resource + 1));
+            }
+            long beforeEnergy = machine.energy().getEnergy();
+            runForge(machine, 60);
+            var registry = h.getLevel().registryAccess();
+            machine.loadAdditional(machine.saveWithoutMetadata(registry), registry);
+            runForge(machine, 40);
+            for (int resource = 0; resource < 4; resource++) {
+                check(machine.observed[resource] == resource + 1 && machine.resourceModuleCount(resource) == resource + 1, "Module consumed itself or restored the wrong generation timer");
+                check(machine.supplies.get(resource).isEmpty(), "Generation required or fabricated a resource item");
+            }
+            check(beforeEnergy - machine.energy().getEnergy() == 10 * machine.energy().getEnergyPerTick(), "Four modules did not charge FE per produced point");
+            machine.energy().setEnergy(0); runForge(machine, 100);
+            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == resource + 1, "Unpowered resource generation continued");
+            machine.energy().setEnergy(machine.energy().getMaxEnergy());
+            machine.enabled = false; runForge(machine, 100); machine.enabled = true;
+            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == resource + 1, "Paused resource generation continued");
+            for (int resource = 0; resource < 4; resource++) machine.observed[resource] = machine.capacities[resource] - 1;
+            runForge(machine, 100);
+            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == machine.capacities[resource], "Module exceeded resource capacity");
+            beforeEnergy = machine.energy().getEnergy(); runForge(machine, 100);
+            check(machine.energy().getEnergy() == beforeEnergy, "Full resource storage still consumed FE");
+            machine.stock.get(0).setStack(new ItemStack(Items.DIAMOND, 13));
+            machine.enhancers.get(0).setStack(new ItemStack(ModItems.ARTISAN_RELIC.get()));
+            ItemStack drop = Block.getDrops(machine.getBlockState(), h.getLevel(), machine.getBlockPos(), machine, null, new ItemStack(Items.DIAMOND_PICKAXE)).getFirst();
+            var restored = new Controller(machine.getBlockPos(), machine.getBlockState()); restored.setLevel(h.getLevel()); restored.applyComponentsFromItemStack(drop);
+            check(restored.getInventorySlots(null).size() == 26 && restored.nativeTier == 3, "Appended module slots changed the inventory layout");
+            for (int resource = 0; resource < 4; resource++) check(restored.resourceModuleCount(resource) == resource + 1 && restored.observed[resource] == machine.observed[resource], "Drop lost a resource module or stored resources");
+            var oldSlots = machine.getInventorySlots(null).stream().limit(23).map(slot -> slot.getStack().copy()).toList();
+            ItemStack oldDrop = drop.copy();
+            oldDrop.set(mekanism.common.attachments.containers.ContainerType.ITEM.getComponentType(), new mekanism.common.attachments.containers.item.AttachedItems(oldSlots));
+            var from020 = new Controller(machine.getBlockPos(), machine.getBlockState()); from020.setLevel(h.getLevel()); from020.applyComponentsFromItemStack(oldDrop);
+            for (int slot = 0; slot < 23; slot++) check(ItemStack.matches(from020.getInventorySlots(null).get(slot).getStack(), oldSlots.get(slot)), "0.2.0 block item lost slot " + slot);
+            check(from020.resourceModules.stream().skip(1).allMatch(slot -> slot.isEmpty()) && from020.nativeTier == 3, "Old item did not gain empty new module slots");
+            h.succeed();
+        } finally { stop(machine); }
+    }
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void resourceModuleCraftingRequiresTheSelectedCoreAndAFullBloodTube(GameTestHelper h) {
+        var player = FakePlayerFactory.getMinecraft(h.getLevel()); var oldMenu = player.containerMenu; var position = player.position();
+        var inventory = player.getInventory().save(new net.minecraft.nbt.ListTag());
+        try {
+            player.getInventory().clearContent();
+            BlockPos table = h.absolutePos(new BlockPos(4, 2, 4));
+            h.getLevel().setBlockAndUpdate(table, Blocks.CRAFTING_TABLE.defaultBlockState()); player.setPos(table.getCenter());
+            String[] ids = {"soul_module", "blood_module", "experience_module"};
+            for (int resource = 1; resource < 4; resource++) {
+                var holder = h.getLevel().getRecipeManager().byKey(ResourceLocation.parse("forbiddenmekanism:" + ids[resource - 1])).orElseThrow();
+                var recipe = (ShapedRecipe) holder.value();
+                var items = recipe.getIngredients().stream().map(ingredient -> ingredient.getItems()[0].copyWithCount(1)).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+                check(recipe.matches(CraftingInput.of(3, 3, items), h.getLevel()), "Module recipe is not craftable as shown in JEI");
+                var core = items.get(4);
+                if (resource == 1) check(core.is(ModItems.SOUL.get()), "Soul core changed");
+                if (resource == 3) check(core.is(ModItems.XPETRIFIED_ORB.get()), "Experience core is not an xpetrified orb");
+                if (resource == 2) {
+                    check(core.is(ModItems.BLOOD_TEST_TUBE.get()) && core.get(ModDataComponents.ESSENCE_STORAGE).value().amount() == 3000, "JEI does not show a full blood tube");
+                    var incomplete = new ArrayList<>(items); incomplete.set(4, new ItemStack(ModItems.TEST_TUBE.get()));
+                    check(!recipe.matches(CraftingInput.of(3, 3, incomplete), h.getLevel()), "Empty tube crafted a blood module");
+                    incomplete.set(4, new ItemStack(ModItems.BLOOD_TEST_TUBE.get()));
+                    check(!recipe.matches(CraftingInput.of(3, 3, incomplete), h.getLevel()), "Zero-blood container crafted a blood module");
+                    incomplete.get(4).set(ModDataComponents.ESSENCE_STORAGE, new EssenceStorage(EssenceValue.of(EssenceType.BLOOD, 2999), 3000, true));
+                    check(!recipe.matches(CraftingInput.of(3, 3, incomplete), h.getLevel()), "Partially filled tube crafted a blood module");
+                    core.set(DataComponents.CUSTOM_NAME, Component.literal("Full blood"));
+                    check(recipe.matches(CraftingInput.of(3, 3, items), h.getLevel()), "Named full tube was incorrectly rejected");
+                }
+                var menu = new CraftingMenu(80 + resource, player.getInventory(), ContainerLevelAccess.create(h.getLevel(), table)); player.containerMenu = menu;
+                for (int i = 0; i < 9; i++) menu.getSlot(i + 1).set(items.get(i).copy());
+                check(menu.getSlot(0).getItem().is(Content.resourceModule(resource)), "Actual workbench did not craft the resource module");
+                menu.clicked(0, 0, ClickType.PICKUP, player);
+                check(menu.getCarried().is(Content.resourceModule(resource)), "Workbench output was not received");
+                for (int i = 1; i <= 9; i++) check(menu.getSlot(i).getItem().isEmpty(), "Crafting did not consume the complete module materials");
+            }
+            h.succeed();
+        } finally { player.containerMenu = oldMenu; player.setPos(position); player.getInventory().load(inventory); }
     }
     @GameTest(template = "empty", timeoutTicks = 60)
     public static void forgePausesValidatesWorkAndKeepsComponentsThroughDropAndReload(GameTestHelper h) {

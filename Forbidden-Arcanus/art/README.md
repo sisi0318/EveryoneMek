@@ -7,6 +7,9 @@
 | `source/forge_controller.png` | 锻造室，冲压机构与砧座、四个资源状态灯 |
 | `source/clibano_controller.png` | 炽炉控制器，橙色与青色双炉口 |
 | `source/glow_module.png` | 辉光柱插件，淡黄色柱形标记、灰色模块壳与透明外围 |
+| `source/soul_module-v2.png` | 灵魂插件，青色灵魂标记与灰色模块壳 |
+| `source/blood_module.png` | 血液插件，红色满血试管标记与灰色模块壳 |
+| `source/experience_module.png` | 经验插件，绿色经验球标记与灰色模块壳 |
 
 两张图集按等分 2×2 布局：左上静止正面、右上顶部、左下侧面、右下工作正面。侧面复用于背面与底面。模块原稿机械裁掉透明余量，最近邻缩为 14×14，再保留一圈透明像素，输出 16×16 图标。
 

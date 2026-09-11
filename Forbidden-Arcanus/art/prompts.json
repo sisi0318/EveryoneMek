@@ -98,6 +98,72 @@
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/glow_module.png"
       }
+    },
+    {
+      "id": "experience_module",
+      "source": "Forbidden-Arcanus/art/source/experience_module.png",
+      "generated_file": "exec-884e47bc-1f6e-47fe-8d63-b7f9c56584ba.png",
+      "references": [],
+      "reference_role": "Independent original generation after reference edits produced opaque checkerboards; casing style follows the repository's existing industrial modules.",
+      "prompt": "Generate a NEW isolated pixel-art game inventory item on a GENUINELY TRANSPARENT background (PNG alpha), no checkerboard pixels. Item: an ORIGINAL gray Mekanism industrial upgrade cartridge with a single large bright green round experience ORB with a chunky stepped pixel outline, about 6 cells wide and 6 high; a single darker green horizontal band inside, no star and no text. Dark charcoal square casing, thick gray industrial frame, black recessed center, two small green status lights. Flat frontal icon. It will be reduced to exactly 16x16 pixels: visible cartridge fills a centered 14x14 region, transparent one-cell outer border. Coarse large solid-color cells, recognizable silhouette. No text, no gradients, no glow, no scene, no repeated notches or details finer than one pixel cell. At least 80 percent gray/charcoal. The exterior surrounding the item must be fully transparent, not solid, not white, not black, not a checkerboard. Render actual alpha transparency.",
+      "export": {
+        "trim": "transparent padding",
+        "size": [
+          16,
+          16
+        ],
+        "inner_size": [
+          14,
+          14
+        ],
+        "padding": 1,
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/experience_module.png"
+      }
+    },
+    {
+      "id": "blood_module",
+      "source": "Forbidden-Arcanus/art/source/blood_module.png",
+      "generated_file": "exec-2dd99416-4d2e-43bb-aa41-4fe29ca6ca87.png",
+      "references": [],
+      "reference_role": "Independent original generation after reference edits produced opaque checkerboards; casing style follows the repository's existing industrial modules.",
+      "prompt": "Generate a NEW isolated pixel-art game inventory item on a GENUINELY TRANSPARENT background (PNG alpha), no checkerboard pixels. Item: an ORIGINAL gray Mekanism industrial upgrade cartridge with a single broad upright glass TEST TUBE FILLED WITH RED BLOOD, a short gray cap at the top, simple pale gray glass outline, flat red filling, chunky rounded bottom, about 5 cells wide and 8 high; no droplets outside the tube. Dark charcoal square casing, thick gray industrial frame, black recessed center, two small red status lights. Flat frontal icon. It will be reduced to exactly 16x16 pixels: visible cartridge fills a centered 14x14 region, transparent one-cell outer border. Coarse large solid-color cells, recognizable silhouette. No text, no gradients, no glow, no scene, no repeated notches or details finer than one pixel cell. At least 80 percent gray/charcoal. The exterior surrounding the item must be fully transparent, not solid, not white, not black, not a checkerboard. Render actual alpha transparency.",
+      "export": {
+        "trim": "transparent padding",
+        "size": [
+          16,
+          16
+        ],
+        "inner_size": [
+          14,
+          14
+        ],
+        "padding": 1,
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/blood_module.png"
+      }
+    },
+    {
+      "id": "soul_module",
+      "source": "Forbidden-Arcanus/art/source/soul_module-v2.png",
+      "generated_file": "exec-02da5671-57ab-43ec-a9b0-d5efa9016edf.png",
+      "references": [],
+      "reference_role": "Independent original generation after reference edits produced opaque checkerboards; casing style follows the repository's existing industrial modules.",
+      "prompt": "Generate a NEW isolated Minecraft pixel-art inventory item on a GENUINELY TRANSPARENT PNG ALPHA background. No checkerboard. Item: gray industrial Mekanism upgrade cartridge with a very large simple pale CYAN GHOST emblem. The whole design must correspond to exactly a 16x16 pixel grid: thick dark gray cartridge frame occupies a 14x14 square, one-cell transparent outer margin. Inner ghost occupies 8 cells wide and 9 cells tall. Ghost head/body is a broad rectangular cyan silhouette with two stepped upper corners and a short offset tail. TWO LARGE BLACK SQUARE EYES, each exactly 2 cells wide and 2 cells high, separated by two cyan cells, so both eyes remain plainly visible at 16 pixels. The ghost fills most of the black recessed center. No cross shape, no narrow plus shape, no skull, no long pointed top. Simple neutral-gray casing, two small cyan indicator pixels. Flat front view, coarse solid-color pixel cells, no text, gradients, glow, perspective, noise, shading finer than one cell, gold, ornamental edges, scene or background. Exterior surrounding the item must be fully transparent, not black, white or a painted checkerboard.",
+      "export": {
+        "trim": "transparent padding",
+        "size": [
+          16,
+          16
+        ],
+        "inner_size": [
+          14,
+          14
+        ],
+        "padding": 1,
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/soul_module.png"
+      }
     }
   ]
 }

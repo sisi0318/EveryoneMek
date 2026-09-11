@@ -10,7 +10,7 @@ public final class MachineConfig {
         var builder = new ModConfigSpec.Builder();
         OPERATION_FE = builder.comment("FE per controller logistics operation. Native processing costs and duration are unchanged.")
               .defineInRange("operationFE", 200, 1, 1_000_000);
-        FORGE_FE = builder.comment("Base FE per forge processing tick, or per point of Aureal produced by an obelisk module.")
+        FORGE_FE = builder.comment("Base FE per forge processing tick, or per resource point produced by an installed module.")
               .defineInRange("forgeFE", 100, 1, 1_000_000);
         SPEC = builder.build();
     }

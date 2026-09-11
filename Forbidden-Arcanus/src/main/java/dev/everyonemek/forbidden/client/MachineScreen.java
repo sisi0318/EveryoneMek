@@ -34,7 +34,7 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
             removeWidget(original);
             upgradeTab = addRenderableWidget(new GuiUpgradeWindowTab(this, tile, () -> upgradeTab) {
                 @Override protected GuiWindow createWindow(SelectedWindowData data) {
-                    return new GlowUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
+                    return new ResourceUpgradeWindow(MachineScreen.this, (getGuiWidth() - 198) / 2, 15, tile, data);
                 }
             });
         }

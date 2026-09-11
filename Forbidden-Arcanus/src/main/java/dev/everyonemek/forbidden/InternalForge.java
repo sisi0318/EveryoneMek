@@ -20,7 +20,8 @@ import net.minecraft.world.item.ItemStack;
 public final class InternalForge {
     private final Controller machine;
     private CompoundTag signature;
-    private int glowProgress;
+    private static final String[] MODULE_PROGRESS_KEYS = {"glow_progress", "soul_progress", "blood_progress", "experience_progress"};
+    private final int[] moduleProgress = new int[4];
 
     public InternalForge(Controller machine) {
         this.machine = machine;
@@ -60,22 +61,24 @@ public final class InternalForge {
         return new EssencesDefinition(Math.max(0, cost.aureal()), Math.max(0, cost.souls()),
               Math.max(0, cost.blood()), Math.max(0, cost.experience()));
     }
-    public int glowInterval() { return Math.max(1, MekanismUtils.getTicks(machine, 100)); }
+    public int moduleInterval() { return Math.max(1, MekanismUtils.getTicks(machine, 100)); }
     private boolean hasEnergy(long amount) {
         return machine.energy().extract(amount, Action.SIMULATE, AutomationType.INTERNAL) == amount;
     }
-    private void generateAureal() {
-        int modules = machine.glowModules();
-        if (modules == 0) { glowProgress = 0; return; }
-        int free = machine.capacities[0] - machine.observed[0];
-        if (free <= 0 || !hasEnergy(machine.energy().getEnergyPerTick())) return;
-        if (++glowProgress >= glowInterval()) {
-            int amount = (int) Math.min(Math.min(modules, free), machine.energy().getEnergy() / machine.energy().getEnergyPerTick());
-            machine.energy().extract(machine.energy().getEnergyPerTick() * amount, Action.EXECUTE, AutomationType.INTERNAL);
-            machine.observed[0] += amount;
-            glowProgress = 0;
+    private void generateResources() {
+        for (int resource = 0; resource < 4; resource++) {
+            int modules = machine.resourceModuleCount(resource);
+            if (modules == 0) { moduleProgress[resource] = 0; continue; }
+            int free = machine.capacities[resource] - machine.observed[resource];
+            if (free <= 0 || !hasEnergy(machine.energy().getEnergyPerTick())) continue;
+            if (++moduleProgress[resource] >= moduleInterval()) {
+                int amount = (int) Math.min(Math.min(modules, free), machine.energy().getEnergy() / machine.energy().getEnergyPerTick());
+                machine.energy().extract(machine.energy().getEnergyPerTick() * amount, Action.EXECUTE, AutomationType.INTERNAL);
+                machine.observed[resource] += amount;
+                moduleProgress[resource] = 0;
+            }
+            machine.markForSave();
         }
-        machine.markForSave();
     }
     private void fillResources() {
         var level = machine.getLevel();
@@ -149,7 +152,7 @@ public final class InternalForge {
         if (!machine.enabled || !machine.canFunction()) { machine.status = Controller.PAUSED; return; }
         if (!hasEnergy(machine.energy().getEnergyPerTick())) { machine.status = Controller.NEED_ENERGY; return; }
         fillResources();
-        generateAureal();
+        generateResources();
         Work work = select();
         if (work == null) {
             resetProgress(); machine.selectedRecipe = ""; machine.status = Controller.NEED_MATERIALS; return;
@@ -180,7 +183,7 @@ public final class InternalForge {
         tag.putInt("forge_tier", machine.nativeTier);
         tag.putIntArray("essences", Arrays.copyOf(machine.observed, 4));
         tag.putInt("progress", machine.progress);
-        tag.putInt("glow_progress", glowProgress);
+        for (int resource = 0; resource < 4; resource++) tag.putInt(MODULE_PROGRESS_KEYS[resource], moduleProgress[resource]);
         if (signature != null) tag.put("work", signature.copy());
     }
     public void load(CompoundTag tag) {
@@ -191,6 +194,6 @@ public final class InternalForge {
         signature = tag.contains("work", 10) ? tag.getCompound("work").copy() : null;
         machine.duration = signature == null ? 1 : Math.clamp(signature.getInt("duration"), 1, Integer.MAX_VALUE);
         machine.progress = signature == null ? 0 : Math.clamp(tag.getInt("progress"), 0, machine.duration - 1);
-        glowProgress = Math.clamp(tag.getInt("glow_progress"), 0, 99);
+        for (int resource = 0; resource < 4; resource++) moduleProgress[resource] = Math.clamp(tag.getInt(MODULE_PROGRESS_KEYS[resource]), 0, 99);
     }
 }
