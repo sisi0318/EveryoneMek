@@ -4,7 +4,7 @@
 
 ## 版本与已确认范围
 
-- 0.2.1；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
+- 0.2.2；包 `dev.everyonemek.forbidden`，域 `forbiddenmekanism`，产物 `ForbiddenMekanism-<版本>.jar`。
 - Java 21、Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。
 - Forbidden & Arcanus 发布版 2.6.1，Modrinth artifact `fNjxgZPH`；Valhelsia Core 1.1.4，artifact `cttRekq9`。后者必须显式声明，不能用上游源码的 1.1.5 代替实际发布 JAR 契约。
 - JEI 19.22.1.316 可选；不要求 Ponder。
@@ -18,9 +18,11 @@
 - `InternalForge`：原平台判定、1–5 级容量、四项资源、辉光生成及内部加工。使用原 `Ritual` 注册表，生产支持 `CreateItemResult` 和 `TransmuteInputResult`；`UpgradeTierResult` 仅用于插件合成。
 - `ForgeUpgradeRecipe`：继承 `ShapedRecipe`，3×3 中心固定为原主材料，周围八份材料无序匹配原仪式。JSON 仅保存 `Ritual` holder 引用；服务端 RegistryOps 解析、网络通过原仪式注册表同步。不要硬编码复制九份材料，不能漏中心材料、另加工作台或增加中间核心。继承原有形状配方使 JEI 与配方书按 3×3 显示和填充。
 - `ForgeTierInstallerItem`、`MachineBlock.useItemOn`：在 Mek 默认打开界面前处理插件。右键严格相邻前一级升级，校验访问与距离，成功消耗一个（创造模式除外）；不替换实体，不改库存、资源或有效进度。
-- `ResourceModuleSlot`、`client/ResourceUpgradeWindow`：Mek 原升级窗口底部有四个独立资源插件槽，每种最多 8 个，保留速度／能量升级列表。每个每 100 tick 产生 1 点对应资源，按实际产量扣 FE，受速度升级影响，满储量、断电、暂停或平台损坏时停止。资源计时器分别保存，原 `glow_progress` 键不变。
+- `ResourceModuleSlot`、`client/ResourceUpgradeWindow`：四种资源插件共用原 Mek 安装槽、升级列表及卸载输出槽，每种最多 8 个，正常点击卸载一个，Shift 点击卸载全部。主界面四条竖条显示储量和 +x/秒。单个每 100 tick 产生 100 辉光、1 灵魂、150 血液或 100 经验，按有效插件生成次数扣 FE，受速度升级影响；满储量、断电、暂停或平台损坏时停止。资源计时器分别保存，原 `glow_progress` 键不变。
 - 锻造室的进度签名包含配方、加工材料及组件、增强器、输出、修正后成本和有效工期；换配方或有效签名变化归零。管道增加同类多批材料无需丢掉当前进度。进度每 tick 耗能，完成时一次性扣原料和四资源、合并输出。
 - 所有原料、增强器、资源和有效进度保存在机器；实体 NBT 和拆成物品的 `settings`、Mek item attachments 都要接好。等级与资源按原容量限幅。
+
+资源模块持久化槽的 `createContainerSlot()` 返回 null，避免第二组可手动操作的槽。客户端安装数量由独立 `SyncableInt` 同步；不要依赖已隐藏槽的物品同步。原 Mek 插件物品和本模组资源插件的物品堆叠限制分别遵循各自定义，本模组资源插件每叠最多 8，测试超额安装应用已有数量加一整叠，不能构造 10 个一叠后假定全数进入原输入槽。
 
 库存顺序：锻造室原料 0–8、输出 9–12、四资源输入 13–16、能量 17、增强器 18–21、辉光插件 22、灵魂插件 23、血液插件 24、经验插件 25。新增三槽追加在 0.2.0 库存后，不更改旧索引；保留现有机器和辉光模块。炽炉原料 0–8、输出 9–12、燃料 13、灵魂 14、能量 15。BlockItem 附件数量和顺序与此一致。
 
@@ -37,15 +39,15 @@ Mek `applyInventorySlots` 只接受长度相等的物品列表。`Controller` �
 - `Binding` 仅负责炽炉：单控制器认领、原机 UUID/位置、距离、已加载区块、完整结构与权限校验。缓存菜单接口每次操作重新 resolve。
 - `NativeInventory`、`MachineMenu` 的远程七槽只用于炽炉；不加入控制器持久化库存。Shift 点击取回玩家背包，服务器校验菜单、距离与权限。
 - 炽炉原机槽：增强器 0、灵魂 1、燃料 2、原料 3–4、结果 5–6。`ClibanoAutomation` 通过原缓存检查将实际选中的配方，不复制燃烧／残渣引擎。FE 仅供调度，暂停不冻结原燃料和灵魂计时。
-- 唯一 common Mixin 为 `ClibanoAccess`，读取原同步数据与配方缓存。旧 Forge/Ritual Mixin 已全部删除。
+- `ClibanoAccess` 读取原炽炉同步数据与配方缓存。Mek 升级整合使用 common `UpgradeSlotAccess`、`ForgeUpgradeComponentMixin`，只为本模组锻造室增加资源插件；原 Forge/Ritual Mixin 仍全部删除。client 列表包含 `GuiUpgradeScrollListAccess` 和 `ForgeUpgradeWindowMixin`，不得放入 common。
 
 ## UI、资源与测试
 
-- 界面 258×324，玩家槽起点 (48,240)、标签 (48,228)。锻造室：原料 (18,30) 3×3，输出 (200,30) 2×2，增强器 (112,30) 一行四格，资源 (112,66) 一行四格，能量 (218,84)。不再显示锤子、绑定、复位或单独仪式槽。
+- 界面 258×324，玩家槽起点 (48,240)、标签 (48,228)。锻造室：原料 (18,30) 3×3，输出 (200,30) 2×2，增强器 (112,30) 一行四格，资源 (112,66) 一行四格，能量 (218,66)。四根资源条内容宽 4、高 52，外框各加 2，位于 (18+55×i,98)，旁边放名称和速率；状态 (18,154) 220×18，等级／配方信息 (18,176) 220×26。不再显示锤子、绑定、复位或单独仪式槽。
 - 炽炉远程槽坐标集中在 `MachineMenu.nativeCoordinates`；原机未连接显示未测量值，不伪装成零。
-- `tools/generate_resources.py` 维护所有运行 JSON 和测试模板；改生成器后重新生成。三个新插件各用指定核心加 4 原子合金、2 终极控制电路、2 金锭。血液核心采用 `neoforge:components`，限定 `blood_test_tube` 的 `essence_storage` 为 BLOOD 3000/3000，`strict: false` 允许额外名称组件；不能只按物品 ID 接受空管。JEI 展示的代表 ItemStack 也必须装满。
-- 内置 ImageGen 图稿与提示词在 `art/source/`、`art/prompts.json`，机械导出见 [art/README.md](art/README.md)。8 个完整方块面不透明、四个模块保留真实 alpha，运行 PNG 均为 16×16。四种等级插件引用 Mek 原升级器模型，不复制依赖材质。
-- 11 项服务端 GameTest 位于 `src/gameTest/java/dev/everyonemek/forbidden/ControllerGameTests.java`：7 项锻造室、4 项炽炉。已验证真实工作台九份消耗及方块右键升级、资源守恒、保存与组件、平台/电力/暂停和真实六面出料。新增用例覆盖三插件真实工作台合成与满管判定、四种插件并行生成与独立计时/耗电/容量/26 槽掉落保存。
+- `tools/generate_resources.py` 维护所有运行 JSON 和测试模板；改生成器后重新生成。四种资源插件均为无序合成，两份水晶块／灵魂块／满血试管／石化经验块，加一份奥术磨制暗石和净化粉。`soul_block` 与 `xpetrified_block` 分别由九个原灵魂与石化经验球压缩，支持单块拆回九份；通过普通方块注册，无方块实体。血液核心采用 `neoforge:components`，限定 `blood_test_tube` 的 `essence_storage` 为 BLOOD 3000/3000，`strict: false` 允许额外名称组件；不能只按物品 ID 接受空管。JEI 展示的代表 ItemStack 也必须装满。
+- 内置 ImageGen 图稿与提示词在 `art/source/`、`art/prompts.json`，机械导出见 [art/README.md](art/README.md)。10 张完整方块贴图不透明，八种插件图标保留真实 alpha，运行 PNG 均为 16×16。四种等级插件采用禁忌与奥秘配色的原创暗石符印，不复制依赖图稿。
+- 13 项服务端 GameTest 位于 `src/gameTest/java/dev/everyonemek/forbidden/ControllerGameTests.java`：9 项锻造室／材料、4 项炽炉。已验证真实工作台九份消耗及方块右键升级、资源守恒、保存与组件、平台/电力/暂停和真实六面出料。覆盖三插件真实工作台合成与双满管判定、四插件并行生成、独立计时/耗电/容量/26 槽掉落保存、原 Mek 槽真实点击安装与卸载／上限／距离／组件，以及两种压缩块合成、掉落和完整拆回。`UpgradeIntegrationContractTest` 的 2 项 JUnit 检查读取 Mek 字节码验证升级组件字段、原窗口绘制顺序与客户端选择桥接。
 - `check` 只编译 GameTest；逻辑需要时显式运行 `runGameTestServer`。不启动客户端。相关测试通过后不为文档或贴图重复全套测试。
 
 ```powershell

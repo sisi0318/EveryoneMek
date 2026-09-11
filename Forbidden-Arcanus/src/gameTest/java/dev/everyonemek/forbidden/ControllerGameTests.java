@@ -184,8 +184,8 @@ public final class ControllerGameTests {
             machine.module.setStack(new ItemStack(Content.GLOW_MODULE.get(), 3));
             long energy = machine.energy().getEnergy();
             runForge(machine, 99); check(machine.observed[0] == 0, "Module generated ahead of its native interval");
-            runForge(machine, 1); check(machine.observed[0] == 3 && energy - machine.energy().getEnergy() == 3 * machine.energy().getEnergyPerTick(), "Module generation rate or FE charge wrong");
-            machine.energy().setEnergy(0); runForge(machine, 110); check(machine.observed[0] == 3, "Unpowered module generated Aureal");
+            runForge(machine, 1); check(machine.observed[0] == 300 && energy - machine.energy().getEnergy() == 3 * machine.energy().getEnergyPerTick(), "Module generation rate or FE charge wrong");
+            machine.energy().setEnergy(0); runForge(machine, 110); check(machine.observed[0] == 300, "Unpowered module generated Aureal");
             machine.energy().setEnergy(machine.energy().getMaxEnergy());
             machine.observed[0] = machine.capacities[0] - 1; runForge(machine, 100);
             check(machine.observed[0] == machine.capacities[0], "Aureal overflowed capacity");
@@ -201,7 +201,7 @@ public final class ControllerGameTests {
             machine.module.setStack(new ItemStack(Content.GLOW_MODULE.get())); machine.observed[0] = 0;
             machine.getComponent().addUpgrades(Upgrade.SPEED, 2); int interval = machine.forge.moduleInterval();
             check(interval < 100, "Speed upgrades did not affect the module"); runForge(machine, interval);
-            check(machine.observed[0] == 1, "Upgraded module interval wrong");
+            check(machine.observed[0] == 100, "Upgraded module interval wrong");
             h.succeed();
         } finally { stop(machine); }
     }
@@ -212,11 +212,12 @@ public final class ControllerGameTests {
         try {
             Arrays.fill(machine.observed, 0);
             var menu = new MachineMenu(72, player.getInventory(), machine);
+            int[] expected = {100, 2, 450, 400};
             for (int resource = 0; resource < 4; resource++) {
                 var slot = machine.resourceModules.get(resource);
                 check(slot.getLimit(new ItemStack(Content.resourceModule(resource))) == 8, "Module stack limit changed");
                 check(!slot.isItemValid(new ItemStack(Content.resourceModule((resource + 1) % 4))), "Module accepted by the wrong resource slot");
-                check(menu.moduleSlot(resource).getInventorySlot() == slot, "Upgrade window does not point to the actual module slot");
+                check(slot.createContainerSlot() == null, "Installed storage exposed a second manual upgrade slot");
                 slot.setStack(new ItemStack(Content.resourceModule(resource), resource + 1));
             }
             long beforeEnergy = machine.energy().getEnergy();
@@ -225,20 +226,21 @@ public final class ControllerGameTests {
             machine.loadAdditional(machine.saveWithoutMetadata(registry), registry);
             runForge(machine, 40);
             for (int resource = 0; resource < 4; resource++) {
-                check(machine.observed[resource] == resource + 1 && machine.resourceModuleCount(resource) == resource + 1, "Module consumed itself or restored the wrong generation timer");
+                check(machine.observed[resource] == expected[resource] && machine.resourceModuleCount(resource) == resource + 1, "Module consumed itself or restored the wrong generation timer");
                 check(machine.supplies.get(resource).isEmpty(), "Generation required or fabricated a resource item");
             }
-            check(beforeEnergy - machine.energy().getEnergy() == 10 * machine.energy().getEnergyPerTick(), "Four modules did not charge FE per produced point");
+            check(beforeEnergy - machine.energy().getEnergy() == 10 * machine.energy().getEnergyPerTick(), "Resource modules did not charge FE per active module pulse");
             machine.energy().setEnergy(0); runForge(machine, 100);
-            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == resource + 1, "Unpowered resource generation continued");
+            check(Arrays.stream(machine.resourceRates).allMatch(rate -> rate == 0), "Unpowered machine displayed production");
+            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == expected[resource], "Unpowered resource generation continued");
             machine.energy().setEnergy(machine.energy().getMaxEnergy());
             machine.enabled = false; runForge(machine, 100); machine.enabled = true;
-            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == resource + 1, "Paused resource generation continued");
+            for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == expected[resource], "Paused resource generation continued");
             for (int resource = 0; resource < 4; resource++) machine.observed[resource] = machine.capacities[resource] - 1;
             runForge(machine, 100);
             for (int resource = 0; resource < 4; resource++) check(machine.observed[resource] == machine.capacities[resource], "Module exceeded resource capacity");
             beforeEnergy = machine.energy().getEnergy(); runForge(machine, 100);
-            check(machine.energy().getEnergy() == beforeEnergy, "Full resource storage still consumed FE");
+            check(machine.energy().getEnergy() == beforeEnergy && Arrays.stream(machine.resourceRates).allMatch(rate -> rate == 0), "Full resource storage consumed FE or displayed production");
             machine.stock.get(0).setStack(new ItemStack(Items.DIAMOND, 13));
             machine.enhancers.get(0).setStack(new ItemStack(ModItems.ARTISAN_RELIC.get()));
             ItemStack drop = Block.getDrops(machine.getBlockState(), h.getLevel(), machine.getBlockPos(), machine, null, new ItemStack(Items.DIAMOND_PICKAXE)).getFirst();
@@ -265,19 +267,21 @@ public final class ControllerGameTests {
             String[] ids = {"soul_module", "blood_module", "experience_module"};
             for (int resource = 1; resource < 4; resource++) {
                 var holder = h.getLevel().getRecipeManager().byKey(ResourceLocation.parse("forbiddenmekanism:" + ids[resource - 1])).orElseThrow();
-                var recipe = (ShapedRecipe) holder.value();
+                var recipe = (ShapelessRecipe) holder.value();
                 var items = recipe.getIngredients().stream().map(ingredient -> ingredient.getItems()[0].copyWithCount(1)).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+                check(items.size() == 4 && items.get(2).is(ModBlocks.ARCANE_POLISHED_DARKSTONE.get().asItem()) && items.get(3).is(ModItems.MUNDABITUR_DUST.get()), "Module no longer follows the Aureal recipe materials");
+                while (items.size() < 9) items.add(ItemStack.EMPTY);
                 check(recipe.matches(CraftingInput.of(3, 3, items), h.getLevel()), "Module recipe is not craftable as shown in JEI");
-                var core = items.get(4);
-                if (resource == 1) check(core.is(ModItems.SOUL.get()), "Soul core changed");
-                if (resource == 3) check(core.is(ModItems.XPETRIFIED_ORB.get()), "Experience core is not an xpetrified orb");
+                var core = items.getFirst();
+                if (resource == 1) check(core.is(Content.SOUL_BLOCK.asItem()), "Soul core changed");
+                if (resource == 3) check(core.is(Content.XPETRIFIED_BLOCK.asItem()), "Experience core is not a petrified experience block");
                 if (resource == 2) {
                     check(core.is(ModItems.BLOOD_TEST_TUBE.get()) && core.get(ModDataComponents.ESSENCE_STORAGE).value().amount() == 3000, "JEI does not show a full blood tube");
-                    var incomplete = new ArrayList<>(items); incomplete.set(4, new ItemStack(ModItems.TEST_TUBE.get()));
+                    var incomplete = new ArrayList<>(items); incomplete.set(0, new ItemStack(ModItems.TEST_TUBE.get()));
                     check(!recipe.matches(CraftingInput.of(3, 3, incomplete), h.getLevel()), "Empty tube crafted a blood module");
-                    incomplete.set(4, new ItemStack(ModItems.BLOOD_TEST_TUBE.get()));
+                    incomplete.set(0, new ItemStack(ModItems.BLOOD_TEST_TUBE.get()));
                     check(!recipe.matches(CraftingInput.of(3, 3, incomplete), h.getLevel()), "Zero-blood container crafted a blood module");
-                    incomplete.get(4).set(ModDataComponents.ESSENCE_STORAGE, new EssenceStorage(EssenceValue.of(EssenceType.BLOOD, 2999), 3000, true));
+                    incomplete.get(0).set(ModDataComponents.ESSENCE_STORAGE, new EssenceStorage(EssenceValue.of(EssenceType.BLOOD, 2999), 3000, true));
                     check(!recipe.matches(CraftingInput.of(3, 3, incomplete), h.getLevel()), "Partially filled tube crafted a blood module");
                     core.set(DataComponents.CUSTOM_NAME, Component.literal("Full blood"));
                     check(recipe.matches(CraftingInput.of(3, 3, items), h.getLevel()), "Named full tube was incorrectly rejected");
@@ -291,6 +295,75 @@ public final class ControllerGameTests {
             }
             h.succeed();
         } finally { player.containerMenu = oldMenu; player.setPos(position); player.getInventory().load(inventory); }
+    }
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void sharedMekUpgradeSlotsInstallUninstallAndPreservePendingItems(GameTestHelper h) {
+        var machine = forge(h, 2);
+        var player = FakePlayerFactory.getMinecraft(h.getLevel());
+        var oldMenu = player.containerMenu; var position = player.position();
+        try {
+            player.setPos(machine.getBlockPos().getCenter());
+            var menu = new MachineMenu(93, player.getInventory(), machine); player.containerMenu = menu;
+            menu.setSelectedWindow(player.getUUID(), new mekanism.common.inventory.container.SelectedWindowData(mekanism.common.inventory.container.SelectedWindowData.WindowType.UPGRADE));
+            var input = machine.getComponent().getUpgradeSlot();
+            var output = machine.getComponent().getUpgradeOutputSlot();
+            ItemStack modules = new ItemStack(Content.SOUL_MODULE.get(), 8);
+            modules.set(DataComponents.CUSTOM_NAME, Component.literal("Stored souls"));
+            machine.resourceModules.get(1).setStack(modules.copyWithCount(2));
+            check(input.insertItem(modules, Action.SIMULATE, AutomationType.EXTERNAL).getCount() == 8, "External automation reached resource installation");
+            check(menu.getUpgradeSlot().mayPlace(modules), "Mek shared input refused resource module");
+            menu.setCarried(modules.copy()); menu.clicked(menu.getUpgradeSlot().index, 0, ClickType.PICKUP, player);
+            check(menu.getCarried().isEmpty() && input.getCount() == 8, "Actual upgrade slot click lost modules");
+            for (int i = 0; i < 20; i++) machine.getComponent().tickServer();
+            check(machine.resourceModuleCount(1) == 2 && machine.getComponent().getScaledUpgradeProgress() == 1, "Install ignored Mek progress");
+            machine.getComponent().tickServer();
+            check(machine.resourceModuleCount(1) == 8 && input.getCount() == 2, "Installation failed to preserve overflow");
+            var registry = h.getLevel().registryAccess();
+            machine.loadAdditional(machine.saveWithoutMetadata(registry), registry);
+            check(machine.resourceModuleCount(1) == 8 && input.getCount() == 2, "Reload lost installed or pending modules");
+            output.setStack(new ItemStack(Content.BLOOD_MODULE.get()));
+            check(!menu.clickMenuButton(player, 33) && machine.resourceModuleCount(1) == 8, "Blocked output removed an installed module");
+            output.setEmpty();
+            check(menu.clickMenuButton(player, 33) && machine.resourceModuleCount(1) == 7 && output.getCount() == 1, "Single uninstall did not use shared output");
+            check(ItemStack.isSameItemSameComponents(output.getStack(), modules), "Uninstall lost item components");
+            player.setPos(machine.getBlockPos().getCenter().add(9, 0, 0));
+            check(!menu.clickMenuButton(player, 37) && machine.resourceModuleCount(1) == 7, "Distant player uninstalled modules");
+            player.setPos(machine.getBlockPos().getCenter());
+            check(menu.clickMenuButton(player, 37) && machine.resourceModuleCount(1) == 0 && output.getCount() == 8, "Shift uninstall lost modules");
+            menu.clicked(menu.getUpgradeSlot().index, 0, ClickType.PICKUP, player);
+            check(menu.getCarried().getCount() == 2 && input.isEmpty(), "Pending input could not be recovered");
+            menu.setCarried(new ItemStack(mekanism.common.registries.MekanismItems.SPEED_UPGRADE.get()));
+            menu.clicked(menu.getUpgradeSlot().index, 0, ClickType.PICKUP, player);
+            for (int i = 0; i < 21; i++) machine.getComponent().tickServer();
+            check(input.isEmpty() && machine.getComponent().getUpgrades(Upgrade.SPEED) == 1, "Native Mek installation stopped working");
+            h.succeed();
+        } finally { player.containerMenu = oldMenu; player.setPos(position); stop(machine); }
+    }
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void compressedMaterialsCraftAndUnpackWithoutLoss(GameTestHelper h) {
+        var player = FakePlayerFactory.getMinecraft(h.getLevel()); var oldMenu = player.containerMenu; var position = player.position();
+        try {
+            BlockPos table = h.absolutePos(new BlockPos(4, 2, 4));
+            h.getLevel().setBlockAndUpdate(table, Blocks.CRAFTING_TABLE.defaultBlockState()); player.setPos(table.getCenter());
+            Item[] materials = {ModItems.SOUL.get(), ModItems.XPETRIFIED_ORB.get()};
+            Block[] blocks = {Content.SOUL_BLOCK.get(), Content.XPETRIFIED_BLOCK.get()};
+            for (int material = 0; material < 2; material++) {
+                var menu = new CraftingMenu(95 + material, player.getInventory(), ContainerLevelAccess.create(h.getLevel(), table)); player.containerMenu = menu;
+                for (int i = 1; i <= 9; i++) menu.getSlot(i).set(new ItemStack(materials[material]));
+                check(menu.getSlot(0).getItem().is(blocks[material].asItem()), "Nine materials did not compress in workbench");
+                menu.clicked(0, 0, ClickType.PICKUP, player);
+                ItemStack compressed = menu.getCarried().copy(); menu.setCarried(ItemStack.EMPTY);
+                for (int i = 1; i <= 9; i++) check(menu.getSlot(i).getItem().isEmpty(), "Compression left duplicate materials");
+                BlockPos pos = table.above(); h.getLevel().setBlockAndUpdate(pos, blocks[material].defaultBlockState());
+                var drops = Block.getDrops(blocks[material].defaultBlockState(), h.getLevel(), pos, null, null, new ItemStack(Items.DIAMOND_PICKAXE));
+                check(drops.size() == 1 && drops.getFirst().is(blocks[material].asItem()) && drops.getFirst().getCount() == 1, "Placed compression block did not drop itself");
+                menu.getSlot(5).set(compressed);
+                check(menu.getSlot(0).getItem().is(materials[material]) && menu.getSlot(0).getItem().getCount() == 9, "Compressed block failed to unpack");
+                menu.clicked(0, 0, ClickType.PICKUP, player);
+                check(menu.getCarried().getCount() == 9 && menu.getSlot(5).getItem().isEmpty(), "Unpacking duplicated or lost materials");
+            }
+            h.succeed();
+        } finally { player.containerMenu = oldMenu; player.setPos(position); }
     }
     @GameTest(template = "empty", timeoutTicks = 60)
     public static void forgePausesValidatesWorkAndKeepsComponentsThroughDropAndReload(GameTestHelper h) {

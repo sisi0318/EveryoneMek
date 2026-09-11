@@ -1,22 +1,8 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_shapeless",
   "category": "misc",
-  "pattern": [
-    "ACA",
-    "GKG",
-    "ACA"
-  ],
-  "key": {
-    "A": {
-      "item": "mekanism:alloy_atomic"
-    },
-    "C": {
-      "item": "mekanism:ultimate_control_circuit"
-    },
-    "G": {
-      "item": "minecraft:gold_ingot"
-    },
-    "K": {
+  "ingredients": [
+    {
       "type": "neoforge:components",
       "items": "forbidden_arcanus:blood_test_tube",
       "strict": false,
@@ -29,8 +15,28 @@
           "limit": 3000
         }
       }
+    },
+    {
+      "type": "neoforge:components",
+      "items": "forbidden_arcanus:blood_test_tube",
+      "strict": false,
+      "components": {
+        "forbidden_arcanus:essence_storage": {
+          "data": {
+            "type": "blood",
+            "amount": 3000
+          },
+          "limit": 3000
+        }
+      }
+    },
+    {
+      "item": "forbidden_arcanus:arcane_polished_darkstone"
+    },
+    {
+      "item": "forbidden_arcanus:mundabitur_dust"
     }
-  },
+  ],
   "result": {
     "id": "forbiddenmekanism:blood_module",
     "count": 1

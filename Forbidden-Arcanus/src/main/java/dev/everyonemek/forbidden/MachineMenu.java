@@ -2,7 +2,6 @@ package dev.everyonemek.forbidden;
 
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoMainBlockEntity;
 import mekanism.api.security.IBlockSecurityUtils;
-import mekanism.common.inventory.container.slot.VirtualInventoryContainerSlot;
 import mekanism.common.inventory.container.tile.MekanismTileContainer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -48,10 +47,6 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
             default -> new int[]{166, 102};
         };
     }
-    public VirtualInventoryContainerSlot moduleSlot(int resource) {
-        return slots.stream().filter(s -> s instanceof VirtualInventoryContainerSlot v && v.getInventorySlot() == tile.resourceModules.get(resource))
-              .map(s -> (VirtualInventoryContainerSlot) s).findFirst().orElseThrow();
-    }
     @Override protected int getInventoryXOffset() { return 48; }
     @Override protected int getInventoryYOffset() { return 240; }
     public boolean canConfigure(Player player) {
@@ -81,6 +76,7 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
     }
     @Override public boolean clickMenuButton(Player player, int id) {
         if (!canConfigure(player) || !(player instanceof ServerPlayer serverPlayer)) return false;
+        if (id >= 32 && id < 40 && tile.kind().forge()) return tile.uninstallResourceModule((id - 32) % 4, id >= 36);
         if (id == 0 && !tile.kind().forge()) return tile.binding.bindNearby(serverPlayer);
         if (id == 1) { tile.enabled = !tile.enabled; tile.markForSave(); return true; }
         if (id == 3 && tile.binding.resolve() instanceof ClibanoMainBlockEntity clibano) {

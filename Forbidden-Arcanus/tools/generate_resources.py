@@ -25,8 +25,8 @@ def write(path, data):
 
 zh = {f"itemGroup.{ID}": "禁忌机械", f"item.{ID}.glow_module": "辉光柱插件"}
 en = {f"itemGroup.{ID}": "Forbidden Mekanism", f"item.{ID}.glow_module": "Aureal Obelisk Module"}
-zh[f"description.{ID}.glow_module"] = "装入锻造室升级槽，消耗 FE 产生辉光。基础每个每 5 秒产生 1 点，最多安装 8 个。"
-en[f"description.{ID}.glow_module"] = "Install in the forging chamber to produce Aureal using FE. Each produces 1 point per 5 seconds before upgrades; up to 8 modules."
+zh[f"description.{ID}.glow_module"] = "装入锻造室升级槽，消耗 FE 产生辉光。基础每个每 5 秒产生 100 点，最多安装 8 个。"
+en[f"description.{ID}.glow_module"] = "Install in the forging chamber to produce Aureal using FE. Each produces 100 points per 5 seconds before upgrades; up to 8 modules."
 zh[f"description.{ID}.forge_tier_installer"] = "右键将 %s 级锻造室升级为 %s 级。"
 en[f"description.{ID}.forge_tier_installer"] = "Use on a tier %s forging chamber to upgrade it to tier %s."
 for name, (cn, english, core, description_cn, description_en) in MACHINES.items():
@@ -59,31 +59,45 @@ write(f"data/{ID}/recipe/glow_module.json", {"type": "minecraft:crafting_shapele
     "ingredients": [{"item": f"forbidden_arcanus:{item}"} for item in
         ("arcane_crystal_block", "arcane_crystal_block", "arcane_polished_darkstone", "mundabitur_dust")],
     "result": {"id": f"{ID}:glow_module", "count": 1}})
+compressed_blocks = {
+    "soul_block": ("灵魂块", "Soul Block", "soul"),
+    "xpetrified_block": ("石化经验块", "Petrified Experience Block", "xpetrified_orb"),
+}
+for block_id, (cn, english, material) in compressed_blocks.items():
+    zh[f"block.{ID}.{block_id}"] = cn
+    en[f"block.{ID}.{block_id}"] = english
+    write(f"assets/{ID}/blockstates/{block_id}.json", {"variants": {"": {"model": f"{ID}:block/{block_id}"}}})
+    write(f"assets/{ID}/models/block/{block_id}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": f"{ID}:block/{block_id}"}})
+    write(f"assets/{ID}/models/item/{block_id}.json", {"parent": f"{ID}:block/{block_id}"})
+    write(f"data/{ID}/loot_table/blocks/{block_id}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:{block_id}"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
+    write(f"data/{ID}/recipe/{block_id}.json", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["MMM", "MMM", "MMM"],
+        "key": {"M": {"item": f"forbidden_arcanus:{material}"}}, "result": {"id": f"{ID}:{block_id}", "count": 1}})
+    write(f"data/{ID}/recipe/{material}_from_block.json", {"type": "minecraft:crafting_shapeless", "category": "misc",
+        "ingredients": [{"item": f"{ID}:{block_id}"}], "result": {"id": f"forbidden_arcanus:{material}", "count": 9}})
 resource_modules = {
-    "soul_module": ("灵魂插件", "Soul Module", "灵魂", "souls", {"item": "forbidden_arcanus:soul"}),
-    "blood_module": ("血液插件", "Blood Module", "血液", "blood", {
+    "soul_module": ("灵魂插件", "Soul Module", "灵魂", "souls", 1, {"item": f"{ID}:soul_block"}),
+    "blood_module": ("血液插件", "Blood Module", "血液", "blood", 150, {
         "type": "neoforge:components", "items": "forbidden_arcanus:blood_test_tube", "strict": False,
         "components": {"forbidden_arcanus:essence_storage": {"data": {"type": "blood", "amount": 3000}, "limit": 3000}}}),
-    "experience_module": ("经验插件", "Experience Module", "经验", "experience", {"item": "forbidden_arcanus:xpetrified_orb"}),
+    "experience_module": ("经验插件", "Experience Module", "经验", "experience", 100, {"item": f"{ID}:xpetrified_block"}),
 }
-for module_id, (cn, english, resource_cn, resource_en, core) in resource_modules.items():
+for module_id, (cn, english, resource_cn, resource_en, produced, core) in resource_modules.items():
     zh[f"item.{ID}.{module_id}"] = cn
     en[f"item.{ID}.{module_id}"] = english
-    zh[f"description.{ID}.{module_id}"] = f"装入锻造室升级槽，消耗 FE 产生{resource_cn}。基础每个每 5 秒产生 1 点，最多安装 8 个。"
-    en[f"description.{ID}.{module_id}"] = f"Install in the forging chamber to produce {resource_en} using FE. Each produces 1 point per 5 seconds before upgrades; up to 8 modules."
+    zh[f"description.{ID}.{module_id}"] = f"装入锻造室升级槽，消耗 FE 产生{resource_cn}。基础每个每 5 秒产生 {produced} 点，最多安装 8 个。"
+    en[f"description.{ID}.{module_id}"] = f"Install in the forging chamber to produce {resource_en} using FE. Each produces {produced} points per 5 seconds before upgrades; up to 8 modules."
     write(f"assets/{ID}/models/item/{module_id}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"{ID}:item/{module_id}"}})
-    write(f"data/{ID}/recipe/{module_id}.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": ["ACA", "GKG", "ACA"],
-        "key": {"A": {"item": "mekanism:alloy_atomic"}, "C": {"item": "mekanism:ultimate_control_circuit"},
-                "G": {"item": "minecraft:gold_ingot"}, "K": core},
+    write(f"data/{ID}/recipe/{module_id}.json", {"type": "minecraft:crafting_shapeless", "category": "misc",
+        "ingredients": [core, core, {"item": "forbidden_arcanus:arcane_polished_darkstone"}, {"item": "forbidden_arcanus:mundabitur_dust"}],
         "result": {"id": f"{ID}:{module_id}", "count": 1}})
-for tier, model in zip(range(2, 6), ("basic", "advanced", "elite", "ultimate")):
+for tier in range(2, 6):
     item_id = f"forge_tier_{tier}_installer"
     zh[f"item.{ID}.{item_id}"] = f"{tier} 级锻造室升级插件"
     en[f"item.{ID}.{item_id}"] = f"Tier {tier} Forging Chamber Installer"
-    write(f"assets/{ID}/models/item/{item_id}.json", {"parent": f"mekanism:item/{model}_tier_installer"})
+    write(f"assets/{ID}/models/item/{item_id}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"{ID}:item/{item_id}"}})
     write(f"data/{ID}/recipe/{item_id}.json", {"type": f"{ID}:forge_upgrade_crafting", "ritual": f"forbidden_arcanus:upgrade_tier_{tier}"})
 for tag in ("mineable/pickaxe", "needs_stone_tool"):
-    write(f"data/minecraft/tags/block/{tag}.json", {"replace": False, "values": [f"{ID}:{name}" for name in MACHINES]})
+    write(f"data/minecraft/tags/block/{tag}.json", {"replace": False, "values": [f"{ID}:{name}" for name in [*MACHINES, *compressed_blocks]]})
 write("pack.mcmeta", {"pack": {"pack_format": 34, "description": "Forbidden Mekanism resources"}})
 
 labels = {
@@ -92,14 +106,14 @@ labels = {
     "products": ("成品", "Products"),
     "bind": ("绑定原机", "Bind"), "pause": ("暂停", "Pause"), "resume": ("继续", "Resume"),
     "recipes": ("选择配方", "Recipes"), "xp": ("经验", "XP"),
-    "module_rate": ("%s 点 / %s 秒", "%s points / %s s"),
+    "production_rate": ("+%s/秒", "+%s/s"),
+    "resource_storage": ("%s %s / %s", "%s %s / %s"),
     "installer_requires": ("需要 %s 级锻造室", "Requires a tier %s forging chamber"),
     "installer_done": ("锻造室已升至 %s 级", "Forging chamber upgraded to tier %s"),
     "platform_missing": ("锻台平台不完整", "Forge platform is incomplete"),
     "target": ("绑定：%s", "Target: %s"), "unbound": ("未绑定", "Unbound"),
     "unmeasured": ("原机状态尚不可用", "Native machine status unavailable"),
     "tier_progress": ("等级 %s  ·  进度 %s / %s", "Tier %s  ·  Progress %s / %s"),
-    "resource_pair": ("%s %s/%s  ·  %s %s/%s", "%s %s/%s  ·  %s %s/%s"),
     "resource.0": ("辉光", "Aureal"), "resource.1": ("灵魂", "Souls"), "resource.2": ("血液", "Blood"), "resource.3": ("经验", "XP"),
     "fire_fuel": ("%s  ·  燃料 %ss  ·  灵魂 %ss", "%s  ·  Fuel %ss  ·  Soul %ss"),
     "fire.0": ("普通火", "Fire"), "fire.1": ("灵魂火", "Soul Fire"), "fire.2": ("附魔火", "Enchanted Fire"),
@@ -150,4 +164,4 @@ template += list_tag("blocks", 10, []) + b"\x00"
 destination = ROOT / f"src/gameTest/resources/data/{ID}/structure/empty.nbt"
 destination.parent.mkdir(parents=True, exist_ok=True)
 destination.write_bytes(gzip.compress(template, mtime=0))
-print(f"Generated resources for {len(MACHINES)} machines, four resource modules and four native-material tier installers.")
+print(f"Generated resources for {len(MACHINES)} machines, four resource modules, two compressed blocks and four native-material tier installers.")

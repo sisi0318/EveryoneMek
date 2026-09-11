@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "MMM",
+    "MMM",
+    "MMM"
+  ],
+  "key": {
+    "M": {
+      "item": "forbidden_arcanus:soul"
+    }
+  },
+  "result": {
+    "id": "forbiddenmekanism:soul_block",
+    "count": 1
+  }
+}

@@ -2,8 +2,6 @@ package dev.everyonemek.forbidden;
 
 import mekanism.api.AutomationType;
 import mekanism.api.IContentsListener;
-import mekanism.common.inventory.container.SelectedWindowData;
-import mekanism.common.inventory.container.SelectedWindowData.WindowType;
 import mekanism.common.inventory.container.slot.SlotOverlay;
 import mekanism.common.inventory.container.slot.VirtualInventoryContainerSlot;
 import mekanism.common.inventory.slot.BasicInventorySlot;
@@ -16,6 +14,7 @@ public final class ResourceModuleSlot extends BasicInventorySlot {
         setSlotOverlay(SlotOverlay.UPGRADE);
     }
     @Override public VirtualInventoryContainerSlot createContainerSlot() {
-        return new VirtualInventoryContainerSlot(this, new SelectedWindowData(WindowType.UPGRADE), getSlotOverlay(), this::setStackUnchecked);
+        // Keep the released persistent inventory indices; installation uses Mek's shared upgrade input.
+        return null;
     }
 }

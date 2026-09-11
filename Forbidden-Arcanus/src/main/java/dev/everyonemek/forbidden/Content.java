@@ -24,6 +24,10 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class Content {
+    public static int resourceModuleIndex(ItemStack stack) {
+        if (!stack.isEmpty()) for (int i = 0; i < 4; i++) if (stack.is(resourceModule(i))) return i;
+        return -1;
+    }
     public static final BlockDeferredRegister BLOCKS = new BlockDeferredRegister(ForbiddenMekanism.ID);
     public static final TileEntityTypeDeferredRegister TILES = new TileEntityTypeDeferredRegister(ForbiddenMekanism.ID);
     public static final ContainerTypeDeferredRegister MENUS = new ContainerTypeDeferredRegister(ForbiddenMekanism.ID);
@@ -31,6 +35,10 @@ public final class Content {
     public static final MekanismDeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> SETTINGS = COMPONENTS.simple("settings",
           builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ForbiddenMekanism.ID);
+    public static final BlockRegistryObject<net.minecraft.world.level.block.Block, net.minecraft.world.item.BlockItem> SOUL_BLOCK = BLOCKS.register("soul_block",
+          net.minecraft.world.level.block.state.BlockBehaviour.Properties.of().strength(3, 6).sound(net.minecraft.world.level.block.SoundType.AMETHYST));
+    public static final BlockRegistryObject<net.minecraft.world.level.block.Block, net.minecraft.world.item.BlockItem> XPETRIFIED_BLOCK = BLOCKS.register("xpetrified_block",
+          net.minecraft.world.level.block.state.BlockBehaviour.Properties.of().strength(3, 6).sound(net.minecraft.world.level.block.SoundType.STONE));
     public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> GLOW_MODULE = ITEMS.register("glow_module", () -> new ResourceModuleItem("glow_module"));
     public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> SOUL_MODULE = ITEMS.register("soul_module", () -> new ResourceModuleItem("soul_module"));
     public static final net.neoforged.neoforge.registries.DeferredItem<ResourceModuleItem> BLOOD_MODULE = ITEMS.register("blood_module", () -> new ResourceModuleItem("blood_module"));
@@ -71,6 +79,7 @@ public final class Content {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind));
                   for (int resource = 0; resource < 4; resource++) output.accept(resourceModule(resource));
                   INSTALLERS.values().forEach(output::accept);
+                  output.accept(SOUL_BLOCK); output.accept(XPETRIFIED_BLOCK);
               }).build());
     }
     public static void register(IEventBus bus) {

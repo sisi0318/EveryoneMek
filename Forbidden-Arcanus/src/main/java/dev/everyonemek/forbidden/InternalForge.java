@@ -22,6 +22,8 @@ public final class InternalForge {
     private CompoundTag signature;
     private static final String[] MODULE_PROGRESS_KEYS = {"glow_progress", "soul_progress", "blood_progress", "experience_progress"};
     private final int[] moduleProgress = new int[4];
+    private static final int[] MODULE_YIELDS = {100, 1, 150, 100};
+    public static int moduleYield(int resource) { return MODULE_YIELDS[resource]; }
 
     public InternalForge(Controller machine) {
         this.machine = machine;
@@ -70,11 +72,16 @@ public final class InternalForge {
             int modules = machine.resourceModuleCount(resource);
             if (modules == 0) { moduleProgress[resource] = 0; continue; }
             int free = machine.capacities[resource] - machine.observed[resource];
-            if (free <= 0 || !hasEnergy(machine.energy().getEnergyPerTick())) continue;
+            long pulseEnergy = Math.max(1, machine.energy().getEnergyPerTick());
+            int active = (int) Math.min(Math.min(modules, (free + moduleYield(resource) - 1) / moduleYield(resource)),
+                  machine.energy().getEnergy() / pulseEnergy);
+            if (free <= 0 || active <= 0) continue;
+            machine.resourceRates[resource] = Math.min(free, active * moduleYield(resource)) * 20.0 / moduleInterval();
             if (++moduleProgress[resource] >= moduleInterval()) {
-                int amount = (int) Math.min(Math.min(modules, free), machine.energy().getEnergy() / machine.energy().getEnergyPerTick());
-                machine.energy().extract(machine.energy().getEnergyPerTick() * amount, Action.EXECUTE, AutomationType.INTERNAL);
+                int amount = Math.min(free, active * moduleYield(resource));
+                machine.energy().extract(pulseEnergy * active, Action.EXECUTE, AutomationType.INTERNAL);
                 machine.observed[resource] += amount;
+                if (machine.observed[resource] == machine.capacities[resource]) machine.resourceRates[resource] = 0;
                 moduleProgress[resource] = 0;
             }
             machine.markForSave();
@@ -148,6 +155,7 @@ public final class InternalForge {
         return tag;
     }
     public void tick() {
+        Arrays.fill(machine.resourceRates, 0);
         if (!hasPlatform()) { machine.status = Controller.STRUCTURE; return; }
         if (!machine.enabled || !machine.canFunction()) { machine.status = Controller.PAUSED; return; }
         if (!hasEnergy(machine.energy().getEnergyPerTick())) { machine.status = Controller.NEED_ENERGY; return; }

@@ -1,6 +1,6 @@
 # Forbidden & Arcanus：锻造室与炽炉自动化
 
-0.2.1 已实现并通过 11 项服务端验收。玩家说明以 [README.md](README.md) 为准，源码入口及维护要求见 [AGENTS.md](AGENTS.md)。客户端视觉由玩家验收。
+0.2.2 已实现并通过 13 项服务端验收和 2 项 Mek 字节码契约检查。玩家说明以 [README.md](README.md) 为准，源码入口及维护要求见 [AGENTS.md](AGENTS.md)。客户端视觉由玩家验收。
 
 ## 架构取舍
 
@@ -21,7 +21,7 @@
 
 源码用于理解契约，实际编译和运行以发布 JAR 为准；上游开发版声明的 Valhelsia Core 1.1.5 不代替发布依赖。参见 [版本声明][versions]、[构建配置][build]、[运行依赖][metadata]。
 
-Forbidden & Arcanus 与 Valhelsia Core 均声明 All Rights Reserved。本项目使用分开的依赖及公开 API，不复制其实现、图稿、模型或 JAR。仅保留一个炽炉状态 accessor Mixin。
+Forbidden & Arcanus 与 Valhelsia Core 均声明 All Rights Reserved。本项目使用分开的依赖及公开 API，不复制其实现、图稿、模型或 JAR。对原炽炉只使用状态 accessor；另以局限于本锻造室的 Mek 升级槽适配和客户端详情区扩展接入资源插件。
 
 ## 内部锻造
 
@@ -41,9 +41,15 @@ Forbidden & Arcanus 与 Valhelsia Core 均声明 All Rights Reserved。本项目
 
 `canInput` 只筛选；`getInputValue` 与 `finishInput` 可能修改组件或使用随机数，只在实际 tick 对副本调用。储存容器按剩余空间抽取，空容器先留在资源槽，等输出空间可用后收取。参见 [储存输入][storage-input]、[附魔提取输入][enchantment-input]。
 
-辉光柱插件以 [原水晶柱][obelisk] 的基础 100 tick / 1 Aureal 为参照，每台最多 8 个；Mek 速度升级缩短间隔，按每点消耗 FE。合成对应柱体的两个神秘水晶方块、一个神秘磨制暗石和洁净粉末。插件通过原 Mek 升级窗口底部扩展槽安装。灵魂、血液、经验插件分别使用灵魂、满血试管、石化经验球作核心，加 4 原子合金、2 终极控制电路及 2 金锭。三种新插件与辉光柱统一为每 100 tick 每个产生 1 点资源，各最多 8 个，使用独立计时器和容量检查；生成只消耗 FE。
+四种插件每个每 100 tick 分别产生 100 Aureal、1 Soul、150 Blood、100 XP，各最多 8 个，Mek 速度升级缩短间隔。平衡参照发布版 18 个非升级仪式的非零成本中位数：1000 Aureal、8.5 Souls、1375 Blood、910 XP，使各资源的典型补充周期接近。
 
-锻造室基础每加工 tick 消耗 100 FE，每点插件生成资源消耗 100 FE；`forgeFE` 可配置。炽炉基础每次有效调度 200 FE，使用原有 `operationFE`。
+生成按有效插件次数收费，不按资源点数收费。有效数量同时受安装数、剩余容量和可用 FE 限制；最后一次不足整份产量仍计一次，满储量不收费。四种独立计时器和资源数量保持原保存方式。锻造室基础每加工 tick 和每个有效插件生成周期均耗 100 FE，受 Mek 升级和 `forgeFE` 配置影响；炽炉仍为 `operationFE` 控制的基础 200 FE／有效调度。
+
+`UpgradeSlotAccess` 仅为锻造室的原安装输入与卸载输出放宽这四种物品的校验。`ForgeUpgradeComponentMixin` 在原 `TileComponentUpgrade.tickServer` 中为资源插件复用 20 tick 安装进度，其他 Mek 升级仍走原逻辑。安装后的物品保留在原有 22–25 库存索引，但不再暴露第二组菜单槽；数量和当前生产速率通过菜单单独同步。卸载通过带菜单 ID 的标准按钮数据包处理，校验权限与距离，并先模拟原输出槽容量。
+
+客户端继承原 `GuiUpgradeWindow`，以原 `GuiInstallableScrollList` 显示两类升级，共用原槽位、进度和卸载位置。两个 client Mixin 仅桥接原列表选择和资源详情区，不扩展 Mek 的 `Upgrade` 枚举。`GuiResourceBar` 使用冶金灌注机同款 `GuiBar.BAR` 边框，显示服务器计算的每秒生成量；剩余空间不足一轮时显示受容量限制的速率。
+
+配方全部无序合成：两份对应材料、一个 `arcane_polished_darkstone` 和一个 `mundabitur_dust`。材料分别为奥术水晶块、本模组灵魂块、满血试管、本模组石化经验块。新增两个压缩块由九份原灵魂／石化经验球合成，单块可完整拆回九份。方块没有机器库存或能力。
 
 血液配方使用 NeoForge 数据组件材料，指定原血液试管的 `essence_storage` 为 3000/3000 BLOOD。允许额外的物品名称等组件；空管、缺血容器不能替代满管。原满管容量来自发布版 `BloodTestTubeItem.MAX_BLOOD`。
 
@@ -60,7 +66,7 @@ Forbidden & Arcanus 与 Valhelsia Core 均声明 All Rights Reserved。本项目
 
 未写命名空间的材料属于 `forbidden_arcanus`。表仅记录默认值，`ForgeUpgradeRecipe` 的 JSON 只引用原 `upgrade_tier_2` 至 `upgrade_tier_5` holder，实际材料随原仪式数据包改变。完整九份材料直接进入工作台，不添加工作台物品或中间核心。
 
-配方继承 `ShapedRecipe`，让 JEI 和配方书显示、填充完整 3×3；中心固定为原主材料，周围八格由原仪式材料匹配。四级插件图标引用 Mek 已有的四种升级器模型。
+配方继承 `ShapedRecipe`，让 JEI 和配方书显示、填充完整 3×3；中心固定为原主材料，周围八格由原仪式材料匹配。四种等级插件采用原创暗石符印、符文／水晶／金色核心／星芒图标，独立导出 16×16 透明材质。
 
 原 [UpgradeTierResult][upgrade-result] 提供目标等级。右键只接受当前等级为目标减一的机器，成功消耗一个插件，保持同一方块实体和库存、资源、设置及有效进度。安装不再次扣原升级仪式的四资源成本。
 
@@ -74,7 +80,7 @@ Forbidden & Arcanus 与 Valhelsia Core 均声明 All Rights Reserved。本项目
 
 ## 验收
 
-11 项 GameTest 分别验证：内部连续生产与四资源扣除；真实工作台完整九材料合成和原方块右键逐级升级；辉光供电、容量、速度与空容器；暂停、平台与工作签名、装备组件和拆装保存；锻造室真实六面出料；炽炉独立双槽；炽炉增强器、合金、火焰、燃料计时与残渣；炽炉真实六面出料；远程菜单 Shift 转移及距离校验；三插件实际工作台合成与满血组件；四插件独立生成、满储量停产、逐点耗能与追加槽位保存。
+13 项 GameTest 分别验证：内部连续生产与四资源扣除；真实工作台完整九材料合成和原方块右键逐级升级；辉光供电、容量、速度与空容器；暂停、平台与工作签名、装备组件和拆装保存；锻造室真实六面出料；炽炉独立双槽；炽炉增强器、合金、火焰、燃料计时与残渣；炽炉真实六面出料；远程菜单 Shift 转移及距离校验；三插件实际工作台合成与满血组件；四插件独立生成、满储量停产、按插件周期耗能与追加槽位保存；原 Mek 槽安装、单个与批量卸载、上限、组件及权限；两种压缩块的实际合成、掉落和无损拆回。另有 2 项字节码检查验证 common 升级字段及 client 窗口注入位置。
 
 测试均使用无界面服务器。相关测试通过后，文档和材质收尾只检查资源并重新打包。
 [versions]: https://github.com/stal111/Forbidden-Arcanus/blob/34f83feb76204fd773e1d2e1d69ecc5b2f2bb933/gradle.properties

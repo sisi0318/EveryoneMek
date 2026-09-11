@@ -54,10 +54,12 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         }
         ProgressType arrow = ProgressType.SMALL_RIGHT;
         addRenderableWidget(new GuiProgress(() -> Math.min(1, tile.progress / (double) tile.duration), arrow, this,
-              tile.kind().forge() ? (71 + 199 - arrow.getWidth()) / 2 : (89 + 143 - arrow.getWidth()) / 2, 110 - arrow.getHeight() / 2));
-        addRenderableWidget(new GuiInnerScreen(this, 18, 126, 220, 18,
+              tile.kind().forge() ? (71 + 199 - arrow.getWidth()) / 2 : (89 + 143 - arrow.getWidth()) / 2,
+              (tile.kind().forge() ? 88 : 110) - arrow.getHeight() / 2));
+        if (tile.kind().forge()) for (int i = 0; i < 4; i++) addRenderableWidget(new GuiResourceBar(this, tile, i, 18 + i * 55, 98));
+        addRenderableWidget(new GuiInnerScreen(this, 18, tile.kind().forge() ? 154 : 126, 220, 18,
               () -> List.of(text(tile.kind().forge() && tile.status == Controller.STRUCTURE ? "platform_missing" : "status." + tile.status))));
-        addRenderableWidget(new GuiInnerScreen(this, 18, 148, 220, 54, this::nativeDetails));
+        addRenderableWidget(new GuiInnerScreen(this, 18, tile.kind().forge() ? 176 : 148, 220, tile.kind().forge() ? 26 : 54, this::nativeDetails));
         if (!tile.kind().forge()) button(18, 207, 60, () -> text("bind"), 0);
         button(tile.kind().forge() ? 18 : 82, 207, tile.kind().forge() ? 106 : 50, () -> text(tile.enabled ? "pause" : "resume"), 1);
         addRenderableWidget(new MekanismButton(this, tile.kind().forge() ? 132 : 136, 207, tile.kind().forge() ? 106 : 58, 16, text("recipes"),
@@ -72,8 +74,6 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         }
         if (tile.kind().forge()) {
             lines.add(text("tier_progress", tile.nativeTier, tile.progress, tile.duration));
-            for (int i = 0; i < 4; i += 2) lines.add(text("resource_pair", text("resource." + i), value(i), tile.capacities[i],
-                  text("resource." + (i + 1)), value(i + 1), tile.capacities[i + 1]));
         } else {
             lines.add(text("fire_fuel", text("fire." + Math.max(0, tile.observed[7])), Math.max(0, tile.observed[1]) / 20, Math.max(0, tile.observed[0]) / 20));
             lines.add(text("clibano_progress", Math.max(0, tile.observed[3]), Math.max(0, tile.observed[5]), Math.max(0, tile.observed[4]), Math.max(0, tile.observed[6])));

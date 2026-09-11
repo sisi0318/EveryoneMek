@@ -2,7 +2,7 @@
 
 为 Forbidden & Arcanus 提供**赫菲斯托斯锻造室**与**炽炉控制器**，支持 Mekanism 的供电、升级、六面物流、红石与安全设置。
 
-当前版本 **0.2.1**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
+当前版本 **0.2.2**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
 
 ![机器材质预览](art/block-preview.png)
 
@@ -27,18 +27,20 @@
 
 ### 四种资源插件
 
-打开 Mek 升级窗口，在底部对应槽中安装。四种插件可以同时工作，**每种最多 8 个**；基础每个插件每 **5 秒产生 1 点对应资源**。只在合成时消耗材料，安装后持续消耗 FE，不再消耗经验球、试管或灵魂。速度升级缩短生成间隔；满储量、断电、暂停或平台不完整时停止生成。
+打开 Mek 升级窗口，将插件放入原来的安装槽。安装后与速度、能量升级显示在同一列表；选中后点击“卸载”取回一个，Shift 点击取回该种全部插件，物品进入原卸载输出槽。每种最多 **8 个**，超过上限的插件留在安装槽；已有插件自动保留。
 
-| 插件 | 产生资源 | 合成核心 |
-| --- | --- | --- |
-| 辉光柱插件 | 辉光 | 2 神秘水晶方块 + 1 神秘磨制暗石 + 1 洁净粉末 |
-| 灵魂插件 | 灵魂 | 1 个[灵魂](https://www.mcmod.cn/item/216208.html) |
-| 血液插件 | 血液 | 1 支装满 **3000 点血液**的[试管](https://www.mcmod.cn/item/555672.html) |
-| 经验插件 | 经验点 | 1 个[石化经验球](https://www.mcmod.cn/item/555645.html) |
+四种插件同时工作，基础每 **5 秒**生成一次，速度升级缩短间隔。主界面用四条竖直资源条显示储量，旁边显示 **+x/秒**；悬停查看准确储量、容量和产速。产速由服务器按当前安装数量、速度、供电和剩余空间计算，满储量、断电、暂停或平台不完整时显示零。
 
-后三种插件在核心之外，各需要 **4 个原子合金、2 个终极控制电路、2 个金锭**，完整摆放见 JEI。血液配方只接受满管，空管和半管不能合成；满管带自定义名称也可以使用。
+| 插件 | 单个每 5 秒产量 | 单个基础产速 | 专用材料 |
+| --- | --- | --- | --- |
+| 辉光柱插件 | 100 辉光 | 20/秒 | 2 神秘水晶方块 |
+| 灵魂插件 | 1 灵魂 | 0.2/秒 | 2 灵魂块 |
+| 血液插件 | 150 血液 | 30/秒 | 2 支满血试管，每支 3000 点 |
+| 经验插件 | 100 经验点 | 20/秒 | 2 石化经验块 |
 
-[耀金瓶](https://www.mcmod.cn/item/555667.html)仍可放入辉光资源槽直接补给；原有辉光柱插件继续使用。
+四种插件均为无序合成：表中的两份专用材料，加 **1 神秘磨制暗石、1 洁净粉末**，完整配方可在 JEI 查看。材料只在合成时消耗，安装后只耗 FE。血液配方拒绝空管和半管，满管可以带自定义名称。
+
+**9 个灵魂 ⇄ 1 灵魂块，9 个石化经验球 ⇄ 1 石化经验块。** 两种压缩块可以放置，也可在工作台完整拆回材料。[耀金瓶](https://www.mcmod.cn/item/555667.html)仍可放入辉光资源槽直接补给。
 
 ### 等级插件
 
@@ -59,7 +61,7 @@
 
 加工检查原材料、等级、增强器、四项资源和输出空间。四种资源不足时分别显示原因。增强器的资源消耗修正生效，检查和实际扣除使用同一组成本。
 
-基础加工时长取自原仪式，Mek 速度升级可以加快加工。基础消耗 **100 FE/tick**；每种资源插件每生成一点也消耗基础 **100 FE**，升级后的能耗遵循 Mek 规则，服务端配置项为 `forgeFE`。
+基础加工时长取自原仪式，Mek 速度升级可以加快加工。基础消耗 **100 FE/tick**；每个参与当次生成的资源插件消耗基础 **100 FE**（不按资源点数收费），升级后的能耗遵循 Mek 规则，服务端配置项为 `forgeFE`。
 
 材料和资源在每批完成时统一扣除。暂停、红石禁止、断电、输出堵塞或平台不完整时停止推进；补齐条件后继续。更换配方、参与加工的物品数据、增强器或速度设置会重新计时。工作灯对应实际加工。
 
@@ -87,18 +89,18 @@
 
 ## 安装与验证
 
-将 `ForbiddenMekanism-0.2.1.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0 更新可以保留现有锻造室和数据，新插件槽追加在原辉光槽后。** 更早的 0.1.0 锻台实现仍不提供迁移；炽炉控制器继续沿用原有机制。
+将 `ForbiddenMekanism-0.2.2.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0／0.2.1 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移；炽炉控制器继续沿用原有机制。
 
 普通锻造和炽炉加工沿用原 JEI 分类；等级插件放在工作台合成分类。两种机器的合成可在 JEI 查看。
 
-11 项无界面服务端 GameTest 已通过，覆盖内部连续加工与成本、实际工作台九格合成与右键升级、四资源插件耗电生成、满管合成、追加槽位保存及容器回收、暂停与平台检查、装备数据与拆装保存、锻造室与炽炉实际箱子输出，以及炽炉双槽／合金／火焰／残渣和菜单权限。客户端界面视觉及整合包体验由玩家在游戏内验收。
+13 项无界面服务端 GameTest 与 2 项 Mek 字节码契约检查已通过，覆盖内部连续加工与成本、实际工作台九格合成与右键升级、四资源插件耗电生成、满管合成、两种压缩块的合成与拆回、原升级槽安装卸载与距离校验、追加槽位保存及容器回收、暂停与平台检查、装备数据与拆装保存、锻造室与炽炉实际箱子输出，以及炽炉双槽／合金／火焰／残渣和菜单权限。客户端界面视觉及整合包体验由玩家在游戏内验收。
 
 开发入口见 [AGENTS.md](AGENTS.md)，实现取舍和上游契约见 [DESIGN.md](DESIGN.md)，图稿与提示词见 [art/README.md](art/README.md)。
 
 ## English quick start
 
-Place the Hephaestus Forging Chamber at the center of the original 9×9 forge floor. Supply FE, put materials in its nine internal input slots, install the required enhancers and supply Aureal, souls, blood and experience. The chamber owns all inventory and essence storage. Craft four tier installers from the native upgrade rituals' complete nine materials and use them sequentially on the chamber. Install up to eight modules of each resource type in the Mek upgrade window. Aureal, Soul, Blood and Experience Modules each generate one point per five seconds before upgrades, using FE without further consumable materials. The three new modules use a soul, a full 3000-point blood tube or an xpetrified orb as their crafting core, plus four atomic alloys, two ultimate control circuits and two gold ingots. Speed upgrades accelerate forging and all resource generation.
+Place the Hephaestus Forging Chamber at the center of the original 9×9 forge floor. Supply FE, put materials in its nine internal input slots, install the required enhancers and supply Aureal, souls, blood and experience. The chamber owns all inventory and essence storage. Craft four tier installers from the native upgrade rituals' complete nine materials and use them sequentially on the chamber. Install up to eight modules of each resource type in the Mek upgrade window. The shared Mek installation slot, installed-upgrade list and uninstall output handle all four resource modules. Aureal, Soul, Blood and Experience Modules produce 100, 1, 150 and 100 points per five seconds respectively, using FE without further consumable materials. Four vertical bars show storage and current production per second. All four shapeless recipes use two resource materials, one arcane polished darkstone and one mundabitur dust. Resource materials are arcane crystal blocks, soul blocks, full 3000-point blood tubes and petrified experience blocks respectively. Nine souls or xpetrified orbs compress into a placeable block and unpack without loss. Speed upgrades accelerate forging and all resource generation.
 
 The Clibano Controller still binds an existing complete Clibano within eight blocks. Sneak-use a Mekanism Configurator on the furnace and then the controller. Native fuel, soul flames, enhancers, residues and experience retain their original behavior.
 
-Version 0.2.1 preserves 0.2.0 machines and adds three module slots after the existing Aureal slot. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Eleven headless server tests pass; client visual acceptance remains in-game.
+Version 0.2.2 preserves 0.2.0 and 0.2.1 machines, inventory and installed modules. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Thirteen headless server tests and two Mek bytecode contract tests pass; client visual acceptance remains in-game.

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "forbiddenmekanism:soul_block"
+    }
+  ],
+  "result": {
+    "id": "forbidden_arcanus:soul",
+    "count": 9
+  }
+}

@@ -1,25 +1,20 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "minecraft:crafting_shapeless",
   "category": "misc",
-  "pattern": [
-    "ACA",
-    "GKG",
-    "ACA"
-  ],
-  "key": {
-    "A": {
-      "item": "mekanism:alloy_atomic"
+  "ingredients": [
+    {
+      "item": "forbiddenmekanism:xpetrified_block"
     },
-    "C": {
-      "item": "mekanism:ultimate_control_circuit"
+    {
+      "item": "forbiddenmekanism:xpetrified_block"
     },
-    "G": {
-      "item": "minecraft:gold_ingot"
+    {
+      "item": "forbidden_arcanus:arcane_polished_darkstone"
     },
-    "K": {
-      "item": "forbidden_arcanus:xpetrified_orb"
+    {
+      "item": "forbidden_arcanus:mundabitur_dust"
     }
-  },
+  ],
   "result": {
     "id": "forbiddenmekanism:experience_module",
     "count": 1

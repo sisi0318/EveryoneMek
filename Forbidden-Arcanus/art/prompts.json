@@ -164,6 +164,62 @@
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/soul_module.png"
       }
+    },
+    {
+      "id": "forge_tier_installers",
+      "source": "Forbidden-Arcanus/art/source/forge_tier_installers.png",
+      "generated_file": "exec-613e8d54-8201-4dc0-87b8-3d9b14353c64.png",
+      "references": [],
+      "reference_role": "Original generation informed by visual inspection of the Forbidden & Arcanus 2.6.1 rune, arcane crystal, deorum ingot and dark nether star. Upstream assets were inspected locally only and are not distributed.",
+      "prompt": "Create an ORIGINAL Minecraft pixel-art item spritesheet for four tier upgrade talismans for a Forbidden and Arcanus themed forging chamber. GENUINE TRANSPARENT PNG ALPHA background, no painted checkerboard, no scene. Exact equal 2x2 grid, one separate icon centered within each quadrant, equal size, generous transparent separation, no labels. Each icon has the simplicity of a real 16x16 inventory sprite, chunky square solid pixels. All four are small thick dark purple-black DARKSTONE square seals with clipped stepped corners, a recessed dark center and a few muted bronze mounting pixels. Their style evokes arcane crystals, pale runestones and dark magical relics of Minecraft Forbidden and Arcanus. Top-left tier 2: a bold pale lavender WHITE RUNESTONE central triangular glyph, angular and solid. Top-right tier 3: a large pointed icy PALE BLUE CRYSTAL inset with a deep indigo base. Bottom-left tier 4: a strong ochre GOLD DIAMOND core with warm amber bevel pixels. Bottom-right tier 5: a large four-point dark mystical STAR, its central cross icy cyan fading by two discrete pixel colors into lavender arms, deep purple border. Each distinct core should fill most of its seal. Use simple readable silhouettes, at most three shades per material, hard pixel edges, flat front view. The darkstone rim is irregular chiseled stone, never industrial silver metal or a circuit board. No upward arrows, digits, letters, sparkles outside the seal, fine ornaments, gradients, bloom, perspective or texture noise. Background around and between every item must be fully alpha transparent. Four equal-size separated sprites in 2x2.",
+      "export": {
+        "grid": "2x2",
+        "order": [
+          "forge_tier_2_installer",
+          "forge_tier_3_installer",
+          "forge_tier_4_installer",
+          "forge_tier_5_installer"
+        ],
+        "crop": "Floor half-width and half-height; then trim alpha",
+        "inner_size": [
+          14,
+          14
+        ],
+        "size": [
+          16,
+          16
+        ],
+        "padding": 1,
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/item/"
+      }
+    },
+    {
+      "id": "compressed_materials",
+      "source": "Forbidden-Arcanus/art/source/compressed_materials.png",
+      "generated_file": "exec-d6be9660-e402-4d1f-9155-ab7927a5a597.png",
+      "references": [],
+      "reference_role": "Original mineral storage block faces; soul and petrified experience color themes.",
+      "prompt": "Generate ORIGINAL Minecraft pixel-art BLOCK TEXTURES for two compressed magical materials themed after Forbidden and Arcanus. Flat opaque texture atlas with exact 2x2 equal grid, no margins, no labels, no perspective. Each quadrant must look like only 16x16 large solid-color pixel cells, coarse bold shapes, NOT detailed illustration. Top-left and top-right are two identical full square faces for a SOUL BLOCK: densely packed soft pale cyan and muted turquoise spectral matter, deep teal coarse creases, a few lighter broad wisps, firmly opaque right to all four edges; subtle three interconnected ghost-like curls, no eyes, no container frame, no runes. Bottom-left and bottom-right are two identical full square faces for a PETRIFIED EXPERIENCE BLOCK: compressed muted olive-gray and sage-green round stone nodules, broad polygonal grain with olive shadows and pale sage highlights, mineral rather than bright glowing slime. Both materials resemble vanilla mineral storage blocks, eight colors maximum per material, simple readable 16-pixel-scale cells. Every full block face must be completely opaque. No outer frame, empty background, gold, metal casing, fine noise, letters, gradients, lighting glow or 3D cubes.",
+      "export": {
+        "grid": "2x2",
+        "faces": {
+          "soul_block": [
+            0,
+            0
+          ],
+          "xpetrified_block": [
+            0,
+            1
+          ]
+        },
+        "size": [
+          16,
+          16
+        ],
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/"
+      }
     }
   ]
 }

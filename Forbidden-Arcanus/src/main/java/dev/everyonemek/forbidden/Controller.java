@@ -3,6 +3,7 @@ package dev.everyonemek.forbidden;
 import com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoMainBlockEntity;
 import com.stal111.forbidden_arcanus.common.item.enhancer.EnhancerHelper;
 import dev.everyonemek.forbidden.mixin.ClibanoAccess;
+import dev.everyonemek.forbidden.mixin.UpgradeSlotAccess;
 import java.util.*;
 import mekanism.api.*;
 import mekanism.api.inventory.IInventorySlot;
@@ -11,6 +12,7 @@ import mekanism.common.capabilities.holder.energy.*;
 import mekanism.common.capabilities.holder.slot.*;
 import mekanism.common.inventory.container.MekanismContainer;
 import mekanism.common.inventory.container.sync.SyncableInt;
+import mekanism.common.inventory.container.sync.SyncableDouble;
 import mekanism.common.inventory.slot.*;
 import mekanism.common.lib.transmitter.TransmissionType;
 import mekanism.common.tile.component.TileComponentEjector;
@@ -45,6 +47,8 @@ public final class Controller extends TileEntityConfigurableMachine {
     public final InternalForge forge;
     public int status = NO_TARGET, progress, duration = 1, nativeTier;
     public final int[] observed = new int[10], capacities = new int[4];
+    public final double[] resourceRates = new double[4];
+    private final int[] clientModuleCounts = new int[4];
     public String recipeLock = "", selectedRecipe = "";
     public boolean enabled = true;
     private int cooldown;
@@ -52,6 +56,17 @@ public final class Controller extends TileEntityConfigurableMachine {
     public Controller(BlockPos pos, BlockState state) {
         super(Content.MACHINES.get(((MachineBlock) state.getBlock()).kind), pos, state);
         forge = kind().forge() ? new InternalForge(this) : null;
+        if (forge != null) {
+            var input = (UpgradeSlotAccess) getComponent().getUpgradeSlot();
+            var valid = input.forbiddenmekanism$validator();
+            var insert = input.forbiddenmekanism$canInsert();
+            input.forbiddenmekanism$validator(stack -> valid.test(stack) || Content.resourceModuleIndex(stack) >= 0);
+            input.forbiddenmekanism$canInsert((stack, automation) -> insert.test(stack, automation)
+                  || automation != AutomationType.EXTERNAL && Content.resourceModuleIndex(stack) >= 0);
+            var output = (UpgradeSlotAccess) getComponent().getUpgradeOutputSlot();
+            var outputValid = output.forbiddenmekanism$validator();
+            output.forbiddenmekanism$validator(stack -> outputValid.test(stack) || Content.resourceModuleIndex(stack) >= 0);
+        }
         var items = configComponent.setupItemIOConfig(new ArrayList<IInventorySlot>(stock),
               new ArrayList<IInventorySlot>(outputs), energySlot, false);
         items.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false,
@@ -93,7 +108,7 @@ public final class Controller extends TileEntityConfigurableMachine {
                   kind().forge() ? 112 + i * 18 : 18 + i * 18, kind().forge() ? 66 : 102);
             supplies.add(slot); builder.addSlot(slot);
         }
-        builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 218, 84));
+        builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 218, kind().forge() ? 66 : 84));
         if (kind().forge()) {
             enhancers = new ArrayList<>();
             for (int i = 0; i < 4; i++) {
@@ -115,8 +130,21 @@ public final class Controller extends TileEntityConfigurableMachine {
     public int glowModules() { return resourceModuleCount(0); }
     public int resourceModuleCount(int resource) {
         if (resourceModules == null || resource < 0 || resource >= resourceModules.size()) return 0;
+        if (level != null && level.isClientSide) return clientModuleCounts[resource];
         var slot = resourceModules.get(resource);
         return slot.getStack().is(Content.resourceModule(resource)) ? Math.min(8, slot.getCount()) : 0;
+    }
+    public boolean uninstallResourceModule(int resource, boolean all) {
+        if (!kind().forge() || resource < 0 || resource >= 4) return false;
+        var installed = resourceModules.get(resource);
+        var output = getComponent().getUpgradeOutputSlot();
+        ItemStack offered = installed.extractItem(all ? 8 : 1, Action.SIMULATE, AutomationType.INTERNAL);
+        if (offered.isEmpty()) return false;
+        int accepted = offered.getCount() - output.insertItem(offered, Action.SIMULATE, AutomationType.INTERNAL).getCount();
+        if (accepted == 0) return false;
+        output.insertItem(installed.extractItem(accepted, Action.EXECUTE, AutomationType.INTERNAL), Action.EXECUTE, AutomationType.INTERNAL);
+        markForSave();
+        return true;
     }
     public MachineEnergyContainer<Controller> energy() { return energy; }
     @Override protected boolean onUpdateServer() {
@@ -224,6 +252,11 @@ public final class Controller extends TileEntityConfigurableMachine {
         container.track(SyncableInt.create(() -> enabled ? 1 : 0, v -> enabled = v != 0));
         for (int i = 0; i < observed.length; i++) { final int n = i; container.track(SyncableInt.create(() -> observed[n], v -> observed[n] = v)); }
         for (int i = 0; i < capacities.length; i++) { final int n = i; container.track(SyncableInt.create(() -> capacities[n], v -> capacities[n] = v)); }
+        if (kind().forge()) for (int i = 0; i < 4; i++) {
+            final int n = i;
+            container.track(SyncableInt.create(() -> resourceModuleCount(n), v -> clientModuleCounts[n] = Math.clamp(v, 0, 8)));
+            container.track(SyncableDouble.create(() -> resourceRates[n], v -> resourceRates[n] = Math.max(0, v)));
+        }
         container.track(new RecipeSelectionSync(() -> List.of(recipeLock, selectedRecipe, binding.label()), values -> {
             if (values.size() == 3) { recipeLock = values.get(0); selectedRecipe = values.get(1); binding.clientLabel = values.get(2); }
         }));

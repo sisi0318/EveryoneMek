@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "forbiddenmekanism:xpetrified_block"
+    }
+  ],
+  "result": {
+    "id": "forbidden_arcanus:xpetrified_orb",
+    "count": 9
+  }
+}

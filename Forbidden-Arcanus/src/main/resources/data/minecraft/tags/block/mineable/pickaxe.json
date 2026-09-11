@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "forbiddenmekanism:forge_controller",
-    "forbiddenmekanism:clibano_controller"
+    "forbiddenmekanism:clibano_controller",
+    "forbiddenmekanism:soul_block",
+    "forbiddenmekanism:xpetrified_block"
   ]
 }
