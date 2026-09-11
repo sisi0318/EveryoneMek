@@ -17,6 +17,7 @@ public final class MachineMenu extends MekanismTileContainer<Controller> {
         if (tile.kind().forge()) return;
         var handler = NativeInventory.menu(tile);
         for (int i = 0; i < handler.getSlots(); i++) {
+            if (i == 2) continue;
             final int index = i;
             int[] coordinates = nativeCoordinates(tile.kind(), i);
             addSlot(new SlotItemHandler(handler, i, coordinates[0], coordinates[1]) {

@@ -2,11 +2,11 @@
 
 为 Forbidden & Arcanus 提供**赫菲斯托斯锻造室**与**炽炉控制器**，支持 Mekanism 的供电、升级、六面物流、红石与安全设置。
 
-当前版本 **0.2.4**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
+当前版本 **0.2.5**。Minecraft **1.21.1**、Java **21**、NeoForge **21.1.241**、Mekanism **10.7.19.85**、Forbidden & Arcanus **2.6.1**、Valhelsia Core **1.1.4**。JEI 可选。
 
 ![机器材质预览](art/block-preview.png)
 
-机器外观采用禁忌与奥秘的暗石风格：锻造室为深红织纹、耀金包边和淡蓝符印，炽炉控制器为灰橄榄色护边与橙／青双炉口，端口为方形管线接口。锻造室此次只更换外部贴图；炽炉新增嵌入式控制器与端口，继续使用 Mek 界面。
+上图为独立方块外观。炽炉控制器和端口嵌入后采用对应的原炉壳纹理，边缘纹路与周围方块连续，中央小灯用于识别；正面随普通火、灵魂火或附魔火切换。锻造室保留暗石祭坛外观，两台机器继续使用 Mek 界面。
 
 ## 赫菲斯托斯锻造室
 
@@ -71,43 +71,45 @@
 
 ## 炽炉控制器
 
-手持控制器，右键完整原 **3×3×3 炽炉**的**左侧、右侧或背面中央一格**，即可嵌入并自动连接。每台炉子只允许一个控制器，正面炉芯保留。安装消耗一个控制器并返还原来的炉砖，保留原炉库存和加工状态。
+手持控制器，右键**炽炉核心**或已成型 **3×3×3 炽炉的正面中央**，即可直接替换核心。安装消耗一个控制器并返还原核心，保留已成型炉子的库存和加工状态。每台炉子只允许一个控制器，旧侧面、背面安装方式继续可用。
 
-也可以在搭建时，用控制器替换上述位置的磨制暗石砖，再用原来的洁净粉末右键正面炉芯激活。控制器正面自动朝外，无需配置器绑定。
+也可以搭建时直接把控制器放在原核心位置，补齐炉壳后，**用洁净粉末右键控制器正面激活**。控制器自动朝外并连接整座炉子，无需另放原核心或使用配置器绑定。修复炉壳后也按此方法重新激活。
 
 ### 炽炉端口
 
 手持**炽炉端口**，右键炉体**顶部、底部、左侧、右侧或背面中央一格**即可替换；也可先把端口放入原始炉壳再激活。控制器已经占用的位置不能再放端口。两块磨制暗石砖、两锭钢和一个基础控制电路合成 **2 个端口**，配方见 JEI。
 
-管道和电缆连接端口朝向炉外的一面。端口的物品模式由控制器六面配置决定：将对应面设为“输入”“额外”“输入 2”或“输出”，分别处理原料、燃料、灵魂或成品。开启自动弹出后，输出端口可向箱子或 Mek 物流管道出料；FE 遵循对应面的能量设置。配置窗口用端口图标标出可接线的结构面，端口灯亮表示已连接完整炉体。
+管道和电缆连接端口朝向炉外的一面。端口的物品模式由控制器六面配置决定：“输入”处理原料，“额外”和“输入 2”分别连接两个灵魂补给槽，“输出”处理成品。开启自动弹出后，输出端口可向箱子或 Mek 物流管道出料；FE 遵循对应面的能量设置。配置窗口用端口图标标出可接线的结构面，端口灯亮表示已连接完整炉体。
 
-方向以**控制器正面**为准。例如控制器嵌在原炉右侧时，控制器“前面”就是该炉子的右侧；根据实际端口位置调整输出面即可。
+方向以**控制器正面**为准。控制器安装在核心位置时，六面配置与整座炉子的前后左右一致；两个侧面、背面、顶部和底部均可安装端口。
 
-左侧九格存放原料；中部七个槽直接操作原炽炉的增强器、灵魂、燃料、两个原料槽和两个结果槽。Shift 点击原机槽位取回玩家背包。控制器补给、收取，原炽炉负责实际燃烧和加工。
+左侧九格存放原料，下方两格补充灵魂。中部六个槽直接操作原炽炉的增强器、灵魂、两个原料槽和两个结果槽。Shift 点击原机槽位取回玩家背包。
 
 | 六面配置 | 默认面 | 用途 |
 | --- | --- | --- |
 | 输入 | 前、左 | 配方原料 |
-| 额外 | 后 | 燃料补给 |
+| 额外 | 后 | 灵魂补给 |
 | 输入 2 | 上 | 灵魂补给 |
 | 输出 | 右 | 成品与残渣合成产物 |
 | 能量 | 下 | 能量物品 |
 
-保留双槽独立加工、双材料合金、增强器、普通火／灵魂火／附魔火、残渣和经验。**FE 用于控制器调度，炽炉仍需要燃料和灵魂。** 基础每次有效调度消耗 200 FE，配置项为 `operationFE`。速度升级缩短调度间隔，原炉的加工、燃料与灵魂计时保持原规则。
+**接入控制器后使用 FE 加热，不再烧煤或其他燃料。** 保留双槽独立加工、双材料合金、增强器、残渣和经验；需要灵魂火或附魔火的配方仍需对应灵魂。
 
-界面显示两槽进度、火焰、燃料／灵魂剩余秒数及残渣总量。“经验”按钮领取原炉记录的加工经验。暂停或控制器断电时，已启动的原炉继续工作。结构损坏后停止远程访问，修复后恢复；查询不强制加载区块。
+基础加热消耗 **50 FE／工作 tick**，只在有可加工配方、输出空间足够且实际推进时收费，配置项为 `clibanoHeatFE`。能量升级提高加热效率。另按每次有效供料或收料消耗基础 **200 FE**，配置项为 `operationFE`；速度升级缩短调度间隔，配方时长仍遵循原炉规则。
 
-拆除嵌入的控制器、任一端口或原炉壳都会按原炽炉规则拆解炉体，原炉库存和经验正常掉落。控制器自己的库存、储能、升级和设置随控制器物品保存；其他控制器和端口方块留在原位。补齐原始炉壳并重新用洁净粉末激活后，留下的控制器与端口自动恢复连接。结构不完整时，端口停止传输。
+界面显示两槽进度、火焰、电热状态、灵魂剩余秒数和残渣总量。“经验”按钮领取原炉记录的加工经验。**暂停、断电或输出堵塞时停止加热并保留进度**；灵魂剩余时长仍按原规则计时。结构损坏后停止访问，修复后恢复；查询不强制加载区块。没有控制器的原炽炉继续使用原燃料规则。
 
-更新前已放在炉外的控制器继续保留原绑定方式与数据。可拆下后手持右键安装到炉体中；继续使用旧方式时，绑定范围仍为 8 格。
+拆除嵌入的控制器、任一端口或原炉壳都会按原炽炉规则拆解炉体，原炉库存和经验正常掉落。控制器自己的库存、储能、升级和设置随控制器物品保存；未拆下的控制器和端口留在原位。补齐原始炉壳并重新用洁净粉末激活后，留下的控制器与端口自动恢复连接。结构不完整时，端口停止传输。
+
+更新前已放在炉外的控制器继续保留 8 格绑定方式与数据，同样使用电热。旧侧面控制器也可继续工作；若要移到正面，可拆下、补回侧面炉砖，再安装到核心位置并重新激活。旧燃料槽改为第二个灵魂补给槽，遗留在控制器或原炉中的燃料会自动退回输出；输出满时留在原处，不会删除。
 
 ## 安装与验证
 
-将 `ForbiddenMekanism-0.2.4.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0–0.2.3 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移。
+将 `ForbiddenMekanism-0.2.5.jar` 与依赖放入客户端、服务端的 `mods` 文件夹，替换旧 JAR。**从 0.2.0–0.2.4 更新保留现有机器、插件、库存和数据。** 客户端与服务端同时替换新版。更早的 0.1.0 锻台实现仍不提供迁移。
 
 普通锻造和炽炉加工沿用原 JEI 分类；等级插件放在工作台合成分类。两种机器的合成可在 JEI 查看。
 
-15 项无界面服务端 GameTest 与 4 项字节码契约检查覆盖现有锻造室与炽炉加工、库存保存、真实合成与资源插件，以及四朝向嵌入组装、实际右键替换、端口供电与物品传输、Mek 物流管道出料、损坏停用与修复重连。客户端界面视觉及整合包体验由玩家在游戏内验收。
+16 项无界面服务端 GameTest 与 5 项字节码契约检查覆盖现有机器、资源和库存机制，以及四朝向核心替换和真实右键激活、无燃料电热、耗能与断电保进度、旧燃料回收、端口供电与 Mek 管道出料、损坏修复。嵌入模型核对原炉壳引用和中央标记范围；客户端界面视觉及整合包体验由玩家在游戏内验收。
 
 开发入口见 [AGENTS.md](AGENTS.md)，实现取舍和上游契约见 [DESIGN.md](DESIGN.md)，图稿与提示词见 [art/README.md](art/README.md)。
 
@@ -115,6 +117,8 @@
 
 Place the Hephaestus Forging Chamber at the center of the original 9×9 forge floor. Supply FE, put materials in its nine internal input slots, install the required enhancers and supply Aureal, souls, blood and experience. The chamber owns all inventory and essence storage. Craft four tier installers from the native upgrade rituals' complete nine materials and use them sequentially on the chamber. Install up to eight modules of each resource type in the Mek upgrade window. The supported-upgrades area displays all four resource module icons before installation, with item-name and usage tooltips. The shared Mek installation slot, installed-upgrade list and uninstall output handle all four resource modules. Aureal, Soul, Blood and Experience Modules produce 100, 1, 150 and 100 points per five seconds respectively, using FE without further consumable materials. Four vertical bars show storage and current production per second. All four shapeless recipes use two resource materials, one arcane polished darkstone and one mundabitur dust. Resource materials are arcane crystal blocks, soul blocks, full 3000-point blood tubes and petrified experience blocks respectively. Nine souls or xpetrified orbs compress into a placeable block and unpack without loss. Speed upgrades accelerate forging and all resource generation.
 
-Use a Clibano Controller on the center block of the left, right or rear wall of a complete 3×3×3 Clibano. It replaces the brick and connects automatically while preserving the native furnace entity and inventory. Keep the front core. Clibano Ports replace top, bottom, side or rear center blocks and follow the corresponding controller side settings for materials, fuel, souls, outputs and FE. Output ports support automatic ejection into chests and Mek logistical transporters. You can also substitute these parts in the raw structure before activating the front core with Mundabitur Dust. Breaking a structural part dismantles the native furnace and drops its contents and experience; surviving controllers and ports reconnect after rebuilding and activation. The controller's own items, energy, upgrades and settings persist. Existing remote controllers retain their eight-block binding mode and can be moved into a wall.
+Use a Clibano Controller directly on the Clibano Core or the front center of an assembled 3×3×3 furnace. You may also place it in the core position while building, then use Mundabitur Dust on the controller's front to activate the complete shell. Installation preserves the native entity and inventory and returns the original core. Existing side, rear and eight-block remote controllers remain compatible. Ports fit the remaining five face centers and follow controller settings for materials, souls, outputs and FE, including automatic output into Mek logistical transporters. Embedded parts use the matching native shell models with small central indicators, preserving the surrounding texture seams and resource-pack changes.
 
-Version 0.2.4 adds embedded Clibano control and pipe ports, with original darkstone artwork for both machines and the port. The forging chamber's mechanics are unchanged. Machines, inventory and installed modules from 0.2.0–0.2.3 are preserved. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Fifteen headless server tests and four bytecode contract tests cover the implementation; client visual acceptance remains in-game.
+Controlled Clibanos use FE for heat and need no coal or other fuel. Soul and enchanted flames still require the appropriate souls and enhancers. Heating costs 50 FE per productive native tick before energy upgrades; logistics costs 200 FE per effective operation. Pausing, losing power or blocking outputs stops heating and preserves progress; the native soul timer continues. Speed upgrades accelerate logistics, while native recipe durations remain unchanged. Old fuel is returned to controller outputs without deletion. Breaking a structural part dismantles the native furnace and drops its contents and experience; surviving parts reconnect after rebuilding and dust activation. The controller's inventory, energy, upgrades and settings persist.
+
+Version 0.2.5 adds direct core replacement, native shell matching and electric heat. Machines, inventory and installed modules from 0.2.0–0.2.4 are preserved. Update both client and server. The earlier 0.1.0 remote forge remains unsupported without legacy migration. Sixteen headless server tests and five bytecode contract tests cover the implementation; client visual acceptance remains in-game.

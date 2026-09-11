@@ -14,8 +14,7 @@ import net.valhelsia.valhelsia_core.api.common.block.entity.neoforge.ValhelsiaCo
 public final class NativeInventory {
     public static boolean acceptsSupply(Level level, MachineKind kind, int slot, ItemStack stack) {
         if (stack.isEmpty()) return false;
-        if (!kind.forge()) return slot == 0 ? stack.getBurnTime(ClibanoMainBlockEntity.RECIPE_TYPE) > 0
-              : ClibanoFireType.fromItem(stack) != ClibanoFireType.FIRE;
+        if (!kind.forge()) return ClibanoFireType.fromItem(stack) != ClibanoFireType.FIRE;
         if (level == null) return true;
         return level.registryAccess().registryOrThrow(FARegistries.FORGE_INPUT).stream()
               .anyMatch(input -> input.canInput(EssenceType.values()[slot], stack));
@@ -23,14 +22,14 @@ public final class NativeInventory {
     public static boolean supply(Controller controller, ValhelsiaContainerBlockEntity<?> target) {
         boolean changed = false;
         for (int i = 0; i < controller.supplies.size(); i++) {
-            int slot = i == 0 ? 2 : 1;
+            int slot = 1;
             ItemStack present = target.getStack(slot);
             if (!present.isEmpty() && !acceptsSupply(controller.getLevel(), controller.kind(), i, present)) {
                 if (!controller.storeOutput(present)) continue;
                 target.setStack(slot, ItemStack.EMPTY); changed = true;
             }
             var source = controller.supplies.get(i);
-            if (source.isEmpty()) continue;
+            if (source.isEmpty() || !acceptsSupply(controller.getLevel(), controller.kind(), i, source.getStack())) continue;
             ItemStack offered = source.getStack().copyWithCount(Math.min(16, source.getCount()));
             ItemStack remainder = target.getItemStackHandler().insertItem(slot, offered, false);
             int moved = offered.getCount() - remainder.getCount();
@@ -38,10 +37,24 @@ public final class NativeInventory {
         }
         return changed;
     }
+    public static void recoverFuel(Controller controller, ValhelsiaContainerBlockEntity<?> target) {
+        boolean changed = false;
+        ItemStack fuel = target.getStack(2);
+        if (!fuel.isEmpty() && controller.storeOutput(fuel)) {
+            // Like native fuel consumption, changing the count preserves its existing burn-duration metadata.
+            fuel.shrink(fuel.getCount()); changed = true;
+        }
+        for (var source : controller.supplies) {
+            if (!source.isEmpty() && !acceptsSupply(controller.getLevel(), controller.kind(), 0, source.getStack()) && controller.storeOutput(source.getStack())) {
+                source.setStack(ItemStack.EMPTY); changed = true;
+            }
+        }
+        if (changed) { controller.markForSave(); target.setChanged(); }
+    }
     public static boolean acceptsNative(Controller controller, int slot, ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (slot == 0) return EnhancerHelper.getEnhancer(controller.getLevel().registryAccess(), stack).isPresent();
-        if (slot == 1 || slot == 2) return acceptsSupply(controller.getLevel(), controller.kind(), slot == 2 ? 0 : 1, stack);
+        if (slot == 1) return acceptsSupply(controller.getLevel(), controller.kind(), 1, stack);
         return slot == 3 || slot == 4;
     }
     public static boolean editable(Controller controller, ValhelsiaContainerBlockEntity<?> block, int slot) {

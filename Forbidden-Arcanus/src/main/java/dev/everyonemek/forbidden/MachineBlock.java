@@ -3,7 +3,7 @@ package dev.everyonemek.forbidden;
 import mekanism.common.block.prefab.BlockTile;
 import mekanism.common.content.blocktype.Machine;
 
-public final class MachineBlock extends BlockTile<Controller, Machine<Controller>> {
+public class MachineBlock extends BlockTile<Controller, Machine<Controller>> {
     public final MachineKind kind;
     @Override public void onRemove(net.minecraft.world.level.block.state.BlockState state, net.minecraft.world.level.Level level,
           net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState replacement, boolean moving) {
@@ -21,6 +21,9 @@ public final class MachineBlock extends BlockTile<Controller, Machine<Controller
           net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
         if (kind.forge() && stack.getItem() instanceof ForgeTierInstallerItem installer && level.getBlockEntity(pos) instanceof Controller machine)
             return installer.install(machine, player, stack);
+        if (!kind.forge() && stack.is(com.stal111.forbidden_arcanus.core.init.ModItems.MUNDABITUR_DUST.get())
+              && level.getBlockEntity(pos) instanceof Controller machine)
+            return ClibanoEmbedding.activate(machine, player, hand, hit);
         return super.useItemOn(stack, state, level, pos, player, hand, hit);
     }
 }

@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "forbidden_arcanus:block/clibano/clibano_center_side",
+    "indicator": "forbiddenmekanism:block/clibano_port/front"
+  },
+  "elements": [
+    {
+      "from": [
+        7,
+        7,
+        -0.002
+      ],
+      "to": [
+        8,
+        9,
+        0
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            11,
+            9,
+            12
+          ],
+          "texture": "#indicator",
+          "cullface": "north"
+        }
+      }
+    }
+  ]
+}

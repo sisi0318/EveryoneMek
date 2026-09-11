@@ -1,36 +1,380 @@
 {
-  "variants": {
-    "facing=north,active=false": {
-      "model": "forbiddenmekanism:block/clibano_controller",
-      "y": 0
+  "multipart": [
+    {
+      "when": {
+        "facing": "north",
+        "active": "false",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller",
+        "y": 0
+      }
     },
-    "facing=north,active=true": {
-      "model": "forbiddenmekanism:block/clibano_controller_active",
-      "y": 0
+    {
+      "when": {
+        "facing": "north",
+        "active": "true",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_active",
+        "y": 0
+      }
     },
-    "facing=east,active=false": {
-      "model": "forbiddenmekanism:block/clibano_controller",
-      "y": 90
+    {
+      "when": {
+        "facing": "east",
+        "active": "false",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller",
+        "y": 90
+      }
     },
-    "facing=east,active=true": {
-      "model": "forbiddenmekanism:block/clibano_controller_active",
-      "y": 90
+    {
+      "when": {
+        "facing": "east",
+        "active": "true",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_active",
+        "y": 90
+      }
     },
-    "facing=south,active=false": {
-      "model": "forbiddenmekanism:block/clibano_controller",
-      "y": 180
+    {
+      "when": {
+        "facing": "south",
+        "active": "false",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller",
+        "y": 180
+      }
     },
-    "facing=south,active=true": {
-      "model": "forbiddenmekanism:block/clibano_controller_active",
-      "y": 180
+    {
+      "when": {
+        "facing": "south",
+        "active": "true",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_active",
+        "y": 180
+      }
     },
-    "facing=west,active=false": {
-      "model": "forbiddenmekanism:block/clibano_controller",
-      "y": 270
+    {
+      "when": {
+        "facing": "west",
+        "active": "false",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller",
+        "y": 270
+      }
     },
-    "facing=west,active=true": {
-      "model": "forbiddenmekanism:block/clibano_controller_active",
-      "y": 270
+    {
+      "when": {
+        "facing": "west",
+        "active": "true",
+        "shell": "standalone"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_active",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "side"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_side",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "front_off"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_off",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "front_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_fire",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "front_soul_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_soul_fire",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "front_enchanted_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_enchanted_fire",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "false"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "true"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator_active",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "side"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_side",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "front_off"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_off",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "front_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_fire",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "front_soul_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_soul_fire",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "front_enchanted_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_enchanted_fire",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "false"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "true"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator_active",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "side"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_side",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "front_off"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_off",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "front_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_fire",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "front_soul_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_soul_fire",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "front_enchanted_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_enchanted_fire",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "false"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "true"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator_active",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "side"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_side",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "front_off"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_off",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "front_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_fire",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "front_soul_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_soul_fire",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "front_enchanted_fire"
+      },
+      "apply": {
+        "model": "forbidden_arcanus:block/clibano_center_front_enchanted_fire",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "false"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "shell": "side|front_off|front_fire|front_soul_fire|front_enchanted_fire",
+        "active": "true"
+      },
+      "apply": {
+        "model": "forbiddenmekanism:block/clibano_controller_indicator_active",
+        "y": 270
+      }
     }
-  }
+  ]
 }

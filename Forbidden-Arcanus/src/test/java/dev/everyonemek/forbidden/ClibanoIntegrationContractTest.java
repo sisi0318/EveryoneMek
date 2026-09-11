@@ -36,4 +36,24 @@ final class ClibanoIntegrationContractTest {
         assertTrue(button.methods.stream().anyMatch(m -> m.name.equals("drawBackground") && m.desc.equals("(Lnet/minecraft/client/gui/GuiGraphics;IIF)V")));
         assertTrue(button.methods.stream().anyMatch(m -> m.name.equals("updateTooltip") && m.desc.equals("(II)V")));
     }
+    @Test void electricHeatWrapsTheNativeRecipeTickAndFuelRead() throws IOException {
+        String mainName = "com/stal111/forbidden_arcanus/common/block/entity/clibano/ClibanoMainBlockEntity";
+        String logicName = "com/stal111/forbidden_arcanus/common/block/entity/clibano/logic/ClibanoSmeltLogic";
+        var main = read(mainName);
+        for (String field : new String[] {"burnTime", "burnDuration"})
+            assertTrue(main.fields.stream().anyMatch(f -> f.name.equals(field) && f.desc.equals("I")));
+        assertTrue(main.fields.stream().anyMatch(f -> f.name.equals("wasLit") && f.desc.equals("Z")));
+        assertTrue(main.fields.stream().anyMatch(f -> f.name.equals("logic") && f.desc.equals("L" + logicName + ";")));
+        assertTrue(main.methods.stream().anyMatch(m -> m.name.equals("updateAppearance") && m.desc.equals("(Lnet/minecraft/world/level/Level;)V")));
+        var tick = main.methods.stream().filter(m -> m.name.equals("serverTick") && m.desc.equals(
+              "(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;L" + mainName + ";)V")).findFirst().orElseThrow();
+        int recipes = 0, processing = 0, fuel = 0;
+        for (var instruction : tick.instructions) if (instruction instanceof MethodInsnNode call) {
+            if (call.owner.equals(logicName) && call.name.equals("updateRecipes") && call.desc.equals("(Ljava/util/List;)V")) recipes++;
+            if (call.owner.equals(logicName) && call.name.equals("tick") && call.desc.equals("(Z)V")) processing++;
+            if (call.owner.equals(mainName) && call.name.equals("getStack") && call.desc.equals("(I)Lnet/minecraft/world/item/ItemStack;")
+                  && call.getPrevious().getOpcode() == org.objectweb.asm.Opcodes.ICONST_2) fuel++;
+        }
+        assertEquals(1, recipes); assertEquals(1, processing); assertEquals(1, fuel);
+    }
 }

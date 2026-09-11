@@ -9,8 +9,13 @@ public final class ClibanoPort extends BlockEntity {
     public void tick() {
         if (level.getGameTime() % 10 != 0) return;
         net.minecraft.core.Direction outward = null;
-        for (var side : net.minecraft.core.Direction.values()) if (ClibanoPorts.controller(this, side) != null) { outward = side; break; }
-        BlockState state = getBlockState().setValue(ClibanoPortBlock.CONNECTED, outward != null);
+        for (var side : net.minecraft.core.Direction.values()) {
+            var center = worldPosition.relative(side.getOpposite());
+            if (level.hasChunkAt(center) && level.getBlockEntity(center) instanceof com.stal111.forbidden_arcanus.common.block.entity.clibano.ClibanoMainBlockEntity main
+                  && Binding.structure(main)) { outward = side; break; }
+        }
+        BlockState state = getBlockState().setValue(ClibanoPortBlock.FORMED, outward != null)
+              .setValue(ClibanoPortBlock.CONNECTED, outward != null && ClibanoPorts.controller(this, outward) != null);
         if (outward != null) state = state.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING, outward);
         if (state != getBlockState()) level.setBlockAndUpdate(worldPosition, state);
     }

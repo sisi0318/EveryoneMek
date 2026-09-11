@@ -122,6 +122,14 @@ public final class Binding {
         player.displayClientMessage(Component.translatable("gui.forbiddenmekanism.bind_hint"), true);
         return false;
     }
+    public static boolean hasClaim(ClibanoMainBlockEntity main) { return main.getPersistentData().getCompound(CLAIM).hasUUID("id"); }
+    public static Controller claimedController(ClibanoMainBlockEntity main) {
+        var claim = main.getPersistentData().getCompound(CLAIM);
+        if (!claim.hasUUID("id")) return null;
+        var pos = BlockPos.of(claim.getLong("pos")); var level = main.getLevel();
+        return level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof Controller controller
+              && controller.binding.id.equals(claim.getUUID("id")) && controller.binding.resolve() == main ? controller : null;
+    }
     public String label() { return controller.getLevel() != null && controller.getLevel().isClientSide ? clientLabel : target == null ? "" : target.toShortString(); }
     public void save(CompoundTag tag) {
         tag.putBoolean("embedded", embedded);

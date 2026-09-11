@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class ClibanoPatternMixin {
     @Inject(method = "canInteract(Lcom/stal111/forbidden_arcanus/common/item/mundabitur/TransformPatternInteraction$TransformPatternContext;)Z", at = @At("RETURN"), cancellable = true)
     private void forbiddenmekanism$singleWall(TransformPatternInteraction.TransformPatternContext context, CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this instanceof CreateClibanoInteraction && cir.getReturnValueZ() && !ClibanoEmbedding.validBase(context)) cir.setReturnValue(false);
+        if ((Object) this instanceof CreateClibanoInteraction && (cir.getReturnValueZ()
+              || ClibanoEmbedding.isController(context.level().getBlockState(context.pos()))))
+            cir.setReturnValue(ClibanoEmbedding.validBase(context));
     }
 }

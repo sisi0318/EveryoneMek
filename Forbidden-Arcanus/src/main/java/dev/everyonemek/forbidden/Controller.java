@@ -160,7 +160,10 @@ public final class Controller extends TileEntityConfigurableMachine {
         ClibanoPorts.eject(this);
         var target = binding.resolve();
         readNative(target);
+        ClibanoControllerBlock.updateAppearance(this, target instanceof ClibanoMainBlockEntity main ? main : null);
         if (target == null) { status = binding.target == null ? NO_TARGET : STRUCTURE; return update; }
+        NativeInventory.recoverFuel(this, target);
+        setActive(observed[1] > 0);
         if (!enabled || !canFunction()) { status = PAUSED; return update; }
         if (cooldown-- > 0) return update;
         cooldown = Math.max(1, 10 / MekanismUtils.getOperationsPerTick(this, 1, 1));
@@ -182,6 +185,7 @@ public final class Controller extends TileEntityConfigurableMachine {
         if (target instanceof ClibanoMainBlockEntity clibano) {
             var data = ((ClibanoAccess) clibano).forbiddenmekanism$data();
             for (int i = 0; i < 10; i++) observed[i] = data.get(i);
+            observed[1] = ((ClibanoHeating) clibano).forbiddenmekanism$isHeating() ? 1 : 0;
             progress = observed[3]; duration = Math.max(1, observed[5]);
         }
     }

@@ -49,6 +49,7 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         addRenderableWidget(new GuiVerticalPowerBar(this, tile.energy(), 242, 24, 94));
         addRenderableWidget(new GuiEnergyTab(this, tile.energy(), tile::getActive));
         for (int i = 0; i < (tile.kind().forge() ? 0 : 7); i++) {
+            if (i == 2) continue;
             int[] xy = MachineMenu.nativeCoordinates(tile.kind(), i);
             addRenderableWidget(new GuiSlot(SlotType.NORMAL, this, xy[0] - 1, xy[1] - 1));
         }
@@ -75,7 +76,7 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         if (tile.kind().forge()) {
             lines.add(text("tier_progress", tile.nativeTier, tile.progress, tile.duration));
         } else {
-            lines.add(text("fire_fuel", text("fire." + Math.max(0, tile.observed[7])), Math.max(0, tile.observed[1]) / 20, Math.max(0, tile.observed[0]) / 20));
+            lines.add(text("fire_power", text("fire." + Math.max(0, tile.observed[7])), text(tile.observed[1] > 0 ? "heating" : "heat_idle"), Math.max(0, tile.observed[0]) / 20));
             lines.add(text("clibano_progress", Math.max(0, tile.observed[3]), Math.max(0, tile.observed[5]), Math.max(0, tile.observed[4]), Math.max(0, tile.observed[6])));
             lines.add(text("residues", value(8), 64));
         }
@@ -92,9 +93,9 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         renderInventoryText(graphics);
         graphics.drawString(font, text("stock"), 18, 19, titleTextColor(), false);
         graphics.drawString(font, text("output"), 200, 19, titleTextColor(), false);
-        if (!tile.kind().forge()) graphics.drawString(font, text("supplies"), 18, 90, titleTextColor(), false);
+        if (!tile.kind().forge()) graphics.drawString(font, text("resource.1"), 18, 90, titleTextColor(), false);
         graphics.drawString(font, text("enhancers"), 112, 19, titleTextColor(), false);
-        graphics.drawString(font, text(tile.kind().forge() ? "resources" : "fuel_soul"), 112, 54, titleTextColor(), false);
+        graphics.drawString(font, text(tile.kind().forge() ? "resources" : "resource.1"), 112, 54, titleTextColor(), false);
         if (!tile.kind().forge()) graphics.drawString(font, text("products"), 130, 90, titleTextColor(), false);
     }
 }

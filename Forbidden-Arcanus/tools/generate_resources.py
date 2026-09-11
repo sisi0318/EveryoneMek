@@ -12,8 +12,8 @@ MACHINES = {
         "消耗 FE 与辉光、灵魂、血液、经验加工材料。放在完整锻台平台的中心。",
         "Uses FE and Aureal, souls, blood and experience to process materials. Place at the center of a complete forge platform."),
     "clibano_controller": ("炽炉控制器", "Clibano Controller", "forbidden_arcanus:clibano_core",
-        "嵌入炽炉侧面或背面中央，自动连接炉体。消耗 FE 供料并收取成品，炽炉仍需燃料和相应灵魂。",
-        "Replace a side or rear center of the Clibano to connect automatically. Uses FE to supply and collect; the furnace still needs fuel and appropriate souls."),
+        "替换炽炉核心，或嵌入侧面、背面中央。用洁净粉末右键激活完整炉壳。消耗 FE 加热和供料收料，特殊火焰需相应灵魂。",
+        "Replace the Clibano Core, or a side or rear center. Activate the complete shell with Mundabitur Dust. Uses FE for heating and logistics; special flames require appropriate souls."),
 }
 
 
@@ -41,9 +41,24 @@ for name, (cn, english, core, description_cn, description_en) in MACHINES.items(
         **{face: f"{texture}/side" for face in ("south", "east", "west", "down")}}})
     write(f"assets/{ID}/models/block/{name}_active.json", {"parent": f"{ID}:block/{name}", "textures": {"north": f"{texture}/front_active"}})
     write(f"assets/{ID}/models/item/{name}.json", {"parent": f"{ID}:block/{name}"})
-    write(f"assets/{ID}/blockstates/{name}.json", {"variants": {
+    variants = {
         f"facing={face},active={str(active).lower()}": {"model": f"{ID}:block/{name}{'_active' if active else ''}", "y": rotation}
-        for face, rotation in (("north", 0), ("east", 90), ("south", 180), ("west", 270)) for active in (False, True)}})
+        for face, rotation in (("north", 0), ("east", 90), ("south", 180), ("west", 270)) for active in (False, True)}
+    if name == "clibano_controller":
+        # Reference the dependency models at runtime, including resource-pack replacements and native flame animations.
+        shells = ("side", "front_off", "front_fire", "front_soul_fire", "front_enchanted_fire")
+        parts = [{"when": {**dict(field.split("=") for field in key.split(",")), "shell": "standalone"}, "apply": model}
+                 for key, model in variants.items()]
+        for face, rotation in (("north", 0), ("east", 90), ("south", 180), ("west", 270)):
+            for shell in shells:
+                parts.append({"when": {"facing": face, "shell": shell},
+                              "apply": {"model": f"forbidden_arcanus:block/clibano_center_{shell}", "y": rotation}})
+            for active in (False, True):
+                parts.append({"when": {"facing": face, "shell": "|".join(shells), "active": str(active).lower()},
+                              "apply": {"model": f"{ID}:block/clibano_controller_indicator{'_active' if active else ''}", "y": rotation}})
+        write(f"assets/{ID}/blockstates/{name}.json", {"multipart": parts})
+    else:
+        write(f"assets/{ID}/blockstates/{name}.json", {"variants": variants})
     components = [f"mekanism:{key}" for key in ("ejector", "owner", "redstone_control", "security", "side_config", "upgrades", "energy", "items")]
     write(f"data/{ID}/loot_table/blocks/{name}.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{
         "type": "minecraft:item", "name": f"{ID}:{name}", "functions": [
@@ -65,10 +80,24 @@ write(f"assets/{ID}/models/block/clibano_port.json", {"parent": "minecraft:block
     **{face: f"{port_texture}/side" for face in ("south", "east", "west", "down")}}})
 write(f"assets/{ID}/models/block/clibano_port_connected.json", {"parent": f"{ID}:block/clibano_port", "textures": {"north": f"{port_texture}/front_active"}})
 write(f"assets/{ID}/models/item/clibano_port.json", {"parent": f"{ID}:block/clibano_port"})
-write(f"assets/{ID}/blockstates/clibano_port.json", {"variants": {
-    f"facing={face},connected={str(connected).lower()}": {"model": f"{ID}:block/clibano_port{'_connected' if connected else ''}", "x": x, "y": y}
-    for face, x, y in (("north", 0, 0), ("east", 0, 90), ("south", 0, 180), ("west", 0, 270), ("up", 270, 0), ("down", 90, 0))
-    for connected in (False, True)}})
+port_parts = []
+for face, x, y in (("north", 0, 0), ("east", 0, 90), ("south", 0, 180), ("west", 0, 270), ("up", 270, 0), ("down", 90, 0)):
+    port_parts.append({"when": {"facing": face, "formed": "true"}, "apply": {
+        "model": f"forbidden_arcanus:block/clibano_center_{'top' if face == 'up' else 'side'}", "x": x, "y": y}})
+    for connected in (False, True):
+        port_parts.append({"when": {"facing": face, "formed": "false", "connected": str(connected).lower()},
+                           "apply": {"model": f"{ID}:block/clibano_port{'_connected' if connected else ''}", "x": x, "y": y}})
+        port_parts.append({"when": {"facing": face, "formed": "true", "connected": str(connected).lower()},
+                           "apply": {"model": f"{ID}:block/clibano_port_indicator{'_active' if connected else ''}", "x": x, "y": y}})
+write(f"assets/{ID}/blockstates/clibano_port.json", {"multipart": port_parts})
+for part, start, end in (("controller", [7, 7, -0.002], [9, 8, 0]), ("port", [7, 7, -0.002], [8, 9, 0])):
+    for active in (False, True):
+        write(f"assets/{ID}/models/block/clibano_{part}_indicator{'_active' if active else ''}.json", {
+            "parent": "minecraft:block/block", "ambientocclusion": False,
+            "textures": {"particle": "forbidden_arcanus:block/clibano/clibano_center_side",
+                         "indicator": f"{port_texture}/{'front_active' if active else 'front'}"},
+            "elements": [{"from": start, "to": end, "shade": False, "faces": {
+                "north": {"uv": [8, 11, 9, 12], "texture": "#indicator", "cullface": "north"}}}]})
 write(f"data/{ID}/loot_table/blocks/clibano_port.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:clibano_port"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
 write(f"data/{ID}/recipe/clibano_port.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": [" B ", "ICI", " B "],
     "key": {"B": {"item": "forbidden_arcanus:polished_darkstone_bricks"}, "I": {"item": "mekanism:ingot_steel"},
@@ -120,7 +149,7 @@ write("pack.mcmeta", {"pack": {"pack_format": 34, "description": "Forbidden Meka
 
 labels = {
     "auto_connected": ("自动连接", "Auto-linked"),
-    "install_wall": ("控制器需放在炽炉侧面或背面中央；端口也可放在顶部和底部中央。检查权限和已有控制器。", "Use a side or rear center for the controller; ports also fit top and bottom centers. Check access and existing controllers."),
+    "install_wall": ("控制器可替换核心或水平侧面中央；端口可放在上、下、侧面与背面中央。检查权限和已有控制器。", "Controllers replace the core or horizontal wall centers; ports fit top, bottom, side and rear centers. Check access and existing controllers."),
     "stock": ("原料", "Materials"), "output": ("输出", "Output"), "supplies": ("补给", "Supplies"),
     "enhancers": ("增强器", "Enhancers"), "resources": ("资源", "Resources"), "fuel_soul": ("燃料 / 灵魂", "Fuel / Souls"),
     "products": ("成品", "Products"),
@@ -135,7 +164,8 @@ labels = {
     "unmeasured": ("原机状态尚不可用", "Native machine status unavailable"),
     "tier_progress": ("等级 %s  ·  进度 %s / %s", "Tier %s  ·  Progress %s / %s"),
     "resource.0": ("辉光", "Aureal"), "resource.1": ("灵魂", "Souls"), "resource.2": ("血液", "Blood"), "resource.3": ("经验", "XP"),
-    "fire_fuel": ("%s  ·  燃料 %ss  ·  灵魂 %ss", "%s  ·  Fuel %ss  ·  Soul %ss"),
+    "fire_power": ("%s  ·  %s  ·  灵魂 %ss", "%s  ·  %s  ·  Soul %ss"),
+    "heating": ("电热运行", "Heating"), "heat_idle": ("电热待机", "Heat idle"),
     "fire.0": ("普通火", "Fire"), "fire.1": ("灵魂火", "Soul Fire"), "fire.2": ("附魔火", "Enchanted Fire"),
     "clibano_progress": ("进度 %s/%s  ·  %s/%s", "Progress %s/%s  ·  %s/%s"), "residues": ("残渣 %s / %s", "Residues %s / %s"),
     "automatic": ("自动匹配", "Automatic"), "all_recipes": ("全部配方", "All recipes"), "applicable": ("当前适用", "Applicable now"),

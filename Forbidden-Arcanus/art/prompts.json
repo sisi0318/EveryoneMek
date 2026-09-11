@@ -306,7 +306,7 @@
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_controller/"
       },
-      "status": "Current machine exterior from 0.2.4",
+      "status": "Current standalone block and item exterior; embedded controller uses native shell model references from 0.2.5.",
       "upstream_reference": {
         "artifact": "maven.modrinth:forbidden-arcanus:fNjxgZPH",
         "assets": [
@@ -354,7 +354,33 @@
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_port/"
       },
-      "status": "Current dedicated Clibano port from 0.2.4; active front indicates connection to a complete furnace."
+      "status": "Current standalone block and item exterior; embedded port uses native shell model references and samples its central indicator from this artwork."
     }
-  ]
+  ],
+  "embedded_shells": {
+    "since": "0.2.5",
+    "generator": "Forbidden-Arcanus/tools/generate_resources.py",
+    "dependency": "maven.modrinth:forbidden-arcanus:fNjxgZPH",
+    "models": [
+      "forbidden_arcanus:block/clibano_center_side",
+      "forbidden_arcanus:block/clibano_center_top",
+      "forbidden_arcanus:block/clibano_center_front_off",
+      "forbidden_arcanus:block/clibano_center_front_fire",
+      "forbidden_arcanus:block/clibano_center_front_soul_fire",
+      "forbidden_arcanus:block/clibano_center_front_enchanted_fire"
+    ],
+    "asset_policy": "Model IDs are referenced at runtime. No dependency model or texture files are redistributed.",
+    "indicator_source": "forbiddenmekanism:block/clibano_port/front or front_active, UV [8,11,9,12]",
+    "indicator_dimensions": {
+      "controller": [
+        2,
+        1
+      ],
+      "port": [
+        1,
+        2
+      ]
+    },
+    "preview": "Dependency-texture comparisons are local-only under build/; art/block-preview.png shows standalone original models."
+  }
 }

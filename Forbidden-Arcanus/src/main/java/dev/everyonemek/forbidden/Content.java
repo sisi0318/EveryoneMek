@@ -67,7 +67,7 @@ public final class Content {
                         () -> EnergyUnit.FORGE_ENERGY.convertTo(1_000_000L))
                   .withSupportedUpgrades(Upgrade.SPEED, Upgrade.ENERGY)
                   .with(AttributeSideConfig.ADVANCED_ELECTRIC_MACHINE).build();
-            var block = BLOCKS.registerDetails(kind.id, () -> new MachineBlock(kind, type));
+            var block = BLOCKS.registerDetails(kind.id, () -> kind.forge() ? new MachineBlock(kind, type) : new ClibanoControllerBlock(type));
             block.forItemHolder(holder -> holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
                 var slots = ItemSlotsBuilder.builder().addInput(9).addOutput(4).addInput(kind.supplies()).addEnergy();
                 if (kind.forge()) slots.addInput(8);

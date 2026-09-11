@@ -429,19 +429,48 @@ public final class ControllerGameTests {
         });
     }
     @GameTest(template = "empty", timeoutTicks = 60)
-    public static void clibanoUsesRealFuelAndBothIndependentNativeInputs(GameTestHelper h) {
+    public static void clibanoUsesElectricHeatAndPreservesFuelAndProgress(GameTestHelper h) {
         var clibano = clibano(h); var controller = controller(h, MachineKind.CLIBANO, 8);
         h.runAfterDelay(2, () -> {
             try {
-                bind(h, controller, clibano.getBlockPos()); controller.stock.get(0).setStack(new ItemStack(Items.RAW_IRON)); controller.stock.get(1).setStack(new ItemStack(Items.RAW_COPPER));
-                runClibano(controller, clibano, 30);
-                check(outputs(controller, Items.IRON_INGOT) == 0 && clibano.getStack(3).isEmpty(), "FE replaced native fuel");
-                controller.supplies.get(0).setStack(new ItemStack(Items.COAL)); runClibano(controller, clibano, 25);
+                clibano.setStack(3, new ItemStack(Items.RAW_IRON)); clibano.setStack(2, new ItemStack(Items.COAL));
+                ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                var data = ((ClibanoAccess) clibano).forbiddenmekanism$data(); int savedBurn = data.get(1);
+                check(savedBurn > 0 && clibano.getStack(2).isEmpty(), "Uncontrolled native furnace no longer consumes ordinary fuel");
+                bind(h, controller, clibano.getBlockPos()); controller.stock.get(0).setStack(new ItemStack(Items.RAW_COPPER));
+                var oldFuel = new net.minecraft.nbt.CompoundTag(); oldFuel.put("item", new ItemStack(Items.COAL, 3).save(h.getLevel().registryAccess()));
+                controller.supplies.get(0).deserializeNBT(h.getLevel().registryAccess(), oldFuel);
+                clibano.setStack(2, new ItemStack(Items.COAL, 2)); controller.onUpdateServer();
+                check(outputs(controller, Items.COAL) == 5 && clibano.getStack(2).isEmpty() && controller.supplies.get(0).isEmpty(), "Legacy fuel was not returned intact");
+                int progress = data.get(3); long energy = controller.energy().getEnergy();
+                controller.enabled = false;
+                ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                check(data.get(3) == progress && controller.energy().getEnergy() == energy, "Pause consumed heat or advanced processing");
+                controller.enabled = true; controller.energy().setEnergy(0);
+                ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                check(data.get(3) == progress && data.get(1) == savedBurn, "Power loss used stored fuel or changed progress");
+                controller.energy().setEnergy(energy);
+                ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                long expectedCost = mekanism.common.util.UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertTo(MachineConfig.CLIBANO_HEAT_FE.get());
+                check(controller.energy().getEnergy() == energy - expectedCost && data.get(3) > progress, "Electric heat did not charge once per productive tick");
+                long beforeBlocked = controller.energy().getEnergy(); int blockedProgress = data.get(3);
+                clibano.setStack(5, new ItemStack(Items.STONE, 64)); clibano.setStack(6, new ItemStack(Items.STONE, 64));
+                try {
+                    ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                    check(controller.energy().getEnergy() == beforeBlocked && data.get(3) == blockedProgress, "Full outputs consumed heat or lost progress");
+                } finally { clibano.setStack(5, ItemStack.EMPTY); clibano.setStack(6, ItemStack.EMPTY); }
+                runClibano(controller, clibano, 25);
                 check(!clibano.getStack(3).isEmpty() && !clibano.getStack(4).isEmpty(), "Native independent inputs were not both fed");
                 runClibano(controller, clibano, 150);
                 check(outputs(controller, Items.IRON_INGOT) == 1 && outputs(controller, Items.COPPER_INGOT) == 1, "Native independent products missing: " + controller.status);
                 check(clibano.getResiduesStorage().getTotalAmount() == 0, "Ordinary fire incorrectly generated residues");
-                check(((ClibanoAccess) clibano).forbiddenmekanism$data().get(1) > 0, "Native fuel burn timer was replaced");
+                check(data.get(1) == savedBurn && outputs(controller, Items.COAL) == 5, "Electric processing spent the reserved combustion time or recovered fuel");
+                long idleEnergy = controller.energy().getEnergy();
+                ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                check(controller.energy().getEnergy() == idleEnergy, "Idle furnace consumed heating energy");
+                controller.binding.release();
+                ClibanoMainBlockEntity.serverTick(clibano.getLevel(), clibano.getBlockPos(), clibano.getBlockState(), clibano);
+                check(data.get(1) == savedBurn - 1, "Removing electric control did not restore native combustion");
                 h.succeed();
             } finally { stop(controller); }
         });
@@ -454,14 +483,15 @@ public final class ControllerGameTests {
                 bind(h, controller, clibano.getBlockPos());
                 controller.setRecipe("forbidden_arcanus:clibano_combustion/obsidiansteel_ingot_from_clibano_combustion");
                 controller.stock.get(0).setStack(new ItemStack(Items.RAW_IRON)); controller.stock.get(1).setStack(new ItemStack(Items.OBSIDIAN));
-                controller.supplies.get(0).setStack(new ItemStack(Items.COAL)); controller.supplies.get(1).setStack(new ItemStack(ModItems.ENCHANTED_SOUL.get()));
+                controller.supplies.get(1).setStack(new ItemStack(ModItems.ENCHANTED_SOUL.get()));
                 runClibano(controller, clibano, 20); check(clibano.getStack(3).isEmpty(), "Alloy bypassed enhancer requirement");
                 clibano.setStack(0, new ItemStack(ModItems.ARTISAN_RELIC.get())); runClibano(controller, clibano, 150);
                 check(outputs(controller, ModItems.OBSIDIANSTEEL_INGOT.get()) == 1, "Native alloy did not combine both inputs");
                 var data = ((ClibanoAccess) clibano).forbiddenmekanism$data(); int soulTime = data.get(0), burnTime = data.get(1);
                 check(data.get(7) == 2 && soulTime > 0, "Enchanted soul did not set native fire");
+                int pausedProgress = data.get(3);
                 controller.enabled = false; runClibano(controller, clibano, 10);
-                check(data.get(0) == soulTime - 10 && data.get(1) == burnTime - 10, "Controller pause froze native fuel or souls");
+                check(data.get(0) == soulTime - 10 && data.get(1) == burnTime && data.get(3) == pausedProgress, "Pause changed native soul timing or continued electric processing");
                 var residue = h.getLevel().registryAccess().registryOrThrow(FARegistries.RESIDUE_TYPE).getHolder(ResourceLocation.parse("forbidden_arcanus:iron")).orElseThrow();
                 clibano.getResiduesStorage().increaseType(residue, residue.value().combineInfo().requiredAmount());
                 controller.enabled = true; runClibano(controller, clibano, 20);
@@ -475,7 +505,7 @@ public final class ControllerGameTests {
         var clibano = clibano(h); var controller = controller(h, MachineKind.CLIBANO, 8);
         h.runAfterDelay(2, () -> {
             bind(h, controller, clibano.getBlockPos());
-            controller.stock.get(0).setStack(new ItemStack(Items.RAW_IRON)); controller.supplies.get(0).setStack(new ItemStack(Items.COAL));
+            controller.stock.get(0).setStack(new ItemStack(Items.RAW_IRON));
             var side = RelativeSide.fromDirections(controller.getDirection(), Direction.WEST);
             var player = FakePlayerFactory.getMinecraft(h.getLevel());
             var context = (net.neoforged.neoforge.network.handling.IPayloadContext) java.lang.reflect.Proxy.newProxyInstance(

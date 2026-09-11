@@ -73,9 +73,15 @@ public final class ClibanoEmbeddingGameTests {
         BlockPos core = center.relative(front);
         player.setPos(core.relative(front, 2).getCenter());
         var dust = new ItemStack(ModItems.MUNDABITUR_DUST.get()); player.setItemInHand(InteractionHand.MAIN_HAND, dust);
-        check(dust.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit(core, front))).consumesAction() && dust.isEmpty(), "Native dust did not form furnace");
+        check(useDust(player, core, front) && dust.isEmpty(), "Native dust did not form furnace");
         check(h.getLevel().getBlockEntity(center) instanceof ClibanoMainBlockEntity, "Native center entity missing");
         return (ClibanoMainBlockEntity) h.getLevel().getBlockEntity(center);
+    }
+    private static boolean useDust(ServerPlayer player, BlockPos core, Direction front) {
+        var state = player.level().getBlockState(core);
+        if (state.getBlock() instanceof MachineBlock block)
+            return block.useItemOn(player.getMainHandItem(), state, player.level(), core, player, InteractionHand.MAIN_HAND, hit(core, front)).consumesAction();
+        return player.getMainHandItem().getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit(core, front))).consumesAction();
     }
     private static void configure(ServerPlayer player, Controller controller, Direction side, DataType type) {
         player.setPos(controller.getBlockPos().relative(controller.getDirection(), 2).getCenter());
@@ -162,12 +168,13 @@ public final class ClibanoEmbeddingGameTests {
             try {
                 player.getInventory().clearContent(); player.getAbilities().instabuild = false;
                 main.setStack(0, new ItemStack(ModItems.ARTISAN_RELIC.get()));
-                install(player, center.east(), Direction.EAST, new ItemStack(Content.MACHINES.get(MachineKind.CLIBANO)));
-                var controller = (Controller) h.getLevel().getBlockEntity(center.east());
+                install(player, center.north(), Direction.NORTH, new ItemStack(Content.MACHINES.get(MachineKind.CLIBANO)));
+                var controller = (Controller) h.getLevel().getBlockEntity(center.north());
                 check(controller.binding.embedded && controller.binding.resolve() == main && main.getStack(0).is(ModItems.ARTISAN_RELIC.get()), "Installing controller replaced native entity or inventory");
-                for (Direction side : new Direction[] {Direction.UP, Direction.DOWN, Direction.WEST, Direction.SOUTH})
+                for (Direction side : new Direction[] {Direction.UP, Direction.DOWN, Direction.WEST, Direction.SOUTH, Direction.EAST})
                     install(player, center.relative(side), side, new ItemStack(Content.CLIBANO_PORT));
-                check(player.getInventory().countItem(ModBlocks.POLISHED_DARKSTONE_BRICKS.get().asItem()) == 5, "Installed parts did not return exactly five original bricks");
+                check(player.getInventory().countItem(ModBlocks.POLISHED_DARKSTONE_BRICKS.get().asItem()) == 5
+                      && player.getInventory().countItem(ModBlocks.CLIBANO_CORE.get().asItem()) == 1, "Installed parts did not return five bricks and the original core");
                 player.setPos(center.north(3).getCenter()); player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Content.CLIBANO_PORT));
                 check(!ClibanoEmbedding.install(player, InteractionHand.MAIN_HAND, hit(center.north(), Direction.NORTH)) && main == h.getLevel().getBlockEntity(center), "Front core could be replaced");
                 configure(player, controller, Direction.WEST, DataType.INPUT);
@@ -179,13 +186,14 @@ public final class ClibanoEmbeddingGameTests {
                 var souls = h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, center.below(), Direction.DOWN);
                 var energy = h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK, center.above(), Direction.UP);
                 check(input != null && fuel != null && souls != null && energy != null, "Formed port capabilities missing");
-                check(energy.receiveEnergy(5000, true) == 5000 && controller.energy().getEnergy() == 0, "FE simulation mutated energy");
-                check(energy.receiveEnergy(5000, false) == 5000, "Top port did not accept real FE");
+                check(energy.receiveEnergy(20000, true) == 20000 && controller.energy().getEnergy() == 0, "FE simulation mutated energy");
+                check(energy.receiveEnergy(20000, false) == 20000, "Top port did not accept real FE");
                 check(ItemHandlerHelper.insertItemStacked(input, new ItemStack(Items.RAW_IRON), true).isEmpty()
                       && controller.stock.stream().allMatch(s -> s.isEmpty()), "Item simulation mutated stock");
                 check(ItemHandlerHelper.insertItemStacked(input, new ItemStack(Items.RAW_IRON), false).isEmpty(), "West port did not feed materials");
                 check(ItemHandlerHelper.insertItemStacked(input, new ItemStack(Items.RAW_COPPER), false).isEmpty(), "Second material rejected");
-                check(ItemHandlerHelper.insertItemStacked(fuel, new ItemStack(Items.COAL), false).isEmpty(), "Top port did not feed fuel");
+                check(!ItemHandlerHelper.insertItemStacked(fuel, new ItemStack(Items.COAL), false).isEmpty(), "Electric furnace still accepted fuel through the former fuel side");
+                check(ItemHandlerHelper.insertItemStacked(fuel, new ItemStack(ModItems.SOUL.get()), false).isEmpty(), "Former fuel side did not accept soul supplies");
                 check(!ItemHandlerHelper.insertItemStacked(souls, new ItemStack(Items.COAL), false).isEmpty(), "Soul port accepted coal");
                 h.getLevel().setBlockAndUpdate(center.south(2), mekanism.common.registries.MekanismBlocks.BASIC_LOGISTICAL_TRANSPORTER.defaultState());
                 h.getLevel().setBlockAndUpdate(center.south(3), mekanism.common.registries.MekanismBlocks.BASIC_LOGISTICAL_TRANSPORTER.defaultState());
@@ -195,6 +203,13 @@ public final class ClibanoEmbeddingGameTests {
                     try {
                         var chest = (ChestBlockEntity) h.getLevel().getBlockEntity(center.south(4));
                         check(chest.countItem(Items.IRON_INGOT) == 1 && chest.countItem(Items.COPPER_INGOT) == 1, "Native products did not eject through configured port into chest: " + controller.status);
+                        check(controller.getBlockState().getValue(ClibanoControllerBlock.SHELL) == ClibanoControllerBlock.Shell.FRONT_OFF,
+                              "Idle electric core retained the burning front model");
+                        for (Direction side : new Direction[] {Direction.UP, Direction.DOWN, Direction.WEST, Direction.SOUTH, Direction.EAST}) {
+                            var state = h.getLevel().getBlockState(center.relative(side));
+                            check(state.getValue(ClibanoPortBlock.FORMED) && state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING) == side,
+                                  "Port model did not follow its native shell face");
+                        }
                         controller.enabled = false; controller.stock.getFirst().setStack(new ItemStack(Items.DIAMOND, 3));
                         var output = h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, center.south(), Direction.SOUTH);
                         controller.outputs.getFirst().setStack(new ItemStack(Items.GOLD_INGOT));
@@ -222,5 +237,53 @@ public final class ClibanoEmbeddingGameTests {
                 });
             } finally { player.getInventory().load(savedNow); player.setPos(positionNow); player.getAbilities().instabuild = creativeNow; }
         });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void coreControllerActivatesAndRepairsWithDustInEveryOrientation(GameTestHelper h) {
+        var profile = new com.mojang.authlib.GameProfile(java.util.UUID.fromString("31ab3e0c-af7c-41b8-9f03-284956895dd2"), "[CoreTest]");
+        var player = FakePlayerFactory.get(h.getLevel(), profile); var position = player.position();
+        var saved = player.getInventory().save(new ListTag()); boolean creative = player.getAbilities().instabuild;
+        var controllers = new ArrayList<Controller>();
+        try {
+            player.getInventory().clearContent(); player.getAbilities().instabuild = false;
+            int index = 0;
+            for (Direction front : Direction.Plane.HORIZONTAL) {
+                BlockPos center = h.absolutePos(new BlockPos(7 + index % 2 * 16, 2, 7 + index / 2 * 16));
+                base(h, center, front); BlockPos core = center.relative(front);
+                if (index++ % 2 == 0) {
+                    int cores = player.getInventory().countItem(ModBlocks.CLIBANO_CORE.get().asItem());
+                    install(player, core, front, new ItemStack(Content.MACHINES.get(MachineKind.CLIBANO)));
+                    check(player.getInventory().countItem(ModBlocks.CLIBANO_CORE.get().asItem()) == cores + 1, "Raw core replacement did not refund its core");
+                } else {
+                    h.getLevel().setBlockAndUpdate(core, Blocks.AIR.defaultBlockState());
+                    place(player, core, front, new ItemStack(Content.MACHINES.get(MachineKind.CLIBANO)));
+                }
+                var controller = (Controller) h.getLevel().getBlockEntity(core); controllers.add(controller);
+                controller.stock.getFirst().setStack(new ItemStack(Items.DIAMOND, 3));
+                var dust = new ItemStack(ModItems.MUNDABITUR_DUST.get()); player.setItemInHand(InteractionHand.MAIN_HAND, dust);
+                BlockPos corner = center.offset(-1, 1, -1);
+                h.getLevel().setBlockAndUpdate(corner, Blocks.AIR.defaultBlockState());
+                var menu = player.containerMenu;
+                check(!useDust(player, core, front) && dust.getCount() == 1 && player.containerMenu == menu, "Incomplete shell consumed dust or opened the controller menu");
+                h.getLevel().setBlockAndUpdate(corner, ModBlocks.POLISHED_DARKSTONE.get().defaultBlockState());
+                check(!useDust(player, core, front.getClockWise()) && dust.getCount() == 1, "Wrong core face activated the furnace");
+                var main = form(h, player, center, front); controller.onUpdateServer();
+                check(controller.binding.resolve() == main && controller.getDirection() == front && controller.stock.getFirst().getCount() == 3,
+                      "Core activation lost inventory or failed connection for " + front);
+                check(controller.getBlockState().getValue(ClibanoControllerBlock.SHELL) == ClibanoControllerBlock.Shell.FRONT_OFF,
+                      "Unlit core did not use the native front model");
+                h.getLevel().setBlockAndUpdate(corner, Blocks.AIR.defaultBlockState());
+                check(controller.binding.resolve() == null, "Broken core furnace stayed connected");
+                h.getLevel().setBlockAndUpdate(corner, ModBlocks.POLISHED_DARKSTONE.get().defaultBlockState());
+                var repaired = form(h, player, center, front); controller.onUpdateServer();
+                check(repaired != main && controller.binding.resolve() == repaired && controller.stock.getFirst().getCount() == 3,
+                      "Core controller could not activate the repaired shell");
+            }
+            h.succeed();
+        } finally {
+            controllers.forEach(ClibanoEmbeddingGameTests::stop);
+            player.setPos(position); player.getInventory().load(saved); player.getAbilities().instabuild = creative;
+        }
     }
 }

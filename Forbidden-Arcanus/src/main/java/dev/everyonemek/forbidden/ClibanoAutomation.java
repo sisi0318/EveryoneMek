@@ -19,7 +19,6 @@ public final class ClibanoAutomation {
         var cache = ((ClibanoAccess) clibano).forbiddenmekanism$recipes();
         controller.status = clibano.getStack(3).isEmpty() && clibano.getStack(4).isEmpty() ? Controller.NEED_MATERIALS : Controller.RUNNING;
         if (!clibano.getStack(5).isEmpty() && !clibano.getStack(6).isEmpty()) controller.status = Controller.OUTPUT_FULL;
-        if (data.get(1) == 0 && clibano.getStack(2).isEmpty()) { controller.status = Controller.NEED_FUEL; return changed; }
         int fire = data.get(0) > 0 ? data.get(7) : ClibanoFireType.fromItem(clibano.getStack(1)).ordinal();
         if (clibano.getStack(3).isEmpty() && clibano.getStack(4).isEmpty()) {
             for (var holder : clibano.getLevel().getRecipeManager().getAllRecipesFor(ClibanoMainBlockEntity.RECIPE_TYPE)) {
