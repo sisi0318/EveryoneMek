@@ -5,6 +5,12 @@ import mekanism.common.content.blocktype.Machine;
 
 public final class MachineBlock extends BlockTile<Controller, Machine<Controller>> {
     public final MachineKind kind;
+    @Override public void onRemove(net.minecraft.world.level.block.state.BlockState state, net.minecraft.world.level.Level level,
+          net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState replacement, boolean moving) {
+        if (!state.is(replacement.getBlock()) && !level.isClientSide && level.getBlockEntity(pos) instanceof Controller controller)
+            ClibanoEmbedding.remove(controller);
+        super.onRemove(state, level, pos, replacement, moving);
+    }
     public MachineBlock(MachineKind kind, Machine<Controller> type) {
         super(type, properties -> properties.strength(4, 12));
         this.kind = kind;

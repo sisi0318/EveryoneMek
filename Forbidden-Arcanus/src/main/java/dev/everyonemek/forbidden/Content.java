@@ -29,6 +29,10 @@ public final class Content {
         return -1;
     }
     public static final BlockDeferredRegister BLOCKS = new BlockDeferredRegister(ForbiddenMekanism.ID);
+    public static final BlockRegistryObject<ClibanoPortBlock, net.minecraft.world.item.BlockItem> CLIBANO_PORT = BLOCKS.register("clibano_port", ClibanoPortBlock::new);
+    private static final DeferredRegister<net.minecraft.world.level.block.entity.BlockEntityType<?>> PORT_TILES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, ForbiddenMekanism.ID);
+    public static final java.util.function.Supplier<net.minecraft.world.level.block.entity.BlockEntityType<ClibanoPort>> CLIBANO_PORT_TILE = PORT_TILES.register("clibano_port",
+          () -> net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(ClibanoPort::new, CLIBANO_PORT.get()).build(null));
     public static final TileEntityTypeDeferredRegister TILES = new TileEntityTypeDeferredRegister(ForbiddenMekanism.ID);
     public static final ContainerTypeDeferredRegister MENUS = new ContainerTypeDeferredRegister(ForbiddenMekanism.ID);
     public static final DataComponentDeferredRegister COMPONENTS = new DataComponentDeferredRegister(ForbiddenMekanism.ID);
@@ -77,6 +81,7 @@ public final class Content {
               .icon(() -> new ItemStack(MACHINES.get(MachineKind.FORGE)))
               .displayItems((parameters, output) -> {
                   for (MachineKind kind : MachineKind.values()) output.accept(MACHINES.get(kind));
+                  output.accept(CLIBANO_PORT);
                   for (int resource = 0; resource < 4; resource++) output.accept(resourceModule(resource));
                   INSTALLERS.values().forEach(output::accept);
                   output.accept(SOUL_BLOCK); output.accept(XPETRIFIED_BLOCK);
@@ -84,6 +89,7 @@ public final class Content {
     }
     public static void register(IEventBus bus) {
         COMPONENTS.register(bus); ITEMS.register(bus); BLOCKS.register(bus); TILES.register(bus); MENUS.register(bus); TABS.register(bus); SERIALIZERS.register(bus);
+        PORT_TILES.register(bus);
     }
     public static Item resourceModule(int resource) {
         return switch (resource) {

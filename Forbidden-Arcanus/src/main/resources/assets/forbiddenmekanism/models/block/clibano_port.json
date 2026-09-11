@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "forbiddenmekanism:block/clibano_port/side",
+    "north": "forbiddenmekanism:block/clibano_port/front",
+    "up": "forbiddenmekanism:block/clibano_port/top",
+    "south": "forbiddenmekanism:block/clibano_port/side",
+    "east": "forbiddenmekanism:block/clibano_port/side",
+    "west": "forbiddenmekanism:block/clibano_port/side",
+    "down": "forbiddenmekanism:block/clibano_port/side"
+  }
+}

@@ -5,7 +5,7 @@
   "exporter": "Forbidden-Arcanus/tools/export_textures.cjs",
   "assets": [
     {
-      "id": "forge_controller",
+      "id": "forge_controller_industrial",
       "source": "Forbidden-Arcanus/art/source/forge_controller.png",
       "generated_file": "exec-4a14896f-c7db-493a-b964-ff8993db84be.png",
       "references": [
@@ -39,10 +39,11 @@
         ],
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/forge_controller/"
-      }
+      },
+      "status": "Historical exterior used through 0.2.3; preserved as an original source reference."
     },
     {
-      "id": "clibano_controller",
+      "id": "clibano_controller_industrial",
       "source": "Forbidden-Arcanus/art/source/clibano_controller.png",
       "generated_file": "exec-b34a725d-5e18-4c36-afc4-1cfd515ac5b9.png",
       "references": [
@@ -76,7 +77,8 @@
         ],
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_controller/"
-      }
+      },
+      "status": "Historical exterior used through 0.2.3; preserved as an original source reference."
     },
     {
       "id": "glow_module",
@@ -220,6 +222,139 @@
         "resampling": "nearest",
         "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/"
       }
+    },
+    {
+      "id": "forge_controller",
+      "source": "Forbidden-Arcanus/art/source/forge_controller-arcanus.png",
+      "generated_file": "exec-0f838f65-0365-4152-bccb-d1cd419978b1.png",
+      "references": [
+        "Forbidden-Arcanus/build/reference/machine-style/reference.png"
+      ],
+      "reference_role": "Locally assembled, ignored reference contact sheet from Forbidden & Arcanus release 2.6.1, used for palette and material language only. Upstream textures are not distributed; all exported faces are newly generated artwork.",
+      "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft block texture atlas, not a screenshot or cube render. The attached contact sheet is a STYLE REFERENCE ONLY for the Forbidden and Arcanus darkstone palette and broad pixel scale. Do not copy any pictured texture, do not copy its contact-sheet layout or text. Required OUTPUT: one perfectly square OPAQUE PNG, exact equal 2x2 quadrants, no gaps or outer margins: top-left idle FRONT, top-right TOP, bottom-left SIDE/BACK/BOTTOM, bottom-right active FRONT. Each quadrant must have the simplicity of a TRUE 16x16 texture: exactly sixteen large square pixel cells across its face, broad solid shapes, not tiny detailed pixels. Faces fill their quadrants right to the edges. Flat orthographic surface artwork, no perspective, no displayed cubes, no labels, no digits, no fine noise, no gradients, no bloom, no antialiased lines, no transparency. Idle and active FRONT MUST share identical geometry and pixel positions; only light colors change. Subject: a Hephaestus FORGING CHAMBER designed as an arcane DARKSTONE ALTAR, free from modern Mekanism machine casing. Main material is deep navy-charcoal and purple-black chiseled darkstone, with subdued slate-gray facets. A small amount of warm ochre/deorum gold trim, and a narrow dark crimson cloth panel, make it belong beside Forbidden and Arcanus's Hephaestus Forge. FRONT: two broad darkstone corner piers; one horizontal dull-gold lintel near the top; centered short dark crimson cloth panel with a simple light violet ANVIL-SHAPED RUNE embossed over it, recognizably a broad flat anvil top narrowing to a short stem and base. Keep the rune chunky, at most seven cells wide and five tall. At the lower edge, a heavy darkstone plinth. No modern rivets, silver machine frame, vent grilles, four LEDs or arrows. TOP: a deeply inset square forging stone with a very simple large pale-blue four-arm sigil at the center and four small dull-gold corner inlays, surrounded by darkstone. SIDE: broad stacked darkstone slabs with one small recessed diamond rune and only two warm ochre edge bands; no crimson cloth on side. ACTIVE FRONT: the exact same face and cloth and anvil rune, with ONLY the rune changing from muted violet-gray to bright pale icy blue. Restrained but distinctly magical masonry, readable at 16x16.",
+      "export": {
+        "grid": "2x2",
+        "faces": {
+          "front": [
+            0,
+            0
+          ],
+          "top": [
+            1,
+            0
+          ],
+          "side": [
+            0,
+            1
+          ],
+          "front_active": [
+            1,
+            1
+          ]
+        },
+        "size": [
+          16,
+          16
+        ],
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/forge_controller/"
+      },
+      "status": "Current machine exterior from 0.2.4",
+      "upstream_reference": {
+        "artifact": "maven.modrinth:forbidden-arcanus:fNjxgZPH",
+        "assets": [
+          "textures/block/darkstone.png",
+          "textures/block/arcane_polished_darkstone.png",
+          "textures/block/hephaestus_forge/tier_3/top.png",
+          "textures/block/hephaestus_forge/tier_3/side.png"
+        ]
+      }
+    },
+    {
+      "id": "clibano_controller",
+      "source": "Forbidden-Arcanus/art/source/clibano_controller-arcanus.png",
+      "generated_file": "exec-fe6c5371-bf23-4b87-b3fd-45ba04e140ee.png",
+      "references": [
+        "Forbidden-Arcanus/build/reference/machine-style/reference.png"
+      ],
+      "reference_role": "Locally assembled, ignored reference contact sheet from Forbidden & Arcanus release 2.6.1, used for palette and material language only. Upstream textures are not distributed; all exported faces are newly generated artwork.",
+      "prompt": "Use case: stylized-concept. Create an ORIGINAL Minecraft block texture atlas, not a screenshot or cube render. The attached contact sheet is a STYLE REFERENCE ONLY for the Forbidden and Arcanus darkstone palette and broad pixel scale. Do not copy any pictured texture, do not copy its contact-sheet layout or text. Required OUTPUT: one perfectly square OPAQUE PNG, exact equal 2x2 quadrants, no gaps or outer margins: top-left idle FRONT, top-right TOP, bottom-left SIDE/BACK/BOTTOM, bottom-right active FRONT. Each quadrant must have the simplicity of a TRUE 16x16 texture: exactly sixteen large square pixel cells across its face, broad solid shapes, not tiny detailed pixels. Faces fill their quadrants right to the edges. Flat orthographic surface artwork, no perspective, no displayed cubes, no labels, no digits, no fine noise, no gradients, no bloom, no antialiased lines, no transparency. Idle and active FRONT MUST share identical geometry and pixel positions; only light colors change. Subject: a CLIBANO FURNACE CONTROLLER as a compact arcane DARKSTONE FURNACE, a matching companion to Forbidden and Arcanus Clibano masonry, free from modern Mekanism casings. Main material deep blue-black/dark charcoal stone, broad gray-olive stone/aged metal braces, low contrast moss-gray edge highlights, sparse fire color. FRONT: a broad stepped darkstone arch surrounding TWO side-by-side narrow furnace chambers, separated by a thick gray-olive stone pier. A chunky gray-olive lintel and lower stone sill frame the chambers. Left contains a few dull amber embers; right contains dull teal soul embers. Avoid modern regular silver metal frames and electronic panels. TOP: a centered dark octagonal exhaust opening with a chunky olive-gray stone ring; a few broad navy darkstone masonry blocks in the corners. SIDE: one deeply inset small black square masonry socket surrounded by simple worn olive-gray brackets on a wall of broad darkstone slabs. ACTIVE FRONT: identical arches, piers and sill and exact chamber geometry; only the left ember pixels brighten orange-gold and the right ember pixels brighten icy cyan, as two small bold flame shapes. No red banners, ornate gold, purple crystal, circular spell patterns, wooden panels or modern ventilation grilles. Clear restrained Clibano-style coarse masonry, readable at 16x16.",
+      "export": {
+        "grid": "2x2",
+        "faces": {
+          "front": [
+            0,
+            0
+          ],
+          "top": [
+            1,
+            0
+          ],
+          "side": [
+            0,
+            1
+          ],
+          "front_active": [
+            1,
+            1
+          ]
+        },
+        "size": [
+          16,
+          16
+        ],
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_controller/"
+      },
+      "status": "Current machine exterior from 0.2.4",
+      "upstream_reference": {
+        "artifact": "maven.modrinth:forbidden-arcanus:fNjxgZPH",
+        "assets": [
+          "textures/block/clibano/clibano_center_front_off.png",
+          "textures/block/clibano/clibano_center_top.png",
+          "textures/block/clibano/clibano_center_side.png",
+          "textures/block/clibano/fire/clibano_center_front.png",
+          "textures/block/clibano/soul_fire/clibano_center_front.png"
+        ]
+      }
+    },
+    {
+      "id": "clibano_port",
+      "source": "Forbidden-Arcanus/art/source/clibano_port-arcanus.png",
+      "generated_file": "exec-bad8d7e2-1674-4039-b7fa-3eeffc21077d.png",
+      "references": [
+        "Forbidden-Arcanus/art/source/clibano_controller-arcanus.png"
+      ],
+      "reference_role": "Original repository controller artwork used only as a darkstone masonry and muted olive-gray palette reference; the new port has one square connector.",
+      "prompt": "Create an ORIGINAL Minecraft Forbidden & Arcanus darkstone Clibano PIPE PORT texture atlas. The attached image is ONLY a style reference for the blue-black masonry and muted olive-gray stone edging, not an edit target. Exact equal 2x2 atlas, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Each quadrant must have the simplicity of exactly 16x16 large solid-color pixel cells. The PORT must be immediately distinct from the double-fire furnace controller: one CENTRAL SQUARE RECESSED PIPE SOCKET, a chunky square olive-gray collar, four small corner fasteners, dark hollow center. NO flames and NO double furnace openings. Fourfold-symmetric functional connector design that reads naturally on the top, bottom or a wall. At least 85 percent charcoal navy darkstone, muted gray-green border, small dim cyan indicator pixel at bottom of front. Active front same exact geometry with just brighter cyan indicator. Top and side matching darkstone with one central compact square socket, minimal detail. Flat opaque atlas edge to edge. No perspective, text, gradient, bloom, high-frequency noise, silver Mek casing, or fantasy ornament. Do not copy the reference furnace design. Truly coarse pixels, each tile legible when reduced to 16x16.",
+      "export": {
+        "grid": "2x2",
+        "faces": {
+          "front": [
+            0,
+            0
+          ],
+          "top": [
+            1,
+            0
+          ],
+          "side": [
+            0,
+            1
+          ],
+          "front_active": [
+            1,
+            1
+          ]
+        },
+        "size": [
+          16,
+          16
+        ],
+        "resampling": "nearest",
+        "destination": "Forbidden-Arcanus/src/main/resources/assets/forbiddenmekanism/textures/block/clibano_port/"
+      },
+      "status": "Current dedicated Clibano port from 0.2.4; active front indicates connection to a complete furnace."
     }
   ]
 }

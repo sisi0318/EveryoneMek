@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,connected=false": {
+      "model": "forbiddenmekanism:block/clibano_port",
+      "x": 0,
+      "y": 0
+    },
+    "facing=north,connected=true": {
+      "model": "forbiddenmekanism:block/clibano_port_connected",
+      "x": 0,
+      "y": 0
+    },
+    "facing=east,connected=false": {
+      "model": "forbiddenmekanism:block/clibano_port",
+      "x": 0,
+      "y": 90
+    },
+    "facing=east,connected=true": {
+      "model": "forbiddenmekanism:block/clibano_port_connected",
+      "x": 0,
+      "y": 90
+    },
+    "facing=south,connected=false": {
+      "model": "forbiddenmekanism:block/clibano_port",
+      "x": 0,
+      "y": 180
+    },
+    "facing=south,connected=true": {
+      "model": "forbiddenmekanism:block/clibano_port_connected",
+      "x": 0,
+      "y": 180
+    },
+    "facing=west,connected=false": {
+      "model": "forbiddenmekanism:block/clibano_port",
+      "x": 0,
+      "y": 270
+    },
+    "facing=west,connected=true": {
+      "model": "forbiddenmekanism:block/clibano_port_connected",
+      "x": 0,
+      "y": 270
+    },
+    "facing=up,connected=false": {
+      "model": "forbiddenmekanism:block/clibano_port",
+      "x": 270,
+      "y": 0
+    },
+    "facing=up,connected=true": {
+      "model": "forbiddenmekanism:block/clibano_port_connected",
+      "x": 270,
+      "y": 0
+    },
+    "facing=down,connected=false": {
+      "model": "forbiddenmekanism:block/clibano_port",
+      "x": 90,
+      "y": 0
+    },
+    "facing=down,connected=true": {
+      "model": "forbiddenmekanism:block/clibano_port_connected",
+      "x": 90,
+      "y": 0
+    }
+  }
+}

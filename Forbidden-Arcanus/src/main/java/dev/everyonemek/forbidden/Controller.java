@@ -156,6 +156,8 @@ public final class Controller extends TileEntityConfigurableMachine {
             return update;
         }
         setActive(false);
+        ClibanoEmbedding.autoConnect(this);
+        ClibanoPorts.eject(this);
         var target = binding.resolve();
         readNative(target);
         if (target == null) { status = binding.target == null ? NO_TARGET : STRUCTURE; return update; }
@@ -250,6 +252,9 @@ public final class Controller extends TileEntityConfigurableMachine {
         container.track(SyncableInt.create(() -> duration, v -> duration = Math.max(1, v)));
         container.track(SyncableInt.create(() -> nativeTier, v -> nativeTier = v));
         container.track(SyncableInt.create(() -> enabled ? 1 : 0, v -> enabled = v != 0));
+        container.track(SyncableInt.create(() -> binding.embedded ? 1 : 0, v -> binding.embedded = v != 0));
+        container.track(mekanism.common.inventory.container.sync.SyncableLong.create(() -> binding.target == null ? Long.MIN_VALUE : binding.target.asLong(),
+              v -> binding.target = v == Long.MIN_VALUE ? null : BlockPos.of(v)));
         for (int i = 0; i < observed.length; i++) { final int n = i; container.track(SyncableInt.create(() -> observed[n], v -> observed[n] = v)); }
         for (int i = 0; i < capacities.length; i++) { final int n = i; container.track(SyncableInt.create(() -> capacities[n], v -> capacities[n] = v)); }
         if (kind().forge()) for (int i = 0; i < 4; i++) {

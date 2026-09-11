@@ -12,8 +12,8 @@ MACHINES = {
         "消耗 FE 与辉光、灵魂、血液、经验加工材料。放在完整锻台平台的中心。",
         "Uses FE and Aureal, souls, blood and experience to process materials. Place at the center of a complete forge platform."),
     "clibano_controller": ("炽炉控制器", "Clibano Controller", "forbidden_arcanus:clibano_core",
-        "消耗 FE，为完整的炽炉供料并收取成品。炽炉仍需燃料和相应灵魂。",
-        "Uses FE to supply and collect from a complete Clibano. The furnace still needs fuel and appropriate souls."),
+        "嵌入炽炉侧面或背面中央，自动连接炉体。消耗 FE 供料并收取成品，炽炉仍需燃料和相应灵魂。",
+        "Replace a side or rear center of the Clibano to connect automatically. Uses FE to supply and collect; the furnace still needs fuel and appropriate souls."),
 }
 
 
@@ -55,6 +55,24 @@ for name, (cn, english, core, description_cn, description_en) in MACHINES.items(
                 "G": {"item": "forbidden_arcanus:arcane_crystal_block"}}, "result": {"id": f"{ID}:{name}", "count": 1}})
 
 write(f"assets/{ID}/models/item/glow_module.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"{ID}:item/glow_module"}})
+zh[f"block.{ID}.clibano_port"] = "炽炉端口"
+en[f"block.{ID}.clibano_port"] = "Clibano Port"
+zh[f"description.{ID}.clibano_port"] = "替换炉体上、下、侧面或背面的中央一格，连接物品管道与 FE 电缆。使用控制器对应面的物流设置。"
+en[f"description.{ID}.clibano_port"] = "Replace a top, bottom, side or rear center to connect item pipes and FE cables. Uses the controller's corresponding side settings."
+port_texture = f"{ID}:block/clibano_port"
+write(f"assets/{ID}/models/block/clibano_port.json", {"parent": "minecraft:block/cube", "textures": {
+    "particle": f"{port_texture}/side", "north": f"{port_texture}/front", "up": f"{port_texture}/top",
+    **{face: f"{port_texture}/side" for face in ("south", "east", "west", "down")}}})
+write(f"assets/{ID}/models/block/clibano_port_connected.json", {"parent": f"{ID}:block/clibano_port", "textures": {"north": f"{port_texture}/front_active"}})
+write(f"assets/{ID}/models/item/clibano_port.json", {"parent": f"{ID}:block/clibano_port"})
+write(f"assets/{ID}/blockstates/clibano_port.json", {"variants": {
+    f"facing={face},connected={str(connected).lower()}": {"model": f"{ID}:block/clibano_port{'_connected' if connected else ''}", "x": x, "y": y}
+    for face, x, y in (("north", 0, 0), ("east", 0, 90), ("south", 0, 180), ("west", 0, 270), ("up", 270, 0), ("down", 90, 0))
+    for connected in (False, True)}})
+write(f"data/{ID}/loot_table/blocks/clibano_port.json", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": f"{ID}:clibano_port"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
+write(f"data/{ID}/recipe/clibano_port.json", {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": [" B ", "ICI", " B "],
+    "key": {"B": {"item": "forbidden_arcanus:polished_darkstone_bricks"}, "I": {"item": "mekanism:ingot_steel"},
+            "C": {"item": "mekanism:basic_control_circuit"}}, "result": {"id": f"{ID}:clibano_port", "count": 2}})
 write(f"data/{ID}/recipe/glow_module.json", {"type": "minecraft:crafting_shapeless", "category": "misc",
     "ingredients": [{"item": f"forbidden_arcanus:{item}"} for item in
         ("arcane_crystal_block", "arcane_crystal_block", "arcane_polished_darkstone", "mundabitur_dust")],
@@ -97,10 +115,12 @@ for tier in range(2, 6):
     write(f"assets/{ID}/models/item/{item_id}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"{ID}:item/{item_id}"}})
     write(f"data/{ID}/recipe/{item_id}.json", {"type": f"{ID}:forge_upgrade_crafting", "ritual": f"forbidden_arcanus:upgrade_tier_{tier}"})
 for tag in ("mineable/pickaxe", "needs_stone_tool"):
-    write(f"data/minecraft/tags/block/{tag}.json", {"replace": False, "values": [f"{ID}:{name}" for name in [*MACHINES, *compressed_blocks]]})
+    write(f"data/minecraft/tags/block/{tag}.json", {"replace": False, "values": [f"{ID}:{name}" for name in [*MACHINES, *compressed_blocks, "clibano_port"]]})
 write("pack.mcmeta", {"pack": {"pack_format": 34, "description": "Forbidden Mekanism resources"}})
 
 labels = {
+    "auto_connected": ("自动连接", "Auto-linked"),
+    "install_wall": ("控制器需放在炽炉侧面或背面中央；端口也可放在顶部和底部中央。检查权限和已有控制器。", "Use a side or rear center for the controller; ports also fit top and bottom centers. Check access and existing controllers."),
     "stock": ("原料", "Materials"), "output": ("输出", "Output"), "supplies": ("补给", "Supplies"),
     "enhancers": ("增强器", "Enhancers"), "resources": ("资源", "Resources"), "fuel_soul": ("燃料 / 灵魂", "Fuel / Souls"),
     "products": ("成品", "Products"),
@@ -126,7 +146,7 @@ labels = {
     "bound": ("已绑定原机", "Native machine bound"),
 }
 statuses = [
-    ("等待下一批", "Waiting for next batch"), ("加工中", "Processing"), ("请绑定炽炉", "Bind a Clibano"),
+    ("等待下一批", "Waiting for next batch"), ("加工中", "Processing"), ("请嵌入并组建炽炉", "Embed in and form a Clibano"),
     ("检查炽炉结构与绑定", "Check Clibano structure and binding"), ("原机已被其他控制器绑定", "Another controller owns this machine"),
     ("缺少电力", "Not enough energy"), ("已暂停", "Paused"), ("缺少配方材料", "Missing recipe materials"),
     ("锻造室等级不满足配方", "Forge tier does not match the recipe"), ("加工条件不满足", "Processing conditions unmet"),
@@ -164,4 +184,4 @@ template += list_tag("blocks", 10, []) + b"\x00"
 destination = ROOT / f"src/gameTest/resources/data/{ID}/structure/empty.nbt"
 destination.parent.mkdir(parents=True, exist_ok=True)
 destination.write_bytes(gzip.compress(template, mtime=0))
-print(f"Generated resources for {len(MACHINES)} machines, four resource modules, two compressed blocks and four native-material tier installers.")
+print(f"Generated resources for {len(MACHINES)} machines, a Clibano port, four resource modules, two compressed blocks and four native-material tier installers.")

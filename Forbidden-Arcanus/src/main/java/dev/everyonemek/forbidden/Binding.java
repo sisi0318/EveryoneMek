@@ -27,6 +27,7 @@ public final class Binding {
     public UUID id = UUID.randomUUID(), owner, targetId;
     public BlockPos target;
     public String clientLabel = "";
+    public boolean embedded;
     public Binding(Controller controller) { this.controller = controller; }
     public FakePlayer actor() {
         if (!(controller.getLevel() instanceof ServerLevel level) || owner == null) return null;
@@ -49,7 +50,8 @@ public final class Binding {
         Level level = block.getLevel(); BlockPos pos = block.getBlockPos();
         for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++)
             if (!level.hasChunkAt(pos.offset(x, 0, z))) return false;
-        return ModBlockPatterns.CLIBANO_COMBUSTION.matches(level, pos.offset(1, 1, -1), Direction.SOUTH, Direction.UP) != null;
+        return block instanceof ClibanoMainBlockEntity main && ClibanoEmbedding.validWalls(main)
+              && ModBlockPatterns.CLIBANO_COMBUSTION.matches(level, pos.offset(1, 1, -1), Direction.SOUTH, Direction.UP) != null;
     }
     public ValhelsiaContainerBlockEntity<?> resolve() {
         Level level = controller.getLevel();
@@ -61,19 +63,16 @@ public final class Binding {
         CompoundTag claim = block.getPersistentData().getCompound(CLAIM);
         if (!claim.hasUUID("target") || !targetId.equals(claim.getUUID("target")) || !claim.hasUUID("id")
               || !id.equals(claim.getUUID("id")) || claim.getLong("pos") != controller.getBlockPos().asLong()) return null;
-        return structure(block) && block.canOpen(actor()) ? block : null;
+        return (!embedded || block instanceof ClibanoMainBlockEntity main && ClibanoEmbedding.belongs(controller, main))
+              && structure(block) && block.canOpen(actor()) ? block : null;
     }
     public boolean bind(ServerPlayer player, BlockPos pos) {
         if (controller.kind().forge() || controller.getBlockPos().distSqr(pos) > 64) return false;
         var block = nativeAt(player.level(), pos);
+        if (embedded && (!(block instanceof ClibanoMainBlockEntity main) || !ClibanoEmbedding.belongs(controller, main))) return false;
         if (block == null || !structure(block) || !block.canOpen(player)) { controller.status = Controller.STRUCTURE; return false; }
         CompoundTag old = block.getPersistentData().getCompound(CLAIM);
-        if (old.hasUUID("id")) {
-            BlockPos previous = BlockPos.of(old.getLong("pos"));
-            if (!player.level().hasChunkAt(previous)) { controller.status = Controller.OCCUPIED; return false; }
-            if (player.level().getBlockEntity(previous) instanceof Controller other && other != controller
-                  && other.binding.id.equals(old.getUUID("id"))) { controller.status = Controller.OCCUPIED; return false; }
-        }
+        if (!available(block, controller)) { controller.status = Controller.OCCUPIED; return false; }
         release();
         target = block.getBlockPos(); owner = player.getUUID();
         targetId = old.hasUUID("target") ? old.getUUID("target") : UUID.randomUUID();
@@ -95,8 +94,23 @@ public final class Binding {
         }
         target = null; targetId = null;
     }
+    public static boolean available(ValhelsiaContainerBlockEntity<?> block, Controller claimant) {
+        var claim = block.getPersistentData().getCompound(CLAIM);
+        if (!claim.hasUUID("id")) return true;
+        BlockPos previous = BlockPos.of(claim.getLong("pos"));
+        return block.getLevel().hasChunkAt(previous) && (!(block.getLevel().getBlockEntity(previous) instanceof Controller other)
+              || other == claimant || !other.binding.id.equals(claim.getUUID("id")));
+    }
+    public static boolean canModify(ValhelsiaContainerBlockEntity<?> block, ServerPlayer player) {
+        var claim = block.getPersistentData().getCompound(CLAIM);
+        if (!claim.hasUUID("id")) return true;
+        BlockPos previous = BlockPos.of(claim.getLong("pos"));
+        return block.getLevel().hasChunkAt(previous) && (!(block.getLevel().getBlockEntity(previous) instanceof Controller other)
+              || !other.binding.id.equals(claim.getUUID("id")) || IBlockSecurityUtils.INSTANCE.canAccess(player, block.getLevel(), previous, other));
+    }
     public boolean bindNearby(ServerPlayer player) {
         if (controller.kind().forge()) return false;
+        if (embedded) { ClibanoEmbedding.autoConnect(controller); return resolve() != null; }
         var found = new LinkedHashMap<BlockPos, ValhelsiaContainerBlockEntity<?>>();
         BlockPos pos = controller.getBlockPos();
         for (BlockPos candidate : BlockPos.betweenClosed(pos.offset(-8, -8, -8), pos.offset(8, 8, 8))) {
@@ -110,11 +124,13 @@ public final class Binding {
     }
     public String label() { return controller.getLevel() != null && controller.getLevel().isClientSide ? clientLabel : target == null ? "" : target.toShortString(); }
     public void save(CompoundTag tag) {
+        tag.putBoolean("embedded", embedded);
         tag.putUUID("controller_id", id);
         if (owner != null) tag.putUUID("owner", owner);
         if (target != null && targetId != null) { tag.putLong("target_pos", target.asLong()); tag.putUUID("target_id", targetId); }
     }
     public void load(CompoundTag tag) {
+        embedded = tag.getBoolean("embedded");
         if (tag.hasUUID("controller_id")) id = tag.getUUID("controller_id");
         owner = tag.hasUUID("owner") ? tag.getUUID("owner") : null;
         targetId = tag.hasUUID("target_id") ? tag.getUUID("target_id") : null;

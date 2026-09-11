@@ -5,7 +5,7 @@ const {createRequire} = require('node:module');
 const sharp = createRequire(path.resolve(__dirname, '../art/package.json'))('sharp');
 const root = path.resolve(__dirname, '..');
 const id = 'forbiddenmekanism';
-const machines = ['forge_controller', 'clibano_controller'];
+const machines = ['forge_controller', 'clibano_controller', 'clibano_port'];
 const modules = ['glow_module', 'soul_module', 'blood_module', 'experience_module'];
 const itemIcons = [...modules, ...[2, 3, 4, 5].map(tier => `forge_tier_${tier}_installer`)];
 const materials = ['soul_block', 'xpetrified_block'];
@@ -35,7 +35,7 @@ async function main() {
     if (!(await sharp(destination).stats()).isOpaque) throw new Error(`Material face must be opaque: ${name}`);
   }
   for (const machine of machines) {
-    const source = path.join(root, 'art/source', `${machine}.png`);
+    const source = path.join(root, 'art/source', `${machine}-arcanus.png`);
     const metadata = await sharp(source).metadata();
     if (metadata.width !== metadata.height || metadata.width % 2) throw new Error(`Invalid atlas: ${machine}`);
     const cell = metadata.width / 2;
@@ -72,12 +72,12 @@ async function main() {
       left: column * 176 + 16, top: row * 176 + 16});
   }
   for (let column = 0; column < moduleTextures.length; column++)
-    images.push({input: await sharp(moduleTextures[column]).resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16 + column % 4 * 176, top: 368 + Math.floor(column / 4) * 176});
+    images.push({input: await sharp(moduleTextures[column]).resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16 + column % 4 * 176, top: 16 + machines.length * 176 + Math.floor(column / 4) * 176});
   for (const [column, name] of materials.entries()) images.push({input: await sharp(path.join(root, `src/main/resources/assets/${id}/textures/block/${name}.png`))
-    .resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16 + column * 176, top: 720});
-  await sharp({create: {width: 720, height: 896, channels: 3, background: '#aeb4b3'}}).composite(images).png().toFile(path.join(root, 'art/texture-sheet.png'));
+    .resize(160, 160, {kernel: 'nearest'}).png().toBuffer(), left: 16 + column * 176, top: 16 + (machines.length + 2) * 176});
+  await sharp({create: {width: 720, height: 16 + (machines.length + 3) * 176, channels: 3, background: '#aeb4b3'}}).composite(images).png().toFile(path.join(root, 'art/texture-sheet.png'));
   const previewBlocks = [...machines, ...materials];
-  const names = ['赫菲斯托斯锻造室', '炽炉控制器', '灵魂块', '石化经验块'];
+  const names = ['赫菲斯托斯锻造室', '炽炉控制器', '炽炉端口', '灵魂块', '石化经验块'];
   const content = [];
   for (let i = 0; i < previewBlocks.length; i++) {
     const column = i % 2, row = Math.floor(i / 2);
@@ -87,11 +87,12 @@ async function main() {
     content.push(await pixelFace(previewBlocks[i], 'side', 'matrix(8,-4,0,8,128,64)', .78));
     content.push(`</g><text x="${176 + 320 * column}" y="${394 + 400 * row}" text-anchor="middle" font-size="21">${names[i]}</text>`);
   }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="736" height="850"><rect width="736" height="850" fill="#edf0eb"/>
+  const previewHeight = 50 + Math.ceil(previewBlocks.length / 2) * 400;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="736" height="${previewHeight}"><rect width="736" height="${previewHeight}" fill="#edf0eb"/>
     <g font-family="Microsoft YaHei,Arial,sans-serif" fill="#24302b"><text x="48" y="44" font-size="25">Forbidden Mekanism</text>
     <text x="688" y="44" text-anchor="end" font-size="16">16×16 · 工作状态</text>${content.join('')}</g></svg>`;
   await fs.writeFile(path.join(root, 'art/block-preview.svg'), svg);
   await sharp(Buffer.from(svg)).png().toFile(path.join(root, 'art/block-preview.png'));
-  console.log('Exported 10 opaque 16x16 block faces, 8 transparent 16x16 item icons and review previews.');
+  console.log('Exported 14 opaque 16x16 block faces, 8 transparent 16x16 item icons and review previews.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

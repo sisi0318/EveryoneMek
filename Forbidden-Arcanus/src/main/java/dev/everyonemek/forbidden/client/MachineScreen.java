@@ -42,7 +42,7 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
     private void button(int x, int y, int width, Supplier<Component> label, int action) {
         addRenderableWidget(new MekanismButton(this, x, y, width, 16, label.get(), (button, mx, my) -> {
             minecraft.gameMode.handleInventoryButtonClick(menu.containerId, action); return true;
-        }) { @Override public void tick() { super.tick(); setMessage(label.get()); } });
+        }) { @Override public void tick() { super.tick(); setMessage(label.get()); active = action != 0 || !tile.binding.embedded; } });
     }
     @Override protected void addGuiElements() {
         super.addGuiElements();
@@ -60,7 +60,7 @@ public final class MachineScreen extends GuiConfigurableTile<Controller, Machine
         addRenderableWidget(new GuiInnerScreen(this, 18, tile.kind().forge() ? 154 : 126, 220, 18,
               () -> List.of(text(tile.kind().forge() && tile.status == Controller.STRUCTURE ? "platform_missing" : "status." + tile.status))));
         addRenderableWidget(new GuiInnerScreen(this, 18, tile.kind().forge() ? 176 : 148, 220, tile.kind().forge() ? 26 : 54, this::nativeDetails));
-        if (!tile.kind().forge()) button(18, 207, 60, () -> text("bind"), 0);
+        if (!tile.kind().forge()) button(18, 207, 60, () -> text(tile.binding.embedded ? "auto_connected" : "bind"), 0);
         button(tile.kind().forge() ? 18 : 82, 207, tile.kind().forge() ? 106 : 50, () -> text(tile.enabled ? "pause" : "resume"), 1);
         addRenderableWidget(new MekanismButton(this, tile.kind().forge() ? 132 : 136, 207, tile.kind().forge() ? 106 : 58, 16, text("recipes"),
               (button, mx, my) -> { addWindow(new GuiRecipeSelector(this, tile, menu.containerId)); return true; }));

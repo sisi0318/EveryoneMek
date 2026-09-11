@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ClibanoMainBlockEntity.class)
 public interface ClibanoAccess {
+    @Accessor("frontDirection") net.minecraft.core.Direction forbiddenmekanism$front();
     @Accessor("containerData") ContainerData forbiddenmekanism$data();
     @Accessor("quickCheck") ClibanoMainBlockEntity.CachedRecipeCheck forbiddenmekanism$recipes();
 }
