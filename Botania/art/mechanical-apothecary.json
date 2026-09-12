@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "Ars-Nouveau/art/source/potion_mixer.png; viewed for the shared industrial style",
+  "prompt": "Use case: stylized-concept. Create one ORIGINAL Minecraft Mekanism-style mechanical petal apothecary machine texture atlas. Exact equal 2x2 grid, no margins or labels: top-left idle front, top-right top, bottom-left side/back/bottom, bottom-right active front. Every quadrant must have the simplicity of exactly 16x16 large solid-color pixel cells, to be nearest-neighbor reduced to actual 16x16 PNG faces. Charcoal and neutral gray at least 85 percent, thick square industrial casing, a recessed work bay. Functional silhouette on the front: one small shallow silver mixing bowl under a short vertical dosing nozzle, two small pale-cyan water/status pixels and one muted green petal pixel. Top: simple recessed square hopper or basin opening with a restrained cyan water center. Side: dark recessed three-slot vent and one plain pipe coupling. Keep idle and active front geometry identical; only 2 or 3 status pixels become brighter. Flat opaque texture atlas, no perspective, text, bloom, gradients, fine noise, floral frame, wood, gold, gems, runic circles or decorative plants. Overall coarse square gray pixel style like a Mekanism chemical mixing machine; extremely readable at tiny block size. Four equal square faces fill the entire square canvas with no borders between quadrants.",
+  "source": "art/source/mechanical_apothecary.png",
+  "quadrants": [
+    "front",
+    "top",
+    "side",
+    "front_active"
+  ],
+  "outputs": "src/main/resources/assets/botanicalmekanism/textures/block/mechanical_apothecary/*.png",
+  "export": "tools/export_textures.cjs; equal quadrants, nearest resize to 16x16"
+}

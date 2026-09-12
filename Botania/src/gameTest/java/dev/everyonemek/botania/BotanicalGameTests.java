@@ -40,21 +40,21 @@ import vazkii.botania.common.lib.BotaniaTags;
 @GameTestHolder(BotanicalMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class BotanicalGameTests {
-    private static void check(boolean value, String message) { if (!value) throw new GameTestAssertException(message); }
-    private static ServerPlayer player(GameTestHelper h, String test) {
+    static void check(boolean value, String message) { if (!value) throw new GameTestAssertException(message); }
+    static ServerPlayer player(GameTestHelper h, String test) {
         return FakePlayerFactory.get(h.getLevel(), new GameProfile(UUID.nameUUIDFromBytes(test.getBytes(StandardCharsets.UTF_8)), "[BotanicalTest]"));
     }
-    private static BlockEntity plant(GameTestHelper h, ServerPlayer player, BlockPos relative, Block block) {
+    static BlockEntity plant(GameTestHelper h, ServerPlayer player, BlockPos relative, Block block) {
         h.setBlock(relative.below(), Blocks.STONE); h.setBlock(relative, block);
         BlockEntity tile = h.getBlockEntity(relative); Flowers.claim(tile, player);
         check(tile.getBlockState().canSurvive(h.getLevel(), tile.getBlockPos()), "Plant rejected stone support");
         return tile;
     }
-    private static ManaPoolBlockEntity pool(GameTestHelper h, BlockPos relative, int mana) {
+    static ManaPoolBlockEntity pool(GameTestHelper h, BlockPos relative, int mana) {
         h.setBlock(relative.below(), Blocks.STONE); h.setBlock(relative, BotaniaBlocks.MANA_POOL);
         var pool = (ManaPoolBlockEntity) h.getBlockEntity(relative); pool.receiveMana(mana); return pool;
     }
-    private static IPayloadContext context(ServerPlayer player) {
+    static IPayloadContext context(ServerPlayer player) {
         return (IPayloadContext) java.lang.reflect.Proxy.newProxyInstance(BotanicalGameTests.class.getClassLoader(), new Class[]{IPayloadContext.class},
               (proxy, method, args) -> {
                   if (method.getName().equals("player")) return player;
@@ -62,7 +62,7 @@ public final class BotanicalGameTests {
                   throw new UnsupportedOperationException(method.getName());
               });
     }
-    private static void action(ServerPlayer player, BlockEntity tile, int action, String value) {
+    static void action(ServerPlayer player, BlockEntity tile, int action, String value) {
         var previous = player.containerMenu; var position = player.position();
         try {
             player.setPos(tile.getBlockPos().getCenter());
@@ -70,7 +70,7 @@ public final class BotanicalGameTests {
             FlowerPackets.handleSettings(new FlowerPackets.Settings(menu.containerId, action, value), context(player));
         } finally { player.containerMenu = previous; player.setPos(position); }
     }
-    private static NetworkPlant node(GameTestHelper h, ServerPlayer player, BlockPos position, NetworkPlant core, int mode, Direction direction, int limit) {
+    static NetworkPlant node(GameTestHelper h, ServerPlayer player, BlockPos position, NetworkPlant core, int mode, Direction direction, int limit) {
         var node = (NetworkPlant) plant(h, player, position, Content.NODE.get());
         for (int i = 0; i < 3 && node.mode != mode; i++) action(player, node, 1, "");
         for (int i = 0; i < 6 && node.direction() != direction; i++) action(player, node, 2, "");
@@ -79,18 +79,18 @@ public final class BotanicalGameTests {
         check(core.network.equals(node.network) && node.mode == mode && node.direction() == direction, "Real settings packet did not configure node");
         return node;
     }
-    private static NetworkPlant core(GameTestHelper h, ServerPlayer player, BlockPos position) {
+    static NetworkPlant core(GameTestHelper h, ServerPlayer player, BlockPos position) {
         var core = (NetworkPlant) plant(h, player, position, Content.CORE.get());
         check(ManaNetworks.get(h.getLevel()).activate(core), "Core did not create network"); return core;
     }
-    private static ItemStack breakAndPick(GameTestHelper h, BlockPos pos, Block block) {
+    static ItemStack breakAndPick(GameTestHelper h, BlockPos pos, Block block) {
         h.getLevel().destroyBlock(pos, true);
         var items = h.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2));
         var item = items.stream().map(ItemEntity::getItem).filter(stack -> stack.is(block.asItem())).findFirst().orElseThrow(() -> new GameTestAssertException("Flower drop missing"));
         ItemStack copy = ItemStack.parseOptional(h.getLevel().registryAccess(), (CompoundTag) item.save(h.getLevel().registryAccess()));
         items.forEach(ItemEntity::discard); return copy;
     }
-    private static void placeItem(ServerPlayer player, BlockPos pos, ItemStack stack) {
+    static void placeItem(ServerPlayer player, BlockPos pos, ItemStack stack) {
         var hand = player.getMainHandItem().copy(); var position = player.position();
         try {
             player.setPos(pos.above(2).getCenter()); player.setItemInHand(InteractionHand.MAIN_HAND, stack);
@@ -98,8 +98,8 @@ public final class BotanicalGameTests {
             check(((BlockItem) stack.getItem()).place(new BlockPlaceContext(player, InteractionHand.MAIN_HAND, stack, hit)).consumesAction(), "Flower item could not be placed");
         } finally { player.setItemInHand(InteractionHand.MAIN_HAND, hand); player.setPos(position); }
     }
-    private static void stop(BlockEntity tile) { Flowers.data(tile).putBoolean("paused", true); }
-    private static void checkWorldSave(GameTestHelper h, BlockEntity flower) {
+    static void stop(BlockEntity tile) { Flowers.data(tile).putBoolean("paused", true); }
+    static void checkWorldSave(GameTestHelper h, BlockEntity flower) {
         var provider = h.getLevel().registryAccess();
         var restored = BlockEntity.loadStatic(flower.getBlockPos(), flower.getBlockState(), flower.saveWithFullMetadata(provider), provider);
         check(restored != null && Objects.equals(Flowers.owner(restored), Flowers.owner(flower))

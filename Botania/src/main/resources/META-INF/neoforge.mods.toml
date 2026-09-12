@@ -7,7 +7,7 @@ modId="botanicalmekanism"
 version="${version}"
 displayName="Botanical Mekanism"
 authors="EveryoneMek"
-description='''FE-powered botanical flowers and a wireless mana network.'''
+description='''Powered flowers, a mechanical apothecary and a wireless mana network.'''
 
 [[mixins]]
 config="botanicalmekanism.mixins.json"
@@ -39,3 +39,10 @@ type="required"
 versionRange="[456-SNAPSHOT]"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.botanicalmekanism]]
+modId="jei"
+type="optional"
+versionRange="[19,20)"
+ordering="AFTER"
+side="CLIENT"

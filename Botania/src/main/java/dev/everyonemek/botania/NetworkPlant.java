@@ -20,6 +20,22 @@ public final class NetworkPlant extends BlockEntity {
     public boolean core() { return getBlockState().is(Content.CORE.get()); }
     public Direction direction() { return getBlockState().getValue(BlockStateProperties.FACING); }
     public BlockPos targetPos() { return worldPosition.relative(direction()); }
+    public boolean detectPool() {
+        if (!(level instanceof ServerLevel) || core() || mode == RELAY) return false;
+        Direction found = null;
+        for (Direction side : Direction.values()) {
+            BlockPos pos = worldPosition.relative(side);
+            if (level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity pool
+                  && pool.getClass() == vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity.class
+                  && pool.getBlockState().getBlock() instanceof vazkii.botania.common.block.mana.ManaPoolBlock block && !block.isCreative()) {
+                if (found != null) return false;
+                found = side;
+            }
+        }
+        if (found == null) return false;
+        level.setBlockAndUpdate(worldPosition, getBlockState().setValue(BlockStateProperties.FACING, found));
+        setChanged(); return true;
+    }
     public void tick() {
         if (!Flowers.live(this) || !(level instanceof ServerLevel server)) return;
         if (core()) ManaNetworks.get(server).tick(this);

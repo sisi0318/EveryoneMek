@@ -35,6 +35,26 @@ for name, (cn, english, description_cn, description_en) in PLANTS.items():
     write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'{MOD}:{name}'}]}]})
 
 messages = {
+    'tab.settings': ('设置', 'Settings'), 'tab.networks': ('网络', 'Networks'),
+    'tab.members': ('成员', 'Members'), 'tab.connections': ('连接', 'Connections'),
+    'search': ('搜索名称', 'Search names'), 'empty_list': ('没有匹配的条目', 'No matching entries'),
+    'back': ('返回', 'Back'), 'online': ('在线', 'Online'), 'offline': ('离线', 'Offline'),
+    'add_member': ('添加成员', 'Add member'), 'add_name': ('添加：%s', 'Add: %s'), 'remove_name': ('移除：%s', 'Remove: %s'),
+    'connected_name': ('已连接：%s', 'Connected: %s'),
+    'network_details': ('%s\n节点：%s / %s\n%s\n核心：%s', '%s\nNodes: %s / %s\n%s\nCore: %s'),
+    'connection_row': ('%s · %s', '%s · %s'),
+    'connection_details': ('位置：%s\n%s\n本批传输：%s', 'Position: %s\n%s\nLast batch: %s'),
+    'detect_pool': ('自动检测', 'Detect pool'), 'target_side': ('魔力池方向', 'Pool direction'),
+    'priority_label': ('优先级', 'Priority'), 'fill_target': ('满池', 'Full'),
+    'priority_short.0': ('低', 'Low'), 'priority_short.1': ('普通', 'Normal'), 'priority_short.2': ('高', 'High'),
+    'detect_failed': ('附近需要唯一的有效魔力池', 'Needs exactly one adjacent supported pool'),
+    'setting_failed': ('设置未生效，请检查条件或权限', 'Setting rejected; check requirements and access'),
+    'apothecary.materials': ('材料', 'Materials'), 'apothecary.products': ('产物', 'Output'),
+    'apothecary.reagent': ('终结材料', 'Reagent'), 'apothecary.water': ('水：%s / %s mB', 'Water: %s / %s mB'),
+    'apothecary.buckets': ('水桶', 'Buckets'),
+    'apothecary.energy_cost': ('每批耗电：%s FE', 'Energy per batch: %s FE'),
+    'apothecary.time_water': ('%s tick · 1000 mB 水', '%s ticks · 1000 mB water'),
+    'apothecary.jei': ('机械花药台', 'Mechanical Apothecary'),
     'energy_label': ('储能 · FE', 'Energy · FE'), 'mana_label': ('魔力储备', 'Mana reserve'),
     'quantity': ('%s / %s', '%s / %s'),
     'loading': ('正在读取花的状态…', 'Reading flower state…'),
@@ -62,6 +82,11 @@ messages = {
 }
 for i, (cn, english) in enumerate(zip(['下方', '上方', '北侧', '南侧', '西侧', '东侧'], ['Down', 'Up', 'North', 'South', 'West', 'East'])):
     messages[f'direction.{i}'] = (f'目标：{cn}', f'Target: {english}')
+    messages[f'side.{i}'] = (cn, english)
+for i, pair in enumerate([
+    ('正在调合', 'Mixing'), ('放入配方材料', 'Insert recipe ingredients'), ('缺少终结材料', 'Needs reagent'),
+    ('需要水', 'Needs water'), ('需要能量', 'Needs energy'), ('产物空间不足', 'Output full'), ('红石已禁止', 'Redstone disabled'),
+]): messages[f'apothecary.status.{i}'] = pair
 statuses = {
     'unlinked': ('请选择网络', 'Select a network'), 'unowned': ('请右键初始化', 'Right-click to initialize'),
     'working': ('正在工作', 'Working'), 'ready': ('等待工作条件', 'Waiting for work'), 'waiting': ('等待供给或带宽', 'Waiting for supply or bandwidth'),
@@ -71,9 +96,13 @@ statuses = {
     'relay': ('中继已连接', 'Relay connected'), 'out_of_range': ('超出连接范围', 'Out of range'),
     'missing_pool': ('目标不是可用魔力池', 'No supported pool at target'), 'duplicate_target': ('魔力池已有无线端点', 'Pool already has an endpoint'),
     'duplicate_core': ('网络已有核心', 'Network already has a core'), 'denied': ('无网络访问权限', 'Network access denied'),
+    'unloaded': ('区块未加载', 'Chunk unloaded'),
 }
 for key, pair in statuses.items(): messages['status.' + key] = pair
 for key, (cn, english) in messages.items(): zh[f'gui.{MOD}.{key}'], en[f'gui.{MOD}.{key}'] = cn, english
+zh[f'block.{MOD}.mechanical_apothecary'], en[f'block.{MOD}.mechanical_apothecary'] = '机械花药台', 'Mechanical Apothecary'
+zh[f'description.{MOD}.mechanical_apothecary'] = '消耗水与能量调合原版花和仿生花。背面输入终结材料，右侧输出产物。'
+en[f'description.{MOD}.mechanical_apothecary'] = 'Uses water and energy to craft native and bionic flowers. Reagent enters at the back; products leave on the right.'
 write(f'assets/{MOD}/lang/zh_cn.json', zh)
 write(f'assets/{MOD}/lang/en_us.json', en)
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
@@ -86,16 +115,40 @@ def shaped(name, pattern, keys):
           'key': {key: {'item': item} for key, item in keys.items()}, 'result': {'id': f'{MOD}:{name}', 'count': 1}})
 
 
-shaped('mana_lotus', ['DCD', 'RLW', 'ISI'], {'D': 'botania:mana_diamond', 'C': 'mekanism:advanced_control_circuit',
-       'R': 'botania:rune_of_fire', 'L': 'botania:endoflame', 'W': 'botania:rune_of_air', 'I': 'botania:manasteel_ingot', 'S': 'botania:livingwood_twig'})
-shaped('resonance_flower', ['SES', 'DCD', 'RTR'], {'S': 'botania:mana_spark', 'E': 'botania:elementium_ingot', 'D': 'botania:dragonstone',
-       'C': 'mekanism:advanced_control_circuit', 'R': 'botania:livingrock', 'T': 'botania:livingwood_twig'})
-for name, ingredients, count in [
-    ('bionic_amaranthus', ['botania:jaded_amaranthus', 'mekanism:basic_control_circuit', 'botania:manasteel_ingot'], 1),
-    ('resonance_bud', ['botania:mana_spark', 'botania:elementium_ingot', 'mekanism:basic_control_circuit'], 2),
-]:
-    write(f'data/{MOD}/recipe/{name}.json', {'type': 'minecraft:crafting_shapeless', 'category': 'misc',
-          'ingredients': [{'item': item} for item in ingredients], 'result': {'id': f'{MOD}:{name}', 'count': count}})
+# Bionic recipes deliberately use only the mechanical recipe type, never the native basin or crafting table.
+recipes = [
+    ('mana_lotus', ['botania:endoflame', 'botania:cyan_mystical_petal', 'botania:cyan_mystical_petal', 'botania:white_mystical_petal', 'botania:white_mystical_petal',
+                    'botania:manasteel_ingot', 'botania:manasteel_ingot', 'botania:mana_diamond', 'botania:rune_of_fire', 'botania:rune_of_air',
+                    'mekanism:advanced_control_circuit'], 'mekanism:alloy_infused', 1, 200, 150),
+    ('bionic_amaranthus', ['botania:jaded_amaranthus', 'botania:green_mystical_petal', 'botania:lime_mystical_petal', 'botania:manasteel_ingot',
+                           'botania:manasteel_ingot', 'botania:mana_pearl', 'botania:rune_of_earth', 'mekanism:basic_control_circuit'],
+                          'mekanism:alloy_infused', 1, 160, 100),
+    ('resonance_flower', ['botania:manastar', 'botania:purple_mystical_petal', 'botania:purple_mystical_petal', 'botania:light_blue_mystical_petal', 'botania:light_blue_mystical_petal',
+                         'botania:mana_spark', 'botania:mana_spark', 'botania:elementium_ingot', 'botania:elementium_ingot', 'botania:dragonstone',
+                         'botania:rune_of_air', 'mekanism:advanced_control_circuit'], 'mekanism:alloy_reinforced', 1, 300, 200),
+    ('resonance_bud', ['botania:mana_spark', 'botania:cyan_mystical_petal', 'botania:purple_mystical_petal', 'botania:elementium_ingot', 'botania:elementium_ingot',
+                      'botania:rune_of_air', 'mekanism:basic_control_circuit'], 'mekanism:alloy_infused', 2, 100, 100),
+]
+for name, ingredients, reagent, count, ticks, power in recipes:
+    write(f'data/{MOD}/recipe/{name}.json', {'type': f'{MOD}:mechanical_apothecary', 'ingredients': [{'item': item} for item in ingredients],
+          'reagent': {'item': reagent}, 'result': {'id': f'{MOD}:{name}', 'count': count}, 'ticks': ticks, 'fe_per_tick': power})
+shaped('mechanical_apothecary', ['MAM', 'CSC', 'MIM'], {'M': 'botania:manasteel_ingot', 'A': 'botania:petal_apothecary',
+       'C': 'mekanism:basic_control_circuit', 'S': 'mekanism:steel_casing', 'I': 'mekanism:alloy_infused'})
+name = 'mechanical_apothecary'
+texture = f'{MOD}:block/{name}'
+write(f'assets/{MOD}/models/block/{name}.json', {'parent': 'minecraft:block/cube', 'textures': {
+      'particle': f'{texture}/side', 'north': f'{texture}/front', 'up': f'{texture}/top',
+      **{face: f'{texture}/side' for face in ['south', 'east', 'west', 'down']}}})
+write(f'assets/{MOD}/models/block/{name}_active.json', {'parent': f'{MOD}:block/{name}', 'textures': {'north': f'{texture}/front_active'}})
+write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'{MOD}:block/{name}'})
+write(f'assets/{MOD}/blockstates/{name}.json', {'variants': {f'facing={face},active={str(active).lower()}': {
+      'model': f'{MOD}:block/{name}' + ('_active' if active else ''), 'y': rotation}
+      for face, rotation in [('north', 0), ('east', 90), ('south', 180), ('west', 270)] for active in [False, True]}})
+write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{
+      'type': 'minecraft:item', 'name': f'{MOD}:{name}', 'functions': [{'function': 'minecraft:copy_name', 'source': 'block_entity'},
+      {'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': [f'mekanism:{key}' for key in
+      ['ejector', 'owner', 'redstone_control', 'security', 'side_config', 'upgrades', 'energy', 'items', 'fluids']]}]}]}]})
+write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': [f'{MOD}:{name}']})
 
 def text(value):
     encoded = value.encode('utf-8')

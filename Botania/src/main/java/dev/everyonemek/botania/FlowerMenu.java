@@ -19,12 +19,15 @@ import vazkii.botania.api.block_entity.FunctionalFlowerBlockEntity;
 import vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity;
 
 public final class FlowerMenu extends AbstractContainerMenu {
+    public static final int SET_MODE = 9, SET_DIRECTION = 10, SET_PRIORITY = 11, DETECT_POOL = 12,
+          ADD_MEMBER = 13, REMOVE_MEMBER = 14, FILL_TARGET = 15;
     public final BlockPos position;
     public final Level level;
     private final Player player;
     private final BlockEntity tile;
     public CompoundTag state = new CompoundTag();
     private CompoundTag lastSent;
+    public String feedback = "";
     public FlowerMenu(int id, Inventory inventory, BlockPos position) {
         super(Content.MENU.get(), id); this.position = position; level = inventory.player.level(); player = inventory.player;
         tile = level.getBlockEntity(position);
@@ -60,9 +63,22 @@ public final class FlowerMenu extends AbstractContainerMenu {
                     }
                     data.invalidate(); return true;
                 }
+                if (action == ADD_MEMBER || action == REMOVE_MEMBER) {
+                    UUID id = UUID.fromString(value);
+                    if (id.equals(network.owner)) return false;
+                    if (action == REMOVE_MEMBER) {
+                        if (network.members.remove(id) == null) return false;
+                    } else {
+                        ServerPlayer member = server.getServer().getPlayerList().getPlayer(id);
+                        if (member == null || network.members.size() >= 32 || network.members.containsKey(id)) return false;
+                        network.members.put(id, member.getGameProfile().getName());
+                    }
+                    data.invalidate(); return true;
+                }
                 return false;
             }
-            if (plant.mode == NetworkPlant.RELAY && (action == 2 || action == 3) || action == 4 && plant.mode != NetworkPlant.RECEIVE) return false;
+            if (plant.mode == NetworkPlant.RELAY && (action == 2 || action == 3 || action == SET_DIRECTION || action == DETECT_POOL)
+                  || (action == 4 || action == SET_PRIORITY || action == FILL_TARGET) && plant.mode != NetworkPlant.RECEIVE) return false;
             if (action == 1) plant.mode = (plant.mode + 1) % 3;
             else if (action == 2) level.setBlockAndUpdate(position, plant.getBlockState().setValue(BlockStateProperties.FACING, Direction.values()[(plant.direction().ordinal() + 1) % 6]));
             else if (action == 3) {
@@ -72,6 +88,21 @@ public final class FlowerMenu extends AbstractContainerMenu {
             } else if (action == 4) plant.priority = (plant.priority + 1) % 3;
             else if (action == 5) return data.join(plant, UUID.fromString(value), sender.getUUID());
             else if (action == 8) { data.removed(plant); plant.network = null; }
+            else if (action == SET_MODE) {
+                int mode = Integer.parseInt(value); if (mode < 0 || mode > 2) return false; plant.mode = mode;
+            } else if (action == SET_DIRECTION) {
+                int direction = Integer.parseInt(value); if (direction < 0 || direction > 5) return false;
+                level.setBlockAndUpdate(position, plant.getBlockState().setValue(BlockStateProperties.FACING, Direction.values()[direction]));
+            } else if (action == SET_PRIORITY) {
+                int priority = Integer.parseInt(value); if (priority < 0 || priority > 2) return false; plant.priority = priority;
+            } else if (action == DETECT_POOL) {
+                if (!plant.detectPool()) return false;
+            } else if (action == FILL_TARGET) {
+                if (!server.hasChunkAt(plant.targetPos()) || !(server.getBlockEntity(plant.targetPos()) instanceof ManaPoolBlockEntity pool)
+                      || pool.getClass() != ManaPoolBlockEntity.class
+                      || !(pool.getBlockState().getBlock() instanceof vazkii.botania.common.block.mana.ManaPoolBlock block) || block.isCreative()) return false;
+                plant.target = pool.getMaxMana();
+            }
             else return false;
             plant.status = plant.network == null ? "unlinked" : "waiting"; plant.setChanged(); data.invalidate(); return true;
         } catch (IllegalArgumentException ignored) { return false; }
@@ -79,6 +110,7 @@ public final class FlowerMenu extends AbstractContainerMenu {
     public CompoundTag snapshot() {
         CompoundTag tag = new CompoundTag();
         if (tile == null || !(level instanceof ServerLevel server)) return tag;
+        tag.putString("feedback", feedback);
         tag.putBoolean("enabled", Flowers.enabled(tile)); tag.putInt("fe", Flowers.storedFE(tile));
         tag.putInt("fePerMana", Balance.FE_PER_MANA.get()); tag.putInt("rate", Balance.LOTUS_RATE.get());
         if (tile instanceof ManaLotus lotus) {
@@ -104,14 +136,44 @@ public final class FlowerMenu extends AbstractContainerMenu {
                   || !Objects.equals(core.network, network.id) || !Flowers.enabled(core))) status = "core_offline";
             tag.putString("status", status);
             if (network != null) {
-                tag.putUUID("network", network.id); tag.putString("name", network.name); tag.putInt("nodes", network.nodes.size());
-                tag.putInt("delivered", network.lastDelivered); tag.putInt("fee", network.lastFee);
-                tag.putString("members", String.join(", ", network.members.values().stream().sorted().toList()));
-                tag.putInt("memberCount", network.members.size());
+                final var visible = network;
+                tag.putUUID("network", visible.id); tag.putString("name", visible.name); tag.putInt("nodes", visible.nodes.size());
+                tag.putInt("delivered", visible.lastDelivered); tag.putInt("fee", visible.lastFee);
+                tag.putString("members", String.join(", ", visible.members.values().stream().sorted().toList()));
+                tag.putInt("memberCount", visible.members.size());
+                ListTag members = new ListTag();
+                visible.members.entrySet().stream().sorted(java.util.Map.Entry.comparingByValue()).forEach(member -> {
+                    CompoundTag entry = new CompoundTag(); entry.putUUID("id", member.getKey()); entry.putString("name", member.getValue()); members.add(entry);
+                });
+                tag.put("memberEntries", members);
+                if (plant.core()) {
+                    ListTag online = new ListTag();
+                    server.getServer().getPlayerList().getPlayers().stream().filter(p -> !p.getUUID().equals(visible.owner) && !visible.members.containsKey(p.getUUID()))
+                          .sorted(java.util.Comparator.comparing(p -> p.getGameProfile().getName())).forEach(p -> {
+                              CompoundTag entry = new CompoundTag(); entry.putUUID("id", p.getUUID()); entry.putString("name", p.getGameProfile().getName()); online.add(entry);
+                          });
+                    tag.put("onlinePlayers", online);
+                    ListTag connections = new ListTag();
+                    visible.nodes.stream().sorted().forEach(pos -> {
+                        CompoundTag entry = new CompoundTag(); entry.putLong("pos", pos.asLong()); entry.putString("name", pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
+                        entry.putString("status", "unloaded");
+                        if (server.hasChunkAt(pos) && server.getBlockEntity(pos) instanceof NetworkPlant node && Objects.equals(node.network, visible.id)) {
+                            entry.putInt("mode", node.mode); entry.putString("status", Flowers.enabled(node) ? node.status : "paused");
+                            entry.putInt("moved", node.moved);
+                        }
+                        connections.add(entry);
+                    });
+                    tag.put("connections", connections);
+                }
             }
             ListTag choices = new ListTag();
             for (ManaNetworks.Network choice : data.accessible(player.getUUID())) {
-                CompoundTag entry = new CompoundTag(); entry.putUUID("id", choice.id); entry.putString("name", choice.name); choices.add(entry);
+                CompoundTag entry = new CompoundTag(); entry.putUUID("id", choice.id); entry.putString("name", choice.name);
+                entry.putInt("nodes", choice.nodes.size());
+                entry.putString("location", choice.core == null ? "" : choice.core.getX() + ", " + choice.core.getY() + ", " + choice.core.getZ());
+                entry.putBoolean("online", choice.core != null && server.hasChunkAt(choice.core)
+                      && server.getBlockEntity(choice.core) instanceof NetworkPlant core && Objects.equals(core.network, choice.id) && Flowers.enabled(core));
+                choices.add(entry);
             }
             tag.put("choices", choices);
             if (!plant.core() && server.hasChunkAt(plant.targetPos())) {

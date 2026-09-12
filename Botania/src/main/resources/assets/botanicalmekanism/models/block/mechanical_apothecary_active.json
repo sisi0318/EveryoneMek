@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/mechanical_apothecary",
+  "textures": {
+    "north": "botanicalmekanism:block/mechanical_apothecary/front_active"
+  }
+}

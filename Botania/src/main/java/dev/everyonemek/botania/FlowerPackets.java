@@ -32,7 +32,9 @@ public final class FlowerPackets {
     public static void handleSettings(Settings packet, net.neoforged.neoforge.network.handling.IPayloadContext context) {
         context.enqueueWork(() -> {
             var player = context.player();
-            if (player.containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId) menu.apply(player, packet.action, packet.value);
+            if (player.containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId) {
+                menu.feedback = menu.apply(player, packet.action, packet.value) ? "" : packet.action == FlowerMenu.DETECT_POOL ? "detect_failed" : "setting_failed";
+            }
         });
     }
     private FlowerPackets() { }

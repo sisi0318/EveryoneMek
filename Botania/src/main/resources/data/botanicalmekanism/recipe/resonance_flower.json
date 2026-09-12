@@ -1,33 +1,50 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "misc",
-  "pattern": [
-    "SES",
-    "DCD",
-    "RTR"
-  ],
-  "key": {
-    "S": {
+  "type": "botanicalmekanism:mechanical_apothecary",
+  "ingredients": [
+    {
+      "item": "botania:manastar"
+    },
+    {
+      "item": "botania:purple_mystical_petal"
+    },
+    {
+      "item": "botania:purple_mystical_petal"
+    },
+    {
+      "item": "botania:light_blue_mystical_petal"
+    },
+    {
+      "item": "botania:light_blue_mystical_petal"
+    },
+    {
       "item": "botania:mana_spark"
     },
-    "E": {
+    {
+      "item": "botania:mana_spark"
+    },
+    {
       "item": "botania:elementium_ingot"
     },
-    "D": {
+    {
+      "item": "botania:elementium_ingot"
+    },
+    {
       "item": "botania:dragonstone"
     },
-    "C": {
+    {
+      "item": "botania:rune_of_air"
+    },
+    {
       "item": "mekanism:advanced_control_circuit"
-    },
-    "R": {
-      "item": "botania:livingrock"
-    },
-    "T": {
-      "item": "botania:livingwood_twig"
     }
+  ],
+  "reagent": {
+    "item": "mekanism:alloy_reinforced"
   },
   "result": {
     "id": "botanicalmekanism:resonance_flower",
     "count": 1
-  }
+  },
+  "ticks": 300,
+  "fe_per_tick": 200
 }

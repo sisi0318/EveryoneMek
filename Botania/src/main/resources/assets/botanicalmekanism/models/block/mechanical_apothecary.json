@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/mechanical_apothecary/side",
+    "north": "botanicalmekanism:block/mechanical_apothecary/front",
+    "up": "botanicalmekanism:block/mechanical_apothecary/top",
+    "south": "botanicalmekanism:block/mechanical_apothecary/side",
+    "east": "botanicalmekanism:block/mechanical_apothecary/side",
+    "west": "botanicalmekanism:block/mechanical_apothecary/side",
+    "down": "botanicalmekanism:block/mechanical_apothecary/side"
+  }
+}

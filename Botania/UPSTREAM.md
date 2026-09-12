@@ -96,4 +96,11 @@
 
 - [JEIBotaniaPlugin](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/client/integration/jei/JEIBotaniaPlugin.java)：已有十类页面及原装置 catalysts；贸易的原样返还条目有额外隐藏逻辑，词典不是简单同类处理。
 - [中文语言资源](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/resources/assets/botania/lang/zh_cn.json)：确认翡翠苋、粘土花、田园康乃馨、漏斗花、手掌花、冶炼火等当前名称。
-- [LICENSE.txt](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/LICENSE.txt)、[ALTERNATE_LICENSES.txt](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/ALTERNATE_LICENSES.txt)：上游使用 Botania 自有许可证，并记录部分其他来源的许可证。当前工作只形成设计与引用；实现时记录实际使用方式，不将上游代码或资产改称本项目原创。
+- [LICENSE.txt](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/LICENSE.txt)、[ALTERNATE_LICENSES.txt](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/ALTERNATE_LICENSES.txt)：上游使用 Botania 自有许可证，并记录部分其他来源的许可证。本项目通过独立运行时依赖调用原花、配方与 JEI 扩展点，不将上游代码或资产改称本项目原创。
+
+## 7. 共鸣网络交互与机械花药台
+
+- Flux Networks `1.21` 固定参考提交为 `ea8b6e0cf708098ab2f02bf5c3d5c1f0ed2a1f5f`。[GuiTabSelection](https://github.com/SonarSonic/Flux-Networks/blob/ea8b6e0cf708098ab2f02bf5c3d5c1f0ed2a1f5f/src/main/java/sonar/fluxnetworks/client/gui/tab/GuiTabSelection.java)提供分页列表、选中反馈和直接连接；[GuiTabMembers](https://github.com/SonarSonic/Flux-Networks/blob/ea8b6e0cf708098ab2f02bf5c3d5c1f0ed2a1f5f/src/main/java/sonar/fluxnetworks/client/gui/tab/GuiTabMembers.java)与 GuiTabConnections 分开管理成员和设备。本模组只参考交互方式，使用独立的简洁矩形实现；未复制其代码或 GUI 素材，不增加 Flux 运行依赖。
+- [PetalApothecaryRecipe](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/crafting/PetalApothecaryRecipe.java)将配方材料与 reagent 分开，材料上限 16。机械台为每个实际消耗材料构造一个单件输入，调用原 matches／assemble／getRemainingItems；堆叠库存由本模组容量匹配器分配。
+- 当前上游物品名为 `white_mystical_petal` 等与 `petal_apothecary`；1.20 的 `white_petal`、`apothecary_default` 不存在。机械配方使用独立 RecipeType／Serializer，原台只查询自己的类型，不能匹配本模组仿生配方。
+- Mek 10.7.19 的 ForgeEnergyIntegration 接收 FE 时调用 `IEnergyConversion.convertFrom`，反向使用 convertTo。机械台按此方向转换 FE 成本和储量，再应用原升级倍率。侧面类型显式包含 FLUID，不能使用只有物品／化学品／能量的 ADVANCED_ELECTRIC_MACHINE 预设。

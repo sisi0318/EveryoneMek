@@ -1,19 +1,38 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
+  "type": "botanicalmekanism:mechanical_apothecary",
   "ingredients": [
     {
       "item": "botania:jaded_amaranthus"
     },
     {
-      "item": "mekanism:basic_control_circuit"
+      "item": "botania:green_mystical_petal"
+    },
+    {
+      "item": "botania:lime_mystical_petal"
     },
     {
       "item": "botania:manasteel_ingot"
+    },
+    {
+      "item": "botania:manasteel_ingot"
+    },
+    {
+      "item": "botania:mana_pearl"
+    },
+    {
+      "item": "botania:rune_of_earth"
+    },
+    {
+      "item": "mekanism:basic_control_circuit"
     }
   ],
+  "reagent": {
+    "item": "mekanism:alloy_infused"
+  },
   "result": {
     "id": "botanicalmekanism:bionic_amaranthus",
     "count": 1
-  }
+  },
+  "ticks": 160,
+  "fe_per_tick": 100
 }

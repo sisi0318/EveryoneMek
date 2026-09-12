@@ -47,7 +47,10 @@ public final class NetworkPlantBlock extends BaseEntityBlock {
     }
     @Override public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        if (!level.isClientSide && level.getBlockEntity(pos) != null) Flowers.placed(level.getBlockEntity(pos), placer, stack);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof NetworkPlant plant) {
+            Flowers.placed(plant, placer, stack);
+            if (!stack.has(Content.STATE.get())) plant.detectPool();
+        }
     }
     @Override protected List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) { return Flowers.withState(super.getDrops(state, builder), builder, this); }
 }

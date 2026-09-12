@@ -55,6 +55,7 @@ public final class Content {
         TABS.register("main", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.botanicalmekanism"))
               .icon(() -> new ItemStack(LOTUS.get())).displayItems((parameters, output) -> {
                   for (var block : new DeferredBlock<?>[]{LOTUS, AMARANTHUS, CORE, NODE}) output.accept(block.get());
+                  output.accept(ApothecaryContent.BLOCK);
               }).build());
     }
     public static void register(IEventBus bus) {
