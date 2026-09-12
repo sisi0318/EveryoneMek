@@ -48,6 +48,9 @@
 | [ManaItem](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/api/mana/ManaItem.java) | 当前 capability 可让不同物品提供魔力行为；池、物品分发和请求各有许可判断；addMana 也无模拟返回值 |
 | [PowerGeneratorBlockEntity](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/block_entity/mana/PowerGeneratorBlockEntity.java) | NeoForge 分支 1 魔力 → 10 FE；主动向邻居输出，不能忽略这条回流路径 |
 | [NeoForge 注册](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/NeoForge/src/main/java/vazkii/botania/neoforge/NeoForgeCommonInitializer.java) | 原魔力转换器的 FE capability 只提供储能视图，receive/extract 均返回 0；使用主动输出路径验收 |
+| [GeneratingFlowerBlockEntity](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/api/block_entity/GeneratingFlowerBlockEntity.java)、[ManaCollector](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/api/mana/ManaCollector.java) | 原产能花保存一份魔力，向绑定收集器转移；原绑定范围 6 格；专用导能莲可在此基础上接入原发射器 |
+| [EndoflameBlockEntity](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/block_entity/flower/generating/EndoflameBlockEntity.java) | 正在燃烧时每 2 tick 加 3 魔力，平均 1.5／tick，另有燃料与冷却；不能误按每 tick 3 魔力做平衡对照 |
+| [GourmaryllisBlockEntity](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/block_entity/flower/generating/GourmaryllisBlockEntity.java) | 食物营养、种类历史、连续供给影响产量和冷却；导能莲的平衡不能只与火红莲或单次峰值比较 |
 
 ## 4. 加工契约
 
@@ -72,7 +75,7 @@
 | --- | --- |
 | [FunctionalFlowerBlockEntity](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/api/block_entity/FunctionalFlowerBlockEntity.java) | 原花拥有内部魔力并主动从绑定池补充；仿生版本要隔离此来源，而非 FE 与原池同时付费 |
 | [SpecialFlowerBlockEntity](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/api/block_entity/SpecialFlowerBlockEntity.java) | commonTick 管理真实 tick、浮空状态和红线虚拟坐标；地栽／浮空状态不能随意在同一实体上切换 |
-| [SpecialFlowerBlock](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/flower/SpecialFlowerBlock.java)、[FloatingSpecialFlowerBlock](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/flower/FloatingSpecialFlowerBlock.java) | 构造时指定 BE 类型；原生种植、tick 与浮空接口必须一起考虑 |
+| [SpecialFlowerBlock](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/flower/SpecialFlowerBlock.java)、[FloatingSpecialFlowerBlock](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/flower/FloatingSpecialFlowerBlock.java) | 构造时指定 BE 类型；原地栽花沿用 FlowerBlock 的种植判定并额外允许红线仿制者；仿生花必须覆写自己的通用承托规则，不能仅复用模型就认为已解除土壤限制 |
 | [NeoForgeCommonInitializer](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/NeoForge/src/main/java/vazkii/botania/neoforge/NeoForgeCommonInitializer.java) | registerAdditionalBlockEntityBlocks 使用 `BlockEntityTypeAddBlocksEvent.modify`，是类型接受新方块的可验证入口 |
 | [翡翠苋](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/block_entity/flower/functional/JadedAmaranthusBlockEntity.java) | 原花从神秘花标签随机取花，检查生存条件；成功生花消耗 100 魔力 |
 | [粘土花](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/block/block_entity/flower/functional/ClayconiaBlockEntity.java) | 找沙、移除方块、产生 1 粘土球、扣 80 魔力 |
@@ -83,7 +86,7 @@
 
 模型已检查：[翡翠苋方块状态](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/generated/resources/assets/botania/blockstates/jaded_amaranthus.json)、[方块模型](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/generated/resources/assets/botania/models/block/jaded_amaranthus.json)、[物品模型](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/generated/resources/assets/botania/models/item/jaded_amaranthus.json)。
 
-原状态直接引用 `botania:block/jaded_amaranthus`；方块模型使用 Botania cross 形状，物品模型引用原花纹理。仿生版本可以指向这些运行时资源；后续逐花检查颜色、cutout、状态属性和漂浮模型，不重绘原花。
+原状态直接引用 `botania:block/jaded_amaranthus`；方块模型使用 Botania cross 形状，物品模型引用原花纹理。六种仿生功能花可以指向这些运行时资源；后续逐花检查颜色、cutout、状态属性和漂浮模型。专用 FE 产能花是另一个原创花种，用户允许为它制作带科技细节的新花形。
 
 ## 6. JEI、名称与授权来源
 
