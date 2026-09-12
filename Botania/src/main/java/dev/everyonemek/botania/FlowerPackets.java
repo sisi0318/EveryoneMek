@@ -23,7 +23,8 @@ public final class FlowerPackets {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        // The joining screen requires acknowledged settings and connect-as support on both ends.
+        var registrar = event.registrar("2");
         registrar.playToServer(Settings.TYPE, Settings.CODEC, FlowerPackets::handleSettings);
         registrar.playToClient(Snapshot.TYPE, Snapshot.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (context.player().containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId && packet.values != null) menu.state = packet.values;
@@ -33,7 +34,7 @@ public final class FlowerPackets {
         context.enqueueWork(() -> {
             var player = context.player();
             if (player.containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId) {
-                menu.feedback = menu.apply(player, packet.action, packet.value) ? "" : packet.action == FlowerMenu.DETECT_POOL ? "detect_failed" : "setting_failed";
+                menu.handleSettings(player, packet.action, packet.value);
             }
         });
     }

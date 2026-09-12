@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.4 可运行原型**：提供仿生导能莲、仿生翡翠苋、共鸣花、共鸣芽和机械花药台。其他加工机器、Mek Chemical 魔力互通器、其余仿生功能花和跨维度网络仍在规划中。
+**0.1.0-alpha.5 可运行原型**：提供仿生导能莲、仿生翡翠苋、共鸣花、共鸣芽和机械花药台。其他加工机器、Mek Chemical 魔力互通器、其余仿生功能花和跨维度网络仍在规划中。
 
 适配 Minecraft 1.21.1、Java 21、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。客户端与服务端都需安装本模组及下列依赖，不要同时保留重复的旧 JAR：
 
@@ -10,7 +10,7 @@
 | Patchouli | 1.21.1-92-NEOFORGE |
 | Curios | 9.5.1+1.21.1 |
 
-本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.4.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，四种扩展花改为机械花药台专用配方。无需安装 Flux Networks。
+本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.5.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，四种扩展花改为机械花药台专用配方。无需安装 Flux Networks。
 
 ![三种原创花形材质](art/texture-sheet.png)
 
@@ -27,15 +27,17 @@
 
 配置界面采用简洁的半透明深灰底。产魔花只显示储能、魔力和状态；共鸣网络分为设置、网络选择、成员和连接概览等页面。悬停花的状态查看绑定信息，悬停储能查看工作要求，列表可搜索和滚轮翻页。模式切换、按钮与回车提交均使用服务端确认值；底部“完成”或 Esc 关闭界面。
 
+**从 alpha.4 更新：**本版增加接入与设置确认协议，客户端和服务端都要替换为相同版本；原有花、网络与机器数据保留。
+
 **从 alpha.1 更新：**客户端和服务端替换本模组 JAR 即可，依赖未变。旧世界中若某朵花无法选中，先空手右键一次补全所有者，再用绑定模式改绑。此次修复防止花在重进世界时丢失所有者、FE 和暂停状态；旧版已经写丢的数据无法推算恢复，物品上的原有储能与设置仍兼容。
 
 ## 无线网络使用
 
 1. 放置共鸣花，在“设置”页命名网络；“成员”页选择在线玩家添加，点击已授权成员可移除，“连接”页查看节点位置和状态。
 2. 在源池旁放共鸣芽。只有一个相邻有效池时自动选中方向；也可在设置页直接选方向或点击“自动检测”。
-3. 打开“网络”页，搜索名称并点击需要加入的网络，服务器确认后显示“已连接”。同名网络可悬停查看核心位置与在线状态。
-4. 源端直接选“供给”，设置保留量；另一池旁的节点选“接收”，设置目标量与优先级。“满池”会把目标量设为当前池容量。
-5. 需要扩展距离时直接选“中继”。节点保存原方向和数量，切回收发模式仍可使用；断开网络有独立按钮。
+3. 未连接的新芽打开后直接进入“网络”页：选中网络，再点击“供给接入”“接收接入”或“中继接入”，一次完成连接和用途设置，并自动返回设置页。只有一个可用网络或搜索结果时已自动选中，直接点用途即可。同名网络可悬停查看核心位置与在线状态。
+4. 源端使用“供给”并设置保留量；目标池旁使用“接收”并设置目标量与优先级。“池容量”把目标量设为当前池容量，确认后更新输入框。已连接节点打开就是设置页，可直接切换模式。
+5. 需要扩展距离时直接选“中继”。节点保留各模式的原方向和数量；已有连接需要换网时切到“网络”页。接入前检查权限与节点额度，失败不会只改动其中一项。
 
 每条链路最长 32 格，基础网络最多 16 个节点；全网等效上限 128 魔力/t，单端 64，每 5 tick 调度一次。优先级按高／普通／低约 4∶2∶1 轮转，低优先级也会获得服务。
 
@@ -81,6 +83,6 @@ This prototype provides a Mechanical Apothecary and four flowers: the Bionic Con
 
 Mount flowers on solid supports or FE cables; soil is not required. Power the Lotus, switch the Wand of the Forest to Bind Mode by sneak-using it in the air, then sneak-use the Lotus and a spreader within six blocks. Its default rate is 4 mana/t for 200 FE/t. The bionic amaranthus uses FE and retains the original flower-growing behavior. Empty-hand right-click opens a compact gray interface with aligned resource values and essential controls; relay mode hides unused settings. When upgrading an alpha.1 world, first open any ownerless flower once to initialize it. The new version preserves owner, FE and pause state across world saves; data already omitted by the old save cannot be reconstructed.
 
-Create a private network at a Resonance Flower. Buds adjacent to native pools act as suppliers, receivers or relays. Select a network from the searchable list, then click the desired mode and pool direction. The core has separate member and connection pages; a fresh bud detects a unique adjacent pool. Links reach 32 blocks; the network has 16 node slots and transfers up to 128 mana/t in five-tick batches. Each 50 delivered mana costs one additional mana per hop, with persistent accounting for small transfers. Unloaded or blocked routes stop without hidden resource storage.
+Create a private network at a Resonance Flower. Buds adjacent to native pools act as suppliers, receivers or relays. An unlinked bud opens the searchable network list. Select a network and click Join: supply, receive or relay to apply both choices at once; successful joining returns to settings. A single available result is preselected. Connected buds open settings directly. Update both client and server for the new acknowledgement protocol. The core has separate member and connection pages; a fresh bud detects a unique adjacent pool. Links reach 32 blocks; the network has 16 node slots and transfers up to 128 mana/t in five-tick batches. Each 50 delivered mana costs one additional mana per hop, with persistent accounting for small transfers. Unloaded or blocked routes stop without hidden resource storage.
 
 The Mechanical Apothecary uses FE, water, 16 ingredient slots and a separate reagent slot to craft both native and bionic flowers. Water enters through fluid pipes or a dedicated container slot; repeated buckets return empty containers through their own output slot. Shift-click routes filled buckets correctly, and full tanks or blocked empty-bucket outputs stop without consuming the bucket. Bionic recipes are exclusive to this machine; the native basin cannot craft them. Native recipes keep their original ingredient and reagent requirements, while bionic recipes require corresponding native flowers, petals, runes and technological components. Other processing machines, Chemical mana interfaces and additional bionic flowers remain planned. Client visual acceptance remains in-game.

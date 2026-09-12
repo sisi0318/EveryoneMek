@@ -196,12 +196,36 @@ public final class ApothecaryGameTests {
         BlockPos pos = new BlockPos(9, 2, 8); pool(h, pos.west(), 0); h.setBlock(pos.below(), Blocks.STONE);
         placeItem(owner, h.absolutePos(pos), new ItemStack(Content.NODE.get())); var node = (NetworkPlant) h.getBlockEntity(pos);
         check(node.direction() == Direction.WEST, "Fresh bud did not identify its unique adjacent pool");
-        var core = core(h, owner, new BlockPos(16, 2, 8)); action(owner, node, 5, core.network.toString());
+        var core = core(h, owner, new BlockPos(16, 2, 8));
+        action(owner, node, FlowerMenu.CONNECT_AS, core.network + ",0");
+        check(core.network.equals(node.network) && node.mode == NetworkPlant.SUPPLY && node.direction() == Direction.WEST, "Connect-as did not apply network and mode together while retaining the pool direction");
         action(owner, node, FlowerMenu.SET_MODE, "0"); check(node.mode == NetworkPlant.SUPPLY, "Direct supply button was not applied");
         action(owner, node, FlowerMenu.SET_PRIORITY, "2"); check(node.priority == 1, "Supply bud accepted receive priority");
         action(owner, node, FlowerMenu.SET_MODE, "1"); action(owner, node, FlowerMenu.SET_PRIORITY, "2");
         action(owner, node, 3, "1"); action(owner, node, FlowerMenu.FILL_TARGET, "");
         check(node.priority == 2 && node.target == 1000000, "Direct priority/fill-target controls failed");
+        var inaccessible = core(h, stranger, new BlockPos(24, 2, 8));
+        action(owner, node, FlowerMenu.CONNECT_AS, inaccessible.network + ",2");
+        check(core.network.equals(node.network) && node.mode == NetworkPlant.RECEIVE, "Denied connect-as partially changed the network or mode");
+        action(owner, node, FlowerMenu.CONNECT_AS, core.network + ",99");
+        check(core.network.equals(node.network) && node.mode == NetworkPlant.RECEIVE, "Invalid connect-as mode changed a node");
+        var crowdedCore = core(h, owner, new BlockPos(32, 2, 8)); var crowded = ManaNetworks.get(h.getLevel()).find(crowdedCore.network);
+        try {
+            for (int i = 1; i <= Balance.NODE_LIMIT; i++) crowded.nodes.add(crowdedCore.getBlockPos().south(i));
+            action(owner, node, FlowerMenu.CONNECT_AS, crowdedCore.network + ",2");
+            check(core.network.equals(node.network) && node.mode == NetworkPlant.RECEIVE, "Full network partially applied connect-as");
+        } finally { crowded.nodes.clear(); ManaNetworks.get(h.getLevel()).invalidate(); }
+        var previousMenu = owner.containerMenu; var previousPosition = owner.position();
+        try {
+            owner.setPos(node.getBlockPos().getCenter()); var menu = new FlowerMenu(93, owner.getInventory(), node.getBlockPos()); owner.containerMenu = menu;
+            for (int revision = 1; revision <= 2; revision++) {
+                FlowerPackets.handleSettings(new FlowerPackets.Settings(93, FlowerMenu.FILL_TARGET, ""), context(owner));
+                var acknowledged = menu.snapshot();
+                check(acknowledged.getInt("settingsRevision") == revision && acknowledged.getInt("settingsAction") == FlowerMenu.FILL_TARGET
+                      && acknowledged.getString("settingsValue").isEmpty() && acknowledged.getInt("limit") == 1000000,
+                      "Unchanged pool-capacity requests did not acknowledge their confirmed value");
+            }
+        } finally { owner.containerMenu = previousMenu; owner.setPos(previousPosition); }
         action(stranger, node, FlowerMenu.SET_MODE, "2"); check(node.mode == NetworkPlant.RECEIVE, "Stranger changed node mode");
         action(owner, node, FlowerMenu.SET_DIRECTION, "99"); check(node.direction() == Direction.WEST, "Invalid direction packet changed a node");
         pool(h, pos.east(), 0); action(owner, node, FlowerMenu.DETECT_POOL, "");
