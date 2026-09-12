@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MAM",
+    "CSC",
+    "MIM"
+  ],
+  "key": {
+    "M": {
+      "item": "botania:terrasteel_ingot"
+    },
+    "A": {
+      "item": "botania:orechid"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    },
+    "I": {
+      "item": "mekanism:alloy_reinforced"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:ore_processor",
+    "count": 1
+  }
+}

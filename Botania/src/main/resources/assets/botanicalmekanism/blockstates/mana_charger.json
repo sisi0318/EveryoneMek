@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "facing=north,active=false": {
+      "model": "botanicalmekanism:block/mana_charger",
+      "y": 0
+    },
+    "facing=north,active=true": {
+      "model": "botanicalmekanism:block/mana_charger_active",
+      "y": 0
+    },
+    "facing=east,active=false": {
+      "model": "botanicalmekanism:block/mana_charger",
+      "y": 90
+    },
+    "facing=east,active=true": {
+      "model": "botanicalmekanism:block/mana_charger_active",
+      "y": 90
+    },
+    "facing=south,active=false": {
+      "model": "botanicalmekanism:block/mana_charger",
+      "y": 180
+    },
+    "facing=south,active=true": {
+      "model": "botanicalmekanism:block/mana_charger_active",
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "botanicalmekanism:block/mana_charger",
+      "y": 270
+    },
+    "facing=west,active=true": {
+      "model": "botanicalmekanism:block/mana_charger_active",
+      "y": 270
+    }
+  }
+}

@@ -26,6 +26,25 @@ public final class Flowers {
         return persistent.getCompound(DATA);
     }
     public static boolean isAmaranthus(BlockEntity tile) { return tile.getBlockState().is(Content.AMARANTHUS.get()); }
+    public static boolean isBionic(BlockEntity tile) {
+        for (var block : Content.bionics()) if (tile.getBlockState().is(block.get())) return true;
+        return false;
+    }
+    public static int workReserve(BlockEntity tile) {
+        if (tile.getBlockState().is(Content.HOPPERHOCK.get())) return 1;
+        if (tile.getBlockState().is(Content.RANNUNCARPUS.get())) return 2;
+        if (tile.getBlockState().is(Content.AGRICARNATION.get())) return 6;
+        if (tile.getBlockState().is(Content.CLAYCONIA.get())) return 80;
+        if (tile.getBlockState().is(Content.EXOFLAME.get())) return 300;
+        return 100;
+    }
+    public static int workRadius(BlockEntity tile) {
+        return tile.getBlockState().is(Content.HOPPERHOCK.get()) ? 10 : tile.getBlockState().is(Content.RANNUNCARPUS.get()) ? 8 : 5;
+    }
+    public static boolean workAllowed(FunctionalFlowerBlockEntity tile) {
+        return live(tile) && enabled(tile) && !tile.getBlockState().getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED)
+              && PlantSupport.areaLoaded(tile.getLevel(), tile.getBlockPos(), workRadius(tile));
+    }
     public static boolean live(BlockEntity tile) {
         return tile.getLevel() != null && !tile.isRemoved() && tile.getLevel().hasChunkAt(tile.getBlockPos())
               && tile.getLevel().getBlockEntity(tile.getBlockPos()) == tile;
@@ -69,9 +88,10 @@ public final class Flowers {
         };
     }
     public static void supplyAmaranthus(FunctionalFlowerBlockEntity tile) {
-        if (!live(tile) || tile.getLevel().isClientSide || !enabled(tile)
-              || tile.getBlockState().getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED)
-              || !PlantSupport.areaLoaded(tile.getLevel(), tile.getBlockPos(), 5)) return;
+        supplyBionic(tile);
+    }
+    public static void supplyBionic(FunctionalFlowerBlockEntity tile) {
+        if (!workAllowed(tile) || tile.getLevel().isClientSide) return;
         if (tile.getBindingPos() != null) tile.setBindingPos(null);
         int units = Math.min(tile.getMaxMana() - tile.getMana(), storedFE(tile) / Balance.FE_PER_MANA.get());
         if (units > 0) { setFE(tile, storedFE(tile) - units * Balance.FE_PER_MANA.get()); tile.addMana(units); tile.setChanged(); }
@@ -87,6 +107,8 @@ public final class Flowers {
         } else if (tile instanceof FunctionalFlowerBlockEntity flower) state.putInt("mana", flower.getMana());
         if (tile instanceof NetworkPlant plant) plant.saveItem(state);
         if (tile instanceof ManaLotus lotus) state.putLong("last_production_tick", lotus.lastProductionTick());
+        for (var property : tile.getBlockState().getProperties()) if (property != net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED
+              && tile instanceof FunctionalFlowerBlockEntity) saveProperty(state, tile.getBlockState(), property);
         for (ItemStack drop : drops) if (drop.is(block.asItem())) drop.set(Content.STATE.get(), CustomData.of(state));
         return drops;
     }
@@ -106,6 +128,12 @@ public final class Flowers {
                 } else if (tile instanceof FunctionalFlowerBlockEntity flower)
                     flower.addMana(Math.clamp(state.getInt("mana"), 0, flower.getMaxMana()) - flower.getMana());
                 if (tile instanceof NetworkPlant plant) plant.loadItem(state);
+                if (tile instanceof FunctionalFlowerBlockEntity) {
+                    var blockState = tile.getBlockState();
+                    for (var property : blockState.getProperties()) if (state.contains("property_" + property.getName()))
+                        blockState = restoreProperty(blockState, property, state.getString("property_" + property.getName()));
+                    tile.getLevel().setBlock(tile.getBlockPos(), blockState, 3);
+                }
                 if (tile instanceof ManaLotus lotus && state.contains("last_production_tick")) lotus.restoreProductionTick(state.getLong("last_production_tick"));
                 if (owner(tile) != null && (!(placer instanceof Player player) || !owns(player, tile))) data(tile).putBoolean("paused", true);
             }
@@ -118,6 +146,14 @@ public final class Flowers {
         if (!owns(player, tile)) { player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.botanicalmekanism.denied"), true); return; }
         serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, ignored) -> new FlowerMenu(id, inventory, tile.getBlockPos()),
               tile.getBlockState().getBlock().getName()), buffer -> buffer.writeBlockPos(tile.getBlockPos()));
+    }
+    private static <T extends Comparable<T>> void saveProperty(CompoundTag tag, net.minecraft.world.level.block.state.BlockState state,
+          net.minecraft.world.level.block.state.properties.Property<T> property) {
+        tag.putString("property_" + property.getName(), property.getName(state.getValue(property)));
+    }
+    private static <T extends Comparable<T>> net.minecraft.world.level.block.state.BlockState restoreProperty(net.minecraft.world.level.block.state.BlockState state,
+          net.minecraft.world.level.block.state.properties.Property<T> property, String value) {
+        return property.getValue(value).map(parsed -> state.setValue(property, parsed)).orElse(state);
     }
     private Flowers() { }
 }

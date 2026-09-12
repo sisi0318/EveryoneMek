@@ -1,0 +1,22 @@
+{
+  "method": "Direct reuse of original repository 16x16 textures; no repainting or filtering.",
+  "sources": {
+    "mana_bridge": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/source_converter",
+    "mana_charger": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/potion_bottler",
+    "mana_infuser": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/imbuement_chamber",
+    "runic_forge": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/enchanting_apparatus",
+    "pure_converter": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/whirlisprig_station",
+    "terra_condenser": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/ritual_controller",
+    "botanical_brewery": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/potion_mixer",
+    "ore_processor": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/magic_crusher",
+    "metamorphic_stone": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/source_extractor",
+    "elven_trade_controller": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/drygmy_station",
+    "mana_enchanter_controller": "Ars-Nouveau/src/main/resources/assets/arsmekanism/textures/block/glyph_scribe"
+  },
+  "faces": [
+    "front",
+    "top",
+    "side",
+    "front_active"
+  ]
+}

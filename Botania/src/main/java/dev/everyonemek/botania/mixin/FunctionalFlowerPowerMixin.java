@@ -15,20 +15,20 @@ public abstract class FunctionalFlowerPowerMixin {
     @Inject(method = "saveAdditional", at = @At("TAIL"))
     private void saveBionicData(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo callback) {
         var flower = (FunctionalFlowerBlockEntity) (Object) this;
-        if (Flowers.isAmaranthus(flower)) Flowers.saveData(flower, tag);
+        if (Flowers.isBionic(flower)) Flowers.saveData(flower, tag);
     }
     @Inject(method = "loadAdditional", at = @At("TAIL"))
     private void loadBionicData(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo callback) {
         var flower = (FunctionalFlowerBlockEntity) (Object) this;
-        if (Flowers.isAmaranthus(flower)) Flowers.loadData(flower, tag);
+        if (Flowers.isBionic(flower)) Flowers.loadData(flower, tag);
     }
     @Inject(method = "drawManaFromPool", at = @At("HEAD"), cancellable = true)
     private void botanicalPower(CallbackInfo callback) {
         var flower = (FunctionalFlowerBlockEntity) (Object) this;
-        if (Flowers.isAmaranthus(flower)) { Flowers.supplyAmaranthus(flower); callback.cancel(); }
+        if (Flowers.isBionic(flower)) { Flowers.supplyBionic(flower); callback.cancel(); }
     }
     @Inject(method = "getBindingRadius", at = @At("HEAD"), cancellable = true)
     private void noPoolBinding(CallbackInfoReturnable<Integer> callback) {
-        if (Flowers.isAmaranthus((FunctionalFlowerBlockEntity) (Object) this)) callback.setReturnValue(0);
+        if (Flowers.isBionic((FunctionalFlowerBlockEntity) (Object) this)) callback.setReturnValue(0);
     }
 }

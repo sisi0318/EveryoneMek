@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MAM",
+    "CSC",
+    "MIM"
+  ],
+  "key": {
+    "M": {
+      "item": "botania:elementium_ingot"
+    },
+    "A": {
+      "item": "botania:elven_gateway_core"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    },
+    "I": {
+      "item": "mekanism:alloy_reinforced"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:elven_trade_controller",
+    "count": 1
+  }
+}

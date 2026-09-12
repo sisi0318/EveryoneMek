@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/terra_condenser/side",
+    "north": "botanicalmekanism:block/terra_condenser/front",
+    "up": "botanicalmekanism:block/terra_condenser/top",
+    "south": "botanicalmekanism:block/terra_condenser/side",
+    "east": "botanicalmekanism:block/terra_condenser/side",
+    "west": "botanicalmekanism:block/terra_condenser/side",
+    "down": "botanicalmekanism:block/terra_condenser/side"
+  }
+}

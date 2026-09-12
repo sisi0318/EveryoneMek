@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/runic_forge/side",
+    "north": "botanicalmekanism:block/runic_forge/front",
+    "up": "botanicalmekanism:block/runic_forge/top",
+    "south": "botanicalmekanism:block/runic_forge/side",
+    "east": "botanicalmekanism:block/runic_forge/side",
+    "west": "botanicalmekanism:block/runic_forge/side",
+    "down": "botanicalmekanism:block/runic_forge/side"
+  }
+}

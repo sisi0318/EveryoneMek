@@ -4,7 +4,11 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "FunctionalFlowerPowerMixin",
-    "AmaranthusWorkMixin"
+    "AmaranthusWorkMixin",
+    "BionicWandMixin",
+    "ManaPoolAccess",
+    "EnchanterAccess",
+    "EnchanterControlMixin"
   ],
   "client": [],
   "injectors": {

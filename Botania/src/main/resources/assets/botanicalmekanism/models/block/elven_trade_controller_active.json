@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/elven_trade_controller",
+  "textures": {
+    "north": "botanicalmekanism:block/elven_trade_controller/front_active"
+  }
+}

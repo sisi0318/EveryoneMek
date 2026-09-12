@@ -24,10 +24,11 @@ public final class FlowerPackets {
     }
     public static void register(RegisterPayloadHandlersEvent event) {
         // The joining screen requires acknowledged settings and connect-as support on both ends.
-        var registrar = event.registrar("2");
+        var registrar = event.registrar("3");
         registrar.playToServer(Settings.TYPE, Settings.CODEC, FlowerPackets::handleSettings);
         registrar.playToClient(Snapshot.TYPE, Snapshot.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (context.player().containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId && packet.values != null) menu.state = packet.values;
+            else if (context.player().containerMenu instanceof ManaMachineMenu menu && menu.containerId == packet.menuId && packet.values != null) menu.state = packet.values;
         }));
     }
     public static void handleSettings(Settings packet, net.neoforged.neoforge.network.handling.IPayloadContext context) {
@@ -36,6 +37,7 @@ public final class FlowerPackets {
             if (player.containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId) {
                 menu.handleSettings(player, packet.action, packet.value);
             }
+            else if (player.containerMenu instanceof ManaMachineMenu menu && menu.containerId == packet.menuId) menu.handleSettings(player, packet.action, packet.value);
         });
     }
     private FlowerPackets() { }

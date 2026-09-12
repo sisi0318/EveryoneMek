@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/metamorphic_stone/side",
+    "north": "botanicalmekanism:block/metamorphic_stone/front",
+    "up": "botanicalmekanism:block/metamorphic_stone/top",
+    "south": "botanicalmekanism:block/metamorphic_stone/side",
+    "east": "botanicalmekanism:block/metamorphic_stone/side",
+    "west": "botanicalmekanism:block/metamorphic_stone/side",
+    "down": "botanicalmekanism:block/metamorphic_stone/side"
+  }
+}

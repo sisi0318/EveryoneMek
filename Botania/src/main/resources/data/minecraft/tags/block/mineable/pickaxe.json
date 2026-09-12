@@ -1,6 +1,17 @@
 {
   "replace": false,
   "values": [
-    "botanicalmekanism:mechanical_apothecary"
+    "botanicalmekanism:mechanical_apothecary",
+    "botanicalmekanism:mana_bridge",
+    "botanicalmekanism:mana_charger",
+    "botanicalmekanism:mana_infuser",
+    "botanicalmekanism:runic_forge",
+    "botanicalmekanism:pure_converter",
+    "botanicalmekanism:terra_condenser",
+    "botanicalmekanism:botanical_brewery",
+    "botanicalmekanism:ore_processor",
+    "botanicalmekanism:metamorphic_stone",
+    "botanicalmekanism:elven_trade_controller",
+    "botanicalmekanism:mana_enchanter_controller"
   ]
 }

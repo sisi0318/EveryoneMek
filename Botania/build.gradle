@@ -40,6 +40,7 @@ neoForge {
         server { server(); programArgument '--nogui' }
         gameTestServer {
             type = 'gameTestServer'
+            gameDirectory = layout.buildDirectory.dir(providers.gradleProperty('gameTestDirectory').orElse('gametest'))
             systemProperty 'neoforge.enabledGameTestNamespaces', 'botanicalmekanism'
         }
     }

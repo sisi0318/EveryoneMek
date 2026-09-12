@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/pure_converter/side",
+    "north": "botanicalmekanism:block/pure_converter/front",
+    "up": "botanicalmekanism:block/pure_converter/top",
+    "south": "botanicalmekanism:block/pure_converter/side",
+    "east": "botanicalmekanism:block/pure_converter/side",
+    "west": "botanicalmekanism:block/pure_converter/side",
+    "down": "botanicalmekanism:block/pure_converter/side"
+  }
+}

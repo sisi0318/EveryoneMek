@@ -37,6 +37,14 @@ public final class Content {
           () -> new PoweredPlantBlock(plant(), () -> Content.LOTUS_TILE.get()));
     public static final DeferredBlock<PoweredPlantBlock> AMARANTHUS = BLOCKS.register("bionic_amaranthus",
           () -> new PoweredPlantBlock(plant(), () -> BotaniaBlockEntities.JADED_AMARANTHUS));
+    public static final DeferredBlock<PoweredPlantBlock> CLAYCONIA = BLOCKS.register("bionic_clayconia",
+          () -> new PoweredPlantBlock(plant(), () -> BotaniaBlockEntities.CLAYCONIA));
+    public static final DeferredBlock<PoweredPlantBlock> AGRICARNATION = BLOCKS.register("bionic_agricarnation",
+          () -> new PoweredPlantBlock(plant(), () -> BotaniaBlockEntities.AGRICARNATION));
+    public static final DeferredBlock<PoweredPlantBlock.Hopper> HOPPERHOCK = BLOCKS.register("bionic_hopperhock", () -> new PoweredPlantBlock.Hopper(plant()));
+    public static final DeferredBlock<PoweredPlantBlock.Placer> RANNUNCARPUS = BLOCKS.register("bionic_rannuncarpus", () -> new PoweredPlantBlock.Placer(plant()));
+    public static final DeferredBlock<PoweredPlantBlock> EXOFLAME = BLOCKS.register("bionic_exoflame",
+          () -> new PoweredPlantBlock(plant(), () -> BotaniaBlockEntities.EXOFLAME));
     public static final DeferredBlock<NetworkPlantBlock> CORE = BLOCKS.register("resonance_flower", () -> new NetworkPlantBlock(plant(), true));
     public static final DeferredBlock<NetworkPlantBlock> NODE = BLOCKS.register("resonance_bud", () -> new NetworkPlantBlock(plant(), false));
 
@@ -50,24 +58,32 @@ public final class Content {
           () -> IMenuTypeExtension.create((id, inventory, buffer) -> new FlowerMenu(id, inventory, buffer.readBlockPos())));
 
     static {
-        for (var block : new DeferredBlock<?>[]{LOTUS, AMARANTHUS, CORE, NODE})
+        for (var block : plants())
             ITEMS.register(block.getId().getPath(), () -> new PlantItem(block.get(), new Item.Properties()));
         TABS.register("main", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.botanicalmekanism"))
               .icon(() -> new ItemStack(LOTUS.get())).displayItems((parameters, output) -> {
-                  for (var block : new DeferredBlock<?>[]{LOTUS, AMARANTHUS, CORE, NODE}) output.accept(block.get());
+                  for (var block : plants()) output.accept(block.get());
                   output.accept(ApothecaryContent.BLOCK);
+                  for (var block : ManaContent.MACHINES.values()) output.accept(block);
               }).build());
     }
     public static void register(IEventBus bus) {
         BLOCKS.register(bus); ITEMS.register(bus); TILES.register(bus); MENUS.register(bus); COMPONENTS.register(bus); TABS.register(bus);
         bus.addListener(Content::capabilities);
-        bus.addListener((BlockEntityTypeAddBlocksEvent event) -> event.modify(BotaniaBlockEntities.JADED_AMARANTHUS, AMARANTHUS.get()));
+        bus.addListener((BlockEntityTypeAddBlocksEvent event) -> {
+            var blocks = bionics(); var types = bionicTypes();
+            for (int i = 0; i < blocks.length; i++) event.modify(types[i], blocks[i].get());
+        });
     }
     private static void capabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, LOTUS_TILE.get(), (tile, side) -> Flowers.energy(tile));
-        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BotaniaBlockEntities.JADED_AMARANTHUS,
-              (tile, side) -> Flowers.isAmaranthus(tile) ? Flowers.energy(tile) : null);
+        for (var type : bionicTypes()) event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, type,
+              (tile, side) -> Flowers.isBionic(tile) ? Flowers.energy(tile) : null);
         event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(WandBindable.LOOKUP), LOTUS_TILE.get(), (tile, side) -> tile);
     }
+    public static DeferredBlock<?>[] bionics() { return new DeferredBlock<?>[]{AMARANTHUS, CLAYCONIA, AGRICARNATION, HOPPERHOCK, RANNUNCARPUS, EXOFLAME}; }
+    public static DeferredBlock<?>[] plants() { return new DeferredBlock<?>[]{LOTUS, AMARANTHUS, CLAYCONIA, AGRICARNATION, HOPPERHOCK, RANNUNCARPUS, EXOFLAME, CORE, NODE}; }
+    private static BlockEntityType<?>[] bionicTypes() { return new BlockEntityType<?>[]{BotaniaBlockEntities.JADED_AMARANTHUS, BotaniaBlockEntities.CLAYCONIA,
+          BotaniaBlockEntities.AGRICARNATION, BotaniaBlockEntities.HOPPERHOCK, BotaniaBlockEntities.RANNUNCARPUS, BotaniaBlockEntities.EXOFLAME}; }
     private Content() { }
 }

@@ -27,7 +27,7 @@ import static dev.everyonemek.botania.BotanicalGameTests.*;
 @GameTestHolder(BotanicalMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class ApothecaryGameTests {
-    private static void withUsername(net.minecraft.server.level.ServerPlayer player, Runnable action) {
+    static void withUsername(net.minecraft.server.level.ServerPlayer player, Runnable action) {
         // GameTestServer has no profile service; real Mek placement still needs the owner's name.
         try {
             var field = net.neoforged.neoforge.common.UsernameCache.class.getDeclaredField("map"); field.setAccessible(true);
@@ -80,7 +80,7 @@ public final class ApothecaryGameTests {
         check(recipes.byKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "mechanical_apothecary")).isPresent(), "Machine crafting recipe failed to load");
         var id = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "mana_lotus");
         var recipe = (MechanicalFlowerRecipe) recipes.byKey(id).orElseThrow().value();
-        check(recipes.getAllRecipesFor(ApothecaryContent.RECIPE_TYPE.get()).size() == 4, "Mechanical flower recipes failed to load");
+        check(recipes.getAllRecipesFor(ApothecaryContent.RECIPE_TYPE.get()).size() == Content.plants().length, "Mechanical flower recipes failed to load");
         check(recipes.getAllRecipesFor(BotaniaRecipeTypes.PETAL_APOTHECARY_TYPE).stream().noneMatch(r -> r.value().getResultItem(h.getLevel().registryAccess()).is(Content.LOTUS.asItem())
               || r.value().getResultItem(h.getLevel().registryAccess()).is(Content.AMARANTHUS.asItem())), "Native basin can craft a bionic flower");
         List<ItemStack> nativeInput = new ArrayList<>();

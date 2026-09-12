@@ -13,6 +13,7 @@ public final class BotanicalMekanism {
         container.registerConfig(ModConfig.Type.SERVER, Balance.SPEC);
         Content.register(bus);
         ApothecaryContent.register(bus);
+        ManaContent.register(bus);
         bus.addListener(FlowerPackets::register);
     }
 }

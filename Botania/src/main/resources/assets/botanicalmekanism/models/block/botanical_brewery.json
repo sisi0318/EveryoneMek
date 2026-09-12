@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/botanical_brewery/side",
+    "north": "botanicalmekanism:block/botanical_brewery/front",
+    "up": "botanicalmekanism:block/botanical_brewery/top",
+    "south": "botanicalmekanism:block/botanical_brewery/side",
+    "east": "botanicalmekanism:block/botanical_brewery/side",
+    "west": "botanicalmekanism:block/botanical_brewery/side",
+    "down": "botanicalmekanism:block/botanical_brewery/side"
+  }
+}

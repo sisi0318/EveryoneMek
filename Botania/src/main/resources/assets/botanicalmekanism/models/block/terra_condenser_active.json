@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/terra_condenser",
+  "textures": {
+    "north": "botanicalmekanism:block/terra_condenser/front_active"
+  }
+}

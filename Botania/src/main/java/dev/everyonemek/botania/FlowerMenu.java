@@ -109,9 +109,7 @@ public final class FlowerMenu extends AbstractContainerMenu {
             } else if (action == DETECT_POOL) {
                 if (!plant.detectPool()) return false;
             } else if (action == FILL_TARGET) {
-                if (!server.hasChunkAt(plant.targetPos()) || !(server.getBlockEntity(plant.targetPos()) instanceof ManaPoolBlockEntity pool)
-                      || pool.getClass() != ManaPoolBlockEntity.class
-                      || !(pool.getBlockState().getBlock() instanceof vazkii.botania.common.block.mana.ManaPoolBlock block) || block.isCreative()) return false;
+                var pool = ManaEndpoint.at(plant); if (pool == null) return false;
                 plant.target = pool.getMaxMana();
             }
             else return false;
@@ -134,8 +132,9 @@ public final class FlowerMenu extends AbstractContainerMenu {
             if (lotus.findBoundTile() != null) tag.putLong("binding", lotus.getBindingPos().asLong());
             tag.putString("status", switch (lotus.status) { case 1 -> "paused"; case 2 -> "unbound"; case 3 -> "full"; case 4 -> "no_energy"; default -> "working"; });
         } else if (tile instanceof FunctionalFlowerBlockEntity flower) {
+            tag.putString("flowerId", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock()).toString());
             tag.putInt("kind", 1); tag.putInt("mana", flower.getMana()); tag.putInt("maxMana", flower.getMaxMana());
-            tag.putString("status", !Flowers.enabled(tile) ? "paused" : Flowers.storedFE(tile) < Balance.FE_PER_MANA.get() && flower.getMana() == 0 ? "no_energy" : "ready");
+            tag.putString("status", !Flowers.enabled(tile) ? "paused" : flower.getMana() + Flowers.storedFE(tile) / Balance.FE_PER_MANA.get() < Flowers.workReserve(tile) ? "no_energy" : "ready");
         } else if (tile instanceof NetworkPlant plant) {
             ManaNetworks data = ManaNetworks.get(server);
             if (plant.core()) data.activate(plant);
@@ -193,7 +192,8 @@ public final class FlowerMenu extends AbstractContainerMenu {
             }
             tag.put("choices", choices);
             if (!plant.core() && server.hasChunkAt(plant.targetPos())) {
-                if (server.getBlockEntity(plant.targetPos()) instanceof ManaPoolBlockEntity pool) {
+                var pool = ManaEndpoint.at(plant);
+                if (pool != null) {
                     tag.putInt("mana", pool.getCurrentMana()); tag.putInt("maxMana", pool.getMaxMana());
                 }
             }

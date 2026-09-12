@@ -1,0 +1,38 @@
+{
+  "type": "botanicalmekanism:mechanical_apothecary",
+  "ingredients": [
+    {
+      "item": "botania:rannuncarpus"
+    },
+    {
+      "item": "botania:orange_mystical_petal"
+    },
+    {
+      "item": "botania:yellow_mystical_petal"
+    },
+    {
+      "item": "botania:manasteel_ingot"
+    },
+    {
+      "item": "botania:manasteel_ingot"
+    },
+    {
+      "item": "botania:mana_pearl"
+    },
+    {
+      "item": "botania:rune_of_earth"
+    },
+    {
+      "item": "mekanism:basic_control_circuit"
+    }
+  ],
+  "reagent": {
+    "item": "mekanism:alloy_infused"
+  },
+  "result": {
+    "id": "botanicalmekanism:bionic_rannuncarpus",
+    "count": 1
+  },
+  "ticks": 160,
+  "fe_per_tick": 100
+}

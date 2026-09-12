@@ -63,13 +63,8 @@ public final class ManaNetworks extends SavedData {
         return pos != null && level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof NetworkPlant plant && Flowers.live(plant) ? plant : null;
     }
     private static boolean within(BlockPos a, BlockPos b) { return a.distSqr(b) <= (long) Balance.RANGE * Balance.RANGE; }
-    private static ManaPoolBlockEntity pool(ServerLevel level, NetworkPlant node) {
-        BlockPos position = node.targetPos();
-        if (!level.hasChunkAt(position) || !(level.getBlockEntity(position) instanceof ManaPoolBlockEntity pool)
-              || pool.getClass() != ManaPoolBlockEntity.class || !(pool.getBlockState().getBlock() instanceof ManaPoolBlock block) || block.isCreative()) return null;
-        return pool;
-    }
-    private record Endpoint(NetworkPlant node, ManaPoolBlockEntity pool, List<BlockPos> path) { }
+    private static ManaEndpoint pool(ServerLevel level, NetworkPlant node) { return ManaEndpoint.at(node); }
+    private record Endpoint(NetworkPlant node, ManaEndpoint pool, List<BlockPos> path) { }
     private static List<BlockPos> path(NetworkPlant node, BlockPos core, List<NetworkPlant> relays) {
         if (within(core, node.getBlockPos())) return List.of(core, node.getBlockPos());
         return relays.stream().filter(relay -> within(core, relay.getBlockPos()) && within(relay.getBlockPos(), node.getBlockPos()))
@@ -100,7 +95,7 @@ public final class ManaNetworks extends SavedData {
             List<NetworkPlant> relays = nodes.stream().filter(node -> node.mode == NetworkPlant.RELAY && within(network.core, node.getBlockPos())).toList();
             for (NetworkPlant node : nodes) {
                 if (node.mode == NetworkPlant.RELAY || path(node, network.core, relays).isEmpty()) continue;
-                ManaPoolBlockEntity pool = pool(level, node);
+                ManaEndpoint pool = pool(level, node);
                 if (pool != null) targetOwners.putIfAbsent(pool.getBlockPos(), node.getBlockPos());
             }
         }
@@ -128,7 +123,7 @@ public final class ManaNetworks extends SavedData {
             List<BlockPos> route = path(node, core.getBlockPos(), relays);
             if (node.mode == NetworkPlant.RELAY) { node.status = within(core.getBlockPos(), node.getBlockPos()) ? "relay" : "out_of_range"; continue; }
             if (route.isEmpty()) { node.status = "out_of_range"; continue; }
-            ManaPoolBlockEntity pool = pool(level, node);
+            ManaEndpoint pool = pool(level, node);
             if (pool == null) { node.status = "missing_pool"; continue; }
             if (!node.getBlockPos().equals(targetOwners.get(pool.getBlockPos()))) { node.status = "duplicate_target"; continue; }
             node.hops = route.size() - 1;
@@ -158,27 +153,23 @@ public final class ManaNetworks extends SavedData {
     }
     private int transfer(ServerLevel level, Network network, Endpoint source, Endpoint target, int max,
           Map<BlockPos, Integer> endpointSpent, Map<BlockPos, Integer> relaySpent) {
-        if (source.pool == target.pool || source.node.mode != NetworkPlant.SUPPLY || target.node.mode != NetworkPlant.RECEIVE
+        if (source.pool.tile() == target.pool.tile() || source.node.mode != NetworkPlant.SUPPLY || target.node.mode != NetworkPlant.RECEIVE
               || !valid(level, network, source) || !valid(level, network, target)) return 0;
         Set<BlockPos> routeRelays = relays(source, target);
-        int available = source.pool.getCurrentMana() - source.node.reserve;
-        int space = Math.min(target.node.target, target.pool.getMaxMana()) - target.pool.getCurrentMana();
+        int available = Math.min(source.pool.extractable(), source.pool.getCurrentMana() - source.node.reserve);
+        int space = Math.min(target.pool.space(), Math.min(target.node.target, target.pool.getMaxMana()) - target.pool.getCurrentMana());
         int count = Math.min(max, Math.min(space, Balance.ENDPOINT_BUDGET - endpointSpent.getOrDefault(target.node.getBlockPos(), 0)));
         count = Math.min(count, Balance.ENDPOINT_BUDGET - endpointSpent.getOrDefault(source.node.getBlockPos(), 0));
         for (BlockPos relay : routeRelays) count = Math.min(count, Balance.RELAY_BUDGET - relaySpent.getOrDefault(relay, 0));
         int hops = hops(source.path, target.path);
         while (count > 0 && count + WirelessFee.forDelivery(count, hops, network.credit).fee() > available) count--;
         if (count <= 0) return 0;
-        int beforeSource = source.pool.getCurrentMana(), beforeTarget = target.pool.getCurrentMana();
         WirelessFee planned = WirelessFee.forDelivery(count, hops, network.credit);
-        source.pool.receiveMana(-count - planned.fee());
-        if (source.pool.getCurrentMana() != beforeSource - count - planned.fee()) {
-            source.pool.receiveMana(beforeSource - source.pool.getCurrentMana()); return 0;
-        }
-        target.pool.receiveMana(count);
-        int accepted = Math.clamp(target.pool.getCurrentMana() - beforeTarget, 0, count);
+        int taken = source.pool.take(count + planned.fee());
+        if (taken != count + planned.fee()) { source.pool.refund(taken); return 0; }
+        int accepted = Math.clamp(target.pool.give(count), 0, count);
         WirelessFee actual = WirelessFee.forDelivery(accepted, hops, network.credit);
-        source.pool.receiveMana(count + planned.fee() - accepted - actual.fee());
+        source.pool.refund(taken - accepted - actual.fee());
         if (accepted == 0) return 0;
         network.credit = actual.remainingCredit(); network.lastFee += actual.fee(); network.lastDelivered += accepted;
         for (Endpoint endpoint : List.of(source, target)) {
@@ -194,7 +185,7 @@ public final class ManaNetworks extends SavedData {
     }
     private static boolean valid(ServerLevel level, Network network, Endpoint endpoint) {
         if (!Flowers.live(endpoint.node) || !Flowers.enabled(endpoint.node) || !network.id.equals(endpoint.node.network)
-              || !network.permits(Flowers.owner(endpoint.node)) || pool(level, endpoint.node) != endpoint.pool) return false;
+              || !network.permits(Flowers.owner(endpoint.node)) || !endpoint.pool.same(pool(level, endpoint.node))) return false;
         for (int i = 0; i < endpoint.path.size(); i++) {
             NetworkPlant plant = at(level, endpoint.path.get(i));
             if (plant == null || !Flowers.enabled(plant) || !network.id.equals(plant.network) || !network.permits(Flowers.owner(plant))) return false;

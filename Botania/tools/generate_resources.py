@@ -10,6 +10,11 @@ MOD = 'botanicalmekanism'
 PLANTS = {
     'mana_lotus': ('仿生导能莲', 'Bionic Conduction Lotus', '消耗 FE 产生魔力。使用森林法杖连接魔力发射器。', 'Uses FE to produce mana. Bind to a mana spreader with a Wand of the Forest.'),
     'bionic_amaranthus': ('仿生翡翠苋', 'Bionic Jaded Amaranthus', '消耗 FE，在合适地面生成神秘花。', 'Uses FE to grow mystical flowers on suitable ground.'),
+    'bionic_clayconia': ('仿生粘土花', 'Bionic Clayconia', '消耗 FE，将周围的沙转为粘土球。', 'Uses FE to turn nearby sand into clay balls.'),
+    'bionic_agricarnation': ('仿生田园康乃馨', 'Bionic Agricarnation', '消耗 FE，加快周围合适植物的生长。', 'Uses FE to accelerate suitable nearby plants.'),
+    'bionic_hopperhock': ('仿生漏斗花', 'Bionic Hopperhock', '消耗 FE，将掉落物送入相邻容器。物品框筛选，潜行使用森林法杖切换模式。', 'Uses FE to collect drops into adjacent inventories. Item frames filter; sneak-use a Wand to change mode.'),
+    'bionic_rannuncarpus': ('仿生手掌花', 'Bionic Rannuncarpus', '消耗 FE，放置掉落方块。以花下两格的方块为地面样板，潜行使用森林法杖切换模式。', 'Uses FE to place dropped blocks. Matches the block two below the flower; sneak-use a Wand to change mode.'),
+    'bionic_exoflame': ('仿生冶炼火', 'Bionic Exoflame', '消耗 FE，给周围可加工的熔炉供热并加速。', 'Uses FE to heat and accelerate nearby working furnaces.'),
     'resonance_flower': ('共鸣花', 'Resonance Flower', '管理同维度魔力无线网络。右键设置网络与成员。', 'Manages a wireless mana network in this dimension. Right-click to configure its name and members.'),
     'resonance_bud': ('共鸣芽', 'Resonance Bud', '从相邻魔力池供给或接收魔力，也可作为无线中继。', 'Supplies or receives mana from an adjacent pool, or relays a wireless connection.'),
 }
@@ -27,11 +32,12 @@ for name, (cn, english, description_cn, description_en) in PLANTS.items():
     zh[key], en[key] = cn, english
     zh[key + '.description'] = description_cn + ' 可安装在普通承托方块或电缆上，无需泥土。'
     en[key + '.description'] = description_en + ' Mount on solid supports or cables; no soil is required.'
-    model = 'botania:block/jaded_amaranthus' if name == 'bionic_amaranthus' else f'{MOD}:block/{name}'
+    native = ('jaded_amaranthus' if name == 'bionic_amaranthus' else name.removeprefix('bionic_')) if name.startswith('bionic_') else None
+    model = f'botania:block/{native}' if native else f'{MOD}:block/{name}'
     write(f'assets/{MOD}/blockstates/{name}.json', {'variants': {'': {'model': model}}})
-    if name != 'bionic_amaranthus':
+    if native is None:
         write(f'assets/{MOD}/models/block/{name}.json', {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'{MOD}:block/{name}'}})
-    write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:block/jaded_amaranthus' if name == 'bionic_amaranthus' else f'{MOD}:block/{name}'}})
+    write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'botania:block/{native}' if native else f'{MOD}:block/{name}'}})
     write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'{MOD}:{name}'}]}]})
 
 messages = {
@@ -44,11 +50,11 @@ messages = {
     'network_details': ('%s\n节点：%s / %s\n%s\n核心：%s', '%s\nNodes: %s / %s\n%s\nCore: %s'),
     'connection_row': ('%s · %s', '%s · %s'),
     'connection_details': ('位置：%s\n%s\n本批传输：%s', 'Position: %s\n%s\nLast batch: %s'),
-    'detect_pool': ('自动检测', 'Detect pool'), 'target_side': ('魔力池方向', 'Pool direction'),
-    'priority_label': ('优先级', 'Priority'), 'fill_target': ('池容量', 'Max'),
+    'detect_pool': ('自动检测', 'Detect pool'), 'target_side': ('目标方向', 'Target direction'),
+    'priority_label': ('优先级', 'Priority'), 'fill_target': ('目标容量', 'Max'),
     'join_as.0': ('供给接入', 'Join: supply'), 'join_as.1': ('接收接入', 'Join: receive'), 'join_as.2': ('中继接入', 'Join: relay'),
-    'mode_help.0': ('从相邻池取出魔力，供给网络；保留量以下不取。', 'Takes mana from the adjacent pool for the network, keeping the reserve.'),
-    'mode_help.1': ('从网络接收魔力，补充相邻池至目标量。', 'Receives network mana into the adjacent pool up to the target amount.'),
+    'mode_help.0': ('从相邻池或机器输出面取魔力，供给网络；保留量以下不取。', 'Takes mana from an adjacent pool or machine output, keeping the reserve.'),
+    'mode_help.1': ('从网络接收魔力，补充相邻池或机器输入面至目标量。', 'Receives mana into an adjacent pool or machine input up to the target.'),
     'mode_help.2': ('延伸网络连接，无需相邻魔力池。', 'Extends network connections; no adjacent pool is required.'),
     'join_help': ('接入“%s”\n%s', 'Join "%s"\n%s'),
     'select_network_first': ('先在列表中选择网络', 'Select a network from the list first'),
@@ -56,7 +62,7 @@ messages = {
     'network_full': ('网络节点已满', 'The network has no free node slots'),
     'connecting': ('正在接入…', 'Connecting…'), 'applying': ('正在应用…', 'Applying…'),
     'priority_short.0': ('低', 'Low'), 'priority_short.1': ('普通', 'Normal'), 'priority_short.2': ('高', 'High'),
-    'detect_failed': ('附近需要唯一的有效魔力池', 'Needs exactly one adjacent supported pool'),
+    'detect_failed': ('附近需要唯一的有效魔力池或魔力机器', 'Needs exactly one adjacent supported pool or mana machine'),
     'setting_failed': ('设置未生效，请检查条件或权限', 'Setting rejected; check requirements and access'),
     'apothecary.materials': ('材料', 'Materials'), 'apothecary.products': ('产物', 'Output'),
     'apothecary.reagent': ('终结材料', 'Reagent'), 'apothecary.water': ('水：%s / %s mB', 'Water: %s / %s mB'),
@@ -103,7 +109,7 @@ statuses = {
     'full': ('已满或达到目标', 'Full or target reached'), 'reserve': ('已达到保留量', 'Reserve reached'),
     'no_supply': ('没有可用供给端', 'No supply endpoint'), 'core_offline': ('核心离线或暂停', 'Core offline or paused'),
     'relay': ('中继已连接', 'Relay connected'), 'out_of_range': ('超出连接范围', 'Out of range'),
-    'missing_pool': ('目标不是可用魔力池', 'No supported pool at target'), 'duplicate_target': ('魔力池已有无线端点', 'Pool already has an endpoint'),
+    'missing_pool': ('目标或魔力接口不可用', 'No supported target or mana port'), 'duplicate_target': ('目标已有无线端点', 'Target already has an endpoint'),
     'duplicate_core': ('网络已有核心', 'Network already has a core'), 'denied': ('无网络访问权限', 'Network access denied'),
     'unloaded': ('区块未加载', 'Chunk unloaded'),
 }
@@ -112,11 +118,9 @@ for key, (cn, english) in messages.items(): zh[f'gui.{MOD}.{key}'], en[f'gui.{MO
 zh[f'block.{MOD}.mechanical_apothecary'], en[f'block.{MOD}.mechanical_apothecary'] = '机械花药台', 'Mechanical Apothecary'
 zh[f'description.{MOD}.mechanical_apothecary'] = '消耗水与能量调合原版花和仿生花。背面输入终结材料，右侧输出产物。'
 en[f'description.{MOD}.mechanical_apothecary'] = 'Uses water and energy to craft native and bionic flowers. Reagent enters at the back; products leave on the right.'
-write(f'assets/{MOD}/lang/zh_cn.json', zh)
-write(f'assets/{MOD}/lang/en_us.json', en)
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin'], 'client': [], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin'], 'client': [], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -138,6 +142,16 @@ recipes = [
     ('resonance_bud', ['botania:mana_spark', 'botania:cyan_mystical_petal', 'botania:purple_mystical_petal', 'botania:elementium_ingot', 'botania:elementium_ingot',
                       'botania:rune_of_air', 'mekanism:basic_control_circuit'], 'mekanism:alloy_infused', 2, 100, 100),
 ]
+for flower, petals, rune in [
+    ('clayconia', ['light_gray', 'cyan'], 'earth'),
+    ('agricarnation', ['lime', 'green'], 'spring'),
+    ('hopperhock', ['gray', 'light_gray'], 'air'),
+    ('rannuncarpus', ['orange', 'yellow'], 'earth'),
+    ('exoflame', ['red', 'orange'], 'fire'),
+]:
+    recipes.append(('bionic_' + flower, [f'botania:{flower}', *[f'botania:{color}_mystical_petal' for color in petals],
+                    'botania:manasteel_ingot', 'botania:manasteel_ingot', 'botania:mana_pearl', f'botania:rune_of_{rune}',
+                    'mekanism:basic_control_circuit'], 'mekanism:alloy_infused', 1, 160, 100))
 for name, ingredients, reagent, count, ticks, power in recipes:
     write(f'data/{MOD}/recipe/{name}.json', {'type': f'{MOD}:mechanical_apothecary', 'ingredients': [{'item': item} for item in ingredients],
           'reagent': {'item': reagent}, 'result': {'id': f'{MOD}:{name}', 'count': count}, 'ticks': ticks, 'fe_per_tick': power})
@@ -158,6 +172,11 @@ write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', '
       {'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': [f'mekanism:{key}' for key in
       ['ejector', 'owner', 'redstone_control', 'security', 'side_config', 'upgrades', 'energy', 'items', 'fluids']]}]}]}]})
 write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': [f'{MOD}:{name}']})
+
+from machine_resources import generate as generate_machines
+generate_machines(ROOT, write, zh, en)
+write(f'assets/{MOD}/lang/zh_cn.json', zh)
+write(f'assets/{MOD}/lang/en_us.json', en)
 
 def text(value):
     encoded = value.encode('utf-8')

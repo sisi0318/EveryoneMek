@@ -17,7 +17,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import vazkii.botania.api.block_entity.SpecialFlowerBlockEntity;
 import vazkii.botania.common.block.flower.PoweredSpecialFlowerBlock;
 
-public final class PoweredPlantBlock extends PoweredSpecialFlowerBlock {
+public class PoweredPlantBlock extends PoweredSpecialFlowerBlock {
     public PoweredPlantBlock(Properties properties, Supplier<BlockEntityType<? extends SpecialFlowerBlockEntity>> type) {
         super(MobEffects.MOVEMENT_SPEED, 1, properties, type);
     }
@@ -36,4 +36,24 @@ public final class PoweredPlantBlock extends PoweredSpecialFlowerBlock {
         if (!level.isClientSide && level.getBlockEntity(pos) != null) Flowers.placed(level.getBlockEntity(pos), placer, stack);
     }
     @Override protected List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) { return Flowers.withState(super.getDrops(state, builder), builder, this); }
+    public static final class Hopper extends PoweredPlantBlock {
+        public Hopper(Properties properties) {
+            super(properties, () -> vazkii.botania.common.block.block_entity.BotaniaBlockEntities.HOPPERHOCK);
+            registerDefaultState(defaultBlockState().setValue(vazkii.botania.api.state.BotaniaStateProperties.HOPPERHOCK_FILTER,
+                  vazkii.botania.api.state.enums.HopperhockFilterType.ACCEPT_IN_FRAME));
+        }
+        @Override protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
+            super.createBlockStateDefinition(builder); builder.add(vazkii.botania.api.state.BotaniaStateProperties.HOPPERHOCK_FILTER);
+        }
+    }
+    public static final class Placer extends PoweredPlantBlock {
+        public Placer(Properties properties) {
+            super(properties, () -> vazkii.botania.common.block.block_entity.BotaniaBlockEntities.RANNUNCARPUS);
+            registerDefaultState(defaultBlockState().setValue(vazkii.botania.api.state.BotaniaStateProperties.RANNUNCARPUS_MODE,
+                  vazkii.botania.api.state.enums.RannuncarpusMode.STATE_INSENSITIVE));
+        }
+        @Override protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
+            super.createBlockStateDefinition(builder); builder.add(vazkii.botania.api.state.BotaniaStateProperties.RANNUNCARPUS_MODE);
+        }
+    }
 }

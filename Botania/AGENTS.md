@@ -4,44 +4,64 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.5 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现导能莲、仿生翡翠苋、原池之间的共鸣网络与机械花药台；其他加工机、Chemical 魔力接口和更多仿生功能花仍是规划。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.6 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、共鸣与 Chemical 魔网、两种辅助设备及十种加工／控制设备。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
-- 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花与后续扩展仍按 DESIGN 分阶段评审。
+- 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。当前通过 9 项服务端 GameTest 与 1 项费用 JUnit，不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。本版通过 18 项服务端 GameTest 与 1 项费用 JUnit，不代表客户端视觉或完整整合包验收。
 
 ## 原型实现入口
 
-- `BotanicalMekanism`、`Content`、`Balance`：注册四种花、两种自有花 BE 类型、菜单、物品状态和服务端参数。使用本目录 Wrapper、独立 `.gradle-home`，Java 21、NeoForge 21.1.241 和 Mek 10.7.19.85。
+- `BotanicalMekanism`、`Content`、`Balance`：注册九种花、两种自有花 BE 类型、菜单、物品状态和服务端参数。使用本目录 Wrapper、独立 `.gradle-home`，Java 21、NeoForge 21.1.241 和 Mek 10.7.19.85。
 - `upstream-lock.json` 与 `tools/prepare_botania.py`：锁定官方运行 `34246437545` 的 NeoForge 产物和 SHA-256。Gradle 的 prepareBotania 任务校验已有文件，缺少时用已登录 GitHub CLI 下载；`BOTANIA_JAR` 可提供匹配本地文件。不能只按 456-SNAPSHOT 名称接受任意 JAR，也不提交依赖 JAR。
 - `PoweredPlantBlock`、`PlantSupport`、`ManaLotus`：非土壤承托、FE 产魔与原生绑定。`useItemOn` 给森林法杖／花之驯养杖返回 SKIP_DEFAULT_BLOCK_INTERACTION，避免配置菜单截获工具。支撑规则排除红线仿制者，防止原 commonTick 进入未核对的远端作用位置。
 - `Flowers`：FE、所有者、暂停与掉落组件。模拟和只读查询不创建持久化子标签；实际写入才标记保存。原生 mana 只有一份，物品恢复不把它复制进公共数据。其他玩家放置带旧所有者的设备时保持暂停。
-- `FunctionalFlowerPowerMixin`、`AmaranthusWorkMixin`：仅匹配本模组翡翠苋，取消池供魔，以 FE 填充原花内部储备；缺区块或暂停时停止原工作扫描。使用 BlockEntityTypeAddBlocksEvent 让原 BE 类型接受本模组方块，普通原花不变。
-- `ManaNetworks`、`NetworkPlant`、`NetworkPlantBlock`：SavedData 保存网络身份、成员、核心位置、节点与收费余量，池资源不进入网络数据。当前只接受真实原生 ManaPoolBlockEntity，按 ManaPoolBlock.isCreative 排除所有颜色的创造池。
+- `FunctionalFlowerPowerMixin`、`AmaranthusWorkMixin`：仅匹配本模组六种功能花，取消池供魔，以 FE 填充原花内部储备；缺区块、暂停、红石禁止或工作储备不足时停止原扫描。使用 BlockEntityTypeAddBlocksEvent 让原 BE 类型接受本模组方块，普通原花不变。
+- `ManaNetworks`、`NetworkPlant`、`NetworkPlantBlock`：SavedData 保存网络身份、成员、核心位置、节点与收费余量，池资源不进入网络数据。原池按 ManaPoolBlock.isCreative 排除所有颜色创造池；ManaEndpoint 还接受本模组有 Chemical 罐的 ManaMachine，按真实侧面 capability 与 UUID 安全检查接入。
 - `WirelessFee`：按实际交付和路径跳数计费，拆包不增加累计费用。5 tick 批次共享全网、端点和中继预算，同批重复调用不重复转移；同一真实池跨网络也仅允许一个活动端点。
 - `FlowerMenu`、`FlowerPackets`、`client/ResonanceScreen`：共鸣网络使用独立的 280×234 简洁矩形分页界面。参考 Flux Networks 的列表选网／成员管理交互，未复制其界面代码或素材。设置页直接选择模式、方向和优先级；网络列表支持搜索、滚轮和按钮翻页：先选择行，再用同页三个“用途接入”按钮。未连接芽首次打开列表，单结果自动选中，成功后回设置；核心还有成员增减与只读连接概览。标题显示服务器确认网络名。0–8 旧操作号保留，9–15 为直接设置／检测／成员／池容量操作，16 为 CONNECT_AS（UUID,mode）。先校验权限与容量再一起提交网络和模式；服务器检查当前菜单、距离、设备所有权和成员资格。
-- FlowerPackets 协议为 2，两端同版。FlowerMenu.handleSettings 在每次操作后返回 settingsRevision／settingsAction／settingsValue（菜单临时信息，不写世界），即使设置未变也发送确认。ResonanceScreen 同时只发一个待确认请求，防止模式变化前提交数量；只在确认后返回设置／更新字段，且不得覆盖用户后来输入的草稿或反复 setValue 移动光标。
-- `client/FlowerScreen`：导能莲和翡翠苋保留 240×148 的储能／魔力／状态界面。用户明确不要花瓣／叶片外框和常驻供魔示意图；不要重新加回来。菜单设置仍由服务器确认。
-- `NetworkPlant.detectPool`：只在唯一相邻原生有效池时更改方向；多个池或没有池时返回失败，保持原设置。新物品放置自动检测；带 flower_state 的旧节点不自动改向。检测与列表遍历只访问已加载区块。
+- FlowerPackets 协议为 3，两端同版。FlowerMenu.handleSettings 在每次操作后返回 settingsRevision／settingsAction／settingsValue（菜单临时信息，不写世界），即使设置未变也发送确认。ResonanceScreen 同时只发一个待确认请求，防止模式变化前提交数量；只在确认后返回设置／更新字段，且不得覆盖用户后来输入的草稿或反复 setValue 移动光标。
+- `client/FlowerScreen`：导能莲和六种功能花保留 240×148 的储能／魔力／状态界面。用户明确不要花瓣／叶片外框和常驻供魔示意图；不要重新加回来。菜单设置仍由服务器确认。
+- `NetworkPlant.detectPool`：只在唯一相邻原生有效池或可访问的本模组魔力机器接口时更改方向；多个池或没有池时返回失败，保持原设置。新物品放置自动检测；带 flower_state 的旧节点不自动改向。检测与列表遍历只访问已加载区块。
 - `ApothecaryContent`、`MechanicalApothecary`、`ApothecaryBlock`、`ApothecaryMenu`：独立 Mek 机械花药台。用户所说“机械花”指原版花，不新增花类别。材料槽 0–15，终结槽 16，输出 17–22，能量物品槽 23，水容器输入 24、空容器输出 25；物品附件与实体顺序一致。已知旧 24 槽物品附件在 applyInventorySlots 补两个空槽后委托 Mek 恢复，不重排旧索引。默认后方 EXTRA 输入终结材料，RIGHT 自动输出，其余常用面输入材料与水桶，RIGHT 同时输出空桶；水与能量六面输入，Mek 六面配置可修改。
-- `MechanicalFlowerRecipe`、`ApothecaryWork`：独立 mechanical_apothecary 配方类型，普通 Botania 台不会查询；当前四种扩展花均迁入此类型。原版花仍读取真实 PetalApothecaryRecipe，并调用其 matches、assemble、getRemainingItems。材料可堆叠多批，但无关材料阻止匹配，防止仿生花材料误做普通花；先匹配正确终结材料，再报告缺料。IngredientAssignment 复用仓库已有容量匹配算法，重复与重叠材料不贪心抢占。
+- `MechanicalFlowerRecipe`、`ApothecaryWork`：独立 mechanical_apothecary 配方类型，普通 Botania 台不会查询；当前九种扩展花均使用此类型。原版花仍读取真实 PetalApothecaryRecipe，并调用其 matches、assemble、getRemainingItems。材料可堆叠多批，但无关材料阻止匹配，防止仿生花材料误做普通花；先匹配正确终结材料，再报告缺料。IngredientAssignment 复用仓库已有容量匹配算法，重复与重叠材料不贪心抢占。
 - 水容器槽复用 FluidInventorySlot.fill 和 fillTank(bucketOutput)，物品侧使用 addFluidFillSlot(0)；导管与水桶共用唯一水罐。材料／终结槽按已支持配方过滤，避免 Shift 点击水桶被原料槽截获。补水与填充能量物品一样独立于加工状态，水满或空桶输出满时保留原桶。
 - 每批用 1000 mB 水，水罐 16000 mB、基础储能 200000 FE。原版花 100 tick × 50 FE，机械配方独立声明工时／每 tick FE；Mek 速度与能量升级作用于工时和能耗。先检查输出、材料、水、能量，再推进；材料与水完成时扣，处理中只扣能量。签名含材料组件、终结材料、产物、成本及工时；世界保存进度，掉落保存容器与设置，未完成批次重新开始。
 - Mek 的 FE → 内部单位使用 EnergyUnit.FORGE_ENERGY.convertFrom；convertTo 是反向。已按 ForgeEnergyIntegration 的字节码核对，不能从其他工程片段猜方向。AttributeSideConfig 必须显式包含 ITEM／FLUID／ENERGY，ADVANCED_ELECTRIC_MACHINE 不含 FLUID，直接套用会得到空流体设置。
 - `client/ApothecaryScreen` 为 238×240 Mek 界面，玩家槽偏移 (29,156)、标签 (29,144)，材料 4×4、终结与输出单独显示。`client/ApothecaryJei` 将机器加入原 Botania 花药台分类的 catalyst，只有机械专用配方使用独立分类；JEI 可选，核对版 19.22.1.316。
-- `ManaLotus.getUpdateTag` 同步所有者，客户端森林法杖 canSelect 才能通过；ClientEvents 单独在客户端注册原生 BindableFlowerWandHud。固定上游 SpecialFlowerBlockEntity.save/loadAdditional 不调用父类，必须用 Flowers.saveData/loadData 显式保存本模组数据；导能莲直接覆写，仿生翡翠苋仅通过 FunctionalFlowerPowerMixin 按本模组方块限定注入。旧物品组件格式保持不变。
+- `ManaLotus.getUpdateTag` 同步所有者，客户端森林法杖 canSelect 才能通过；ClientEvents 单独在客户端注册原生 BindableFlowerWandHud。固定上游 SpecialFlowerBlockEntity.save/loadAdditional 不调用父类，必须用 Flowers.saveData/loadData 显式保存本模组数据；导能莲直接覆写，六种仿生功能花通过 FunctionalFlowerPowerMixin 按本模组方块限定注入。旧物品组件格式保持不变。
 - UI 使用 GuiGraphics 绘制，不增加装饰背景贴图。输入框需要拦截物品栏键 E，Esc 关闭，Tab 保持导航，Enter 提交。花的状态悬停显示绑定坐标，储能悬停显示工作要求；共鸣花的统计、成员和连接在对应页显示。切换节点模式时重建布局并采用服务器确认数量；同模式窗口缩放保留输入草稿。
-- `tools/generate_resources.py` 维护所有运行 JSON 和独立测试模板。火花物品 ID 是 `botania:mana_spark`；花瓣为 `<color>_mystical_petal`，花药台为 `petal_apothecary`。不要使用 1.20 的旧物品 ID。现有原型测试检查四个配方存在，不能仅凭 BUILD SUCCESSFUL 忽略资源解析错误。
-- `art/source/`、`art/prompts.json`、`art/mechanical-apothecary.json`、`tools/export_textures.cjs`：三种原创花与机械台四面材质经 nearest 缩到 16×16；翡翠苋引用原模型。ImageGen 返回的棋盘格可能是绘制背景，需核对实际 alpha；最终三张原稿均为 RGBA。
+- `tools/generate_resources.py` 维护所有运行 JSON 和独立测试模板。火花物品 ID 是 `botania:mana_spark`；花瓣为 `<color>_mystical_petal`，花药台为 `petal_apothecary`。不要使用 1.20 的旧物品 ID。服务端检查机械配方数量与实际制造，不能仅凭 BUILD SUCCESSFUL 忽略资源解析错误。
+- `art/source/`、`art/prompts.json`、`art/mechanical-apothecary.json`、`tools/export_textures.cjs`：三种原创花与机械台四面材质经 nearest 缩到 16×16；六种仿生功能花引用对应原模型。ImageGen 返回的棋盘格可能是绘制背景，需核对实际 alpha；最终三张原稿均为 RGBA。
 
 `BotanicalGameTests` 与 `ApothecaryGameTests` 覆盖真实法杖选花与改绑、客户端更新标签、两种仿生花世界存档恢复、真实电缆与发射器、非土壤安装、FE 模拟、逐 tick 产率、原池不被仿生花抽取、拆装、设置包、权限、费用、优先级、重复批次和中继恢复。接入回归包括网络／模式原子提交、权限与已满回滚、保留方向和无变化的池容量确认。新增检查还覆盖真实漏斗／电缆／机械导管／自动出料、水桶 Shift 点击与多桶补水、满水与空桶槽堵塞恢复、24→26 槽物品迁移、配方隔离、重复材料、错终结材料、堵塞零扣费与机器世界／物品保存。Mek 真实物品放置需要用户名；无界面 GameTest 没有 profile service，测试只临时写入该 FakePlayer 的 UsernameCache 并在 finally 恢复。测试源集不进入 JAR；`check` 编译 GameTest，运行时显式用 runGameTestServer。相关检查通过后不为文档和材质重复服务器。
 
 官方 CI 附件可能过期，请保留已校验副本。CI 使用只读 GitHub 令牌取件；失效后重新核对固定构建来源，不能换浮动包让构建变绿。
 
 processResources 的版本替换属性在配置阶段保存为普通 map；filesMatching 的执行闭包不能读取 project.version，否则开启配置缓存的 CI 会失败。构建脚本变化需核对配置缓存的保存与复用，不能只用 --no-configuration-cache 掩盖问题。
+
+## alpha.6 加工与控制入口
+
+- `ManaMachineKind`、`ManaContent`、`ManaMachineBlock` 注册 11 台新增设备。BRIDGE、CHARGER 为辅助设备，其余九台与旧机械花药台构成十种加工／控制设备。所有新方块的材料与资源由 `tools/machine_resources.py` 生成，入口仍为 `tools/generate_resources.py`。
+- `ManaMachine` 的槽序固定为 inputs → extras → outputs → energy。数量见枚举：符文／泰拉／酿造／精灵材料最多 16；附魔 1 件装备＋16 本书；普通输出 6，精灵 8，充能／附魔 1。回调中初始化容器，禁止字段初始化覆写。Chemical 容量 1,000,000，基础能量 200,000 FE、50 FE/t；速度和能量升级不修改魔力消耗。
+- 加工材料默认 INPUT，背面 EXTRA，右侧 OUTPUT 自动弹出、底部能量物品；Chemical／FE 六面输入。互通器按模式切换 Chemical 输入输出，poolSide 为 RelativeSide 索引；该面固定 NONE，换方向恢复旧面，实际转移与界面共用 mode/poolSide。世界／掉落保存 `machine_settings`，不复用 flower_state。
+- `ManaWork`：Botania 原 RecipeType 适配。符文材料＋catalysts 用容量分配，原 getRemainingItems 同组件返还回源槽，容器走输出；酿造首件为实际空容器，BrewContainer 决定费用（负值拒绝）及产物。空瓶是 MANAGLASS_VIAL／ALFGLASS_FLASK，BREW_VIAL／BREW_FLASK 是成品，不接受再次当空容器。
+- 灌注使用 matches(完整输入副本)／getRecipeOutput，原催化配方优先，只支持原炼金和复制方块；原 getRecipeOutput 返回什么就输出什么，不自行增加原池没有的容器返还。
+- 纯净／凝矿／异构限已核对原生状态配方类、无 pre/success 函数、产物可安全转成默认状态的固体方块物品。拒绝输入 BLOCK_ENTITY_DATA／BLOCK_STATE，避免丢弃装载库存或自定义状态。纯净一件／原 time，吞吐相当于八个原花位置全工作。泰拉真实 3×3 平台按原标签检查。
+- 随机候选使用原位置权重／产物／成本；炎矿判定 dimensionType.hasCeiling，不能写死维度 ID。进度使用候选最长冷却，至少 1；预留全部候选空间及最大魔力，完整提交时抽一次、扣实际成本并立刻放入真实输出槽，不持有待重抽的已付费隐形结果。工作签名按材料组件多重集，补货和等价槽分配不清进度。
+- `ManaTransfer`／`ManaPoolAccess`：仅真实普通／稀释／华丽原池，核对 canSpare／canAccept，转移按实际差值结算。充能座通过 ManaItem.LOOKUP 在单件副本上处理，再提交到真实物品和真实池；拒绝 noExport／禁止充放或异常差值。不伪造池上下文，不接特殊工具成长。
+- `ManaEndpoint` 为视图：原池或本模组机器各一份真实资源。每次查询机器实际侧面 Chemical capability，ISecurityUtils 按花所有者 UUID 验证访问；按实际接受量结费，退回源剩余量用内部回滚，不受源输出面不允许输入影响。去重仍按真实资源 BE 位置，原网络存档字段保持不变。
+- `NativeControllers`：紧邻原门／原附魔设备，6 格所需区块全部加载，重复控制器停机。精灵贸易只接标准原生 ElvenTradeRecipe，按 tryAssemble 的全部 outputs 和 matchedInputSlots 处理；真实门户 consumeMana 负责费用及分摊，不从机器再扣魔。原门自行开门、保留 200,000 开门费；控制器最多每 4 tick 一批，原样退回／词典／特殊第三方贸易交给原门。
+- 附魔通过真实 itemToEnchant 与 onUsedByWand 开始，原 commonTick 完成附魔和定价。`EnchanterControlMixin` 为原查书入口附加只读书籍视图（临时 ItemEntity 不加入世界、存档或掉落）；`EnchanterAccess` 访问真实结构校验器，已连接控制器时结构损坏／暂停／重复连接暂停原流程。原火花仍可供魔；机内 Chemical 只按原装置实际接收差值转入。
+- 附魔装备带一次性 job UUID 以确认归属，原装置保存唯一处理中装备。正常完成输出移除此标记；控制器保存 job 标识但不保存第二份装备。控制器拆除后装备留在原装置，按原方式取回；原装置被拆时依原掉落规则取回装备。
+- `ManaMachineMenu`／`ManaMachineScreen` 为 238×276，玩家槽偏移 (29,192)，标签 (29,180)。材料 (16,32) 起 4×4，独立额外槽 (106,86)，输出 (152,32) 起 3 列，能量物品 (206,86)。附魔书占左侧 4×4，装备 (106,50)。配方选择窗口 `GuiManaRecipeSelector` 使用服务器传来的图标列表，世界函数配方不会因客户端配方同步省略回调而被错误列出；搜索／选择后等待 revision 确认。
+- `ApothecaryJei` 给对应原 JEI 分类添加新工作设备，不创建重复配方类别。没有给未支持的配方增加 JEI 转移能力。
+- `ManaMachineGameTests`、`AdvancedManaGameTests`、`BionicFlowerGameTests` 覆盖新增资源守恒、实际加压管道、已堆叠漏斗补货、催化与容器、物品组件、随机提交、真实门户费用和真实附魔书／修复。无界面服务器没有 profile service，设置所有者与加载带所有者 NBT 都应在临时 UsernameCache 范围内运行；不是生产存档逻辑的例外。
+- GameTest 目录使用 `build/gametest`，可用 `-PgameTestDirectory=某个构建内子目录` 做独立测试，避免读取手动客户端 run/world。不可自动启动客户端，也不可删除用户世界来使测试通过。
+- 新机器材质直接复用本仓库 Ars 原创 16×16 四面资源，映射见 `art/machine-texture-reuse.json`；不是重新生成的美术稿，生成资源时机械复制。`GuiManaRecipeSelector` 的公共列表结构复用仓库 Ars 实现，无外部界面代码复制。
 
 ## 已确认的关键契约
 

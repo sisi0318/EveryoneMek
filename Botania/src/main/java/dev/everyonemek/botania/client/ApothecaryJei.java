@@ -28,6 +28,15 @@ public final class ApothecaryJei implements IModPlugin {
     @Override public void registerCategories(IRecipeCategoryRegistration registration) { registration.addRecipeCategories(new Category(registration.getJeiHelpers().getGuiHelper())); }
     @Override public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(ApothecaryContent.BLOCK), PetalApothecaryRecipeCategory.TYPE, TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.INFUSER)), vazkii.botania.client.integration.jei.ManaPoolRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.RUNIC)), vazkii.botania.client.integration.jei.RunicAltarRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.PURE)), vazkii.botania.client.integration.jei.PureDaisyRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.TERRA)), vazkii.botania.client.integration.jei.TerrestrialAgglomerationRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.BREWERY)), vazkii.botania.client.integration.jei.BreweryRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.ORE)), vazkii.botania.client.integration.jei.orechid.OrechidRecipeCategory.TYPE,
+              vazkii.botania.client.integration.jei.orechid.OrechidIgnemRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.METAMORPHIC)), vazkii.botania.client.integration.jei.orechid.MarimorphosisRecipeCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ManaContent.MACHINES.get(ManaMachineKind.ELVEN)), vazkii.botania.client.integration.jei.ElvenTradeRecipeCategory.TYPE);
     }
     @Override public void registerRecipes(IRecipeRegistration registration) {
         var level = Minecraft.getInstance().level;

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/elven_trade_controller/side",
+    "north": "botanicalmekanism:block/elven_trade_controller/front",
+    "up": "botanicalmekanism:block/elven_trade_controller/top",
+    "south": "botanicalmekanism:block/elven_trade_controller/side",
+    "east": "botanicalmekanism:block/elven_trade_controller/side",
+    "west": "botanicalmekanism:block/elven_trade_controller/side",
+    "down": "botanicalmekanism:block/elven_trade_controller/side"
+  }
+}

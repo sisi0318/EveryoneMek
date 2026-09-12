@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/ore_processor",
+  "textures": {
+    "north": "botanicalmekanism:block/ore_processor/front_active"
+  }
+}

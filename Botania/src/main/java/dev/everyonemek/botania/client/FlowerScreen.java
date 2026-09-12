@@ -148,12 +148,12 @@ public final class FlowerScreen extends AbstractContainerScreen<FlowerMenu> {
             resource(gui, 65, text("mana_label"), menu.state.getInt("mana"), menu.state.getInt("maxMana"), mx, my);
             status(gui, 94, mx, my);
             if (over(mx, my, 14, 36, CONTENT_WIDTH, 18)) hoveredText = builtKind == 0
-                  ? text("lotus_hint", menu.state.getInt("rate") * menu.state.getInt("fePerMana"), menu.state.getInt("rate")) : text("amaranthus_hint");
+                  ? text("lotus_hint", menu.state.getInt("rate") * menu.state.getInt("fePerMana"), menu.state.getInt("rate")) : Component.translatable("block." + menu.state.getString("flowerId").replace(':', '.') + ".description");
             if (over(mx, my, 14, 94, CONTENT_WIDTH, 10)) {
                 if (builtKind == 0) {
                     var bound = net.minecraft.core.BlockPos.of(menu.state.getLong("binding"));
                     hoveredText = menu.state.contains("binding") ? text("bound_to", bound.getX(), bound.getY(), bound.getZ()) : text("bind_help");
-                } else hoveredText = text("amaranthus_hint");
+                } else hoveredText = Component.translatable("block." + menu.state.getString("flowerId").replace(':', '.') + ".description");
             }
         } else if (builtKind == 2) {
             line(gui, text("network_name"), 14, 36, CONTENT_WIDTH, MUTED, mx, my);

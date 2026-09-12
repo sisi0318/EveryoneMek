@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/mana_charger/side",
+    "north": "botanicalmekanism:block/mana_charger/front",
+    "up": "botanicalmekanism:block/mana_charger/top",
+    "south": "botanicalmekanism:block/mana_charger/side",
+    "east": "botanicalmekanism:block/mana_charger/side",
+    "west": "botanicalmekanism:block/mana_charger/side",
+    "down": "botanicalmekanism:block/mana_charger/side"
+  }
+}

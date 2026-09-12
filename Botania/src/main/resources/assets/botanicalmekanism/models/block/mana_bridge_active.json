@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/mana_bridge",
+  "textures": {
+    "north": "botanicalmekanism:block/mana_bridge/front_active"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/mana_charger",
+  "textures": {
+    "north": "botanicalmekanism:block/mana_charger/front_active"
+  }
+}

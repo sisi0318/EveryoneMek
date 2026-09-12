@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/mana_enchanter_controller/side",
+    "north": "botanicalmekanism:block/mana_enchanter_controller/front",
+    "up": "botanicalmekanism:block/mana_enchanter_controller/top",
+    "south": "botanicalmekanism:block/mana_enchanter_controller/side",
+    "east": "botanicalmekanism:block/mana_enchanter_controller/side",
+    "west": "botanicalmekanism:block/mana_enchanter_controller/side",
+    "down": "botanicalmekanism:block/mana_enchanter_controller/side"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/mana_bridge/side",
+    "north": "botanicalmekanism:block/mana_bridge/front",
+    "up": "botanicalmekanism:block/mana_bridge/top",
+    "south": "botanicalmekanism:block/mana_bridge/side",
+    "east": "botanicalmekanism:block/mana_bridge/side",
+    "west": "botanicalmekanism:block/mana_bridge/side",
+    "down": "botanicalmekanism:block/mana_bridge/side"
+  }
+}

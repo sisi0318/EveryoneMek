@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "botanicalmekanism:block/ore_processor/side",
+    "north": "botanicalmekanism:block/ore_processor/front",
+    "up": "botanicalmekanism:block/ore_processor/top",
+    "south": "botanicalmekanism:block/ore_processor/side",
+    "east": "botanicalmekanism:block/ore_processor/side",
+    "west": "botanicalmekanism:block/ore_processor/side",
+    "down": "botanicalmekanism:block/ore_processor/side"
+  }
+}

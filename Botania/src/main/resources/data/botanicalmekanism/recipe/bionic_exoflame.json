@@ -1,0 +1,38 @@
+{
+  "type": "botanicalmekanism:mechanical_apothecary",
+  "ingredients": [
+    {
+      "item": "botania:exoflame"
+    },
+    {
+      "item": "botania:red_mystical_petal"
+    },
+    {
+      "item": "botania:orange_mystical_petal"
+    },
+    {
+      "item": "botania:manasteel_ingot"
+    },
+    {
+      "item": "botania:manasteel_ingot"
+    },
+    {
+      "item": "botania:mana_pearl"
+    },
+    {
+      "item": "botania:rune_of_fire"
+    },
+    {
+      "item": "mekanism:basic_control_circuit"
+    }
+  ],
+  "reagent": {
+    "item": "mekanism:alloy_infused"
+  },
+  "result": {
+    "id": "botanicalmekanism:bionic_exoflame",
+    "count": 1
+  },
+  "ticks": 160,
+  "fe_per_tick": 100
+}

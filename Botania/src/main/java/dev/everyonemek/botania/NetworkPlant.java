@@ -25,9 +25,7 @@ public final class NetworkPlant extends BlockEntity {
         Direction found = null;
         for (Direction side : Direction.values()) {
             BlockPos pos = worldPosition.relative(side);
-            if (level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity pool
-                  && pool.getClass() == vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity.class
-                  && pool.getBlockState().getBlock() instanceof vazkii.botania.common.block.mana.ManaPoolBlock block && !block.isCreative()) {
+            if (ManaEndpoint.at(level, pos, side.getOpposite(), Flowers.owner(this)) != null) {
                 if (found != null) return false;
                 found = side;
             }

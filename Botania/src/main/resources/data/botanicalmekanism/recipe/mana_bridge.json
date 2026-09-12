@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MAM",
+    "CSC",
+    "MIM"
+  ],
+  "key": {
+    "M": {
+      "item": "botania:manasteel_ingot"
+    },
+    "A": {
+      "item": "botania:mana_pool"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    },
+    "I": {
+      "item": "mekanism:alloy_infused"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:mana_bridge",
+    "count": 1
+  }
+}
