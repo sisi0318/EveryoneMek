@@ -30,6 +30,8 @@
 
 官方 CI 附件可能过期，请保留已校验副本。CI 使用只读 GitHub 令牌取件；失效后重新核对固定构建来源，不能换浮动包让构建变绿。
 
+processResources 的版本替换属性在配置阶段保存为普通 map；filesMatching 的执行闭包不能读取 project.version，否则开启配置缓存的 CI 会失败。构建脚本变化需核对配置缓存的保存与复用，不能只用 --no-configuration-cache 掩盖问题。
+
 ## 已确认的关键契约
 
 - 上游分支声明 Minecraft 1.21.1、Java 21、NeoForge 21.1.229、Patchouli 1.21.1-92-NEOFORGE、Curios 9.5.1+1.21.1；现有仓库 NeoForge 为 21.1.241。不要直接复制其他模组的 Patchouli 版本。

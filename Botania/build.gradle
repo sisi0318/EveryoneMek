@@ -60,7 +60,8 @@ tasks.named('test', Test) { useJUnitPlatform() }
 tasks.named('check') { dependsOn 'compileGameTestJava' }
 tasks.named('jar', Jar) { from('LICENSE') }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def resourceProperties = [version: project.version.toString()]
 tasks.named('processResources', ProcessResources) {
-    inputs.property('version', project.version.toString())
-    filesMatching('META-INF/neoforge.mods.toml') { expand(version: project.version.toString()) }
+    inputs.properties(resourceProperties)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(resourceProperties) }
 }
