@@ -1,0 +1,24 @@
+{
+  "name": "block.botanicalmekanism.bionic_hopperhock",
+  "icon": "botanicalmekanism:bionic_hopperhock",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 4,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.bionic_hopperhock.0",
+      "item": "botanicalmekanism:bionic_hopperhock",
+      "title": "book.botanicalmekanism.bionic_hopperhock.title"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/bionic_hopperhock"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.bionic_hopperhock.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:bionic_hopperhock": 0
+  }
+}

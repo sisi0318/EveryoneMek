@@ -1,0 +1,25 @@
+{
+  "name": "block.botanicalmekanism.mechanical_apothecary",
+  "icon": "botanicalmekanism:mechanical_apothecary",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 7,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mechanical_apothecary.0",
+      "item": "botanicalmekanism:mechanical_apothecary",
+      "title": "book.botanicalmekanism.mechanical_apothecary.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mechanical_apothecary.1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mechanical_apothecary"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mechanical_apothecary": 0
+  }
+}

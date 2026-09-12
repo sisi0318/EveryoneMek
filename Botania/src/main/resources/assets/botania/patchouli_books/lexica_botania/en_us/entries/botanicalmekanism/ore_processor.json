@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.ore_processor",
+  "icon": "botanicalmekanism:ore_processor",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 15,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.ore_processor.0",
+      "item": "botanicalmekanism:ore_processor",
+      "title": "book.botanicalmekanism.ore_processor.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:ore_processor"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:ore_processor": 0
+  }
+}

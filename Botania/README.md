@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.7 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种仿生功能花、原生火花与 Chemical 魔力传输、两种魔力辅助设备和十种加工／控制设备。跨维度、高级网络与后续候选花仍待独立设计。
+**0.1.0-alpha.8 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种 FE 功能花、原生火花与 Chemical 魔力传输、两种魔力辅助设备和十种加工／控制设备；新增原词典章节与可选 AE2 仿生织网花。跨维度、高级网络与后续候选花仍待独立设计。
 
 适配 Minecraft 1.21.1、Java 21、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。客户端与服务端都需安装本模组及下列依赖，不要同时保留重复的旧 JAR：
 
@@ -10,13 +10,14 @@
 | Patchouli | 1.21.1-92-NEOFORGE |
 | Curios | 9.5.1+1.21.1 |
 
-本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.7.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，七种 FE 花使用机械花药台专用配方，共鸣增幅器在工作台制作。无需安装 Flux Networks。
+本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.8.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，七种 FE 花使用机械花药台专用配方；安装 AE2 后还能制作仿生织网花。共鸣增幅器在工作台制作。无需安装 Flux Networks。
 
 ![三种原创花形材质](art/texture-sheet.png)
 
 - [完整设计方案](DESIGN.md)：资源互通、机器、仿生花、进度与分阶段验收。
 - [火花与旧网络兼容](WIRELESS.md)：原生火花路线与旧共鸣存档维护。
 - [上游核对记录](UPSTREAM.md)：固定源码版本、配方覆盖和实现契约。
+- [多媒体与 ME 互通](CORPOREA.md)：仿生织网花、正确布线、重复入口保护与下一步候选。
 - [开发入口](AGENTS.md)：已确认要求与下一步。
 
 仿生导能莲采用原创花形，将 FE 转为原生魔力。放下时会自动寻找附近发射器。手动改绑时，潜行右键空气将森林法杖切到**绑定模式**，再潜行右键导能莲、潜行右键 6 格内的目标发射器；让发射器朝向原魔力池。持杖瞄准花会显示原生魔力 HUD，空手右键打开专属配置界面。没有可用发射器、满缓存、暂停或红石禁止时停产，已支付资源保留。
@@ -27,9 +28,23 @@
 
 配置界面采用简洁的半透明深灰底。产魔花只显示储能、魔力和状态；旧共鸣设备保留兼容设置页面，新火花沿用染料和法杖操作。悬停花的状态查看绑定信息，悬停储能查看工作要求，列表可搜索和滚轮翻页。模式切换、按钮与回车提交均使用服务端确认值；底部“完成”或 Esc 关闭界面。
 
-**从 alpha.6 更新：**客户端与服务端同时替换 JAR，依赖不变。所有机器标题已补齐中英文翻译，模型改为 Botania 原版材质的活石／活木装置。原有库存、能量与设置保留；旧共鸣设备继续兼容，模型、贴图和原稿留待后续用途。
+**从 alpha.7 更新：**客户端与服务端同时替换 JAR，原存档、库存与设置保留。AE2 是可选依赖，织网花验证版本为 AE2 19.2.17＋GuideME 21.1.1；其他功能无需安装它们。
 
 **从 alpha.1 更新：**客户端和服务端替换本模组 JAR 即可，依赖未变。旧世界中若某朵花无法选中，先空手右键一次补全所有者，再用绑定模式改绑。此次修复防止花在重进世界时丢失所有者、FE 和暂停状态；旧版已经写丢的数据无法推算恢复，物品上的原有储能与设置仍兼容。
+
+## 植物魔法词典
+
+原植物魔法词典新增“植物机械”分类，共 23 个条目，介绍全部新增花、设备、增幅器及旧设备兼容。8 张机械花药配方图按实际配方材料生成，其余机器显示工作台配方。支持中文和英文，沿用原书的外观与翻页。
+
+手持原词典右键任意本模组设备，可直接打开对应条目；无需另一本书。加工机的配方按钮也会显示当前锁定产物，锁定配方失效时提示重新选择。
+
+## 仿生织网花：可选 AE2
+
+将花接入 ME 电缆，在花和物品箱上装普通多媒体火花，另放一个主火花。**ME 终端可存取多媒体网络物品，多媒体漏斗／索引也可从 ME 取料。** 织网花由 ME 供电，占 1 通道、待机 4 AE/t，无需额外 FE 线，默认双向合计 2,048 件/t。
+
+正确布线、防重复统计、方向设置与限制见 [CORPOREA.md](CORPOREA.md)。主火花下方不是库存节点；同一双箱只用一枚普通火花，同一库存不要再用 ME 存储总线接回同一网络。当前只互通物品，不自动下单合成。多个独立多媒体网络可以通过同一 ME 网络互相访问。
+
+花复用完整保留的共鸣花造型，保留非土壤安装、所有者和暂停设置；缺依赖、断电、无通道或重复接入时显示原因。未安装 AE2 时不生成这朵花的合成配方，已有花及其设置继续安全保存。
 
 ## 原生火花与共鸣增幅器
 
@@ -109,7 +124,7 @@
 
 ## 验证与构建
 
-21 项服务端 GameTest 和 1 项费用单元检查已通过，覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置；新增火花测试检查普通接入、真实染料／法杖、顶部输入、距离边界、双端增幅、保存、拆卸和原升级组合。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
+安装 AE2 的 26 项服务端 GameTest、不安装 AE2 的 22 项服务端 GameTest 与费用单元检查覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置；新增火花测试检查普通接入、真实染料／法杖、顶部输入、距离边界、双端增幅、保存、拆卸和原升级组合；织网花验证真实 ME 电缆、存储元件和红石多媒体漏斗、双向／跨网络访问、模拟、组件、重复路径与旧句柄失效。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
 
 初次构建需要 Python 3.11+、已登录的 GitHub CLI 和 Java 21。Gradle 自动取得锁定 Botania CI 产物并校验 SHA-256；也可用 `BOTANIA_JAR` 指定已下载的同一文件。上游 CI 附件可能过期，请保留已验证的本地依赖；不能静默换成另一个 SNAPSHOT。
 
@@ -119,8 +134,13 @@
 
 This prototype implements the main design: a Conduction Lotus, six bionic functional flowers, native spark range upgrades, a Mana Bridge, a Charging Stand, and ten processing/control devices. Install the locked Botania snapshot, Mekanism, Patchouli and Curios on both client and server.
 
+The existing Lexica Botania now has a Botanical Mechanisms category with bilingual descriptions and recipes. Use the Lexica on an addon device to open its entry.
+
 Mount flowers on solid supports or FE cables; soil is not required. Power the Lotus, switch the Wand of the Forest to Bind Mode by sneak-using it in the air, then sneak-use the Lotus and a spreader within six blocks. Its default rate is 4 mana/t for 200 FE/t. The bionic amaranthus uses FE and retains the original flower-growing behavior. Empty-hand right-click opens a compact gray interface with aligned resource values and essential controls; relay mode hides unused settings. When upgrading an alpha.1 world, first open any ownerless flower once to initialize it. The new version preserves owner, FE and pause state across world saves; data already omitted by the old save cannot be reconstructed.
 
 Attach native Botania sparks to a pool and a mana machine; matching dye colors connect automatically. The machine’s top chemical face must allow input. Install a Resonance Spark Augment at both ends to extend the native 12-block range to 32 blocks per axis. Native pool augments can retain their role together with the range component; the Wand removes the combined augment intact. Transfer rates and mana accounting remain native, with no separate network or membership UI. Old Resonance Flowers/Buds stay compatible but leave new crafting and the creative tab. Their models, textures and source artwork remain preserved for future use.
 
 The Mechanical Apothecary uses FE, water, 16 ingredient slots and a separate reagent slot to craft both native and bionic flowers. Water enters through fluid pipes or a dedicated container slot; repeated buckets return empty containers through their own output slot. Shift-click routes filled buckets correctly, and full tanks or blocked empty-bucket outputs stop without consuming the bucket. Bionic recipes are exclusive to this machine; the native basin cannot craft them. Native recipes keep their original ingredient and reagent requirements, while bionic recipes require corresponding native flowers, petals, runes and technological components. Machine titles are localized, and the twelve machine models now use open livingrock/livingwood apparatus geometry with native materials. The Bridge moves native mana into chemical tubes at 1:1. Infusion, runes, pure conversions, terra, brewing, ores and metamorphic stone use their native recipe rules. Elven trades require an open real portal and pay its pools; enchanting uses a formed real enchanter and retains books. World callbacks, special elven return/lexicon recipes, arbitrary third-party tanks and cross-dimensional networks remain outside this version. Client visual acceptance remains in-game.
+
+
+With optional AE2 19.2.17 and GuideME 21.1.1, the Bionic Corporea Orchid connects physical Corporea inventories to ME and lets Corporea devices request ME items. It uses one ME channel and 4 AE/t idle power. Place ordinary Corporea sparks on the flower and stocks, with the master on a separate support. Both directions use real storage, with loop exclusion and duplicate-route protection. It does not request crafting automatically or expose fluids. Removing AE2 keeps the common flower block/settings safe; all non-AE features remain available.

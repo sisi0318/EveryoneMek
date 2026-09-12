@@ -21,6 +21,18 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
         super(menu, inventory, title); imageWidth = 238; imageHeight = 276; inventoryLabelX = 29; inventoryLabelY = 180; dynamicSlots = true;
     }
     static Component text(String key, Object... args) { return Component.translatable("gui.botanicalmekanism.machine." + key, args); }
+    private Component recipeLabel() {
+        String id = menu.state.getString("recipe");
+        if (id.isEmpty()) return text("choose_recipe");
+        for (var value : menu.state.getList("choices", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            var entry = (net.minecraft.nbt.CompoundTag) value;
+            if (entry.getString("id").equals(id)) {
+                var icon = net.minecraft.world.item.ItemStack.parseOptional(tile.getLevel().registryAccess(), entry.getCompound("icon"));
+                return text("recipe_selected", icon.getHoverName());
+            }
+        }
+        return text("recipe_missing");
+    }
     private void send(int action, String value) {
         if (pendingRevision >= 0) return;
         pendingRevision = menu.state.getInt("revision"); PacketDistributor.sendToServer(new FlowerPackets.Settings(menu.containerId, action, value));
@@ -58,7 +70,7 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
         else {
             addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 113, 48));
             if (tile.kind().chemical) addRenderableWidget(new GuiInnerScreen(this, 16, 120, 204, 16, () -> List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY))));
-            if (!tile.kind().random()) button(16, 162, 204, () -> text("choose_recipe"), () -> addWindow(new GuiManaRecipeSelector(this, menu)));
+            if (!tile.kind().random()) button(16, 162, 204, this::recipeLabel, () -> addWindow(new GuiManaRecipeSelector(this, menu)));
         }
         addRenderableWidget(new GuiInnerScreen(this, 16, tile.kind().controller() ? 162 : 142, 204, 16, () -> List.of(
               pendingRevision >= 0 ? text("applying") : !menu.state.getBoolean("accepted") && menu.state.contains("revision") ? text("rejected") : text("status." + tile.status()))));

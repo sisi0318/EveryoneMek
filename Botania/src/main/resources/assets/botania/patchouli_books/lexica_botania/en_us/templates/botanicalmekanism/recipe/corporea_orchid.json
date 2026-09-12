@@ -1,0 +1,110 @@
+{
+  "components": [
+    {
+      "type": "patchouli:header",
+      "x": -1,
+      "y": 0,
+      "text": "book.botanicalmekanism.mechanical_apothecary.title"
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 18,
+      "item": "botania:corporea_spark",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 18,
+      "item": "botania:hopperhock",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 60,
+      "y": 18,
+      "item": "botania:purple_mystical_petal",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 86,
+      "y": 18,
+      "item": "botania:light_blue_mystical_petal",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 44,
+      "item": "botania:elementium_ingot",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 44,
+      "item": "botania:elementium_ingot",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 60,
+      "y": 44,
+      "item": "ae2:fluix_pearl",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 86,
+      "y": 44,
+      "item": "ae2:engineering_processor",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 70,
+      "item": "ae2:annihilation_core",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 70,
+      "item": "ae2:formation_core",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 132,
+      "item": "mekanism:alloy_reinforced",
+      "framed": true,
+      "link_recipe": false
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 132,
+      "item": "minecraft:water_bucket",
+      "framed": true,
+      "link_recipe": false
+    },
+    {
+      "type": "patchouli:item",
+      "x": 86,
+      "y": 132,
+      "item": "botanicalmekanism:corporea_orchid",
+      "framed": true,
+      "link_recipe": true
+    },
+    {
+      "type": "patchouli:text",
+      "x": 62,
+      "y": 136,
+      "text": "→"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.mana_bridge",
+  "icon": "botanicalmekanism:mana_bridge",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 8,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_bridge.0",
+      "item": "botanicalmekanism:mana_bridge",
+      "title": "book.botanicalmekanism.mana_bridge.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_bridge"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_bridge": 0
+  }
+}

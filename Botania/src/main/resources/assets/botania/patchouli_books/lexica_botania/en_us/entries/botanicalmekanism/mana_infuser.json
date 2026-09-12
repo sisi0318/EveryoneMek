@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.mana_infuser",
+  "icon": "botanicalmekanism:mana_infuser",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_infuser.0",
+      "item": "botanicalmekanism:mana_infuser",
+      "title": "book.botanicalmekanism.mana_infuser.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_infuser"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_infuser": 0
+  }
+}

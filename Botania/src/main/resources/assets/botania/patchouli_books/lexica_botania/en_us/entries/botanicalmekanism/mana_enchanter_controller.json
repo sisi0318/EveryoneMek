@@ -1,0 +1,25 @@
+{
+  "name": "block.botanicalmekanism.mana_enchanter_controller",
+  "icon": "botanicalmekanism:mana_enchanter_controller",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 18,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_enchanter_controller.0",
+      "item": "botanicalmekanism:mana_enchanter_controller",
+      "title": "book.botanicalmekanism.mana_enchanter_controller.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_enchanter_controller.1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_enchanter_controller"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_enchanter_controller": 0
+  }
+}

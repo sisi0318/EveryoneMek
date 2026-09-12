@@ -24,7 +24,8 @@ public final class ClientEvents {
         event.register(dev.everyonemek.botania.ManaContent.MENU.get(), ManaMachineScreen::new);
         event.register(dev.everyonemek.botania.ApothecaryContent.MENU.get(), ApothecaryScreen::new);
         event.<dev.everyonemek.botania.FlowerMenu, net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<dev.everyonemek.botania.FlowerMenu>>register(Content.MENU.get(), (menu, inventory, title) -> menu.level.getBlockState(menu.position).is(Content.CORE.get())
-              || menu.level.getBlockState(menu.position).is(Content.NODE.get()) ? new ResonanceScreen(menu, inventory, title) : new FlowerScreen(menu, inventory, title));
+              || menu.level.getBlockState(menu.position).is(Content.NODE.get()) ? new ResonanceScreen(menu, inventory, title)
+                    : menu.level.getBlockState(menu.position).is(Content.CORPOREA.get()) ? new CorporeaFlowerScreen(menu, inventory, title) : new FlowerScreen(menu, inventory, title));
     }
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {

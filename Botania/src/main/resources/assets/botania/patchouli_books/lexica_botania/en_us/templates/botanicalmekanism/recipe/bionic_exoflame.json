@@ -1,0 +1,96 @@
+{
+  "components": [
+    {
+      "type": "patchouli:header",
+      "x": -1,
+      "y": 0,
+      "text": "book.botanicalmekanism.mechanical_apothecary.title"
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 18,
+      "item": "botania:exoflame",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 18,
+      "item": "botania:red_mystical_petal",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 60,
+      "y": 18,
+      "item": "botania:orange_mystical_petal",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 86,
+      "y": 18,
+      "item": "botania:manasteel_ingot",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 44,
+      "item": "botania:manasteel_ingot",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 44,
+      "item": "botania:mana_pearl",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 60,
+      "y": 44,
+      "item": "botania:rune_of_fire",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 86,
+      "y": 44,
+      "item": "mekanism:basic_control_circuit",
+      "framed": true
+    },
+    {
+      "type": "patchouli:item",
+      "x": 8,
+      "y": 132,
+      "item": "mekanism:alloy_infused",
+      "framed": true,
+      "link_recipe": false
+    },
+    {
+      "type": "patchouli:item",
+      "x": 34,
+      "y": 132,
+      "item": "minecraft:water_bucket",
+      "framed": true,
+      "link_recipe": false
+    },
+    {
+      "type": "patchouli:item",
+      "x": 86,
+      "y": 132,
+      "item": "botanicalmekanism:bionic_exoflame",
+      "framed": true,
+      "link_recipe": true
+    },
+    {
+      "type": "patchouli:text",
+      "x": 62,
+      "y": 136,
+      "text": "→"
+    }
+  ]
+}

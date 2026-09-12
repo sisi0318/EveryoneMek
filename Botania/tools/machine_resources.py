@@ -45,6 +45,7 @@ def generate(root, write, zh, en):
         'charge_mode.0': ('充入物品', 'Charge item'), 'charge_mode.1': ('抽出物品', 'Drain item'),
         'target_apply': ('目标 %', 'Target %'), 'mana': ('魔力：%s / %s', 'Mana: %s / %s'),
         'choose_recipe': ('选择配方', 'Choose recipe'), 'automatic': ('自动匹配', 'Automatic'), 'close': ('关闭', 'Close'),
+        'recipe_selected': ('配方：%s', 'Recipe: %s'), 'recipe_missing': ('配方已不适用，请重新选择', 'Recipe unavailable; choose again'),
         'search_name': ('搜索产物名称', 'Search output names'), 'no_results': ('没有适用配方', 'No supported recipes'),
         'applying': ('正在应用…', 'Applying…'), 'rejected': ('设置未生效', 'Setting rejected'),
     }

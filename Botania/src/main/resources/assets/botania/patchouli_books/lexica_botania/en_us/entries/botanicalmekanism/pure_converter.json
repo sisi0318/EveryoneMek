@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.pure_converter",
+  "icon": "botanicalmekanism:pure_converter",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 12,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.pure_converter.0",
+      "item": "botanicalmekanism:pure_converter",
+      "title": "book.botanicalmekanism.pure_converter.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:pure_converter"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:pure_converter": 0
+  }
+}

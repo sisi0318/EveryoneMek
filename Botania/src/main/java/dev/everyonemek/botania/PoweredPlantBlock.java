@@ -24,6 +24,7 @@ public class PoweredPlantBlock extends PoweredSpecialFlowerBlock {
     @Override public boolean canSurvive(BlockState state, LevelReader level, BlockPos position) { return PlantSupport.canStand(level, position); }
     @Override public net.minecraft.world.ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
           net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
+        if (LexiconGuide.open(player, stack, this)) return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide);
         if (stack.is(vazkii.botania.common.item.BotaniaItems.WAND_OF_THE_FOREST) || stack.is(vazkii.botania.common.item.BotaniaItems.FLORAL_OBEDIENCE_STICK))
             return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         return super.useItemOn(stack, state, level, pos, player, hand, hit);

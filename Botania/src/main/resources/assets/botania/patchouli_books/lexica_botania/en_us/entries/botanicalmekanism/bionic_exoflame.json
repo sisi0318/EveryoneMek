@@ -1,0 +1,24 @@
+{
+  "name": "block.botanicalmekanism.bionic_exoflame",
+  "icon": "botanicalmekanism:bionic_exoflame",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 6,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.bionic_exoflame.0",
+      "item": "botanicalmekanism:bionic_exoflame",
+      "title": "book.botanicalmekanism.bionic_exoflame.title"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/bionic_exoflame"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.bionic_exoflame.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:bionic_exoflame": 0
+  }
+}

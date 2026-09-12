@@ -1,0 +1,25 @@
+{
+  "name": "item.botanicalmekanism.resonance_spark_augment",
+  "icon": "botanicalmekanism:resonance_spark_augment",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 19,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.resonance_spark_augment.0",
+      "item": "botanicalmekanism:resonance_spark_augment",
+      "title": "book.botanicalmekanism.resonance_spark_augment.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.resonance_spark_augment.1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:resonance_spark_augment"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:resonance_spark_augment": 0
+  }
+}

@@ -20,6 +20,7 @@ public final class ApothecaryBlock extends BlockTile<MechanicalApothecary, Machi
         return BotanicalMachineShapes.get("mechanical_apothecary", mekanism.common.block.attribute.Attribute.getFacing(state));
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (LexiconGuide.open(player, stack, this)) return ItemInteractionResult.sidedSuccess(level.isClientSide);
         if (FluidUtil.getFluidHandler(stack).isPresent()) {
             if (!IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return ItemInteractionResult.FAIL;
             if (level.isClientSide || FluidUtil.interactWithFluidHandler(player, hand, level, pos, hit.getDirection())) return ItemInteractionResult.sidedSuccess(level.isClientSide);

@@ -33,3 +33,8 @@ alpha.4–alpha.6 的机械花药台曾使用独立工业机壳图稿 [mechanica
 [模型清单](botanical-machine-models.json)记录原材质引用与元素数。[模型预览](botanical-machines-preview.png)由 `node tools/preview_models.cjs` 读取实际模型、UV 和依赖材质离线渲染；它不是客户端截图。预览脚本使用已有依赖 JAR 与客户端资源缓存。`npm run export` 现在仅导出三种原创花的贴图，避免重建已退役的机壳资源。
 
 **共鸣花模型、运行贴图和 art/source/resonance_flower.png 原稿完整保留，用户计划后续复用。** 共鸣芽资源同样保留，旧网络设备的模型没有被距离升级图标替换。共鸣增幅器使用原 `spark_star` 图标与原火花旋转图标能力。
+
+
+## alpha.8 仿生织网花
+
+`corporea_orchid` 的方块和物品模型引用保留的共鸣花模型，原模型、运行 PNG 与 art/source 原稿不变；只是新增独立的名称与用途。词典使用 Patchouli 原样式和物品图标，机械花药配方模板由实际配方材料生成，不新增位图背景或另一套书籍素材。

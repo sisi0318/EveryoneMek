@@ -1,0 +1,24 @@
+{
+  "name": "block.botanicalmekanism.bionic_amaranthus",
+  "icon": "botanicalmekanism:bionic_amaranthus",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.bionic_amaranthus.0",
+      "item": "botanicalmekanism:bionic_amaranthus",
+      "title": "book.botanicalmekanism.bionic_amaranthus.title"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/bionic_amaranthus"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.bionic_amaranthus.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:bionic_amaranthus": 0
+  }
+}

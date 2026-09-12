@@ -1,0 +1,24 @@
+{
+  "name": "block.botanicalmekanism.bionic_rannuncarpus",
+  "icon": "botanicalmekanism:bionic_rannuncarpus",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 5,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.bionic_rannuncarpus.0",
+      "item": "botanicalmekanism:bionic_rannuncarpus",
+      "title": "book.botanicalmekanism.bionic_rannuncarpus.title"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/bionic_rannuncarpus"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.bionic_rannuncarpus.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:bionic_rannuncarpus": 0
+  }
+}

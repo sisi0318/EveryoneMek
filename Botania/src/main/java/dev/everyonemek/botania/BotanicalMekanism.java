@@ -15,6 +15,8 @@ public final class BotanicalMekanism {
         ApothecaryContent.register(bus);
         ManaContent.register(bus);
         SparkExpansion.register(bus);
+        dev.everyonemek.botania.corporea.CorporeaIntegration.register();
+        if (net.neoforged.fml.ModList.get().isLoaded("ae2")) dev.everyonemek.botania.compat.ae2.AeCompat.register(bus);
         bus.addListener(FlowerPackets::register);
     }
 }

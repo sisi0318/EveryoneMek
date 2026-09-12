@@ -1,0 +1,14 @@
+{
+  "minecraft": "1.21.1",
+  "version": "19.2.17",
+  "maven": "org.appliedenergistics:appliedenergistics2:19.2.17",
+  "sha256": "460d779a0609b81409907d9956de8f6f70a1b0912257e3e5c3c7e75ac9630e95",
+  "release_tag": "neoforge/v19.2.17",
+  "release_commit": "79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a",
+  "reference_branch": "1.21.1",
+  "reference_commit": "fd8b717a405672ce4f65ba540f1db8c91317daa4",
+  "guide_me_version": "21.1.1",
+  "guide_me_sha256": "62229015025b7c0a741590b626b6719631f6b8a945c483ece12e7035d4fd903d",
+  "api_comparison": "No differences under src/main/java/appeng/api between the release tag and the inspected branch commit.",
+  "optional": true
+}

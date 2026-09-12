@@ -41,9 +41,18 @@ public final class FlowerMenu extends AbstractContainerMenu {
     }
     public boolean apply(Player sender, int action, String value) {
         if (!(level instanceof ServerLevel server) || sender.containerMenu != this || !stillValid(sender)) return false;
-        ManaNetworks data = ManaNetworks.get(server);
-        if (action == 0) { Flowers.data(tile).putBoolean("paused", Flowers.enabled(tile)); tile.setChanged(); data.invalidate(); return true; }
+        if (action == 0) {
+            Flowers.data(tile).putBoolean("paused", Flowers.enabled(tile)); tile.setChanged();
+            if (tile instanceof NetworkPlant) ManaNetworks.get(server).invalidate();
+            if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) flower.backend().settingsChanged();
+            return true;
+        }
+        if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) {
+            if (action != 17 || !value.matches("[012]")) return false;
+            flower.mode = Integer.parseInt(value); flower.setChanged(); flower.backend().settingsChanged(); return true;
+        }
         if (!(tile instanceof NetworkPlant plant)) return false;
+        ManaNetworks data = ManaNetworks.get(server);
         try {
             if (plant.core()) {
                 if (!data.activate(plant)) return false;
@@ -135,6 +144,8 @@ public final class FlowerMenu extends AbstractContainerMenu {
             tag.putString("flowerId", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock()).toString());
             tag.putInt("kind", 1); tag.putInt("mana", flower.getMana()); tag.putInt("maxMana", flower.getMaxMana());
             tag.putString("status", !Flowers.enabled(tile) ? "paused" : flower.getMana() + Flowers.storedFE(tile) / Balance.FE_PER_MANA.get() < Flowers.workReserve(tile) ? "no_energy" : "ready");
+        } else if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) {
+            tag.putInt("kind", 4); tag.putInt("mode", flower.mode); flower.backend().describe(tag);
         } else if (tile instanceof NetworkPlant plant) {
             ManaNetworks data = ManaNetworks.get(server);
             if (plant.core()) data.activate(plant);

@@ -1,0 +1,24 @@
+{
+  "name": "block.botanicalmekanism.mana_lotus",
+  "icon": "botanicalmekanism:mana_lotus",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_lotus.0",
+      "item": "botanicalmekanism:mana_lotus",
+      "title": "book.botanicalmekanism.mana_lotus.title"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/mana_lotus"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_lotus.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_lotus": 0
+  }
+}

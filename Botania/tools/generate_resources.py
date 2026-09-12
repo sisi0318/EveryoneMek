@@ -15,6 +15,7 @@ PLANTS = {
     'bionic_hopperhock': ('仿生漏斗花', 'Bionic Hopperhock', '消耗 FE，将掉落物送入相邻容器。物品框筛选，潜行使用森林法杖切换模式。', 'Uses FE to collect drops into adjacent inventories. Item frames filter; sneak-use a Wand to change mode.'),
     'bionic_rannuncarpus': ('仿生手掌花', 'Bionic Rannuncarpus', '消耗 FE，放置掉落方块。以花下两格的方块为地面样板，潜行使用森林法杖切换模式。', 'Uses FE to place dropped blocks. Matches the block two below the flower; sneak-use a Wand to change mode.'),
     'bionic_exoflame': ('仿生冶炼火', 'Bionic Exoflame', '消耗 FE，给周围可加工的熔炉供热并加速。', 'Uses FE to heat and accelerate nearby working furnaces.'),
+    'corporea_orchid': ('仿生织网花', 'Bionic Corporea Orchid', '连接多媒体火花与 ME 网络。由 ME 供能，占用一个通道。', 'Links Corporea sparks and an ME network. Powered by ME; uses one channel.'),
     'resonance_flower': ('共鸣花', 'Resonance Flower', '管理同维度魔力无线网络。右键设置网络与成员。', 'Manages a wireless mana network in this dimension. Right-click to configure its name and members.'),
     'resonance_bud': ('共鸣芽', 'Resonance Bud', '从相邻魔力池供给或接收魔力，也可作为无线中继。', 'Supplies or receives mana from an adjacent pool, or relays a wireless connection.'),
 }
@@ -35,9 +36,12 @@ for name, (cn, english, description_cn, description_en) in PLANTS.items():
     native = ('jaded_amaranthus' if name == 'bionic_amaranthus' else name.removeprefix('bionic_')) if name.startswith('bionic_') else None
     model = f'botania:block/{native}' if native else f'{MOD}:block/{name}'
     write(f'assets/{MOD}/blockstates/{name}.json', {'variants': {'': {'model': model}}})
-    if native is None:
+    if name == 'corporea_orchid':
+        write(f'assets/{MOD}/models/block/{name}.json', {'parent': f'{MOD}:block/resonance_flower'})
+    elif native is None:
         write(f'assets/{MOD}/models/block/{name}.json', {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'{MOD}:block/{name}'}})
     write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'botania:block/{native}' if native else f'{MOD}:block/{name}'}})
+    if name == 'corporea_orchid': write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'{MOD}:item/resonance_flower'})
     write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'{MOD}:{name}'}]}]})
 
 messages = {
@@ -152,10 +156,15 @@ for flower, petals, rune in [
     recipes.append(('bionic_' + flower, [f'botania:{flower}', *[f'botania:{color}_mystical_petal' for color in petals],
                     'botania:manasteel_ingot', 'botania:manasteel_ingot', 'botania:mana_pearl', f'botania:rune_of_{rune}',
                     'mekanism:basic_control_circuit'], 'mekanism:alloy_infused', 1, 160, 100))
+recipes.append(('corporea_orchid', ['botania:corporea_spark', 'botania:hopperhock', 'botania:purple_mystical_petal',
+                'botania:light_blue_mystical_petal', 'botania:elementium_ingot', 'botania:elementium_ingot',
+                'ae2:fluix_pearl', 'ae2:engineering_processor', 'ae2:annihilation_core', 'ae2:formation_core'],
+                'mekanism:alloy_reinforced', 1, 240, 150))
 for name, ingredients, reagent, count, ticks, power in recipes:
     if name in ('resonance_flower', 'resonance_bud'): continue
     write(f'data/{MOD}/recipe/{name}.json', {'type': f'{MOD}:mechanical_apothecary', 'ingredients': [{'item': item} for item in ingredients],
-          'reagent': {'item': reagent}, 'result': {'id': f'{MOD}:{name}', 'count': count}, 'ticks': ticks, 'fe_per_tick': power})
+          'reagent': {'item': reagent}, 'result': {'id': f'{MOD}:{name}', 'count': count}, 'ticks': ticks, 'fe_per_tick': power,
+          **({'neoforge:conditions': [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}]} if name == 'corporea_orchid' else {})})
 shaped('mechanical_apothecary', ['MAM', 'CSC', 'MIM'], {'M': 'botania:manasteel_ingot', 'A': 'botania:petal_apothecary',
        'C': 'mekanism:basic_control_circuit', 'S': 'mekanism:steel_casing', 'I': 'mekanism:alloy_infused'})
 name = 'mechanical_apothecary'
@@ -182,6 +191,28 @@ for tag in ['mana_spark_augments', 'dominant_spark_pull_source', 'recessive_spar
 
 from machine_resources import generate as generate_machines
 generate_machines(ROOT, write, zh, en)
+corporea_messages = {
+    'mode.0': ('双向', 'Both ways'), 'mode.1': ('ME 访问', 'ME access'), 'mode.2': ('火花访问', 'Corporea'),
+    'online': ('已连接', 'Online'), 'offline': ('未就绪', 'Offline'), 'ae': ('ME 网络：%s', 'ME network: %s'),
+    'nodes': ('多媒体库存：%s 个', 'Corporea inventories: %s'), 'stock': ('火花库存：%s 种 / %s 件', 'Corporea: %s types / %s items'),
+    'me_stock': ('ME 库存：%s 种 / %s 件', 'ME: %s types / %s items'),
+    'transfer': ('上一 tick 传输：%s / %s 件', 'Last tick: %s / %s items transferred'),
+    'status.ready': ('已连接 · 4 AE/t · 1 通道', 'Connected · 4 AE/t · 1 channel'),
+    'status.missing_ae2': ('需要安装 AE2', 'AE2 is not installed'), 'status.connecting': ('等待 ME 网络连接', 'Waiting for ME connection'),
+    'status.no_power': ('ME 网络需要电力', 'ME network needs power'), 'status.no_channel': ('ME 网络缺少可用通道', 'ME network needs a channel'),
+    'status.ordinary_spark': ('花上请安装普通多媒体火花', 'Use an ordinary Corporea spark on the flower'),
+    'status.missing_spark': ('请在花上安装多媒体火花', 'Attach a Corporea spark'), 'status.missing_master': ('多媒体网络需要主火花', 'Corporea needs a master spark'),
+    'status.duplicate_bridge': ('该多媒体网络已有接入花', 'This Corporea network has another bridge'),
+    'status.duplicate_storage': ('移除同一库存重复的 ME 存储总线', 'Remove the duplicate ME storage-bus route'),
+    'status.duplicate_chest': ('双箱只需一枚多媒体火花', 'Use one Corporea spark per double chest'),
+    'status.too_many_nodes': ('多媒体节点超过 128 个', 'More than 128 Corporea nodes'),
+    'status.too_many_slots': ('库存槽超过 8192 个', 'More than 8192 inventory slots'),
+    'status.paused': ('已暂停', 'Paused'), 'status.redstone': ('红石信号已暂停访问', 'Paused by redstone'),
+    'status.unloaded': ('所需区块未加载', 'Required chunks are unloaded'),
+}
+for key, (cn, english) in corporea_messages.items(): zh[f'gui.{MOD}.corporea.{key}'], en[f'gui.{MOD}.corporea.{key}'] = cn, english
+from lexicon_resources import generate as generate_lexicon
+generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)
 write(f'assets/{MOD}/lang/zh_cn.json', zh)
 write(f'assets/{MOD}/lang/en_us.json', en)
 

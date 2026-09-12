@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.metamorphic_stone",
+  "icon": "botanicalmekanism:metamorphic_stone",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 16,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.metamorphic_stone.0",
+      "item": "botanicalmekanism:metamorphic_stone",
+      "title": "book.botanicalmekanism.metamorphic_stone.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:metamorphic_stone"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:metamorphic_stone": 0
+  }
+}

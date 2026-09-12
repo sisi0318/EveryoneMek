@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.botanical_brewery",
+  "icon": "botanicalmekanism:botanical_brewery",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 14,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.botanical_brewery.0",
+      "item": "botanicalmekanism:botanical_brewery",
+      "title": "book.botanicalmekanism.botanical_brewery.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:botanical_brewery"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:botanical_brewery": 0
+  }
+}

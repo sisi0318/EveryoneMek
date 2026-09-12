@@ -1,0 +1,24 @@
+{
+  "name": "block.botanicalmekanism.bionic_agricarnation",
+  "icon": "botanicalmekanism:bionic_agricarnation",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.bionic_agricarnation.0",
+      "item": "botanicalmekanism:bionic_agricarnation",
+      "title": "book.botanicalmekanism.bionic_agricarnation.title"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/bionic_agricarnation"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.bionic_agricarnation.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:bionic_agricarnation": 0
+  }
+}

@@ -104,3 +104,12 @@
 - [PetalApothecaryRecipe](https://github.com/VazkiiMods/Botania/blob/d617ef057edf7a4b4fb6c6ee6045c973a80bfb05/Xplat/src/main/java/vazkii/botania/common/crafting/PetalApothecaryRecipe.java)将配方材料与 reagent 分开，材料上限 16。机械台为每个实际消耗材料构造一个单件输入，调用原 matches／assemble／getRemainingItems；堆叠库存由本模组容量匹配器分配。
 - 当前上游物品名为 `white_mystical_petal` 等与 `petal_apothecary`；1.20 的 `white_petal`、`apothecary_default` 不存在。机械配方使用独立 RecipeType／Serializer，原台只查询自己的类型，不能匹配本模组仿生配方。
 - Mek 10.7.19 的 ForgeEnergyIntegration 接收 FE 时调用 `IEnergyConversion.convertFrom`，反向使用 convertTo。机械台按此方向转换 FE 成本和储量，再应用原升级倍率。侧面类型显式包含 FLUID，不能使用只有物品／化学品／能量的 ADVANCED_ELECTRIC_MACHINE 预设。
+
+
+## 8. AE2 与词典核对（alpha.8）
+
+- AE2 用户指定 [1.21.1 分支](https://github.com/AppliedEnergistics/Applied-Energistics-2/tree/1.21.1)，核对提交 fd8b717a405672ce4f65ba540f1db8c91317daa4。运行采用 [19.2.17 正式版](https://github.com/AppliedEnergistics/Applied-Energistics-2/releases/tag/neoforge/v19.2.17)，标签提交 79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a；API 目录对比无差异。
+- 采用公开 [IManagedGridNode](https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a/src/main/java/appeng/api/networking/IManagedGridNode.java)、[IStorageProvider](https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a/src/main/java/appeng/api/storage/IStorageProvider.java) 与 [MEStorage](https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a/src/main/java/appeng/api/storage/MEStorage.java)。节点在实际 ticking 阶段初始化，移除时销毁；MODULATE 返回实际数量，SIMULATE 不转移库存。未复制 AE2 实现或素材，依赖保留原许可证。
+- AE2 19.2.17 还要求 GuideME 21.1.1；Maven 产物与 SHA 记录在 ae2-compat.json。GuideME 自带内部 shaded 库，无需另打包这些库。未安装 AE2 时不要求 GuideME。
+- 固定 Botania 的 CorporeaNodeDetectors 支持直接注册新节点；NeoForge 节点先查 UP 物品能力，再查无侧面能力。CorporeaSparkEntity 的 master 连接集合不含主火花自身，不能把主火花下方的库存当作普通节点。
+- Patchouli 1.21.1-92-NEOFORGE 的 BookContentResourceDirectLoader 根据书的命名空间扫描资源。原书为 botania:lexica_botania，use_resource_pack=true；在该命名空间新增分类与子条目即可，无需另造 book.json。模板和物品映射通过生成器维护，AE 专用配方页使用 mod:ae2 标志。

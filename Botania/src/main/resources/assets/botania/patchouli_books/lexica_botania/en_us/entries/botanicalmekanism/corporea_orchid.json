@@ -1,0 +1,41 @@
+{
+  "name": "block.botanicalmekanism.corporea_orchid",
+  "icon": "botanicalmekanism:corporea_orchid",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.corporea_orchid.0",
+      "item": "botanicalmekanism:corporea_orchid",
+      "title": "book.botanicalmekanism.corporea_orchid.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.4"
+    },
+    {
+      "type": "botania:botanicalmekanism/recipe/corporea_orchid",
+      "flag": "mod:ae2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.cost"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:corporea_orchid": 0
+  }
+}

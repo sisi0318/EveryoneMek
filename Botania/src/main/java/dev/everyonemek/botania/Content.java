@@ -47,6 +47,10 @@ public final class Content {
           () -> new PoweredPlantBlock(plant(), () -> BotaniaBlockEntities.EXOFLAME));
     public static final DeferredBlock<NetworkPlantBlock> CORE = BLOCKS.register("resonance_flower", () -> new NetworkPlantBlock(plant(), true));
     public static final DeferredBlock<NetworkPlantBlock> NODE = BLOCKS.register("resonance_bud", () -> new NetworkPlantBlock(plant(), false));
+    public static final DeferredBlock<dev.everyonemek.botania.corporea.CorporeaFlowerBlock> CORPOREA = BLOCKS.register("corporea_orchid",
+          () -> new dev.everyonemek.botania.corporea.CorporeaFlowerBlock(plant()));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<dev.everyonemek.botania.corporea.CorporeaFlower>> CORPOREA_TILE = TILES.register("corporea_orchid",
+          () -> BlockEntityType.Builder.of(dev.everyonemek.botania.corporea.CorporeaFlower::new, CORPOREA.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ManaLotus>> LOTUS_TILE = TILES.register("mana_lotus",
           () -> BlockEntityType.Builder.of(ManaLotus::new, LOTUS.get()).build(null));
@@ -71,6 +75,7 @@ public final class Content {
                   output.accept(LOTUS.get());
                   for (var block : bionics()) output.accept(block.get());
                   output.accept(SPARK_AUGMENT.get());
+                  if (net.neoforged.fml.ModList.get().isLoaded("ae2")) output.accept(CORPOREA.get());
                   output.accept(ApothecaryContent.BLOCK);
                   for (var block : ManaContent.MACHINES.values()) output.accept(block);
               }).build());
@@ -90,7 +95,7 @@ public final class Content {
         event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(WandBindable.LOOKUP), LOTUS_TILE.get(), (tile, side) -> tile);
     }
     public static DeferredBlock<?>[] bionics() { return new DeferredBlock<?>[]{AMARANTHUS, CLAYCONIA, AGRICARNATION, HOPPERHOCK, RANNUNCARPUS, EXOFLAME}; }
-    public static DeferredBlock<?>[] plants() { return new DeferredBlock<?>[]{LOTUS, AMARANTHUS, CLAYCONIA, AGRICARNATION, HOPPERHOCK, RANNUNCARPUS, EXOFLAME, CORE, NODE}; }
+    public static DeferredBlock<?>[] plants() { return new DeferredBlock<?>[]{LOTUS, AMARANTHUS, CLAYCONIA, AGRICARNATION, HOPPERHOCK, RANNUNCARPUS, EXOFLAME, CORE, NODE, CORPOREA}; }
     private static BlockEntityType<?>[] bionicTypes() { return new BlockEntityType<?>[]{BotaniaBlockEntities.JADED_AMARANTHUS, BotaniaBlockEntities.CLAYCONIA,
           BotaniaBlockEntities.AGRICARNATION, BotaniaBlockEntities.HOPPERHOCK, BotaniaBlockEntities.RANNUNCARPUS, BotaniaBlockEntities.EXOFLAME}; }
     private Content() { }

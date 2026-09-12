@@ -40,6 +40,11 @@ public final class NetworkPlantBlock extends BaseEntityBlock {
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         Flowers.open(player, level.getBlockEntity(pos)); return InteractionResult.sidedSuccess(level.isClientSide);
     }
+    @Override protected net.minecraft.world.ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+          Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
+        return LexiconGuide.open(player, stack, this) ? net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide)
+              : net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
         if (!state.is(replacement.getBlock()) && !level.isClientSide && level.getBlockEntity(pos) instanceof NetworkPlant plant)
             ManaNetworks.get((net.minecraft.server.level.ServerLevel) level).removed(plant);

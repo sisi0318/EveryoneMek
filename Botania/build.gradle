@@ -10,6 +10,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 def upstream = new groovy.json.JsonSlurper().parse(file('upstream-lock.json'))
 def botaniaJar = layout.buildDirectory.file("dependencies/${upstream.filename}")
+def withAE2 = providers.gradleProperty('withAE2').map { it.toBoolean() }.getOrElse(true)
 def prepareBotania = tasks.register('prepareBotania', Exec) {
     inputs.files('upstream-lock.json', 'tools/prepare_botania.py')
     outputs.file(botaniaJar)
@@ -21,10 +22,17 @@ sourceSets {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
     }
+    aeGameTest {
+        compileClasspath += sourceSets.main.output + sourceSets.gameTest.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.gameTest.output
+    }
 }
 configurations {
     gameTestImplementation.extendsFrom implementation
     gameTestRuntimeOnly.extendsFrom runtimeOnly
+    aeGameTestImplementation.extendsFrom gameTestImplementation
+    aeGameTestCompileOnly.extendsFrom compileOnly
+    aeGameTestRuntimeOnly.extendsFrom runtimeOnly
 }
 repositories {
     maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
@@ -35,6 +43,7 @@ repositories {
 neoForge {
     version = project.neo_version
     addModdingDependenciesTo sourceSets.gameTest
+    addModdingDependenciesTo sourceSets.aeGameTest
     runs {
         client { client() }
         server { server(); programArgument '--nogui' }
@@ -45,7 +54,10 @@ neoForge {
         }
     }
     mods {
-        botanicalmekanism { sourceSet sourceSets.main; sourceSet sourceSets.gameTest }
+        botanicalmekanism {
+            sourceSet sourceSets.main; sourceSet sourceSets.gameTest
+            if (withAE2) sourceSet sourceSets.aeGameTest
+        }
     }
 }
 dependencies {
@@ -55,12 +67,17 @@ dependencies {
     implementation 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
     compileOnly 'mezz.jei:jei-1.21.1-common-api:19.22.1.316'
     runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.22.1.316'
+    compileOnly('org.appliedenergistics:appliedenergistics2:19.2.17') { transitive = false }
+    if (withAE2) runtimeOnly 'org.appliedenergistics:appliedenergistics2:19.2.17'
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.named('test', Test) { useJUnitPlatform() }
-tasks.named('check') { dependsOn 'compileGameTestJava' }
+tasks.named('check') {
+    dependsOn 'compileGameTestJava'
+    if (withAE2) dependsOn 'compileAeGameTestJava'
+}
 tasks.named('jar', Jar) { from('LICENSE') }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 def resourceProperties = [version: project.version.toString()]

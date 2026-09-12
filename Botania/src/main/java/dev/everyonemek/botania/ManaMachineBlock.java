@@ -15,6 +15,7 @@ public final class ManaMachineBlock extends BlockTile<ManaMachine, Machine<ManaM
     @Override protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,
           net.minecraft.world.level.block.state.BlockState state, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos,
           net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
+        if (LexiconGuide.open(player, stack, this)) return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide);
         if (kind.chemical && stack.is(vazkii.botania.common.item.BotaniaItems.MANA_SPARK)) {
             if (!mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return net.minecraft.world.ItemInteractionResult.FAIL;
             return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;

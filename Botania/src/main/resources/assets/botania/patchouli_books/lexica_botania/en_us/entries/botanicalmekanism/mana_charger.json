@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.mana_charger",
+  "icon": "botanicalmekanism:mana_charger",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 9,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_charger.0",
+      "item": "botanicalmekanism:mana_charger",
+      "title": "book.botanicalmekanism.mana_charger.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_charger"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_charger": 0
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "block.botanicalmekanism.elven_trade_controller",
+  "icon": "botanicalmekanism:elven_trade_controller",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 17,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.elven_trade_controller.0",
+      "item": "botanicalmekanism:elven_trade_controller",
+      "title": "book.botanicalmekanism.elven_trade_controller.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.elven_trade_controller.1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:elven_trade_controller"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:elven_trade_controller": 0
+  }
+}

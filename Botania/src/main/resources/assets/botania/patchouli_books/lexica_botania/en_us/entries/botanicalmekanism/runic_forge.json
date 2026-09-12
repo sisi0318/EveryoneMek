@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.runic_forge",
+  "icon": "botanicalmekanism:runic_forge",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 11,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.runic_forge.0",
+      "item": "botanicalmekanism:runic_forge",
+      "title": "book.botanicalmekanism.runic_forge.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:runic_forge"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:runic_forge": 0
+  }
+}

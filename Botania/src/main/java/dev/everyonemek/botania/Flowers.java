@@ -106,6 +106,7 @@ public final class Flowers {
             if (flower.getBindingPos() != null) state.putLong("binding", flower.getBindingPos().asLong());
         } else if (tile instanceof FunctionalFlowerBlockEntity flower) state.putInt("mana", flower.getMana());
         if (tile instanceof NetworkPlant plant) plant.saveItem(state);
+        if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) flower.saveItem(state);
         if (tile instanceof ManaLotus lotus) state.putLong("last_production_tick", lotus.lastProductionTick());
         for (var property : tile.getBlockState().getProperties()) if (property != net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED
               && tile instanceof FunctionalFlowerBlockEntity) saveProperty(state, tile.getBlockState(), property);
@@ -128,6 +129,7 @@ public final class Flowers {
                 } else if (tile instanceof FunctionalFlowerBlockEntity flower)
                     flower.addMana(Math.clamp(state.getInt("mana"), 0, flower.getMaxMana()) - flower.getMana());
                 if (tile instanceof NetworkPlant plant) plant.loadItem(state);
+                if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) flower.loadItem(state);
                 if (tile instanceof FunctionalFlowerBlockEntity) {
                     var blockState = tile.getBlockState();
                     for (var property : blockState.getProperties()) if (state.contains("property_" + property.getName()))

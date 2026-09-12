@@ -1,0 +1,21 @@
+{
+  "name": "block.botanicalmekanism.terra_condenser",
+  "icon": "botanicalmekanism:terra_condenser",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 13,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.terra_condenser.0",
+      "item": "botanicalmekanism:terra_condenser",
+      "title": "book.botanicalmekanism.terra_condenser.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:terra_condenser"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:terra_condenser": 0
+  }
+}

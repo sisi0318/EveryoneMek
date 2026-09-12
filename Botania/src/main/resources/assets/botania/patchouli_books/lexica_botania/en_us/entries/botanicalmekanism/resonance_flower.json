@@ -1,0 +1,17 @@
+{
+  "name": "block.botanicalmekanism.resonance_flower",
+  "icon": "botanicalmekanism:resonance_flower",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 21,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.resonance_flower.0",
+      "item": "botanicalmekanism:resonance_flower",
+      "title": "book.botanicalmekanism.resonance_flower.title"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:resonance_flower": 0
+  }
+}
