@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "EAE",
+    "DSD",
+    "EAE"
+  ],
+  "key": {
+    "E": {
+      "item": "botania:elementium_ingot"
+    },
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "D": {
+      "item": "botania:dragonstone"
+    },
+    "S": {
+      "item": "botania:mana_spark"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:resonance_spark_augment",
+    "count": 1
+  }
+}

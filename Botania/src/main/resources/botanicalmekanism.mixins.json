@@ -8,7 +8,10 @@
     "BionicWandMixin",
     "ManaPoolAccess",
     "EnchanterAccess",
-    "EnchanterControlMixin"
+    "EnchanterControlMixin",
+    "SparkTransfersAccess",
+    "SparkRangeMixin",
+    "SparkRequestMixin"
   ],
   "client": [],
   "injectors": {

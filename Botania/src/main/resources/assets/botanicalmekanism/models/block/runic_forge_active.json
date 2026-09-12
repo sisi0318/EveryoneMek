@@ -1,6 +1,6 @@
 {
   "parent": "botanicalmekanism:block/runic_forge",
   "textures": {
-    "north": "botanicalmekanism:block/runic_forge/front_active"
+    "indicator": "botania:block/mana_diamond_block"
   }
 }

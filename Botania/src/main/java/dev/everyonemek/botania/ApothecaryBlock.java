@@ -14,7 +14,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.fluids.FluidUtil;
 
 public final class ApothecaryBlock extends BlockTile<MechanicalApothecary, Machine<MechanicalApothecary>> {
-    public ApothecaryBlock(Machine<MechanicalApothecary> type) { super(type, properties -> properties.strength(4, 12)); }
+    public ApothecaryBlock(Machine<MechanicalApothecary> type) { super(type, properties -> properties.strength(4, 12).noOcclusion()); }
+    @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
+          BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return BotanicalMachineShapes.get("mechanical_apothecary", mekanism.common.block.attribute.Attribute.getFacing(state));
+    }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (FluidUtil.getFluidHandler(stack).isPresent()) {
             if (!IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return ItemInteractionResult.FAIL;

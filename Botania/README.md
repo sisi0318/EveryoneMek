@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.6 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种仿生功能花、共鸣网络、两种魔力辅助设备和十种加工／控制设备。跨维度、高级网络与后续候选花仍待独立设计。
+**0.1.0-alpha.7 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种仿生功能花、原生火花与 Chemical 魔力传输、两种魔力辅助设备和十种加工／控制设备。跨维度、高级网络与后续候选花仍待独立设计。
 
 适配 Minecraft 1.21.1、Java 21、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。客户端与服务端都需安装本模组及下列依赖，不要同时保留重复的旧 JAR：
 
@@ -10,12 +10,12 @@
 | Patchouli | 1.21.1-92-NEOFORGE |
 | Curios | 9.5.1+1.21.1 |
 
-本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.6.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，九种扩展花均为机械花药台专用配方。无需安装 Flux Networks。
+本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.7.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，七种 FE 花使用机械花药台专用配方，共鸣增幅器在工作台制作。无需安装 Flux Networks。
 
 ![三种原创花形材质](art/texture-sheet.png)
 
 - [完整设计方案](DESIGN.md)：资源互通、机器、仿生花、进度与分阶段验收。
-- [魔力无线网络](WIRELESS.md)：共鸣花核心、收发／中继节点、距离、带宽、费用和权限。
+- [火花与旧网络兼容](WIRELESS.md)：原生火花路线与旧共鸣存档维护。
 - [上游核对记录](UPSTREAM.md)：固定源码版本、配方覆盖和实现契约。
 - [开发入口](AGENTS.md)：已确认要求与下一步。
 
@@ -25,27 +25,24 @@
 
 导能莲默认每株 200 FE／tick 产生 4 魔力／tick，最多保存 20,000 FE 和 800 魔力，首版无速度升级。服务端 `botanicalmekanism-server.toml` 可设置 `fePerMana`（默认 50）和 `lotusManaPerTick`（默认 4）。翡翠苋每次生花默认使用相当于 5,000 FE 的工作储备。空手右键花可查看储能并暂停。
 
-配置界面采用简洁的半透明深灰底。产魔花只显示储能、魔力和状态；共鸣网络分为设置、网络选择、成员和连接概览等页面。悬停花的状态查看绑定信息，悬停储能查看工作要求，列表可搜索和滚轮翻页。模式切换、按钮与回车提交均使用服务端确认值；底部“完成”或 Esc 关闭界面。
+配置界面采用简洁的半透明深灰底。产魔花只显示储能、魔力和状态；旧共鸣设备保留兼容设置页面，新火花沿用染料和法杖操作。悬停花的状态查看绑定信息，悬停储能查看工作要求，列表可搜索和滚轮翻页。模式切换、按钮与回车提交均使用服务端确认值；底部“完成”或 Esc 关闭界面。
 
-**从 alpha.5 更新：**客户端与服务端同时替换 JAR，网络协议已更新，依赖不变。原有花、网络、库存、水、能量与设置保留。
+**从 alpha.6 更新：**客户端与服务端同时替换 JAR，依赖不变。所有机器标题已补齐中英文翻译，模型改为 Botania 原版材质的活石／活木装置。原有库存、能量与设置保留；旧共鸣设备继续兼容，模型、贴图和原稿留待后续用途。
 
 **从 alpha.1 更新：**客户端和服务端替换本模组 JAR 即可，依赖未变。旧世界中若某朵花无法选中，先空手右键一次补全所有者，再用绑定模式改绑。此次修复防止花在重进世界时丢失所有者、FE 和暂停状态；旧版已经写丢的数据无法推算恢复，物品上的原有储能与设置仍兼容。
 
-## 无线网络使用
+## 原生火花与共鸣增幅器
 
-1. 放置共鸣花，在“设置”页命名网络；“成员”页选择在线玩家添加，点击已授权成员可移除，“连接”页查看节点位置和状态。
-2. 在源池或魔力机器旁放共鸣芽。只有一个相邻有效目标时自动选中方向；也可在设置页直接选方向或点击“自动检测”。
-3. 未连接的新芽打开后直接进入“网络”页：选中网络，再点击“供给接入”“接收接入”或“中继接入”，一次完成连接和用途设置，并自动返回设置页。只有一个可用网络或搜索结果时已自动选中，直接点用途即可。同名网络可悬停查看核心位置与在线状态。
-4. 源端使用“供给”并设置保留量；目标池或机器输入面旁使用“接收”并设置目标量与优先级。“目标容量”把目标量设为当前容量，确认后更新输入框。已连接节点打开就是设置页，可直接切换模式。
-5. 需要扩展距离时直接选“中继”。节点保留各模式的原方向和数量；已有连接需要换网时切到“网络”页。接入前检查权限与节点额度，失败不会只改动其中一项。
+现在直接使用 Botania 原火花，不再要求新建共鸣网络、选择核心或管理成员。
 
-每条链路最长 32 格，基础网络最多 16 个节点；全网等效上限 128 魔力/t，单端 64，每 5 tick 调度一次。优先级按高／普通／低约 4∶2∶1 轮转，低优先级也会获得服务。
+1. 在原魔力池和本模组有魔力罐的机器上各安装一枚普通火花。机器自动向附近同色火花请求魔力，和原泰拉／附魔装置一样使用原传输流程。
+2. 使用染料给火花分组，森林法杖查看连接或潜行拆卸。机器顶部的 Chemical 面必须允许输入；关闭顶部输入后，火花停止供给。
+3. 想扩大距离时，在**两端火花**上分别安装共鸣增幅器，范围从原各轴 ±12 格扩展至 **各轴 ±32 格**。只升级一端仍保持原距离。
+4. 池上的原聚集／分散等升级可以与增幅器组合：先装原升级或先装增幅器均可。潜行用森林法杖拆下时，原升级和距离效果一起保存在掉落升级物品中，再装回即可恢复。机器端只接受距离增幅器，原池控制升级继续用于池。
 
-每交付 50 魔力、每跳额外消耗 1 魔力；两跳交付 100 时源池共减少 104。小额累计计费，拆装不会重置余量；空闲、满目标或失败不收费。一个池或机器只允许一个活动无线端点，魔力只保存在真实池或机器中，没有隐藏网络库存。
+增幅器由火花、源质钢 ×4、龙石 ×2、强化合金 ×2 合成。它只扩展距离，魔力吞吐、染色、原升级角色和费用继续采用 Botania 原规则；不另收旧共鸣网络费用，不增加网络库存或跨维度传输。
 
-核心离线或暂停时全网停传，断开的中继影响相应路径，不强制加载区块或补发离线流量。节点拆装保留设置并重新验证连接；其他玩家放置带旧所有者的设备时保持暂停。
-
-**无线端点支持普通、稀释、华丽原生池和本模组的魔力机器。** 机器接入遵守 Mek 权限与实际六面 Chemical 设置；供给端需要输出面，接收端需要输入面。有线与无线共用同一罐，关闭该面后无线同样停止。任意第三方 Chemical 储罐仍需另行适配。远端原池可继续供给火花和普通功能花。
+**旧共鸣花／芽：**退出新的合成与创造物品栏，但现有设备、旧网络、GUI 与资源保存继续兼容。旧设备可在工作台回收成一个共鸣增幅器；也可以继续保留。共鸣花的注册 ID、模型、贴图与美术原稿完整保留，供后续新用途复用。旧机制的说明与限制见 [兼容记录](WIRELESS.md)。
 
 ## 机械花药台
 
@@ -65,8 +62,6 @@
 | --- | --- | --- | --- |
 | 导能莲 ×1 | 火红莲、青色花瓣 ×2、白色花瓣 ×2、魔力钢 ×2、魔力钻石、火之符文、风之符文、高级控制电路 | 灌注合金 | 30,000 FE／200 tick |
 | 仿生翡翠苋 ×1 | 翡翠苋、绿色花瓣、黄绿色花瓣、魔力钢 ×2、魔力珍珠、地之符文、基础控制电路 | 灌注合金 | 16,000 FE／160 tick |
-| 共鸣花 ×1 | 魔力星、紫色花瓣 ×2、淡蓝色花瓣 ×2、火花 ×2、源质钢 ×2、龙石、风之符文、高级控制电路 | 强化合金 | 60,000 FE／300 tick |
-| 共鸣芽 ×2 | 火花、青色花瓣、紫色花瓣、源质钢 ×2、风之符文、基础控制电路 | 灌注合金 | 10,000 FE／100 tick |
 | 原版花 | 沿用原配方 | 沿用原配方 | 5,000 FE／100 tick |
 
 ## 新增仿生功能花
@@ -85,7 +80,7 @@
 
 ## 魔力互通与加工设备
 
-推荐先搭建：**导能莲 → 原发射器 → 原池 → 魔力互通器 → 加压管道 → 加工机**。也可让共鸣芽从原池无线供给加工机输入面。1 单位 Chemical 魔力等于 1 原生魔力。
+推荐先搭建：**导能莲 → 原发射器 → 原池 → 原火花 → 加工机**。需要管线时，通过魔力互通器接加压管道。1 单位 Chemical 魔力等于 1 原生魔力。
 
 - 魔力互通器：紧邻原池，界面直接选择池所在的相对方向，再选“从池抽取”或“向池供给”；选中的池面不接化学管道。默认最多 1,000 魔力/t，每个发生转移的 tick 消耗基础 50 FE。
 - 魔力充能座：连接相邻真实原池，放入单件可储魔物品，选择充入／抽出与 0–100% 目标。达到目标后进入输出槽；遵守物品和原池的充放魔许可，不支持创造池或特殊工具成长。
@@ -108,13 +103,13 @@
 
 **精灵贸易控制器**紧邻真实精灵门核心，界面选核心方向。玩家用森林法杖按原方式开门，保留门框、至少两个自然水晶和其下的原池。门自身支付 200,000 开门魔力；每批贸易通过真实门按原规则分摊 500 魔力，控制器只支付搬运 FE，并接收全部产物。输出满、门未开、结构损坏或池不足时保留材料。一次最多每 4 tick 解析一批；原样退回、词典升级和第三方特殊贸易继续由原门处理。
 
-**魔力附魔控制器**紧邻已形成的原附魔装置，选择装置方向，放入一件装备和附魔书。控制器把装备交给原装置，书籍留在本机；原装置决定可用附魔、冲突、等级及精确魔力费用。可从 Chemical 管线／共鸣网络供魔，也可继续使用原火花。完成后装备回到输出槽。结构损坏、红石暂停或控制器重复时暂停原流程，修好后恢复。拆下控制器时，处理中装备仍在真实附魔装置，可按原方式取回；不复制到控制器掉落物中。保留附魔装置本身的完整结构，不以独立机内配方替代。
+**魔力附魔控制器**紧邻已形成的原附魔装置，选择装置方向，放入一件装备和附魔书。控制器把装备交给原装置，书籍留在本机；原装置决定可用附魔、冲突、等级及精确魔力费用。可从 Chemical 管线／原火花供魔，也可继续使用原火花。完成后装备回到输出槽。结构损坏、红石暂停或控制器重复时暂停原流程，修好后恢复。拆下控制器时，处理中装备仍在真实附魔装置，可按原方式取回；不复制到控制器掉落物中。保留附魔装置本身的完整结构，不以独立机内配方替代。
 
 一个真实装置只允许一个指向它的活动控制器；重复连接停止。两种控制器只访问紧邻目标，周围所需区块未加载时不工作。
 
 ## 验证与构建
 
-18 项服务端 GameTest 和 1 项费用单元检查已通过：覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
+21 项服务端 GameTest 和 1 项费用单元检查已通过，覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置；新增火花测试检查普通接入、真实染料／法杖、顶部输入、距离边界、双端增幅、保存、拆卸和原升级组合。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
 
 初次构建需要 Python 3.11+、已登录的 GitHub CLI 和 Java 21。Gradle 自动取得锁定 Botania CI 产物并校验 SHA-256；也可用 `BOTANIA_JAR` 指定已下载的同一文件。上游 CI 附件可能过期，请保留已验证的本地依赖；不能静默换成另一个 SNAPSHOT。
 
@@ -122,10 +117,10 @@
 
 ## English quick start
 
-This prototype implements the main design: a Conduction Lotus, six bionic functional flowers, two resonance flowers, a Mana Bridge, a Charging Stand, and ten processing/control devices. Install the locked Botania snapshot, Mekanism, Patchouli and Curios on both client and server.
+This prototype implements the main design: a Conduction Lotus, six bionic functional flowers, native spark range upgrades, a Mana Bridge, a Charging Stand, and ten processing/control devices. Install the locked Botania snapshot, Mekanism, Patchouli and Curios on both client and server.
 
 Mount flowers on solid supports or FE cables; soil is not required. Power the Lotus, switch the Wand of the Forest to Bind Mode by sneak-using it in the air, then sneak-use the Lotus and a spreader within six blocks. Its default rate is 4 mana/t for 200 FE/t. The bionic amaranthus uses FE and retains the original flower-growing behavior. Empty-hand right-click opens a compact gray interface with aligned resource values and essential controls; relay mode hides unused settings. When upgrading an alpha.1 world, first open any ownerless flower once to initialize it. The new version preserves owner, FE and pause state across world saves; data already omitted by the old save cannot be reconstructed.
 
-Create a private network at a Resonance Flower. Buds adjacent to native pools or this addon’s mana machines act as suppliers, receivers or relays. Machine endpoints obey actual chemical side configuration and Mek security. An unlinked bud opens the searchable network list. Select a network and click Join: supply, receive or relay to apply both choices at once; successful joining returns to settings. A single available result is preselected. Connected buds open settings directly. Update both client and server for the new acknowledgement protocol. The core has separate member and connection pages; a fresh bud detects a unique adjacent pool. Links reach 32 blocks; the network has 16 node slots and transfers up to 128 mana/t in five-tick batches. Each 50 delivered mana costs one additional mana per hop, with persistent accounting for small transfers. Unloaded or blocked routes stop without hidden resource storage.
+Attach native Botania sparks to a pool and a mana machine; matching dye colors connect automatically. The machine’s top chemical face must allow input. Install a Resonance Spark Augment at both ends to extend the native 12-block range to 32 blocks per axis. Native pool augments can retain their role together with the range component; the Wand removes the combined augment intact. Transfer rates and mana accounting remain native, with no separate network or membership UI. Old Resonance Flowers/Buds stay compatible but leave new crafting and the creative tab. Their models, textures and source artwork remain preserved for future use.
 
-The Mechanical Apothecary uses FE, water, 16 ingredient slots and a separate reagent slot to craft both native and bionic flowers. Water enters through fluid pipes or a dedicated container slot; repeated buckets return empty containers through their own output slot. Shift-click routes filled buckets correctly, and full tanks or blocked empty-bucket outputs stop without consuming the bucket. Bionic recipes are exclusive to this machine; the native basin cannot craft them. Native recipes keep their original ingredient and reagent requirements, while bionic recipes require corresponding native flowers, petals, runes and technological components. The Bridge moves native mana into chemical tubes at 1:1. Infusion, runes, pure conversions, terra, brewing, ores and metamorphic stone use their native recipe rules. Elven trades require an open real portal and pay its pools; enchanting uses a formed real enchanter and retains books. World callbacks, special elven return/lexicon recipes, arbitrary third-party tanks and cross-dimensional networks remain outside this version. Client visual acceptance remains in-game.
+The Mechanical Apothecary uses FE, water, 16 ingredient slots and a separate reagent slot to craft both native and bionic flowers. Water enters through fluid pipes or a dedicated container slot; repeated buckets return empty containers through their own output slot. Shift-click routes filled buckets correctly, and full tanks or blocked empty-bucket outputs stop without consuming the bucket. Bionic recipes are exclusive to this machine; the native basin cannot craft them. Native recipes keep their original ingredient and reagent requirements, while bionic recipes require corresponding native flowers, petals, runes and technological components. Machine titles are localized, and the twelve machine models now use open livingrock/livingwood apparatus geometry with native materials. The Bridge moves native mana into chemical tubes at 1:1. Infusion, runes, pure conversions, terra, brewing, ores and metamorphic stone use their native recipe rules. Elven trades require an open real portal and pay its pools; enchanting uses a formed real enchanter and retains books. World callbacks, special elven return/lexicon recipes, arbitrary third-party tanks and cross-dimensional networks remain outside this version. Client visual acceptance remains in-game.

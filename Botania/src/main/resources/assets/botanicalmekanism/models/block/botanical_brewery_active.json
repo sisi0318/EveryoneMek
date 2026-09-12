@@ -1,6 +1,6 @@
 {
   "parent": "botanicalmekanism:block/botanical_brewery",
   "textures": {
-    "north": "botanicalmekanism:block/botanical_brewery/front_active"
+    "indicator": "botania:block/mana_diamond_block"
   }
 }

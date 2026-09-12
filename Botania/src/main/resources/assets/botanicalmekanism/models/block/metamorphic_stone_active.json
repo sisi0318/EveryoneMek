@@ -1,6 +1,6 @@
 {
   "parent": "botanicalmekanism:block/metamorphic_stone",
   "textures": {
-    "north": "botanicalmekanism:block/metamorphic_stone/front_active"
+    "indicator": "botania:block/mana_diamond_block"
   }
 }

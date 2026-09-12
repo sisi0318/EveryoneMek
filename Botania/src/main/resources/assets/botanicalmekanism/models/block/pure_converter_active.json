@@ -1,6 +1,6 @@
 {
   "parent": "botanicalmekanism:block/pure_converter",
   "textures": {
-    "north": "botanicalmekanism:block/pure_converter/front_active"
+    "indicator": "botania:block/mana_diamond_block"
   }
 }

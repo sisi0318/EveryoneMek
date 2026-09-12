@@ -1,0 +1,70 @@
+{
+  "version": "alpha.7",
+  "method": "Original JSON geometry; runtime references to the pinned Botania materials. No upstream bitmaps are bundled.",
+  "palette": {
+    "stone": "botania:block/polished_livingrock",
+    "wood": "botania:block/livingwood_log",
+    "wood_end": "botania:block/livingwood_log_top",
+    "rune": "botania:block/runic_altar_top",
+    "terra": "botania:block/terrestrial_agglomeration_plate_top",
+    "metal": "botania:block/manasteel_block",
+    "green": "botania:block/terrasteel_block",
+    "pink": "botania:block/elementium_block",
+    "crystal": "botania:block/mana_diamond_block",
+    "elf_crystal": "botania:block/dragonstone_block",
+    "daisy": "botania:block/pure_daisy",
+    "orechid": "botania:block/orechid",
+    "morph_flower": "botania:block/marimorphosis",
+    "rock": "minecraft:block/stone"
+  },
+  "models": {
+    "mechanical_apothecary": {
+      "elements": 16,
+      "solid_elements": 16
+    },
+    "mana_infuser": {
+      "elements": 17,
+      "solid_elements": 17
+    },
+    "runic_forge": {
+      "elements": 16,
+      "solid_elements": 16
+    },
+    "mana_bridge": {
+      "elements": 15,
+      "solid_elements": 15
+    },
+    "mana_charger": {
+      "elements": 17,
+      "solid_elements": 17
+    },
+    "terra_condenser": {
+      "elements": 16,
+      "solid_elements": 16
+    },
+    "pure_converter": {
+      "elements": 18,
+      "solid_elements": 16
+    },
+    "ore_processor": {
+      "elements": 16,
+      "solid_elements": 14
+    },
+    "metamorphic_stone": {
+      "elements": 16,
+      "solid_elements": 14
+    },
+    "botanical_brewery": {
+      "elements": 21,
+      "solid_elements": 21
+    },
+    "elven_trade_controller": {
+      "elements": 17,
+      "solid_elements": 17
+    },
+    "mana_enchanter_controller": {
+      "elements": 17,
+      "solid_elements": 17
+    }
+  }
+}

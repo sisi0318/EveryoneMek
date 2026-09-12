@@ -114,7 +114,7 @@ public final class BotanicalGameTests {
         var lotus = (ManaLotus) plant(h, player, pos, Content.LOTUS.get());
         h.setBlock(new BlockPos(15, 1, 15), BotaniaBlocks.RED_STRINGED_SPOOFER);
         check(!lotus.getBlockState().canSurvive(h.getLevel(), h.absolutePos(new BlockPos(15, 2, 15))), "Bionic support allowed remote-position spoofing");
-        for (String recipe : List.of("mana_lotus", "bionic_amaranthus", "resonance_flower", "resonance_bud"))
+        for (String recipe : List.of("mana_lotus", "bionic_amaranthus", "resonance_spark_augment"))
             check(h.getLevel().getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, recipe)).isPresent(), "Prototype crafting recipe missing: " + recipe);
         check(Content.LOTUS.get().useItemOn(new ItemStack(BotaniaItems.WAND_OF_THE_FOREST), lotus.getBlockState(), h.getLevel(), lotus.getBlockPos(),
               player, InteractionHand.MAIN_HAND, new BlockHitResult(lotus.getBlockPos().getCenter(), Direction.UP, lotus.getBlockPos(), false))

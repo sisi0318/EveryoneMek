@@ -142,6 +142,8 @@
   "gui.botanicalmekanism.status.unloaded": "Chunk unloaded",
   "block.botanicalmekanism.mechanical_apothecary": "Mechanical Apothecary",
   "description.botanicalmekanism.mechanical_apothecary": "Uses water and energy to craft native and bionic flowers. Reagent enters at the back; products leave on the right.",
+  "item.botanicalmekanism.resonance_spark_augment": "Resonance Spark Augment",
+  "tooltip.botanicalmekanism.spark_range": "Install at both ends for %s-block spark range. Keeps native dyes and augments.",
   "block.botanicalmekanism.mana_bridge": "Mana Bridge",
   "description.botanicalmekanism.mana_bridge": "Connects an adjacent native mana pool to chemical tubes. Select the pool face and transfer direction.",
   "block.botanicalmekanism.mana_charger": "Mana Charging Stand",
@@ -198,5 +200,17 @@
   "gui.botanicalmekanism.machine.status.10": "Waiting",
   "gui.botanicalmekanism.machine.status.11": "Nearby chunks unloaded",
   "gui.botanicalmekanism.machine.status.12": "Device occupied or duplicate controllers",
-  "gui.botanicalmekanism.machine.status.13": "Orechid Ignem needs a ceiling dimension"
+  "gui.botanicalmekanism.machine.status.13": "Orechid Ignem needs a ceiling dimension",
+  "container.botanicalmekanism.mechanical_apothecary": "Mechanical Apothecary",
+  "container.botanicalmekanism.mana_bridge": "Mana Bridge",
+  "container.botanicalmekanism.mana_charger": "Mana Charging Stand",
+  "container.botanicalmekanism.mana_infuser": "Mana Infusion Chamber",
+  "container.botanicalmekanism.runic_forge": "Runic Forge",
+  "container.botanicalmekanism.pure_converter": "Pure Conversion Chamber",
+  "container.botanicalmekanism.terra_condenser": "Terra Condensation Chamber",
+  "container.botanicalmekanism.botanical_brewery": "Botanical Brewing Chamber",
+  "container.botanicalmekanism.ore_processor": "Ore Processing Chamber",
+  "container.botanicalmekanism.metamorphic_stone": "Metamorphic Stone Chamber",
+  "container.botanicalmekanism.elven_trade_controller": "Elven Trade Controller",
+  "container.botanicalmekanism.mana_enchanter_controller": "Mana Enchanter Controller"
 }

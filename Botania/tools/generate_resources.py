@@ -120,7 +120,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '消耗水与能量调合原版
 en[f'description.{MOD}.mechanical_apothecary'] = 'Uses water and energy to craft native and bionic flowers. Reagent enters at the back; products leave on the right.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin'], 'client': [], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin'], 'client': [], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -153,17 +153,12 @@ for flower, petals, rune in [
                     'botania:manasteel_ingot', 'botania:manasteel_ingot', 'botania:mana_pearl', f'botania:rune_of_{rune}',
                     'mekanism:basic_control_circuit'], 'mekanism:alloy_infused', 1, 160, 100))
 for name, ingredients, reagent, count, ticks, power in recipes:
+    if name in ('resonance_flower', 'resonance_bud'): continue
     write(f'data/{MOD}/recipe/{name}.json', {'type': f'{MOD}:mechanical_apothecary', 'ingredients': [{'item': item} for item in ingredients],
           'reagent': {'item': reagent}, 'result': {'id': f'{MOD}:{name}', 'count': count}, 'ticks': ticks, 'fe_per_tick': power})
 shaped('mechanical_apothecary', ['MAM', 'CSC', 'MIM'], {'M': 'botania:manasteel_ingot', 'A': 'botania:petal_apothecary',
        'C': 'mekanism:basic_control_circuit', 'S': 'mekanism:steel_casing', 'I': 'mekanism:alloy_infused'})
 name = 'mechanical_apothecary'
-texture = f'{MOD}:block/{name}'
-write(f'assets/{MOD}/models/block/{name}.json', {'parent': 'minecraft:block/cube', 'textures': {
-      'particle': f'{texture}/side', 'north': f'{texture}/front', 'up': f'{texture}/top',
-      **{face: f'{texture}/side' for face in ['south', 'east', 'west', 'down']}}})
-write(f'assets/{MOD}/models/block/{name}_active.json', {'parent': f'{MOD}:block/{name}', 'textures': {'north': f'{texture}/front_active'}})
-write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'{MOD}:block/{name}'})
 write(f'assets/{MOD}/blockstates/{name}.json', {'variants': {f'facing={face},active={str(active).lower()}': {
       'model': f'{MOD}:block/{name}' + ('_active' if active else ''), 'y': rotation}
       for face, rotation in [('north', 0), ('east', 90), ('south', 180), ('west', 270)] for active in [False, True]}})
@@ -172,6 +167,18 @@ write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', '
       {'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': [f'mekanism:{key}' for key in
       ['ejector', 'owner', 'redstone_control', 'security', 'side_config', 'upgrades', 'energy', 'items', 'fluids']]}]}]}]})
 write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': [f'{MOD}:{name}']})
+
+# The old network blocks remain registered for saves; new worlds use native sparks.
+zh[f'item.{MOD}.resonance_spark_augment'], en[f'item.{MOD}.resonance_spark_augment'] = '共鸣增幅器', 'Resonance Spark Augment'
+zh[f'tooltip.{MOD}.spark_range'] = '两端安装：火花范围扩展至 %s 格。保留原染色和升级。'
+en[f'tooltip.{MOD}.spark_range'] = 'Install at both ends for %s-block spark range. Keeps native dyes and augments.'
+write(f'assets/{MOD}/models/item/resonance_spark_augment.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:item/spark_star'}})
+shaped('resonance_spark_augment', ['EAE', 'DSD', 'EAE'], {'E': 'botania:elementium_ingot', 'A': 'mekanism:alloy_reinforced', 'D': 'botania:dragonstone', 'S': 'botania:mana_spark'})
+write(f'data/{MOD}/recipe/legacy_resonance_recycling.json', {'type': 'minecraft:crafting_shapeless', 'category': 'misc',
+      'ingredients': [[{'item': f'{MOD}:resonance_flower'}, {'item': f'{MOD}:resonance_bud'}]],
+      'result': {'id': f'{MOD}:resonance_spark_augment', 'count': 1}})
+for tag in ['mana_spark_augments', 'dominant_spark_pull_source', 'recessive_spark_push_target']:
+    write(f'data/botania/tags/item/{tag}.json', {'replace': False, 'values': [f'{MOD}:resonance_spark_augment']})
 
 from machine_resources import generate as generate_machines
 generate_machines(ROOT, write, zh, en)

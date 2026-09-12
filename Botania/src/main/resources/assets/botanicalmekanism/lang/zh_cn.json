@@ -142,6 +142,8 @@
   "gui.botanicalmekanism.status.unloaded": "区块未加载",
   "block.botanicalmekanism.mechanical_apothecary": "机械花药台",
   "description.botanicalmekanism.mechanical_apothecary": "消耗水与能量调合原版花和仿生花。背面输入终结材料，右侧输出产物。",
+  "item.botanicalmekanism.resonance_spark_augment": "共鸣增幅器",
+  "tooltip.botanicalmekanism.spark_range": "两端安装：火花范围扩展至 %s 格。保留原染色和升级。",
   "block.botanicalmekanism.mana_bridge": "魔力互通器",
   "description.botanicalmekanism.mana_bridge": "连接相邻原魔力池与魔力管道。选择方向和传输模式。",
   "block.botanicalmekanism.mana_charger": "魔力充能座",
@@ -198,5 +200,17 @@
   "gui.botanicalmekanism.machine.status.10": "等待工作",
   "gui.botanicalmekanism.machine.status.11": "周围区块未加载",
   "gui.botanicalmekanism.machine.status.12": "装置正在使用或控制器重复",
-  "gui.botanicalmekanism.machine.status.13": "炎矿需要有顶维度"
+  "gui.botanicalmekanism.machine.status.13": "炎矿需要有顶维度",
+  "container.botanicalmekanism.mechanical_apothecary": "机械花药台",
+  "container.botanicalmekanism.mana_bridge": "魔力互通器",
+  "container.botanicalmekanism.mana_charger": "魔力充能座",
+  "container.botanicalmekanism.mana_infuser": "魔力灌注室",
+  "container.botanicalmekanism.runic_forge": "符文锻造室",
+  "container.botanicalmekanism.pure_converter": "纯净转化室",
+  "container.botanicalmekanism.terra_condenser": "泰拉凝聚室",
+  "container.botanicalmekanism.botanical_brewery": "植物酿造室",
+  "container.botanicalmekanism.ore_processor": "凝矿处理室",
+  "container.botanicalmekanism.metamorphic_stone": "异构石转化室",
+  "container.botanicalmekanism.elven_trade_controller": "精灵贸易控制器",
+  "container.botanicalmekanism.mana_enchanter_controller": "魔力附魔控制器"
 }

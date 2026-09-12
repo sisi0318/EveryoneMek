@@ -1,6 +1,6 @@
 {
   "parent": "botanicalmekanism:block/mana_enchanter_controller",
   "textures": {
-    "north": "botanicalmekanism:block/mana_enchanter_controller/front_active"
+    "indicator": "botania:block/mana_diamond_block"
   }
 }

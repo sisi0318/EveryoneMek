@@ -104,6 +104,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine {
     }
     @Override protected boolean onUpdateServer() {
         boolean update = super.onUpdateServer(); energySlot.fillContainerOrConvert(); setActive(false);
+        SparkExpansion.supplyMachine(this);
         if (!canFunction()) { status = REDSTONE; return update; }
         if (kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER) { ManaTransfer.tick(this); return update; }
         if (kind().controller()) { NativeControllers.tick(this); return update; }

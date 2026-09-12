@@ -54,6 +54,12 @@ public final class Content {
           () -> BlockEntityType.Builder.of(NetworkPlant::new, CORE.get(), NODE.get()).build(null));
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<CustomData>> STATE = COMPONENTS.register("flower_state",
           () -> DataComponentType.<CustomData>builder().persistent(CustomData.CODEC).networkSynchronized(CustomData.STREAM_CODEC).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> SPARK_RANGE = COMPONENTS.register("spark_range",
+          () -> DataComponentType.<Boolean>builder().persistent(com.mojang.serialization.Codec.BOOL).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.BOOL).build());
+    public static final DeferredItem<Item> SPARK_AUGMENT = ITEMS.register("resonance_spark_augment",
+          () -> new Item(new Item.Properties().component(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
+                .component(vazkii.botania.common.component.BotaniaDataComponents.AUGMENT_ICON,
+                      net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("botania", "item/spark_star"))));
     public static final DeferredHolder<MenuType<?>, MenuType<FlowerMenu>> MENU = MENUS.register("flower",
           () -> IMenuTypeExtension.create((id, inventory, buffer) -> new FlowerMenu(id, inventory, buffer.readBlockPos())));
 
@@ -62,7 +68,9 @@ public final class Content {
             ITEMS.register(block.getId().getPath(), () -> new PlantItem(block.get(), new Item.Properties()));
         TABS.register("main", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.botanicalmekanism"))
               .icon(() -> new ItemStack(LOTUS.get())).displayItems((parameters, output) -> {
-                  for (var block : plants()) output.accept(block.get());
+                  output.accept(LOTUS.get());
+                  for (var block : bionics()) output.accept(block.get());
+                  output.accept(SPARK_AUGMENT.get());
                   output.accept(ApothecaryContent.BLOCK);
                   for (var block : ManaContent.MACHINES.values()) output.accept(block);
               }).build());

@@ -14,6 +14,7 @@ public final class BotanicalMekanism {
         Content.register(bus);
         ApothecaryContent.register(bus);
         ManaContent.register(bus);
+        SparkExpansion.register(bus);
         bus.addListener(FlowerPackets::register);
     }
 }

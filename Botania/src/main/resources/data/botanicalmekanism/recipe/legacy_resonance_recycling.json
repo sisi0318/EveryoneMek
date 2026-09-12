@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    [
+      {
+        "item": "botanicalmekanism:resonance_flower"
+      },
+      {
+        "item": "botanicalmekanism:resonance_bud"
+      }
+    ]
+  ],
+  "result": {
+    "id": "botanicalmekanism:resonance_spark_augment",
+    "count": 1
+  }
+}
