@@ -17,9 +17,11 @@ on:
           - NaturesAura
           - Ars-Nouveau
           - Forbidden-Arcanus
+          - Botania
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   select:
@@ -81,6 +83,8 @@ jobs:
           dependency-graph: disabled
 
       - name: Build and run unit and server tests
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash ./gradlew --no-daemon --console=plain --max-workers=2 build runGameTestServer
 
       - name: Upload mod JAR

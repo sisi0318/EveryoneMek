@@ -13,6 +13,7 @@ on:
           - NaturesAura
           - Ars-Nouveau
           - Forbidden-Arcanus
+          - Botania
       draft:
         description: 仅创建草稿（勾选后不会公开发布）
         type: boolean
@@ -24,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: release-${{ inputs.module }}
@@ -68,6 +70,8 @@ jobs:
 
       - name: Compile selected mod
         working-directory: ${{ steps.mod.outputs.directory }}
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash ./gradlew --no-daemon --console=plain --max-workers=2 clean assemble
 
       - name: Prepare release package

@@ -31,6 +31,13 @@ MODULES = {
         "mod_id": "forbiddenmekanism",
         "java": "21",
     },
+    "Botania": {
+        "directory": "Botania",
+        "name": "Botanical Mekanism",
+        "archive": "BotanicalMekanism",
+        "mod_id": "botanicalmekanism",
+        "java": "21",
+    },
 }
 
 

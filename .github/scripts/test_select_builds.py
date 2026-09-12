@@ -14,6 +14,7 @@ class BuildSelectionTest(unittest.TestCase):
             (["NaturesAura/src/main/resources/data/deleted.json"], ["NaturesAura"]),
             (["Ars-Nouveau/old.java", "NaturesAura/new.java"], ["NaturesAura", "Ars-Nouveau"]),
             (["Forbidden-Arcanus/src/main/java/Controller.java"], ["Forbidden-Arcanus"]),
+            (["Botania/src/main/java/ManaLotus.java"], ["Botania"]),
             (["Ars-Nouveau/old.java", "Forbidden-Arcanus/new.java"], ["Ars-Nouveau", "Forbidden-Arcanus"]),
             (["README.md", "Ars-Nouveau/AGENTS.md", "docs/diagram.svg"], []),
             ([".github/workflows/build.yml"], list(MODULES)),

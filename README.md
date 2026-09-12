@@ -9,10 +9,11 @@
 - [Nature's Mekanism](NaturesAura/README.md)：自然灵气供给、仪式加工、装瓶、环境调控、生物生产与矿物凝聚室。
 - [Ars Mekanism](Ars-Nouveau/README.md)：魔源供给与转换、灌注与附魔、萃取与粉碎、魔符抄写、药水加工，以及德格米、风转草和仪式火盆自动化。
 - [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻造室与炽炉控制器，机内锻造、四类资源插件、逐级升级，以及炽炉嵌入、电热和端口物流。
+- [Botanical Mekanism](Botania/README.md)：导能莲、仿生翡翠苋与原池之间的共鸣魔网，目前为可运行原型。
 
 开发接手与新增模组先读 [AGENTS.md](AGENTS.md)，其中提供通用规则、启动清单和各模组开发入口。
 
-设计中：[Botania × Mekanism](Botania/README.md)，规划专用仿生花产魔力、原生魔力互通、加工设备和仿生功能花；尚无可安装 JAR。[查看完整方案](Botania/DESIGN.md)。
+Botania 的后续加工设备与更多仿生花见 [完整规划](Botania/DESIGN.md)。
 
 开发资料：
 

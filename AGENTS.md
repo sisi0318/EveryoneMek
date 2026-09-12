@@ -20,7 +20,7 @@
 - [Ars-Nouveau](Ars-Nouveau/AGENTS.md)：资源转换、组件配方、原装置接入与已付费产物分批输出。
 - [Forbidden-Arcanus](Forbidden-Arcanus/AGENTS.md)：机内锻造、自定义升级、原多方块嵌入与共享库存端口。
 
-设计中的模组另见 [Botania](Botania/AGENTS.md)：专用仿生花产能、魔力网络与加工设备，尚未进入实现与构建。
+- [Botania](Botania/AGENTS.md)：花形供魔与无线网络原型，后续加工规划在模组文档中。
 
 ### 新模组启动
 
