@@ -31,13 +31,27 @@ public final class Flowers {
               && tile.getLevel().getBlockEntity(tile.getBlockPos()) == tile;
     }
     private static CompoundTag readData(BlockEntity tile) { return tile.getPersistentData().getCompound(DATA); }
+    // The pinned Botania flower base does not call BlockEntity.save/loadAdditional.
+    // Persist our namespace explicitly instead of relying on NeoForgeData being inherited.
+    public static void saveData(BlockEntity tile, CompoundTag tag) { tag.put(DATA, readData(tile).copy()); }
+    public static void loadData(BlockEntity tile, CompoundTag tag) {
+        CompoundTag source = tag.contains(DATA, net.minecraft.nbt.Tag.TAG_COMPOUND) ? tag : tag.getCompound("NeoForgeData");
+        if (source.contains(DATA, net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            CompoundTag common = source.getCompound(DATA).copy();
+            if (common.contains("fe")) common.putInt("fe", Math.clamp(common.getInt("fe"), 0, Balance.ENERGY_CAPACITY));
+            tile.getPersistentData().put(DATA, common);
+        }
+    }
     public static boolean enabled(BlockEntity tile) { return !readData(tile).getBoolean("paused"); }
     public static int storedFE(BlockEntity tile) { return Math.clamp(readData(tile).getInt("fe"), 0, Balance.ENERGY_CAPACITY); }
     public static void setFE(BlockEntity tile, int energy) { data(tile).putInt("fe", Math.clamp(energy, 0, Balance.ENERGY_CAPACITY)); tile.setChanged(); }
     public static UUID owner(BlockEntity tile) { return readData(tile).hasUUID("owner") ? readData(tile).getUUID("owner") : null; }
     public static boolean owns(Player player, BlockEntity tile) { return owner(tile) != null && owner(tile).equals(player.getUUID()); }
     public static void claim(BlockEntity tile, LivingEntity placer) {
-        if (owner(tile) == null && placer instanceof Player player) { data(tile).putUUID("owner", player.getUUID()); tile.setChanged(); }
+        if (owner(tile) == null && placer instanceof Player player) {
+            data(tile).putUUID("owner", player.getUUID()); tile.setChanged();
+            if (tile instanceof ManaLotus lotus) lotus.markForImmediateSync();
+        }
     }
     public static IEnergyStorage energy(BlockEntity tile) {
         return new IEnergyStorage() {

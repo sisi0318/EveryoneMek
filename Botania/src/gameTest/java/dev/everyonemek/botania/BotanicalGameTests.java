@@ -18,6 +18,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -33,6 +34,7 @@ import vazkii.botania.common.block.BotaniaBlocks;
 import vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity;
 import vazkii.botania.common.block.block_entity.mana.ManaSpreaderBlockEntity;
 import vazkii.botania.common.item.BotaniaItems;
+import vazkii.botania.common.item.WandOfTheForestItem;
 import vazkii.botania.common.lib.BotaniaTags;
 
 @GameTestHolder(BotanicalMekanism.ID)
@@ -97,6 +99,13 @@ public final class BotanicalGameTests {
         } finally { player.setItemInHand(InteractionHand.MAIN_HAND, hand); player.setPos(position); }
     }
     private static void stop(BlockEntity tile) { Flowers.data(tile).putBoolean("paused", true); }
+    private static void checkWorldSave(GameTestHelper h, BlockEntity flower) {
+        var provider = h.getLevel().registryAccess();
+        var restored = BlockEntity.loadStatic(flower.getBlockPos(), flower.getBlockState(), flower.saveWithFullMetadata(provider), provider);
+        check(restored != null && Objects.equals(Flowers.owner(restored), Flowers.owner(flower))
+              && Flowers.storedFE(restored) == Flowers.storedFE(flower) && Flowers.enabled(restored) == Flowers.enabled(flower),
+              "World save lost bionic owner, FE or pause state");
+    }
 
     @GameTest(template = "empty", timeoutTicks = 150)
     public static void realCablePowersNonSoilLotusAndNativeSpreader(GameTestHelper h) {
@@ -116,7 +125,37 @@ public final class BotanicalGameTests {
         var spreader = (ManaSpreaderBlockEntity) h.getBlockEntity(new BlockPos(7, 2, 5));
         var pool = pool(h, new BlockPos(10, 2, 5), 0);
         check(spreader.bindTo(player, new ItemStack(BotaniaItems.WAND_OF_THE_FOREST), pool.getBlockPos(), Direction.UP), "Spreader aiming failed");
-        check(lotus.bindTo(player, new ItemStack(BotaniaItems.WAND_OF_THE_FOREST), spreader.getBlockPos(), Direction.UP), "Lotus native binding failed");
+        // First reproduce the automatic link, then use the actual wand to select and rebind.
+        BlockPos otherPos = pos.north(2);
+        h.setBlock(otherPos, BotaniaBlocks.MANA_SPREADER);
+        lotus.tickFlower();
+        check(lotus.getBindingPos() != null, "Lotus failed to auto-bind");
+        var replica = new ManaLotus(lotus.getBlockPos(), lotus.getBlockState());
+        replica.handleUpdateTag(lotus.getUpdateTag(h.getLevel().registryAccess()), h.getLevel().registryAccess());
+        var wand = new ItemStack(BotaniaItems.WAND_OF_THE_FOREST);
+        var stranger = player(h, "lotus-stranger");
+        check(replica.canSelect(player, wand, Direction.UP), "Update tag omitted ownership required by client wand selection");
+        check(!replica.canSelect(stranger, wand, Direction.UP), "Client update lost the owner restriction");
+        var oldHand = player.getMainHandItem(); boolean oldShift = player.isShiftKeyDown();
+        try {
+            WandOfTheForestItem.setBindMode(wand, true);
+            player.setItemInHand(InteractionHand.MAIN_HAND, wand); player.setShiftKeyDown(true);
+            var wandItem = (WandOfTheForestItem) wand.getItem();
+            for (BlockPos target : List.of(h.absolutePos(otherPos), spreader.getBlockPos())) {
+                var select = new BlockHitResult(lotus.getBlockPos().getCenter(), Direction.UP, lotus.getBlockPos(), false);
+                check(wandItem.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, select)).consumesAction()
+                      && WandOfTheForestItem.getBindingAttempt(wand).map(p -> p.pos().equals(lotus.getBlockPos())).orElse(false),
+                      "Sneak-use did not select the lotus in the real wand");
+                var hit = new BlockHitResult(target.getCenter(), Direction.UP, target, false);
+                check(wandItem.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit)).consumesAction()
+                      && target.equals(lotus.getBindingPos()) && WandOfTheForestItem.getBindingAttempt(wand).isEmpty(),
+                      "Wand did not complete/reassign the lotus binding");
+            }
+            check(!lotus.bindTo(stranger, wand, h.absolutePos(otherPos), Direction.UP)
+                  && spreader.getBlockPos().equals(lotus.getBindingPos()), "Other player changed a private binding");
+        } finally { player.setItemInHand(InteractionHand.MAIN_HAND, oldHand); player.setShiftKeyDown(oldShift); h.setBlock(otherPos, Blocks.AIR); }
+        // The preliminary auto-binding tick already consumed this tick's generation budget.
+        lotus.restoreProductionTick(Long.MIN_VALUE);
         var energy = h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK, lotus.getBlockPos(), Direction.DOWN);
         CompoundTag previous = lotus.getPersistentData().copy();
         check(energy != null && energy.receiveEnergy(1000, true) == 1000 && previous.equals(lotus.getPersistentData()), "FE simulation mutated flower data");
@@ -137,6 +176,7 @@ public final class BotanicalGameTests {
                 check(pool.getCurrentMana() > 0 && Flowers.storedFE(lotus) > 0, "Cable → lotus → native spreader → pool did not operate");
                 check(cube.getEnergyContainers(null).getFirst().getEnergy() < 1_000_000, "Cube supplied no real energy");
                 stop(lotus); int mana = lotus.getMana(), stored = Flowers.storedFE(lotus); long tick = lotus.lastProductionTick();
+                checkWorldSave(h, lotus);
                 ItemStack drop = breakAndPick(h, lotus.getBlockPos(), Content.LOTUS.get());
                 h.setBlock(pos.below(), Blocks.GLASS); placeItem(player, lotus.getBlockPos(), drop);
                 var restored = (ManaLotus) h.getBlockEntity(pos);
@@ -168,6 +208,7 @@ public final class BotanicalGameTests {
             try {
                 check(pool.getCurrentMana() == 10_000 && Flowers.storedFE(flower) == 0 && flower.getMana() == 0, "Bionic work consumed native pool mana or charged incorrectly");
                 energy.receiveEnergy(7500, false); Flowers.supplyAmaranthus(flower); stop(flower);
+                checkWorldSave(h, flower);
                 int stored = Flowers.storedFE(flower), mana = flower.getMana();
                 ItemStack drop = breakAndPick(h, flower.getBlockPos(), Content.AMARANTHUS.get());
                 placeItem(player, flower.getBlockPos(), drop);

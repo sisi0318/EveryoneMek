@@ -83,6 +83,7 @@ public final class FlowerMenu extends AbstractContainerMenu {
         tag.putInt("fePerMana", Balance.FE_PER_MANA.get()); tag.putInt("rate", Balance.LOTUS_RATE.get());
         if (tile instanceof ManaLotus lotus) {
             tag.putInt("kind", 0); tag.putInt("mana", lotus.getMana()); tag.putInt("maxMana", lotus.getMaxMana());
+            if (lotus.findBoundTile() != null) tag.putLong("binding", lotus.getBindingPos().asLong());
             tag.putString("status", switch (lotus.status) { case 1 -> "paused"; case 2 -> "unbound"; case 3 -> "full"; case 4 -> "no_energy"; default -> "working"; });
         } else if (tile instanceof FunctionalFlowerBlockEntity flower) {
             tag.putInt("kind", 1); tag.putInt("mana", flower.getMana()); tag.putInt("maxMana", flower.getMaxMana());

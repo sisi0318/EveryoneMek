@@ -43,9 +43,22 @@ public final class ManaLotus extends GeneratingFlowerBlockEntity {
     @Override public int getMaxMana() { return Balance.LOTUS_CAPACITY; }
     @Override public int getColor() { return 0x4AE1E8; }
     @Override public RadiusDescriptor getRadius() { return RadiusDescriptor.Rectangle.square(getBlockPos(), getBindingRadius()); }
-    @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) { super.saveAdditional(tag, provider); tag.putLong("last_production_tick", lastProductionTick); }
+    @Override public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        CompoundTag tag = super.getUpdateTag(provider);
+        // Native flower updates only carry mana/binding. The wand also selects on the client,
+        // which needs the owner for the same permission decision as the server.
+        CompoundTag access = new CompoundTag();
+        var owner = Flowers.owner(this);
+        if (owner != null) access.putUUID("owner", owner);
+        tag.put(BotanicalMekanism.ID, access);
+        return tag;
+    }
+    @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
+        super.saveAdditional(tag, provider); Flowers.saveData(this, tag); tag.putLong("last_production_tick", lastProductionTick);
+    }
     @Override protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.loadAdditional(tag, provider);
+        Flowers.loadData(this, tag);
         lastProductionTick = tag.contains("last_production_tick") ? tag.getLong("last_production_tick") : Long.MIN_VALUE;
         addMana(Math.clamp(getMana(), 0, getMaxMana()) - getMana());
     }

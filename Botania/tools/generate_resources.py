@@ -18,7 +18,7 @@ PLANTS = {
 def write(path, value):
     destination = RES / path
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    destination.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
 
 
 zh, en = {'itemGroup.' + MOD: '植物机械'}, {'itemGroup.' + MOD: 'Botanical Mekanism'}
@@ -35,16 +35,25 @@ for name, (cn, english, description_cn, description_en) in PLANTS.items():
     write(f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'{MOD}:{name}'}]}]})
 
 messages = {
+    'energy_label': ('储能 · FE', 'Energy · FE'), 'mana_label': ('魔力储备', 'Mana reserve'),
+    'quantity': ('%s / %s', '%s / %s'),
+    'loading': ('正在读取花的状态…', 'Reading flower state…'),
+    'member_hint': ('输入在线玩家名添加成员；再次输入已授权名字可移除。', 'Add an online player by name; enter an authorized name again to remove them.'),
+    'bind_hint': ('法杖绑定模式：\n潜行右键花 → 发射器', 'Bind Mode + sneak:\nFlower → spreader'),
+    'bind_help': ('潜行右键空气将森林法杖切到绑定模式，再潜行右键花和 6 格内的发射器。', 'Sneak-use the Wand in the air to select Bind Mode, then sneak-use the flower and a spreader within 6 blocks.'),
+    'bound_to': ('已绑定发射器：%s, %s, %s', 'Bound spreader: %s, %s, %s'),
+    'amaranthus_ground': ('花本身可立于石材或电缆上', 'The bionic flower can stand on stone or cables'),
+    'relay_hint': ('中继只延伸连接，无需相邻魔力池', 'Relays extend links; no adjacent pool needed'),
     'denied': ('无配置权限', 'Access denied'), 'pause': ('暂停', 'Pause'), 'resume': ('启用', 'Enable'),
     'apply': ('应用', 'Apply'), 'member_toggle': ('增减', 'Toggle'), 'disconnect': ('断开', 'Unlink'),
     'energy': ('储能：%s / %s FE', 'Energy: %s / %s FE'), 'mana': ('魔力：%s / %s', 'Mana: %s / %s'),
     'network': ('网络：%s', 'Network: %s'), 'network_name': ('网络名称', 'Network name'), 'unlinked': ('未连接', 'Unlinked'),
-    'member_name': ('成员名称（新增需在线）', 'Member name (online to add)'),
+    'member_name': ('成员名称', 'Member name'),
     'members': ('成员：%s', 'Members: %s'), 'nodes': ('节点：%s / %s', 'Nodes: %s / %s'),
-    'member_count': ('授权成员：%s（悬停查看）', 'Authorized members: %s (hover)'),
-    'flow_fee': ('本批到货 %s，费用 %s', 'Last batch: %s delivered, fee %s'),
+    'member_count': ('授权成员：%s', 'Members: %s'),
+    'flow_fee': ('本批到货 %s，费用 %s', 'Delivered %s · Fee %s'),
     'relay_flow': ('最近一批转发：%s', 'Last batch relayed: %s'),
-    'reserve': ('保留量', 'Reserve'), 'target': ('目标量', 'Target'), 'confirmed_limit': ('已确认数量：%s', 'Confirmed amount: %s'),
+    'reserve': ('保留量', 'Reserve'), 'target': ('目标量', 'Target'), 'confirmed_limit': ('已确认数量：%s', 'Confirmed: %s'),
     'unmeasured': ('尚未连接魔力池', 'No pool connected'),
     'lotus_hint': ('满速 %s FE/t → %s 魔力/t', 'Full rate: %s FE/t → %s mana/t'),
     'amaranthus_hint': ('周围需有可种植神秘花的地面', 'Needs suitable ground for mystical flowers'),

@@ -9,9 +9,17 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import vazkii.botania.api.block.WandHUD;
+import vazkii.botania.api.block_entity.BindableSpecialFlowerBlockEntity;
+import vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities;
 
 @EventBusSubscriber(modid = BotanicalMekanism.ID, value = Dist.CLIENT)
 public final class ClientEvents {
+    @SubscribeEvent public static void capabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(WandHUD.BLOCK_LOOKUP),
+              Content.LOTUS_TILE.get(), (tile, unused) -> new BindableSpecialFlowerBlockEntity.BindableFlowerWandHud<>(tile));
+    }
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event) { event.register(Content.MENU.get(), FlowerScreen::new); }
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {

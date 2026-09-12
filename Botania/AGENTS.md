@@ -4,7 +4,7 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.1 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现导能莲、仿生翡翠苋和原池之间的共鸣网络；加工机、Chemical 魔力接口和其他仿生功能花仍是规划。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.2 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现导能莲、仿生翡翠苋和原池之间的共鸣网络；加工机、Chemical 魔力接口和其他仿生功能花仍是规划。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
@@ -22,11 +22,13 @@
 - `FunctionalFlowerPowerMixin`、`AmaranthusWorkMixin`：仅匹配本模组翡翠苋，取消池供魔，以 FE 填充原花内部储备；缺区块或暂停时停止原工作扫描。使用 BlockEntityTypeAddBlocksEvent 让原 BE 类型接受本模组方块，普通原花不变。
 - `ManaNetworks`、`NetworkPlant`、`NetworkPlantBlock`：SavedData 保存网络身份、成员、核心位置、节点与收费余量，池资源不进入网络数据。当前只接受真实原生 ManaPoolBlockEntity，按 ManaPoolBlock.isCreative 排除所有颜色的创造池。
 - `WirelessFee`：按实际交付和路径跳数计费，拆包不增加累计费用。5 tick 批次共享全网、端点和中继预算，同批重复调用不重复转移；同一真实池跨网络也仅允许一个活动端点。
-- `FlowerMenu`、`FlowerPackets`、`client/FlowerScreen`：240×218 无库存配置菜单，复用 Mek 窗口、按钮和输入框。设置包检查当前菜单 ID、同世界、8 格距离及设备所有权，加入网络再检查成员资格。当前循环选择可访问网络；成员新增需在线，移除可使用保存名称。
+- `FlowerMenu`、`FlowerPackets`、`client/FlowerScreen`：280×224 无库存配置菜单，继承原版 AbstractContainerScreen。用户最终选择接近原生魔力 HUD 的半透明深底：小尺寸原花图标、细魔力条、少量花种主题色与供魔关系。不要改回 Mek 窗口，也不要把大花冠、叶片或藤蔓做成边框／按钮；用户认为这种装饰太刻意。设置包检查当前菜单 ID、同世界、8 格距离及设备所有权，加入网络再检查成员资格。当前循环选择可访问网络；成员新增需在线，移除可使用保存名称。
+- `ManaLotus.getUpdateTag` 同步所有者，客户端森林法杖 canSelect 才能通过；ClientEvents 单独在客户端注册原生 BindableFlowerWandHud。固定上游 SpecialFlowerBlockEntity.save/loadAdditional 不调用父类，必须用 Flowers.saveData/loadData 显式保存本模组数据；导能莲直接覆写，仿生翡翠苋仅通过 FunctionalFlowerPowerMixin 按本模组方块限定注入。旧物品组件格式保持不变。
+- UI 使用 GuiGraphics 和原物品图标绘制，不增加装饰背景贴图。输入框需要拦截物品栏键 E，Esc 关闭，Tab 保持导航，Enter 提交。状态、真实绑定坐标、成员名单和长文本使用悬停提示。
 - `tools/generate_resources.py` 维护所有运行 JSON 和独立测试模板。火花物品 ID 是 `botania:mana_spark`，不是旧 `botania:spark`。现有原型测试检查四个配方存在，不能仅凭 BUILD SUCCESSFUL 忽略资源解析错误。
 - `art/source/`、`art/prompts.json`、`tools/export_textures.cjs`：三张原创图稿经 nearest 缩到 16×16；翡翠苋引用原模型。ImageGen 返回的棋盘格可能是绘制背景，需核对实际 alpha；最终三张原稿均为 RGBA。
 
-`BotanicalGameTests` 覆盖真实电缆与发射器、非土壤安装、FE 模拟、逐 tick 产率、原池不被仿生花抽取、拆装、设置包、权限、费用、优先级、重复批次和中继恢复。测试源集不进入 JAR；`check` 编译 GameTest，运行时显式用 runGameTestServer。相关检查通过后不为文档和材质重复服务器。
+`BotanicalGameTests` 覆盖真实法杖选花与改绑、客户端更新标签、两种仿生花世界存档恢复、真实电缆与发射器、非土壤安装、FE 模拟、逐 tick 产率、原池不被仿生花抽取、拆装、设置包、权限、费用、优先级、重复批次和中继恢复。测试源集不进入 JAR；`check` 编译 GameTest，运行时显式用 runGameTestServer。相关检查通过后不为文档和材质重复服务器。
 
 官方 CI 附件可能过期，请保留已校验副本。CI 使用只读 GitHub 令牌取件；失效后重新核对固定构建来源，不能换浮动包让构建变绿。
 
