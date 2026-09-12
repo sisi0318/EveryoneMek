@@ -20,6 +20,8 @@
 - [Ars-Nouveau](Ars-Nouveau/AGENTS.md)：资源转换、组件配方、原装置接入与已付费产物分批输出。
 - [Forbidden-Arcanus](Forbidden-Arcanus/AGENTS.md)：机内锻造、自定义升级、原多方块嵌入与共享库存端口。
 
+设计中的模组另见 [Botania](Botania/AGENTS.md)：魔力网络、加工设备和保留原模型的仿生花，尚未进入实现与构建。
+
 ### 新模组启动
 
 1. 先明确目标模组、需要自动化的原生机制和机器用途，再确认对应 Minecraft／加载器的实际发布依赖及必要运行依赖。开发分支源码只作参考，不能替代发布 JAR 的契约。

@@ -12,6 +12,8 @@
 
 开发接手与新增模组先读 [AGENTS.md](AGENTS.md)，其中提供通用规则、启动清单和各模组开发入口。
 
+设计中：[Botania × Mekanism](Botania/README.md)，规划 FE 魔力供给、原生魔力互通、加工设备和保留原花模型的仿生花；尚无可安装 JAR。[查看完整方案](Botania/DESIGN.md)。
+
 开发资料：
 
 - [NaturesAura 适配与机器设计](docs/NATURES_AURA_DESIGN.md)
