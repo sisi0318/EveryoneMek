@@ -1,0 +1,41 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT; upstream dependencies retain their own licenses"
+
+[[mods]]
+modId="botanicalmekanism"
+version="${version}"
+displayName="Botanical Mekanism"
+authors="EveryoneMek"
+description='''FE-powered botanical flowers and a wireless mana network.'''
+
+[[mixins]]
+config="botanicalmekanism.mixins.json"
+
+[[dependencies.botanicalmekanism]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.241,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.botanicalmekanism]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.botanicalmekanism]]
+modId="mekanism"
+type="required"
+versionRange="[10.7.19,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.botanicalmekanism]]
+modId="botania"
+type="required"
+versionRange="[456-SNAPSHOT]"
+ordering="AFTER"
+side="BOTH"

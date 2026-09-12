@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SES",
+    "DCD",
+    "RTR"
+  ],
+  "key": {
+    "S": {
+      "item": "botania:mana_spark"
+    },
+    "E": {
+      "item": "botania:elementium_ingot"
+    },
+    "D": {
+      "item": "botania:dragonstone"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "R": {
+      "item": "botania:livingrock"
+    },
+    "T": {
+      "item": "botania:livingwood_twig"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:resonance_flower",
+    "count": 1
+  }
+}

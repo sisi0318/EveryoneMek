@@ -1,0 +1,66 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.146'
+}
+
+group = 'dev.everyonemek'
+version = mod_version
+base { archivesName = 'BotanicalMekanism' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+def upstream = new groovy.json.JsonSlurper().parse(file('upstream-lock.json'))
+def botaniaJar = layout.buildDirectory.file("dependencies/${upstream.filename}")
+def prepareBotania = tasks.register('prepareBotania', Exec) {
+    inputs.files('upstream-lock.json', 'tools/prepare_botania.py')
+    outputs.file(botaniaJar)
+    commandLine 'python', 'tools/prepare_botania.py'
+}
+
+sourceSets {
+    gameTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations {
+    gameTestImplementation.extendsFrom implementation
+    gameTestRuntimeOnly.extendsFrom runtimeOnly
+}
+repositories {
+    maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
+    maven { url = 'https://maven.blamejared.com/'; content { includeGroup 'vazkii.patchouli' } }
+    maven { url = 'https://maven.theillusivec4.top/'; content { includeGroup 'top.theillusivec4.curios' } }
+    mavenCentral()
+}
+neoForge {
+    version = project.neo_version
+    addModdingDependenciesTo sourceSets.gameTest
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'botanicalmekanism'
+        }
+    }
+    mods {
+        botanicalmekanism { sourceSet sourceSets.main; sourceSet sourceSets.gameTest }
+    }
+}
+dependencies {
+    implementation "mekanism:Mekanism:${mekanism_version}"
+    implementation files(botaniaJar).builtBy(prepareBotania)
+    implementation 'vazkii.patchouli:Patchouli:1.21.1-92-NEOFORGE'
+    implementation 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+tasks.named('test', Test) { useJUnitPlatform() }
+tasks.named('check') { dependsOn 'compileGameTestJava' }
+tasks.named('jar', Jar) { from('LICENSE') }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.named('processResources', ProcessResources) {
+    inputs.property('version', project.version.toString())
+    filesMatching('META-INF/neoforge.mods.toml') { expand(version: project.version.toString()) }
+}

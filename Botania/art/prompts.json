@@ -1,0 +1,33 @@
+{
+  "tool": "built-in image_gen",
+  "reference": {
+    "repository": "VazkiiMods/Botania",
+    "commit": "d617ef057edf7a4b4fb6c6ee6045c973a80bfb05",
+    "path": "assets/botania/textures/block/pure_daisy.png",
+    "role": "style reference only; extracted locally from the locked upstream JAR"
+  },
+  "assets": [
+    {
+      "id": "mana_lotus",
+      "prompt": "Use case: stylized-concept. Asset: one ORIGINAL Minecraft plant sprite, front/side elevation for a crossed-plane flower block and inventory icon. Use the attached Botania flower only as a reference for simple plant proportions and chunky pixel scale, not an edit target. Transparent background with real alpha. One complete flower centered, slender stem and two readable leaves, no pot, no ground, no machine box, no pedestal, no labels or text. Extremely coarse 16x16 pixel-art simplicity: large flat square color cells, strong silhouette, no gradients, no glow halo, no fine lines, no antialiasing. Fill most of the frame with about one coarse cell of transparent padding. Keep all details readable when nearest-neighbor reduced to 16x16. Subject: a technological mana-generating lotus flower. Broad open cyan and white lotus crown, small muted-silver circular pistil, green stem and two green leaves with a single silver vein. Mostly a recognizable organic flower, with only a few clean metallic pixels and one bright cyan status pixel. The side-view lotus crown should be wider than the leaves.",
+      "source": "art/source/mana_lotus.png",
+      "output": "src/main/resources/assets/botanicalmekanism/textures/block/mana_lotus.png",
+      "edits": [
+        "Edit this image into ONE production sprite. Use only the FRONT-FACING flower at the upper left as the subject, discard the side-view flower and discard the miniature flower entirely. Put this single complete upright cyan-white lotus with silver pistil, green stem and two leaves in the center of a SQUARE frame. Make the background genuinely TRANSPARENT with alpha, with zero painted black background and absolutely no glow halo. Remove all bloom and lighting gradients. The sprite must look like coarse Minecraft 16x16 pixel art with a few large flat square color cells: no fine detail, no shading within a cell, no extra views, no duplicates, no border, no words. One complete plant, leaves and stem visible, transparent padding about one coarse pixel around the silhouette. This is an in-game crossed-plane plant texture, not a concept sheet.",
+        "Background extraction only. Preserve the single cyan-white flower, silver center, green stem, green leaves and their large pixel shapes. Remove EVERY gray-and-white checkerboard background pixel, including the gaps between petals and leaves, and replace the background with actual TRANSPARENT ALPHA. Deliver a transparent PNG cutout, like a game sprite. Do not draw a checkerboard, black background, white background, shadow, glow, or scenery. Keep only one complete plant."
+      ]
+    },
+    {
+      "id": "resonance_flower",
+      "prompt": "Use case: stylized-concept. Asset: one ORIGINAL Minecraft plant sprite, front/side elevation for a crossed-plane flower block and inventory icon. Use the attached Botania flower only as a reference for simple plant proportions and chunky pixel scale, not an edit target. Transparent background with real alpha. One complete flower centered, slender stem and two readable leaves, no pot, no ground, no machine box, no pedestal, no labels or text. Extremely coarse 16x16 pixel-art simplicity: large flat square color cells, strong silhouette, no gradients, no glow halo, no fine lines, no antialiasing. Fill most of the frame with about one coarse cell of transparent padding. Keep all details readable when nearest-neighbor reduced to 16x16. Subject: a wireless-mana resonance flower, a tall recognizable flower with an upright violet and pale-blue crown and a small hollow ring-shaped lavender pistil. Two green leaves and a thin green stem, tiny silver vein accents. Its crown should read like petals around a small ring, not an antenna dish or technological tower. Distinct violet color from the cyan mana lotus.",
+      "source": "art/source/resonance_flower.png",
+      "output": "src/main/resources/assets/botanicalmekanism/textures/block/resonance_flower.png"
+    },
+    {
+      "id": "resonance_bud",
+      "prompt": "Use case: stylized-concept. Asset: one ORIGINAL Minecraft plant sprite, front/side elevation for a crossed-plane flower block and inventory icon. Use the attached Botania flower only as a reference for simple plant proportions and chunky pixel scale, not an edit target. Transparent background with real alpha. One complete flower centered, slender stem and two readable leaves, no pot, no ground, no machine box, no pedestal, no labels or text. Extremely coarse 16x16 pixel-art simplicity: large flat square color cells, strong silhouette, no gradients, no glow halo, no fine lines, no antialiasing. Fill most of the frame with about one coarse cell of transparent padding. Keep all details readable when nearest-neighbor reduced to 16x16. Subject: a compact wireless-mana relay flower bud. Short green stem with two small leaves, a closed three-petal teal and violet bud, one pale silver band around the bud and a small bright mint pistil tip. A cute clearly botanical flower bud, not a crystal standing on a pedestal. Smaller compact crown than a full lotus.",
+      "source": "art/source/resonance_bud.png",
+      "output": "src/main/resources/assets/botanicalmekanism/textures/block/resonance_bud.png"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "dev.everyonemek.botania.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FunctionalFlowerPowerMixin",
+    "AmaranthusWorkMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

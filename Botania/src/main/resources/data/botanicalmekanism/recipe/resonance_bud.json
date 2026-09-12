@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "botania:mana_spark"
+    },
+    {
+      "item": "botania:elementium_ingot"
+    },
+    {
+      "item": "mekanism:basic_control_circuit"
+    }
+  ],
+  "result": {
+    "id": "botanicalmekanism:resonance_bud",
+    "count": 2
+  }
+}

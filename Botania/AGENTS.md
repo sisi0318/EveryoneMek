@@ -4,14 +4,31 @@
 
 ## 当前阶段与用户要求
 
-- 当前是设计阶段，尚未实现机器、建立 Gradle 工程或生成 JAR。设计中的名称、功耗、容量和阶段划分是提案，不能写成已发布行为。
+- 当前为 **0.1.0-alpha.1 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现导能莲、仿生翡翠苋和原池之间的共鸣网络；加工机、Chemical 魔力接口和其他仿生功能花仍是规划。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花与后续扩展仍按 DESIGN 分阶段评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前范围暂按同维度、可中继基地网络；32 格链路、带宽与费用是提案，不是已确认的用户数值或已实现功能。
-- 客户端游戏验收由用户进行。设计阶段只核对文档和来源，不运行客户端或宣称服务端兼容已通过。
+- 客户端游戏验收由用户进行，不运行客户端。当前通过 5 项服务端 GameTest 与 1 项费用 JUnit，不代表客户端视觉或完整整合包验收。
+
+## 原型实现入口
+
+- `BotanicalMekanism`、`Content`、`Balance`：注册四种方块、两种自有 BE 类型、菜单、物品状态和服务端参数。使用本目录 Wrapper、独立 `.gradle-home`，Java 21、NeoForge 21.1.241 和 Mek 10.7.19.85。
+- `upstream-lock.json` 与 `tools/prepare_botania.py`：锁定官方运行 `34246437545` 的 NeoForge 产物和 SHA-256。Gradle 的 prepareBotania 任务校验已有文件，缺少时用已登录 GitHub CLI 下载；`BOTANIA_JAR` 可提供匹配本地文件。不能只按 456-SNAPSHOT 名称接受任意 JAR，也不提交依赖 JAR。
+- `PoweredPlantBlock`、`PlantSupport`、`ManaLotus`：非土壤承托、FE 产魔与原生绑定。`useItemOn` 给森林法杖／花之驯养杖返回 SKIP_DEFAULT_BLOCK_INTERACTION，避免配置菜单截获工具。支撑规则排除红线仿制者，防止原 commonTick 进入未核对的远端作用位置。
+- `Flowers`：FE、所有者、暂停与掉落组件。模拟和只读查询不创建持久化子标签；实际写入才标记保存。原生 mana 只有一份，物品恢复不把它复制进公共数据。其他玩家放置带旧所有者的设备时保持暂停。
+- `FunctionalFlowerPowerMixin`、`AmaranthusWorkMixin`：仅匹配本模组翡翠苋，取消池供魔，以 FE 填充原花内部储备；缺区块或暂停时停止原工作扫描。使用 BlockEntityTypeAddBlocksEvent 让原 BE 类型接受本模组方块，普通原花不变。
+- `ManaNetworks`、`NetworkPlant`、`NetworkPlantBlock`：SavedData 保存网络身份、成员、核心位置、节点与收费余量，池资源不进入网络数据。当前只接受真实原生 ManaPoolBlockEntity，按 ManaPoolBlock.isCreative 排除所有颜色的创造池。
+- `WirelessFee`：按实际交付和路径跳数计费，拆包不增加累计费用。5 tick 批次共享全网、端点和中继预算，同批重复调用不重复转移；同一真实池跨网络也仅允许一个活动端点。
+- `FlowerMenu`、`FlowerPackets`、`client/FlowerScreen`：240×218 无库存配置菜单，复用 Mek 窗口、按钮和输入框。设置包检查当前菜单 ID、同世界、8 格距离及设备所有权，加入网络再检查成员资格。当前循环选择可访问网络；成员新增需在线，移除可使用保存名称。
+- `tools/generate_resources.py` 维护所有运行 JSON 和独立测试模板。火花物品 ID 是 `botania:mana_spark`，不是旧 `botania:spark`。现有原型测试检查四个配方存在，不能仅凭 BUILD SUCCESSFUL 忽略资源解析错误。
+- `art/source/`、`art/prompts.json`、`tools/export_textures.cjs`：三张原创图稿经 nearest 缩到 16×16；翡翠苋引用原模型。ImageGen 返回的棋盘格可能是绘制背景，需核对实际 alpha；最终三张原稿均为 RGBA。
+
+`BotanicalGameTests` 覆盖真实电缆与发射器、非土壤安装、FE 模拟、逐 tick 产率、原池不被仿生花抽取、拆装、设置包、权限、费用、优先级、重复批次和中继恢复。测试源集不进入 JAR；`check` 编译 GameTest，运行时显式用 runGameTestServer。相关检查通过后不为文档和材质重复服务器。
+
+官方 CI 附件可能过期，请保留已校验副本。CI 使用只读 GitHub 令牌取件；失效后重新核对固定构建来源，不能换浮动包让构建变绿。
 
 ## 已确认的关键契约
 
@@ -36,7 +53,7 @@
 - 原 `ManaSparkHelper.SPARK_SCAN_RANGE=12` 是各轴 AABB 搜索，按颜色筛选；`ManaSparkEntity.TRANSFER_RATE=1000` 参与按连接数计算预算，不是整个原生网络的固定总吞吐。
 - 共鸣网络不改原火花、不无线传 FE。六种 FE 仿生功能花不从无线网络补魔；原功能花通过远端原池使用网络供给。
 
-## 实现前的顺序
+## 扩展与交付顺序
 
 1. 按 DESIGN 的 P0 验证固定构建、导能莲真实产魔链、一种仿生功能花及非土壤安装；验证来源与 SHA 后再写依赖声明。
 2. 按资源、加工、仿生花三个独立模块划分实现；先复用现有 Mek 基类和组件，再针对各 Botania 契约适配。
