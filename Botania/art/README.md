@@ -60,3 +60,6 @@ alpha.4–alpha.6 的机械花药台曾使用独立工业机壳图稿 [mechanica
 ![AE 原盘与魔力盘对比](mana-cell-preview.png)
 
 AE 原盘材质与模型属于 Applied Energistics 2 作者，按 [AE2 的素材许可声明](https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a/README.md#license) 使用 CC BY-NC-SA 3.0。此对比预览包含该素材，沿用同一许可；它不属于仓库代码的 MIT 许可。运行资源仅引用依赖中的素材。
+
+
+alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素材与模型保持上述版本。此离线预览由原图和 JSON 标签位置拼合，不执行 Minecraft 的 ItemColor；不能用它替代渲染回调检查或游戏内验收。

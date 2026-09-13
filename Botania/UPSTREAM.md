@@ -143,3 +143,9 @@
 - AE2 原素材位于 models/item/fluid_storage_cell_<tier>k.json 与 models/block/drive/cells/<tier>k_fluid_cell.json。JSON 父模型通过 NeoForge CompositeModel 引用，原文件不改、不复制。AE README 对材质和模型声明 CC BY-NC-SA 3.0；预览图片在 art/README 单独注明。
 - 固定 Botania 的 ManaPoolBlockEntity.getCurrentMana 对 isCreative 返回 getMaxMana，读取已保存的 manaCap；receiveMana 后这个公开值仍不会下降。永恒池取魔必须识别该语义，不能以 before-after=0 判定未转移；仍检查 canSpare。普通池继续按差值结算。
 - 当前 Mek GuiWindowCreatorTab 提供窗口关闭、禁用标签和重建监听，GuiPoolConnectionTab 直接继承；设置继续使用本模组原有服务器确认包。没有复制 Mek 的侧栏窗口实现。
+
+
+## 13. alpha.15 AE 物品着色
+
+- AE2 19.2.17 的 BasicStorageCell.getColor 对盘身返回 0xFFFFFF，对状态灯返回 CellState RGB；InitItemColors.init 注册时统一调用 makeOpaque，将结果交 FastColor.ARGB32.opaque。
+- 当前 Minecraft ItemRenderer.renderQuadList 读取 FastColor.ARGB32.alpha(i)，未补 alpha 的 RGB 会使原盘身完全透明。魔力标签没有 tintIndex，仍能显示，因此截图仅剩小条。复用 AE 颜色函数时必须保留注册层的不透明转换。

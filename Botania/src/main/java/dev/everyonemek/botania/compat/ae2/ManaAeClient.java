@@ -21,8 +21,12 @@ public final class ManaAeClient {
         for (var tier : ManaCellTier.values()) event.register(ModelResourceLocation.standalone(cellModel(tier)));
     }
     public static void colors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) {
-        event.register(appeng.items.storage.BasicStorageCell::getColor, Content.MANA_CELLS.values().stream()
+        event.register(ManaAeClient::cellColor, Content.MANA_CELLS.values().stream()
               .map(net.neoforged.neoforge.registries.DeferredItem::get).toArray(net.minecraft.world.item.Item[]::new));
+    }
+    public static int cellColor(net.minecraft.world.item.ItemStack stack, int tintIndex) {
+        // AE returns RGB here; its own registration adds alpha before Minecraft renders it.
+        return net.minecraft.util.FastColor.ARGB32.opaque(appeng.items.storage.BasicStorageCell.getColor(stack, tintIndex));
     }
 
     public static void register() {

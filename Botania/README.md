@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.14** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.15** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.14.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.15.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -109,7 +109,7 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.14 已通过 38 项带 AE2／JEI 联动的服务端测试和 3 项单元检查；无 AE2 的 27 项验证来自 alpha.11。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.14 已通过 38 项带 AE2／JEI 联动的服务端测试；alpha.15 通过 4 项单元检查，包含物品颜色接口回归。无 AE2 的 27 项验证来自 alpha.11。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 

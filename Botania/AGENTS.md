@@ -4,7 +4,7 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.14 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.15 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
@@ -13,10 +13,16 @@
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
 - 客户端游戏验收由用户进行，不运行客户端。alpha.14 验证带 AE2／JEI 联动的 38 项服务端 GameTest 和 3 项 JUnit；无 AE2 的 27 项验证来自 alpha.11。不代表客户端视觉或完整整合包验收。
 
+## alpha.15 魔力盘透明度修复
+
+- 用户截图中 JEI 只显示蓝色小条，盘身／LED 完全消失。根因是直接注册 BasicStorageCell::getColor；AE 该方法返回 24 位 RGB，当前 Minecraft ItemRenderer.renderQuadList 会读取 ARGB 高字节作为 alpha，所以整个盘身变透明。原 AE InitItemColors.init 在注册时通过 makeOpaque 包装，不能漏掉这层调用。
+- `ManaAeClient.cellColor` 复用原颜色计算，再调用 FastColor.ARGB32.opaque，保留盘身原色和真实状态灯颜色。CompositeModel、原盘父模型、素材、容量及存档无需修改。不要把此现象误判为盘身没有烘焙而重做模型。
+- `ManaGuiContractTest` 对照实际 AE 注册代码的 ARGB 不透明契约，检查本模组登记的回调在返回 RGB 前补全 alpha，防止再次直接注册未包装的 getColor。普通 JUnit 不加载 Minecraft 客户端或注册表，使用已有 ASM 方式；AE 不在测试运行依赖时跳过这项可选契约。图像拼合预览只检查素材与位置，不能证明物品着色回调正确；这次保留该回归检查。alpha.15 编译、4 项单元检查与 JAR 核对通过；未为颜色修复重跑服务端。
+
 ## alpha.14 原生盘、五档容量和永恒池
 
 - 用户否定自创盘外形，明确以 AE 原盘修改。`mana_cell_models.py` 用 CompositeModel 引用 `ae2:item/fluid_storage_cell_<tier>k` 和原驱动器插槽模型，只加两面液面小标签。AE 材质／模型为 CC BY-NC-SA 3.0，运行时引用，未复制进 JAR；离线预览归属见 art/README。不要恢复 alpha.13 的石质卡片模型。
-- `ManaCellModelLoader` 委托 NeoForge CompositeModel.Loader；AE 缺失时只替换其 base 子模型为 Botania 图标，避免缺失可选父模型。加载器和事件均在客户端。AE 在场时 `ManaAeClient` 注册所有插槽模型，并用原 BasicStorageCell.getColor 根据本盘真实存储状态绘制物品 LED；世界 LED 仍由 AE 绘制，蓝色标签避开 x=4..5、y=0..1。
+- `ManaCellModelLoader` 委托 NeoForge CompositeModel.Loader；AE 缺失时只替换其 base 子模型为 Botania 图标，避免缺失可选父模型。加载器和事件均在客户端。AE 在场时 `ManaAeClient` 注册所有插槽模型，并用原 BasicStorageCell.getColor 根据本盘真实存储状态绘制物品 LED（alpha.15 补上 ARGB 不透明转换）；世界 LED 仍由 AE 绘制，蓝色标签避开 x=4..5、y=0..1。
 - `ManaCellTier` 为不依赖 AE 的共同枚举，1/4/16/64/256 × 1024 × 8000 魔力；容量 8,192,000、32,768,000、131,072,000、524,288,000、2,097,152,000。待机 0.5/1/1.5/2/2.5 AE/t。1k 保留 mana_storage_cell ID；四档追加 _4k 等后缀，Content.MANA_CELL 仍是旧 ID 别名。stored_mana Long 组件不变，所有容器策略按物品档位取得容量，不再只认单个物品。
 - ManaKey.getAmountPerByte 同步 8000（原 AE 流体密度），每次操作仍为 1000，显示与配方仍 1 单位 = 1 魔力。AE 合成存储的 5200 魔力输入现在计 5.2 字节，另加其他材料和树开销；这不是 JVM 堆用量或性能实测。
 - `ManaTransfer.pool` 接受原永恒池，仍检查精确原池类、存活和已加载区块。永恒池 getCurrentMana 始终等于容量，take 不按减少量结算、不改池内数值；SIMULATE 无副作用，refund 返回刚取出的余量。普通池仍按实际差值。ManaAccess、ManaEndpoint 和互通器／六面补魔统一使用该方法；canSpare、满仓与 RATE 限制仍有效。
