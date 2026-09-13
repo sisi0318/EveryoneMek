@@ -10,10 +10,12 @@ public interface BridgeBackend {
     default void loaded() { }
     default void tick() { }
     default void destroy() { }
+    default void removed() { }
     default void load(CompoundTag tag) { }
     default CompoundTag save() { return new CompoundTag(); }
     default boolean connected() { return false; }
     default void settingsChanged() { }
     default List<ItemStack> request(CorporeaRequest request, boolean execute) { return List.of(); }
+    default void requestCraft(vazkii.botania.api.corporea.CorporeaRequestMatcher matcher, int missing) { }
     default void describe(CompoundTag state) { state.putString("status", "missing_ae2"); }
 }

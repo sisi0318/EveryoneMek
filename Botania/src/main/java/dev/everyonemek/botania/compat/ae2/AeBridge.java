@@ -32,6 +32,7 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
     private static final int NODE_LIMIT = 128, SLOT_LIMIT = 8192;
     private final CorporeaFlower flower;
     private final IManagedGridNode node;
+    private final BridgeCrafting crafting;
     private final ExportStorage storage = new ExportStorage();
     private long budgetTick = Long.MIN_VALUE;
     private int spent, lastMoved, displayNodes, displayTypes, displayMeTypes;
@@ -41,12 +42,14 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
 
     public AeBridge(CorporeaFlower flower) {
         this.flower = flower;
+        crafting = new BridgeCrafting(this, flower);
         node = GridHelper.createManagedNode(this, new IGridNodeListener<AeBridge>() {
             @Override public void onSaveChanges(AeBridge bridge, IGridNode gridNode) { flower.setChanged(); }
             @Override public void onStateChanged(AeBridge bridge, IGridNode gridNode, State state) { bridge.settingsChanged(); }
             @Override public void onGridChanged(AeBridge bridge, IGridNode gridNode) { flower.setChanged(); }
         }).setInWorldNode(true).setTagName("ae_node").setFlags(GridFlags.REQUIRE_CHANNEL)
-              .setIdlePowerUsage(4).setVisualRepresentation(Content.CORPOREA.get()).addService(IStorageProvider.class, this);
+              .setIdlePowerUsage(4).setVisualRepresentation(Content.CORPOREA.get()).addService(IStorageProvider.class, this)
+              .addService(appeng.api.networking.crafting.ICraftingRequester.class, crafting);
     }
     @Override public void loaded() {
         if (scheduled || destroyed) return;
@@ -58,9 +61,10 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
             node.create(tile.getLevel(), tile.getBlockPos());
         });
     }
-    @Override public void load(CompoundTag tag) { node.loadFromNBT(tag); }
-    @Override public CompoundTag save() { var tag = new CompoundTag(); node.saveToNBT(tag); return tag; }
-    @Override public void destroy() { destroyed = true; node.destroy(); }
+    @Override public void load(CompoundTag tag) { node.loadFromNBT(tag); crafting.load(tag); }
+    @Override public CompoundTag save() { var tag = new CompoundTag(); node.saveToNBT(tag); crafting.save(tag); return tag; }
+    @Override public void destroy() { destroyed = true; crafting.stopCalculation(); node.destroy(); }
+    @Override public void removed() { crafting.cancelAll(); }
     @Override public IGridNode getGridNode(Direction direction) { return destroyed ? null : node.getNode(); }
     @Override public IGridNode getActionableNode() { return getGridNode(Direction.DOWN); }
     @Override public AECableType getCableConnectionType(Direction direction) { return AECableType.SMART; }
@@ -158,7 +162,7 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
     }
     @Override public void tick() {
         if (!node.isReady()) loaded();
-        advanceBudget();
+        advanceBudget(); crafting.tick();
         if (!flower.enabled()) status = Flowers.enabled(flower) ? "redstone" : "paused";
         else if (!node.isReady()) status = "connecting";
         else if (!node.isPowered()) status = "no_power";
@@ -173,13 +177,13 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
             var physical = scan(topology); displayTypes = physical.size();
             for (long amount : physical.values()) displayItems = saturatedAdd(displayItems, amount);
             var me = withoutCorporea(topology.master(), () -> node.getGrid().getStorageService().getInventory().getAvailableStacks());
-            for (var entry : me) if (entry.getKey() instanceof AEItemKey && entry.getLongValue() > 0) {
+            for (var entry : me) if (entry.getKey() instanceof AEItemKey key && flower.filter.allows(key.toStack()) && entry.getLongValue() > 0) {
                 displayMeTypes++; displayMeItems = saturatedAdd(displayMeItems, entry.getLongValue());
             }
         }
     }
     @Override public void describe(CompoundTag state) {
-        state.putString("status", status); state.putBoolean("ae_connected", connected());
+        crafting.describe(state); state.putString("status", status); state.putBoolean("ae_connected", connected());
         state.putInt("nodes", displayNodes); state.putInt("types", displayTypes); state.putInt("me_types", displayMeTypes);
         state.putLong("items", displayItems); state.putLong("me_items", displayMeItems); state.putInt("moved", lastMoved);
         state.putInt("limit", Balance.CORPOREA_TRANSFER.get());
@@ -191,7 +195,7 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
             var handler = port.handler(); if (handler == null) continue;
             for (int slot = 0; slot < handler.getSlots(); slot++) {
                 var stack = handler.getStackInSlot(slot); var key = AEItemKey.of(stack);
-                if (key != null && key.matches(handler.extractItem(slot, 1, true))) counts.merge(key, (long) stack.getCount(), AeBridge::saturatedAdd);
+                if (key != null && flower.filter.allows(stack) && key.matches(handler.extractItem(slot, 1, true))) counts.merge(key, (long) stack.getCount(), AeBridge::saturatedAdd);
             }
         }
         return counts;
@@ -205,7 +209,7 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
             IActionSource source = request.getEntity() instanceof Player player ? IActionSource.ofPlayer(player, this) : IActionSource.ofMachine(this);
             List<ItemStack> found = new ArrayList<>();
             for (var entry : inventory.getAvailableStacks()) {
-                if (!(entry.getKey() instanceof AEItemKey key) || entry.getLongValue() <= 0 || !request.getMatcher().test(key.toStack())) continue;
+                if (!(entry.getKey() instanceof AEItemKey key) || entry.getLongValue() <= 0 || !flower.filter.allows(key.toStack()) || !request.getMatcher().test(key.toStack())) continue;
                 int available = (int) Math.min(Integer.MAX_VALUE, entry.getLongValue());
                 request.trackFound(Math.min(available, Integer.MAX_VALUE - Math.max(0, request.getFound())));
                 int wanted = request.getStillNeeded() < 0 ? available : Math.min(available, request.getStillNeeded());
@@ -225,6 +229,26 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
             return found;
         });
     }
+    boolean craftingReady() { return usable() != null; }
+    long availableForCrafting(CorporeaRequestMatcher matcher) {
+        var topology = usable(); if (topology == null) return Long.MAX_VALUE;
+        // All real ME-visible storage is counted once here, including this network's physical stocks.
+        long amount = 0;
+        for (var entry : node.getGrid().getStorageService().getInventory().getAvailableStacks())
+            if (entry.getKey() instanceof AEItemKey key && flower.filter.allows(key.toStack()) && matcher.test(key.toStack()))
+                amount = saturatedAdd(amount, Math.max(0, entry.getLongValue()));
+        // In receive-only mode the physical stocks are not mounted in ME.
+        if (!flower.exportsCorporea()) for (var entry : scan(topology).entrySet())
+            if (matcher.test(entry.getKey().toStack())) amount = saturatedAdd(amount, entry.getValue());
+        return amount;
+    }
+    @Override public void requestCraft(CorporeaRequestMatcher matcher, int missing) { crafting.request(matcher, missing); }
+    long returnCrafted(AEItemKey key, long amount, Actionable mode) {
+        var topology = usable(); if (topology == null) return 0;
+        long moved = withoutCorporea(topology.master(), () -> node.getGrid().getStorageService().getInventory()
+              .insert(key, Math.min(amount, remaining()), mode, IActionSource.ofMachine(this)));
+        if (mode == Actionable.MODULATE) record((int) moved); return moved;
+    }
     private final class ExportStorage implements MEStorage {
         @Override public Component getDescription() { return Content.CORPOREA.get().getName(); }
         @Override public boolean isPreferredStorageFor(AEKey what, IActionSource source) {
@@ -241,11 +265,11 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
             }, false);
         }
         @Override public long extract(AEKey what, long amount, Actionable action, IActionSource source) {
-            if (!(what instanceof AEItemKey key) || amount <= 0 || !flower.exportsCorporea()) return 0;
+            if (!(what instanceof AEItemKey key) || !flower.filter.allows(key.toStack()) || amount <= 0 || !flower.exportsCorporea()) return 0;
             return exporting(() -> transfer(key, amount, action, false), 0L);
         }
         @Override public long insert(AEKey what, long amount, Actionable action, IActionSource source) {
-            if (!(what instanceof AEItemKey key) || amount <= 0 || !flower.exportsCorporea()) return 0;
+            if (!(what instanceof AEItemKey key) || !flower.filter.allows(key.toStack()) || amount <= 0 || !flower.exportsCorporea()) return 0;
             return exporting(() -> transfer(key, amount, action, true), 0L);
         }
         private long transfer(AEItemKey key, long amount, Actionable action, boolean insert) {

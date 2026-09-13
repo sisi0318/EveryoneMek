@@ -42,6 +42,20 @@ public final class ApothecaryJei implements IModPlugin {
         var level = Minecraft.getInstance().level;
         if (level != null) registration.addRecipes(TYPE, level.getRecipeManager().getAllRecipesFor(ApothecaryContent.RECIPE_TYPE.get()).stream().map(holder -> holder.value()).toList());
     }
+    @Override public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
+        registration.addRecipeTransferHandler(new MachineJeiTransfer<>(ApothecaryMenu.class, ApothecaryContent.MENU.get(), TYPE, registration.getTransferHelper()), TYPE);
+        var petal = PetalApothecaryRecipeCategory.TYPE;
+        registration.addRecipeTransferHandler(new MachineJeiTransfer<>(ApothecaryMenu.class, ApothecaryContent.MENU.get(), petal, registration.getTransferHelper()), petal);
+        transfer(registration, vazkii.botania.client.integration.jei.ManaPoolRecipeCategory.TYPE);
+        transfer(registration, vazkii.botania.client.integration.jei.RunicAltarRecipeCategory.TYPE);
+        transfer(registration, vazkii.botania.client.integration.jei.PureDaisyRecipeCategory.TYPE);
+        transfer(registration, vazkii.botania.client.integration.jei.TerrestrialAgglomerationRecipeCategory.TYPE);
+        transfer(registration, vazkii.botania.client.integration.jei.BreweryRecipeCategory.TYPE);
+        transfer(registration, vazkii.botania.client.integration.jei.ElvenTradeRecipeCategory.TYPE);
+    }
+    private static <R> void transfer(IRecipeTransferRegistration registration, RecipeType<R> type) {
+        registration.addRecipeTransferHandler(new MachineJeiTransfer<>(ManaMachineMenu.class, ManaContent.MENU.get(), type, registration.getTransferHelper()), type);
+    }
     private static final class Category implements IRecipeCategory<MechanicalFlowerRecipe> {
         private final IDrawable icon, slot;
         Category(IGuiHelper helper) { icon = helper.createDrawableIngredient(VanillaTypes.ITEM_STACK, new ItemStack(ApothecaryContent.BLOCK)); slot = helper.getSlotDrawable(); }

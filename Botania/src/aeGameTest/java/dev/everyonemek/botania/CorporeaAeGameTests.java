@@ -66,6 +66,79 @@ public final class CorporeaAeGameTests {
               .stacks().stream().mapToInt(ItemStack::getCount).sum();
     }
     @GameTest(template = "empty", timeoutTicks = 260)
+    public static void samplesFilterRealCountsTransfersAndOwnerMenuWithoutConsumingItems(GameTestHelper h) {
+        var rig = rig(h, new BlockPos(20, 4, 20));
+        h.startSequence().thenWaitUntil(() -> ready(rig)).thenExecute(() -> {
+            var owner = player(h, "corporea-me"); owner.setPos(rig.flower.getBlockPos().getX(), rig.flower.getBlockPos().getY(), rig.flower.getBlockPos().getZ());
+            owner.getInventory().setItem(0, rig.chest.getItem(2).copy());
+            var menu = new FlowerMenu(71, owner.getInventory(), rig.flower.getBlockPos()); owner.containerMenu = menu;
+            check(menu.apply(owner, 19, "0,0") && menu.apply(owner, 18, "1"), "Sample menu action failed");
+            check(owner.getInventory().getItem(0).getCount() == 2 && rig.flower.filter.samples[0].getCount() == 1, "Sample consumed inventory or copied count");
+            var view = new MEStorage[1]; rig.bridge.mountInventories((storage, priority) -> view[0] = storage);
+            var plain = AEItemKey.of(Items.EMERALD); var named = AEItemKey.of(rig.chest.getItem(2));
+            check(view[0].getAvailableStacks().get(plain) == 0 && view[0].getAvailableStacks().get(named) == 2, "Filter merged components or leaked count");
+            for (var action : Actionable.values()) check(view[0].extract(plain, 1, action, IActionSource.empty()) == 0
+                  && view[0].insert(plain, 1, action, IActionSource.empty()) == 0, "Filter ignored during simulation or transfer");
+            check(count(rig, Items.IRON_INGOT, false, 8) == 0 && count(rig, Items.IRON_INGOT, true, 8) == 0, "Filter leaked reverse ME access");
+            check(menu.apply(owner, 20, "0") && view[0].getAvailableStacks().get(plain) == 8, "Item-only matching did not update real storage");
+            check(menu.apply(owner, 18, "2") && view[0].getAvailableStacks().get(plain) == 0, "Deny mode ignored");
+            check(menu.apply(owner, 19, "0,-1") && rig.flower.filter.samples[0].isEmpty(), "Sample removal failed");
+            owner.containerMenu = owner.inventoryMenu;
+            check(!menu.apply(owner, 19, "0,0"), "Stale menu accepted sample change");
+        }).thenSucceed();
+    }
+    @GameTest(template = "empty", timeoutTicks = 650)
+    public static void shortageSubmitsOnePersistedAeJobAndReturnsResultsToNativeRequests(GameTestHelper h) {
+        var rig = rig(h, new BlockPos(20, 4, 20)); var iron = AEItemKey.of(Items.IRON_INGOT); var block = AEItemKey.of(Items.IRON_BLOCK);
+        var providerPos = rig.pos.below().south();
+        h.setBlock(providerPos, AEBlocks.PATTERN_PROVIDER.block());
+        h.setBlock(providerPos.south(), Blocks.CHEST);
+        h.setBlock(rig.pos.below().north(), AEBlocks.CRAFTING_STORAGE_4K.block());
+        var provider = (appeng.blockentity.crafting.PatternProviderBlockEntity) h.getBlockEntity(providerPos);
+        provider.getLogic().getPatternInv().setItemDirect(0, appeng.api.crafting.PatternDetailsHelper.encodeProcessingPattern(
+              List.of(new appeng.api.stacks.GenericStack(iron, 9)), List.of(new appeng.api.stacks.GenericStack(block, 1))));
+        rig.flower.autocraft = true;
+        var requester = new appeng.api.networking.crafting.ICraftingRequester[1];
+        h.startSequence().thenWaitUntil(() -> {
+            ready(rig);
+            check(rig.bridge.managedNode().getGrid().getCraftingService().getCraftables(k -> k.equals(block)).contains(block), "AE pattern not published");
+            check(!rig.bridge.managedNode().getGrid().getCraftingService().getCpus().isEmpty(), "AE CPU not ready");
+        }).thenExecute(() -> {
+            count(rig, Items.IRON_BLOCK, false, 2);
+            var state = new CompoundTag(); rig.bridge.describe(state); check(state.getInt("craft_jobs") == 0, "Simulation started a craft");
+            count(rig, Items.IRON_BLOCK, true, 2); count(rig, Items.IRON_BLOCK, true, 2);
+            rig.bridge.describe(state); check(state.getInt("craft_jobs") == 1, "Repeated shortage started multiple calculations");
+        }).thenWaitUntil(() -> {
+            requester[0] = rig.bridge.managedNode().getNode().getService(appeng.api.networking.crafting.ICraftingRequester.class);
+            var diagnostic = new CompoundTag(); rig.bridge.describe(diagnostic);
+            check(requester[0].getRequestedJobs().size() == 1, "AE job not accepted: " + diagnostic);
+        }).thenExecute(() -> {
+            var link = requester[0].getRequestedJobs().iterator().next();
+            count(rig, Items.IRON_BLOCK, true, 2); check(requester[0].getRequestedJobs().size() == 1, "Retainer-style retry duplicated an accepted job");
+            var saved = rig.flower.saveWithFullMetadata(h.getLevel().registryAccess());
+            var clone = (CorporeaFlower) net.minecraft.world.level.block.entity.BlockEntity.loadStatic(rig.flower.getBlockPos(), rig.flower.getBlockState(), saved, h.getLevel().registryAccess());
+            clone.setLevel(h.getLevel()); var backend = clone.backend(); var resaved = backend.save();
+            var restoredLink = resaved.getList("crafting_jobs", net.minecraft.nbt.Tag.TAG_COMPOUND).getCompound(0).getCompound("link");
+            var originalLink = new CompoundTag(); link.writeToNBT(originalLink);
+            check(restoredLink.equals(originalLink), "World reload replaced the paid crafting link"); backend.destroy();
+            check(!saved.getCompound("flower_state").contains("crafting_jobs"), "Job leaked into portable settings");
+        }).thenWaitUntil(() -> {
+            var chest = (ChestBlockEntity) h.getBlockEntity(providerPos.south());
+            check(java.util.stream.IntStream.range(0, chest.getContainerSize()).map(i -> chest.getItem(i).is(Items.IRON_INGOT) ? chest.getItem(i).getCount() : 0).sum() == 18, "AE pattern provider did not send paid inputs");
+        }).thenExecute(() -> {
+            // Complete the external processing recipe through the actual network/CPU insertion path.
+            ((ChestBlockEntity) h.getBlockEntity(providerPos.south())).clearContent();
+            check(rig.storage().insert(block, 2, Actionable.MODULATE, IActionSource.empty()) == 2, "CPU refused processing outputs");
+        }).thenWaitUntil(() -> {
+            check(requester[0].getRequestedJobs().isEmpty(), "Crafted results did not finish the accepted link");
+            check(rig.storage().getAvailableStacks().get(block) == 2, "Results did not return to real ME storage");
+        }).thenExecute(() -> {
+            rig.flower.autocraft = false;
+            check(count(rig, Items.IRON_BLOCK, true, 2) == 2, "Native request retry could not retrieve crafted results");
+            check(rig.storage().getAvailableStacks().get(iron) == 46, "Crafting paid incorrect ingredient amount");
+        }).thenSucceed();
+    }
+    @GameTest(template = "empty", timeoutTicks = 260)
     public static void nativeMeCellAndCorporeaAccessBothWaysWithoutDoubleCounting(GameTestHelper h) {
         var rig = rig(h, new BlockPos(20, 4, 20));
         h.startSequence().thenWaitUntil(() -> ready(rig)).thenExecute(() -> {

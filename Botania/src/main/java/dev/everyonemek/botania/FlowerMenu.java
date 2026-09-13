@@ -48,8 +48,15 @@ public final class FlowerMenu extends AbstractContainerMenu {
             return true;
         }
         if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) {
-            if (action != 17 || !value.matches("[012]")) return false;
-            flower.mode = Integer.parseInt(value); flower.setChanged(); flower.backend().settingsChanged(); return true;
+            if (action == 17 && value.matches("[012]")) flower.mode = Integer.parseInt(value);
+            else if (action == 18 && value.matches("[012]")) flower.filter.mode = Integer.parseInt(value);
+            else if (action == 20 && value.matches("[01]")) flower.filter.exact = value.equals("1");
+            else if (action == 21 && value.matches("[01]")) flower.autocraft = value.equals("1");
+            else if (action == 19 && value.matches("[0-8],(-1|[0-8])")) {
+                var parts = value.split(","); int sample = Integer.parseInt(parts[0]), source = Integer.parseInt(parts[1]);
+                flower.filter.samples[sample] = source < 0 ? ItemStack.EMPTY : sender.getInventory().getItem(source).copyWithCount(1);
+            } else return false;
+            flower.setChanged(); flower.backend().settingsChanged(); return true;
         }
         if (!(tile instanceof NetworkPlant plant)) return false;
         ManaNetworks data = ManaNetworks.get(server);
@@ -146,6 +153,7 @@ public final class FlowerMenu extends AbstractContainerMenu {
             tag.putString("status", !Flowers.enabled(tile) ? "paused" : flower.getMana() + Flowers.storedFE(tile) / Balance.FE_PER_MANA.get() < Flowers.workReserve(tile) ? "no_energy" : "ready");
         } else if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) {
             tag.putInt("kind", 4); tag.putInt("mode", flower.mode); flower.backend().describe(tag);
+            flower.filter.save(tag, level.registryAccess()); tag.putBoolean("autocraft", flower.autocraft);
         } else if (tile instanceof NetworkPlant plant) {
             ManaNetworks data = ManaNetworks.get(server);
             if (plant.core()) data.activate(plant);

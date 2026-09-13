@@ -16,14 +16,21 @@ public final class CorporeaSaveGameTests {
     public static void bridgeFlowerWorldAndItemStateRemainSafeWithOrWithoutAe2(GameTestHelper h) {
         var owner = player(h, "bridge-save");
         var flower = (CorporeaFlower) plant(h, owner, new BlockPos(15, 2, 15), Content.CORPOREA.get()); flower.mode = 2; stop(flower);
+        flower.filter.mode = 1; flower.filter.exact = true; flower.autocraft = true;
+        var sample = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD);
+        sample.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Filter sample"));
+        flower.filter.samples[0] = sample;
         var registry = h.getLevel().registryAccess(); var saved = flower.saveWithFullMetadata(registry);
         var restored = (CorporeaFlower) BlockEntity.loadStatic(flower.getBlockPos(), flower.getBlockState(), saved, registry);
         check(restored != null && restored.mode == 2 && owner.getUUID().equals(Flowers.owner(restored)) && !Flowers.enabled(restored), "World save lost flower settings or owner");
+        check(restored.filter.mode == 1 && restored.autocraft && restored.filter.allows(sample)
+              && !restored.filter.allows(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD)), "World lost component-aware filter");
         var drop = breakAndPick(h, flower.getBlockPos(), Content.CORPOREA.get());
         check(!drop.get(Content.STATE.get()).copyTag().contains("me_connection"), "Flower item copied an old ME node identity");
         placeItem(owner, flower.getBlockPos(), drop);
         var placed = (CorporeaFlower) h.getLevel().getBlockEntity(flower.getBlockPos());
         check(placed != null && placed.mode == 2 && !Flowers.enabled(placed), "Dropped flower did not restore settings");
+        check(placed.filter.mode == 1 && placed.autocraft && placed.filter.allows(sample), "Drop lost filter or crafting toggle");
         if (!net.neoforged.fml.ModList.get().isLoaded("ae2")) {
             try { Class.forName("appeng.api.networking.GridHelper", false, CorporeaSaveGameTests.class.getClassLoader()); throw new GameTestAssertException("AE2 classes leaked into optional-off runtime"); }
             catch (ClassNotFoundException expected) { }

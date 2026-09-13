@@ -11,6 +11,10 @@
       "title": "book.botanicalmekanism.botanical_brewery.title"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.botanical_brewery.1"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:botanical_brewery"
     }

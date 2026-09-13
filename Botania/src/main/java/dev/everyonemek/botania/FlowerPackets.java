@@ -22,10 +22,23 @@ public final class FlowerPackets {
               buffer -> new Snapshot(buffer.readVarInt(), buffer.readNbt()));
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
+    public record FillRecipe(int menuId, ResourceLocation recipe, boolean max) implements CustomPacketPayload {
+        public static final Type<FillRecipe> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "fill_recipe"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, FillRecipe> CODEC = StreamCodec.of(
+              (buffer, packet) -> { buffer.writeVarInt(packet.menuId); buffer.writeResourceLocation(packet.recipe); buffer.writeBoolean(packet.max); },
+              buffer -> new FillRecipe(buffer.readVarInt(), buffer.readResourceLocation(), buffer.readBoolean()));
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
     public static void register(RegisterPayloadHandlersEvent event) {
         // The joining screen requires acknowledged settings and connect-as support on both ends.
-        var registrar = event.registrar("3");
+        var registrar = event.registrar("4");
         registrar.playToServer(Settings.TYPE, Settings.CODEC, FlowerPackets::handleSettings);
+        registrar.playToServer(FillRecipe.TYPE, FillRecipe.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            var player = context.player(); var menu = player.containerMenu;
+            if (menu.containerId != packet.menuId) return;
+            String error = MachineRecipeTransfer.transfer(player, menu, packet.recipe, packet.max, true);
+            if (!error.isEmpty()) player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.botanicalmekanism.transfer." + error), true);
+        }));
         registrar.playToClient(Snapshot.TYPE, Snapshot.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (context.player().containerMenu instanceof FlowerMenu menu && menu.containerId == packet.menuId && packet.values != null) menu.state = packet.values;
             else if (context.player().containerMenu instanceof ManaMachineMenu menu && menu.containerId == packet.menuId && packet.values != null) menu.state = packet.values;

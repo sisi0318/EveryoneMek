@@ -27,6 +27,18 @@
       "text": "book.botanicalmekanism.corporea_orchid.4"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.5"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.6"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.corporea_orchid.7"
+    },
+    {
       "type": "botania:botanicalmekanism/recipe/corporea_orchid",
       "flag": "mod:ae2"
     },

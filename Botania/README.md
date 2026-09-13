@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.8 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种 FE 功能花、原生火花与 Chemical 魔力传输、两种魔力辅助设备和十种加工／控制设备；新增原词典章节与可选 AE2 仿生织网花。跨维度、高级网络与后续候选花仍待独立设计。
+**0.1.0-alpha.9 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种 FE 功能花、原生火花与 Chemical 魔力传输、两种魔力辅助设备和十种加工／控制设备；新增原词典章节与可选 AE2 仿生织网花。跨维度、高级网络与后续候选花仍待独立设计。
 
 适配 Minecraft 1.21.1、Java 21、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。客户端与服务端都需安装本模组及下列依赖，不要同时保留重复的旧 JAR：
 
@@ -10,7 +10,7 @@
 | Patchouli | 1.21.1-92-NEOFORGE |
 | Curios | 9.5.1+1.21.1 |
 
-本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.8.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，七种 FE 花使用机械花药台专用配方；安装 AE2 后还能制作仿生织网花。共鸣增幅器在工作台制作。无需安装 Flux Networks。
+本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.9.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，七种 FE 花使用机械花药台专用配方；安装 AE2 后还能制作仿生织网花。共鸣增幅器在工作台制作。无需安装 Flux Networks。
 
 ![三种原创花形材质](art/texture-sheet.png)
 
@@ -28,7 +28,7 @@
 
 配置界面采用简洁的半透明深灰底。产魔花只显示储能、魔力和状态；旧共鸣设备保留兼容设置页面，新火花沿用染料和法杖操作。悬停花的状态查看绑定信息，悬停储能查看工作要求，列表可搜索和滚轮翻页。模式切换、按钮与回车提交均使用服务端确认值；底部“完成”或 Esc 关闭界面。
 
-**从 alpha.7 更新：**客户端与服务端同时替换 JAR，原存档、库存与设置保留。AE2 是可选依赖，织网花验证版本为 AE2 19.2.17＋GuideME 21.1.1；其他功能无需安装它们。
+**从 alpha.8 更新：**客户端与服务端同时替换 JAR，原存档、库存与设置保留；旧花默认不筛选、不开启自动合成。AE2 是可选依赖，织网花验证版本为 AE2 19.2.17＋GuideME 21.1.1；其他功能无需安装它们。
 
 **从 alpha.1 更新：**客户端和服务端替换本模组 JAR 即可，依赖未变。旧世界中若某朵花无法选中，先空手右键一次补全所有者，再用绑定模式改绑。此次修复防止花在重进世界时丢失所有者、FE 和暂停状态；旧版已经写丢的数据无法推算恢复，物品上的原有储能与设置仍兼容。
 
@@ -38,11 +38,13 @@
 
 手持原词典右键任意本模组设备，可直接打开对应条目；无需另一本书。加工机的配方按钮也会显示当前锁定产物，锁定配方失效时提示重新选择。
 
+打开机械花药台、灌注室、符文台、纯净转化、泰拉、酿造或精灵贸易控制器后，可点 JEI 原配方的加号填充一批，Shift 加号填充多批。自动区分材料、终结材料、催化物和空容器；旧材料退回背包，空间不足时整次取消。仍需供水、供电、魔力和真实结构；随机矿物配方不提供定向填充。
+
 ## 仿生织网花：可选 AE2
 
 将花接入 ME 电缆，在花和物品箱上装普通多媒体火花，另放一个主火花。**ME 终端可存取多媒体网络物品，多媒体漏斗／索引也可从 ME 取料。** 织网花由 ME 供电，占 1 通道、待机 4 AE/t，无需额外 FE 线，默认双向合计 2,048 件/t。
 
-正确布线、防重复统计、方向设置与限制见 [CORPOREA.md](CORPOREA.md)。主火花下方不是库存节点；同一双箱只用一枚普通火花，同一库存不要再用 ME 存储总线接回同一网络。当前只互通物品，不自动下单合成。多个独立多媒体网络可以通过同一 ME 网络互相访问。
+正确布线、防重复统计、方向设置与限制见 [CORPOREA.md](CORPOREA.md)。主火花下方不是库存节点；同一双箱只用一枚普通火花，同一库存不要再用 ME 存储总线接回同一网络。当前互通物品，支持九格样品筛选和可开启的缺货合成。开启后需要 AE 样板与 CPU，成品回到 ME，再由原多媒体装置或保持器重试取货。多个独立多媒体网络可以通过同一 ME 网络互相访问。
 
 花复用完整保留的共鸣花造型，保留非土壤安装、所有者和暂停设置；缺依赖、断电、无通道或重复接入时显示原因。未安装 AE2 时不生成这朵花的合成配方，已有花及其设置继续安全保存。
 
@@ -124,7 +126,7 @@
 
 ## 验证与构建
 
-安装 AE2 的 26 项服务端 GameTest、不安装 AE2 的 22 项服务端 GameTest 与费用单元检查覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置；新增火花测试检查普通接入、真实染料／法杖、顶部输入、距离边界、双端增幅、保存、拆卸和原升级组合；织网花验证真实 ME 电缆、存储元件和红石多媒体漏斗、双向／跨网络访问、模拟、组件、重复路径与旧句柄失效。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
+安装 AE2 的 30 项服务端 GameTest、不安装 AE2 的 24 项服务端 GameTest 与费用单元检查覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置；新增火花测试检查普通接入、真实染料／法杖、顶部输入、距离边界、双端增幅、保存、拆卸和原升级组合；织网花验证真实 ME 电缆、存储元件和红石多媒体漏斗、双向／跨网络访问、模拟、组件、重复路径与旧句柄失效；另验证样品组件、真实合成 CPU／样板供应器、链接重载，以及 JEI 材料分槽和背包满时的整体回滚。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
 
 初次构建需要 Python 3.11+、已登录的 GitHub CLI 和 Java 21。Gradle 自动取得锁定 Botania CI 产物并校验 SHA-256；也可用 `BOTANIA_JAR` 指定已下载的同一文件。上游 CI 附件可能过期，请保留已验证的本地依赖；不能静默换成另一个 SNAPSHOT。
 
@@ -143,4 +145,6 @@ Attach native Botania sparks to a pool and a mana machine; matching dye colors c
 The Mechanical Apothecary uses FE, water, 16 ingredient slots and a separate reagent slot to craft both native and bionic flowers. Water enters through fluid pipes or a dedicated container slot; repeated buckets return empty containers through their own output slot. Shift-click routes filled buckets correctly, and full tanks or blocked empty-bucket outputs stop without consuming the bucket. Bionic recipes are exclusive to this machine; the native basin cannot craft them. Native recipes keep their original ingredient and reagent requirements, while bionic recipes require corresponding native flowers, petals, runes and technological components. Machine titles are localized, and the twelve machine models now use open livingrock/livingwood apparatus geometry with native materials. The Bridge moves native mana into chemical tubes at 1:1. Infusion, runes, pure conversions, terra, brewing, ores and metamorphic stone use their native recipe rules. Elven trades require an open real portal and pay its pools; enchanting uses a formed real enchanter and retains books. World callbacks, special elven return/lexicon recipes, arbitrary third-party tanks and cross-dimensional networks remain outside this version. Client visual acceptance remains in-game.
 
 
-With optional AE2 19.2.17 and GuideME 21.1.1, the Bionic Corporea Orchid connects physical Corporea inventories to ME and lets Corporea devices request ME items. It uses one ME channel and 4 AE/t idle power. Place ordinary Corporea sparks on the flower and stocks, with the master on a separate support. Both directions use real storage, with loop exclusion and duplicate-route protection. It does not request crafting automatically or expose fluids. Removing AE2 keeps the common flower block/settings safe; all non-AE features remain available.
+With optional AE2 19.2.17 and GuideME 21.1.1, the Bionic Corporea Orchid connects physical Corporea inventories to ME and lets Corporea devices request ME items. It uses one ME channel and 4 AE/t idle power. Place ordinary Corporea sparks on the flower and stocks, with the master on a separate support. Both directions use real storage, with loop exclusion and duplicate-route protection. Nine sample slots filter both bridge directions by exact components or item type. Optional autocrafting orders actual shortages through AE patterns and a CPU (four jobs, up to 4096 items each); results return to ME for native requestors or retainers to retry. It does not expose fluids. Removing AE2 keeps the common flower block/settings safe; all non-AE features remain available.
+
+JEI plus-button transfer now fills supported apothecary, infusion, runic, pure, terra, brewery and elven recipes from real inventories. Shift-plus fills complete batches. Reagents, catalysts and empty vessels use their proper slots; a full backpack aborts the whole transfer. Water, power, mana and structures are still required.

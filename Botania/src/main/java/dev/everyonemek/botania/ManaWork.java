@@ -157,7 +157,7 @@ public final class ManaWork {
         BlockState state = catalystState(tile.extras.getFirst().getStack()); return state != null && recipe.getRecipeCatalyst().test(state);
     }
     // Only native catalyst blocks have a defined machine context. Third-party stateful catalysts need an adapter.
-    private static BlockState catalystState(ItemStack stack) {
+    static BlockState catalystState(ItemStack stack) {
         var state = itemState(stack);
         return state != null && (state.is(vazkii.botania.common.block.BotaniaBlocks.ALCHEMY_CATALYST)
               || state.is(vazkii.botania.common.block.BotaniaBlocks.CONJURATION_CATALYST)) ? state : null;
@@ -242,17 +242,17 @@ public final class ManaWork {
         do { bits = random.nextLong() >>> 1; value = bits % bound; } while (bits - value + bound - 1 < 0);
         return value;
     }
-    private static BlockState itemState(ItemStack stack) {
+    static BlockState itemState(ItemStack stack) {
         return !stack.isEmpty() && !stack.has(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA)
               && !stack.has(net.minecraft.core.component.DataComponents.BLOCK_STATE) && stack.getItem() instanceof BlockItem block ? block.getBlock().defaultBlockState() : null;
     }
-    private static boolean safeStateRecipe(BlockStateRecipe recipe) {
+    static boolean safeStateRecipe(BlockStateRecipe recipe) {
         String type = recipe.getClass().getName();
         return Set.of("vazkii.botania.common.crafting.PureDaisyRecipe", "vazkii.botania.common.crafting.OrechidRecipe",
               "vazkii.botania.common.crafting.OrechidIgnemRecipe", "vazkii.botania.common.crafting.MarimorphosisRecipe").contains(type)
               && recipe.getPreUpdateFunction().isEmpty() && recipe.getSuccessFunction().isEmpty();
     }
-    private static boolean safeOutput(StateIngredient ingredient) {
+    static boolean safeOutput(StateIngredient ingredient) {
         var states = ingredient.getDisplayed();
         return !states.isEmpty() && states.size() <= 4096 && states.stream().allMatch(state -> !state.isAir() && state.getFluidState().isEmpty()
               && state.getBlock().asItem() instanceof BlockItem item && item.getBlock() == state.getBlock() && state == state.getBlock().defaultBlockState());

@@ -47,6 +47,10 @@ public final class CorporeaFlowerBlock extends BaseEntityBlock {
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof CorporeaFlower flower) Flowers.placed(flower, placer, stack);
     }
     @Override protected List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) { return Flowers.withState(super.getDrops(state, builder), builder, this); }
+    @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState next, boolean moving) {
+        if (!state.is(next.getBlock()) && !level.isClientSide && level.getBlockEntity(pos) instanceof CorporeaFlower flower) flower.backend().removed();
+        super.onRemove(state, level, pos, next, moving);
+    }
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return level.isClientSide ? null : createTickerHelper(type, Content.CORPOREA_TILE.get(), (world, pos, blockState, tile) -> tile.tick());
     }

@@ -15,6 +15,10 @@
       "text": "book.botanicalmekanism.mechanical_apothecary.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mechanical_apothecary.2"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mechanical_apothecary"
     }

@@ -36,10 +36,18 @@ HELP = {
         ('花和存放物品的箱子上安装普通多媒体火花，主火花另放在旁边的支撑上。主火花下方不作为库存节点。ME 终端和多媒体装置双向访问真实物品。', 'Put ordinary Corporea sparks on the flower and item stores. Place the master separately: its own block is not a stock node. ME terminals and Corporea devices can both access real items.'),
         ('默认双向，也能只开放一侧。ME 返回视图排除本花挂载的多媒体库存，防止循环计数。一组多媒体网络只允许一朵活动接入花。', 'Defaults to both directions; either direction can be disabled. The ME view excludes Corporea storage mounted by bridge flowers to avoid counting loops. One active bridge per Corporea network.'),
         ('同一箱子不要再用存储总线接回同一 ME 网络，双箱只装一枚多媒体火花。冲突会显示原因并停用。断电、无通道、缺主火花或卸载时停止访问。', 'Do not also connect the same chest through an ME storage bus; use one Corporea spark per double chest. Conflicts disable access with a reason. Offline grids, missing masters and unloaded chunks stop access.'),
-        ('仅互通物品，不传流体或魔力，也不自动下单合成。默认两向合计最多 2,048 件/t。多媒体向 ME 取物按 ME 原规则付电；ME 端直接访问物理库存。', 'Items only: no fluids, mana or automatic crafting requests. Both directions share a default 2,048 items/t limit. Corporea extraction pays normal ME energy; the ME side accesses physical stores.')],
+        ('仅互通物品，不传流体或魔力。默认两向合计最多 2,048 件/t。多媒体向 ME 取物按 ME 原规则付电；ME 端直接访问物理库存。', 'Items only: no fluids or mana. Both directions share a default 2,048 items/t limit. Corporea extraction pays normal ME energy; the ME side accesses physical stores.')],
     'resonance_flower': [('旧共鸣花继续兼容已有网络，但不再作为新传输方案。可回收为共鸣增幅器。此花的模型、贴图和原稿完整保留，后续另有用途。', 'Legacy Resonance Flowers remain compatible with existing networks. Recycle them into a spark augment if desired. Their model, textures and source art stay preserved for future use.')],
     'resonance_bud': [('旧共鸣芽继续兼容已有网络，可以回收为共鸣增幅器。新生产线直接使用原火花，无需选择网络或管理成员。', 'Legacy Resonance Buds keep working on existing networks and can be recycled into a spark augment. New setups use native sparks without network selection or member management.')],
 }
+
+HELP['corporea_orchid'].extend([
+    ('配置中先点快捷栏物品，再点样品格；右键清除。样品不消耗物品，可选择全部、仅样品或排除样品，并切换完整物品或仅种类匹配。筛选同时作用于两向桥接。', 'Select a hotbar item, then a sample slot; right-click to clear. Samples consume nothing. Choose all, allow or deny, with exact components or item types. Both bridge directions use the filter.'),
+    ('自动合成默认关闭。开启后，实际多媒体请求缺货时向 AE 下单，需要样板与合成 CPU。每花最多 4 项任务，每项最多 4,096 件；重复缺货不重复提交已有任务。', 'Autocrafting starts disabled. Enable it to order actual Corporea shortages using AE patterns and a crafting CPU. Each flower allows four jobs, up to 4,096 items each. Repeated shortages share an existing job.'),
+    ('成品回到 ME，再由原装置取货。可用原拦截器与保持器保存缺额，以红石重试；一次漏斗请求不会等待合成。暂停或断电时等待恢复。关闭自动合成停止新订单，已付款任务仍可交货。', 'Results return to ME for native devices to request again. Use an interceptor and retainer to keep the missing amount and retry with redstone. A funnel request does not wait for crafting. Disabling orders still permits paid jobs to deliver.'),
+])
+for machine in ['mechanical_apothecary', 'mana_infuser', 'runic_forge', 'pure_converter', 'terra_condenser', 'botanical_brewery', 'elven_trade_controller']:
+    HELP[machine].append(('打开机器后，可在 JEI 对应配方点加号填充一批，Shift 加号填充多批。材料来自背包和机内原材料，终结材料、催化物与空瓶自动分槽；水、电、魔力与原结构仍需正常提供。', 'Open this machine and press the JEI recipe plus button for one batch, or Shift-plus for multiple batches. It uses your inventory and existing materials, routing reagents, catalysts and empty vessels. Supply water, power, mana and required structures normally.'))
 
 
 SHORT_TITLES = {

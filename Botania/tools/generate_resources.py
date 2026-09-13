@@ -210,6 +210,27 @@ corporea_messages = {
     'status.paused': ('已暂停', 'Paused'), 'status.redstone': ('红石信号已暂停访问', 'Paused by redstone'),
     'status.unloaded': ('所需区块未加载', 'Required chunks are unloaded'),
 }
+corporea_messages.update({
+    'filter.0': ('筛选：全部', 'Filter: all'), 'filter.1': ('筛选：仅样品', 'Filter: allow'), 'filter.2': ('筛选：排除样品', 'Filter: deny'),
+    'exact': ('匹配完整物品', 'Exact components'), 'item_only': ('仅匹配种类', 'Item type only'),
+    'samples': ('样品', 'Filter'), 'hotbar': ('物品', 'Hotbar'),
+    'sample_help': ('先点快捷栏物品，再点样品格；右键清除。不会消耗物品。筛选对两侧桥接访问生效。', 'Select a hotbar item, then a sample slot. Right-click to clear. Samples consume nothing. Filters apply to both bridge directions.'),
+    'craft.on': ('合成：开', 'Craft: on'), 'craft.off': ('合成：关', 'Craft: off'),
+    'crafting': ('合成：%s · %s 项', 'Craft: %s · %s jobs'),
+    'craft_help': ('开启后仅为实际请求的缺口下单。需要 AE 样板与合成 CPU；产物回到 ME，由多媒体装置再次请求，或配合原保持器重试。最多 4 项任务、每项 4096 件。', 'Orders only actual request shortages. Requires AE patterns and a crafting CPU. Results return to ME; request again or retry with a native retainer. Up to 4 jobs, 4096 items each.'),
+    'craft.status.off': ('关闭', 'Off'), 'craft.status.idle': ('待命', 'Idle'), 'craft.status.calculating': ('计算中', 'Calculating'),
+    'craft.status.running': ('进行中', 'Running'), 'craft.status.no_pattern': ('没有可用样板', 'No pattern'),
+    'craft.status.ambiguous': ('多个结果，请精确指定物品', 'Ambiguous item'), 'craft.status.missing_materials': ('合成缺料', 'Missing materials'),
+    'craft.status.no_cpu': ('CPU 忙碌或计划已变化', 'CPU busy / plan changed'), 'craft.status.failed': ('计算失败，请重试', 'Retry calculation'),
+    'craft.status.canceled': ('任务已取消', 'Canceled'), 'craft.status.': ('待命', 'Idle'),
+})
+for key, cn, english in [
+    ('unsupported', '此机器不支持填充该配方', 'This recipe cannot be filled in this machine'),
+    ('unavailable', '无法操作此机器', 'This machine is unavailable'),
+    ('missing', '缺少材料、终结材料或容器', 'Missing ingredients, reagent or container'),
+    ('full', '背包没有空间收回原材料', 'No inventory space to return existing ingredients'),
+]:
+    zh[f'gui.{MOD}.transfer.{key}'], en[f'gui.{MOD}.transfer.{key}'] = cn, english
 for key, (cn, english) in corporea_messages.items(): zh[f'gui.{MOD}.corporea.{key}'], en[f'gui.{MOD}.corporea.{key}'] = cn, english
 from lexicon_resources import generate as generate_lexicon
 generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)

@@ -113,3 +113,10 @@
 - AE2 19.2.17 还要求 GuideME 21.1.1；Maven 产物与 SHA 记录在 ae2-compat.json。GuideME 自带内部 shaded 库，无需另打包这些库。未安装 AE2 时不要求 GuideME。
 - 固定 Botania 的 CorporeaNodeDetectors 支持直接注册新节点；NeoForge 节点先查 UP 物品能力，再查无侧面能力。CorporeaSparkEntity 的 master 连接集合不含主火花自身，不能把主火花下方的库存当作普通节点。
 - Patchouli 1.21.1-92-NEOFORGE 的 BookContentResourceDirectLoader 根据书的命名空间扫描资源。原书为 botania:lexica_botania，use_resource_pack=true；在该命名空间新增分类与子条目即可，无需另造 book.json。模板和物品映射通过生成器维护，AE 专用配方页使用 mod:ae2 标志。
+
+## 9. alpha.9 合成与填充契约
+
+- 固定 Botania 的 `CorporeaInterceptor.interceptRequestLast` 得到全部返回 stacks，可在此求实际缺额；原请求立即返回，后续取货由 CorporeaRetainer／CorporeaRequestor 重试。不通过提前截取某个节点的尚缺数量下单。
+- AE2 19.2.17 `ICraftingService.beginCraftingCalculation` 异步返回计划；`submitJob` 返回实际链接，`ICraftingRequester` 保存、重载并提供链接，完成物品通过 `insertCraftedItems` 返回实际接受量。实际合成前同步库存缓存，避免机器计算读到初连网络的空缓存。工作线程只操作 AE 的计算上下文。
+- `StorageHelper.loadCraftingLink` 恢复原 UUID；拆除与区块卸载分开处理。材料由原 CPU 与样板供应器支付，回货进入真实 ME 存储，无花内付费成品副本。
+- JEI 19.22.1.316 的 `IRecipeTransferHandler` 支持只读预检与实际发送阶段；`IRecipeTransferRegistration` 按菜单和原分类注册。加号包不信任客户端材料，服务端重新查配方、实际权限和原槽位。没有复制 JEI 或 AE 的实现代码。
