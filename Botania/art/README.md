@@ -76,3 +76,7 @@ alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素�
 机械火花沿用 Botania 原火花贴图和实体渲染，在外侧加一圈由 `mekanism:block/block_steel` 绘制的细框；机械主火花多一个小标记。物品模型使用 NeoForge CompositeModel 引用原火花子模型，框架前后两面都显示，避开原火花平面以免闪烁。原染色星点、升级轨道和幻影墨水由 Botania 渲染器继续处理。
 
 生成入口为 `tools/generate_resources.py`，实体渲染为 `client/MechanicalSparkRenderer`。未复制第三方 PNG 或新增位图；Botania、Mek 材质仅按运行路径引用。实体动态效果由玩家游戏内验收。
+
+## alpha.18 织网花界面
+
+运行时引用 AE2 原 `textures/guis/storagebus.png` 面板及 `textures/guis/states.png` 槽框、设置图标，未复制 PNG 到本模组。筛选为 9×7 格，设置改为左侧工具栏，界面不显示未实现的升级卡槽或优先级按钮。素材归属 AE2 作者，许可同上方 AE 原盘说明（CC BY-NC-SA 3.0）。此改动没有新增位图原稿，游戏内由玩家验收。

@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -21,6 +22,8 @@ import vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity;
 public final class FlowerMenu extends AbstractContainerMenu {
     public static final int SET_MODE = 9, SET_DIRECTION = 10, SET_PRIORITY = 11, DETECT_POOL = 12,
           ADD_MEMBER = 13, REMOVE_MEMBER = 14, FILL_TARGET = 15, CONNECT_AS = 16;
+    public static final int COPY_FILTER_CURSOR = 22, CLEAR_FILTER_SLOT = 23, CLEAR_FILTER = 24;
+    public static final int CORPOREA_INVENTORY_Y = 169, CORPOREA_HOTBAR_Y = 227;
     public final BlockPos position;
     public final Level level;
     private final Player player;
@@ -33,8 +36,26 @@ public final class FlowerMenu extends AbstractContainerMenu {
     public FlowerMenu(int id, Inventory inventory, BlockPos position) {
         super(Content.MENU.get(), id); this.position = position; level = inventory.player.level(); player = inventory.player;
         tile = level.getBlockEntity(position);
+        if (tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower) {
+            for (int row = 0; row < 3; row++) for (int column = 0; column < 9; column++)
+                addSlot(new Slot(inventory, 9 + row * 9 + column, 8 + column * 18, CORPOREA_INVENTORY_Y + row * 18));
+            for (int column = 0; column < 9; column++) addSlot(new Slot(inventory, column, 8 + column * 18, CORPOREA_HOTBAR_Y));
+        }
     }
-    @Override public ItemStack quickMoveStack(Player player, int slot) { return ItemStack.EMPTY; }
+    @Override public ItemStack quickMoveStack(Player player, int slot) {
+        if (!level.isClientSide && player.containerMenu == this && stillValid(player) && slot >= 0 && slot < slots.size()
+              && tile instanceof dev.everyonemek.botania.corporea.CorporeaFlower flower) {
+            var sample = slots.get(slot).getItem();
+            if (!sample.isEmpty()) {
+                for (var present : flower.filter.samples) if (ItemStack.isSameItemSameComponents(present, sample)) return ItemStack.EMPTY;
+                for (int i = 0; i < flower.filter.samples.length; i++) if (flower.filter.samples[i].isEmpty()) {
+                    flower.filter.samples[i] = sample.copyWithCount(1); flower.setChanged(); flower.backend().settingsChanged(); break;
+                }
+            }
+        }
+        // Shift-click only copies a filter; no physical stack moves or repeats.
+        return ItemStack.EMPTY;
+    }
     @Override public boolean stillValid(Player player) {
         return player.level() == level && player.distanceToSqr(position.getCenter()) <= 64
               && (level.isClientSide || tile != null && Flowers.live(tile) && Flowers.owns(player, tile));
@@ -52,6 +73,12 @@ public final class FlowerMenu extends AbstractContainerMenu {
             else if (action == 18 && value.matches("[012]")) flower.filter.mode = Integer.parseInt(value);
             else if (action == 20 && value.matches("[01]")) flower.filter.exact = value.equals("1");
             else if (action == 21 && value.matches("[01]")) flower.autocraft = value.equals("1");
+            else if (action == CLEAR_FILTER && value.isEmpty()) java.util.Arrays.fill(flower.filter.samples, ItemStack.EMPTY);
+            else if ((action == COPY_FILTER_CURSOR || action == CLEAR_FILTER_SLOT) && value.matches("[0-9]{1,2}")) {
+                int sample = Integer.parseInt(value);
+                if (sample >= flower.filter.samples.length) return false;
+                flower.filter.samples[sample] = action == CLEAR_FILTER_SLOT ? ItemStack.EMPTY : getCarried().copyWithCount(1);
+            }
             else if (action == 19 && value.matches("[0-8],(-1|[0-8])")) {
                 var parts = value.split(","); int sample = Integer.parseInt(parts[0]), source = Integer.parseInt(parts[1]);
                 flower.filter.samples[sample] = source < 0 ? ItemStack.EMPTY : sender.getInventory().getItem(source).copyWithCount(1);

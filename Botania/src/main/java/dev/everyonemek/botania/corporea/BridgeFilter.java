@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 
 /** Samples are descriptions, never an inventory or a source of drops. */
 public final class BridgeFilter {
-    public static final int SIZE = 9;
+    public static final int SIZE = 63;
     public final ItemStack[] samples = new ItemStack[SIZE];
     public int mode; // all, allow samples, deny samples
     public boolean exact = true;

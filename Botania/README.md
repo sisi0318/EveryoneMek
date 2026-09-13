@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.17** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.18** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.17.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.18.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -128,13 +128,13 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 织网花让 ME 终端存取多媒体箱子，也让多媒体漏斗从 ME 取货。它需要 ME 电力和一个通道。
 
-花和箱子上安装普通多媒体火花，主火花另放。空手右击花，可选择传输方向、样品筛选和缺货自动合成。具体摆法和固定器用法见 [CORPOREA.md](CORPOREA.md)。
+花和箱子上安装普通多媒体火花，主火花另放。空手右击花，按 ME 存储总线式界面设置：上方 63 个样品格，下方完整背包，方向、筛选和自动合成开关在左侧。拿起物品后点击样品格或 Shift 点击背包物品即可取样，右击清除。具体摆法和固定器用法见 [CORPOREA.md](CORPOREA.md)。
 
 ## 开发与测试
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.17 已通过 46 项常规服务端测试、47 项安装 Applied Botanics 时的服务端测试，以及 4 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.18 已通过 46 项常规服务端测试和 4 项单元检查；Applied Botanics 共存的 47 项测试沿用 alpha.17 结果。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -163,3 +163,5 @@ An infuser also reads its floor catalyst when its internal catalyst slot is empt
 Optional Applied Botanics support uses the supplied Botania-456-compatible alpha.3 JAR. Its Fluix Mana Pool uses the same ME mana as these cells and machines. Existing cells and patterns keep working, with matching capacities for each tier. No separate set of cells is needed. Do not install both the original and compatibility Appbot JARs.
 
 Mechanical sparks retain native dye, augments, ink and wand controls. One master per connected color group stores up to eight range and eight throughput upgrades. Each range upgrade adds eight blocks (12–76 total); throughput is 1–9 times the native rate. Empty-hand right-click any connected mechanical spark to open the shared slots. Extra masters disable bonuses until removed. Upgrades stay in the dismantled master item.
+
+The Corporea Orchid uses an ME Storage Bus style screen with 63 filter slots and the full player inventory. Click a filter with a held item or Shift-click an inventory item to copy a sample. Right-click clears a sample. Direction, filtering, matching, autocrafting and pause controls are in the left toolbar; hover the top status line for network and crafting details. Existing nine-slot filters keep their samples.

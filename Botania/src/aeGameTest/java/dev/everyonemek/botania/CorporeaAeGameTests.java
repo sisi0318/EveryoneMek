@@ -74,6 +74,24 @@ public final class CorporeaAeGameTests {
             var menu = new FlowerMenu(71, owner.getInventory(), rig.flower.getBlockPos()); owner.containerMenu = menu;
             check(menu.apply(owner, 19, "0,0") && menu.apply(owner, 18, "1"), "Sample menu action failed");
             check(owner.getInventory().getItem(0).getCount() == 2 && rig.flower.filter.samples[0].getCount() == 1, "Sample consumed inventory or copied count");
+            menu.clicked(27, 0, net.minecraft.world.inventory.ClickType.PICKUP, owner);
+            FlowerPackets.handleSettings(new FlowerPackets.Settings(menu.containerId, FlowerMenu.COPY_FILTER_CURSOR, "62"), context(owner));
+            check(menu.getCarried().getCount() == 2 && owner.getInventory().getItem(0).isEmpty()
+                  && ItemStack.isSameItemSameComponents(rig.flower.filter.samples[62], menu.getCarried()) && rig.flower.filter.samples[62].getCount() == 1,
+                  "Last filter slot did not copy the real cursor stack without consuming it");
+            FlowerPackets.handleSettings(new FlowerPackets.Settings(menu.containerId, FlowerMenu.CLEAR_FILTER_SLOT, "62"), context(owner));
+            check(rig.flower.filter.samples[62].isEmpty() && menu.getCarried().getCount() == 2, "Right-click clearing consumed cursor items");
+            check(!menu.apply(owner, FlowerMenu.COPY_FILTER_CURSOR, "63"), "Out-of-range filter slot accepted");
+            menu.clicked(27, 0, net.minecraft.world.inventory.ClickType.PICKUP, owner);
+            var old = owner.getInventory().getItem(9).copy();
+            try {
+                owner.getInventory().setItem(9, new ItemStack(Items.IRON_INGOT, 32));
+                menu.clicked(0, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, owner);
+                menu.clicked(0, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, owner);
+                check(owner.getInventory().getItem(9).getCount() == 32 && rig.flower.filter.samples[1].is(Items.IRON_INGOT)
+                      && rig.flower.filter.samples[2].isEmpty(), "Shift-copy consumed items or repeated an existing sample");
+                check(menu.apply(owner, FlowerMenu.CLEAR_FILTER_SLOT, "1"), "Shift-copy cleanup failed");
+            } finally { owner.getInventory().setItem(9, old); }
             var view = new MEStorage[1]; rig.bridge.mountInventories((storage, priority) -> view[0] = storage);
             var plain = AEItemKey.of(Items.EMERALD); var named = AEItemKey.of(rig.chest.getItem(2));
             check(view[0].getAvailableStacks().get(plain) == 0 && view[0].getAvailableStacks().get(named) == 2, "Filter merged components or leaked count");
@@ -83,6 +101,10 @@ public final class CorporeaAeGameTests {
             check(menu.apply(owner, 20, "0") && view[0].getAvailableStacks().get(plain) == 8, "Item-only matching did not update real storage");
             check(menu.apply(owner, 18, "2") && view[0].getAvailableStacks().get(plain) == 0, "Deny mode ignored");
             check(menu.apply(owner, 19, "0,-1") && rig.flower.filter.samples[0].isEmpty(), "Sample removal failed");
+            menu.apply(owner, 19, "8,0");
+            FlowerPackets.handleSettings(new FlowerPackets.Settings(menu.containerId, FlowerMenu.CLEAR_FILTER, ""), context(owner));
+            check(java.util.Arrays.stream(rig.flower.filter.samples).allMatch(ItemStack::isEmpty) && owner.getInventory().getItem(0).getCount() == 2,
+                  "Clear-all changed inventory or left filter samples");
             owner.containerMenu = owner.inventoryMenu;
             check(!menu.apply(owner, 19, "0,0"), "Stale menu accepted sample change");
         }).thenSucceed();

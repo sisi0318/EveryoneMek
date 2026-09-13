@@ -164,3 +164,7 @@
 - 在 NeoForge 21.1.241 核对 IRegistryExtension.addAlias 与 MappedRegistry.resolve、RegistrySnapshot 别名同步；在 AE2 19.2.17 核对 AEKey.TYPE_FIELD（#t）与 MapCodec 的类型派发。只保留一个真实注册类型，两个旧 ID 都解码到当前类型。
 - Appbot 固定 alpha.3 的 ManaContainerItemStrategy 通过 ManaItem 查询，ContainerItemStrategy.register 使用 putIfAbsent，不能再给它注册第二个策略。本模组给盘与魔力团提供真实 ManaItem 视图，复用原策略。
 - Appbot 原 ManaKeyType.getAmountPerByte 为 500，ManaCellItem.getTotalBytes 按 1000 字节／k；共存时定点调整为 8000 和 1024，与本模组原五档容量统一。存量数字不缩放。原 ManaKey.addDrops 仅放粒子，共存时改为已实现的魔力团以保留拆卸资源。
+
+## 16. alpha.18 织网花界面参考
+
+核对 AE2 19.2.17 的 `StorageBusScreen`、`screens/storage_bus.json`、`screens/common/player_inventory.json`、`Icon` 和 `IconButton`：原界面宽 176、高 253，筛选从 (8,29) 按 9 列排列，玩家背包距底 84、快捷栏距底 26。运行时引用其面板与图标，本模组保留自有 FlowerMenu 和设置包，不复制 StorageBusMenu 或改变 AE 总线本身。图标仅对应花已有的控制与清空功能。

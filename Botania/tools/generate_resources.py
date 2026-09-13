@@ -213,8 +213,8 @@ corporea_messages = {
 corporea_messages.update({
     'filter.0': ('筛选：全部', 'Filter: all'), 'filter.1': ('筛选：仅样品', 'Filter: allow'), 'filter.2': ('筛选：排除样品', 'Filter: deny'),
     'exact': ('精确匹配', 'Exact match'), 'item_only': ('只看种类', 'Item type'),
-    'samples': ('样品', 'Filter'), 'hotbar': ('物品', 'Hotbar'),
-    'sample_help': ('点击物品，再点击样品格。右击可清除，物品不会被拿走。', 'Click an item, then a sample slot. Right-click to clear. The item stays in your inventory.'),
+    'samples': ('样品', 'Filter'), 'hotbar': ('物品', 'Hotbar'), 'clear': ('清空筛选', 'Clear filter'),
+    'sample_help': ('拿起物品后点击样品格，或 Shift 点击背包物品。右击清除，样品不会消耗物品。', 'Click a filter slot with a held item, or Shift-click an inventory item. Right-click to clear. Samples do not consume items.'),
     'craft.on': ('合成：开', 'Craft: on'), 'craft.off': ('合成：关', 'Craft: off'),
     'crafting': ('合成：%s · %s 项', 'Craft: %s · %s jobs'),
     'craft_help': ('缺货时让 ME 自动制作。需要样板和合成 CPU，做好后再取一次货。', 'Asks ME to craft missing items. Requires a pattern and crafting CPU; request the items again when ready.'),

@@ -45,7 +45,7 @@ for name in ['mana_bridge', 'mana_charger', 'mana_infuser', 'runic_forge', 'terr
     HELP[name].append(('森林法杖切到绑定模式，潜行右击发射器，再潜行右击机器，即可从发射器供魔。魔力脉冲命中的那一面需要设为魔力输入。', 'Switch the Wand to Bind mode, sneak-use it on a spreader, then on the machine. The face hit by its bursts must allow Mana input.'))
 
 HELP['corporea_orchid'].extend([
-    ('在设置中点击快捷栏物品，再点击样品格，就能指定允许通过的物品。右击样品格可清除。$(p)同一种物品若有不同名字或附魔，可以选择是否区分。', 'Click a hotbar item and then a sample slot to choose which items may pass. Right-click a sample to clear it.$(p)You can choose whether names and enchantments should count as different items.'),
+    ('拿起背包物品后点击样品格，或 Shift 点击物品，即可添加样品。共有 63 个样品格，右击可清除；左侧按钮可切换筛选方式。$(p)同一种物品若有不同名字或附魔，可以选择是否区分。', 'Click a filter slot with a held item, or Shift-click an inventory item to copy it. There are 63 slots. Right-click to clear a sample; use the left toolbar to change filtering.$(p)You can choose whether names and enchantments should count as different items.'),
     ('开启自动合成后，漏斗取货时若库存不足，织网花会请 ME 制作缺少的物品。网络中需要相应的样板、材料和合成 CPU。$(p)最多同时保留 4 项任务，每项最多制作 4,096 件。', 'With autocrafting enabled, the Orchid asks ME to make items missing from a funnel request. The network needs a matching pattern, ingredients and a crafting CPU.$(p)It keeps up to four jobs, with at most 4,096 items per job.'),
     ('做好以后，再让漏斗取一次货即可。也可以用多媒体拦截器和多媒体固定器记录缺少的数量，收到红石信号后再次取货。', 'Once crafting finishes, request the items again. A Corporea Interceptor and Retainer can remember the missing amount and repeat the request when given a redstone signal.'),
 ])
