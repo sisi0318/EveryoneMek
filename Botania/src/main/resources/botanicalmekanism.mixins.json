@@ -19,7 +19,9 @@
     "MechanicalSparkPlacementMixin",
     "MechanicalSparkMixin",
     "ManaTerminalDefaultsMixin",
-    "ManaWirelessDefaultsMixin"
+    "ManaWirelessDefaultsMixin",
+    "SparkMeNodeCapacityMixin",
+    "SparkMeConnectionCapacityMixin"
   ],
   "plugin": "dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin",
   "client": [

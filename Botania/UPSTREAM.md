@@ -178,3 +178,9 @@
 ## 18. alpha.22 终端可见类型
 
 核对 AE2 19.2.17 的 KeyTypeSelection、AbstractTerminalPart 和 WirelessTerminalMenuHost：方块终端在 readFromNBT 恢复 enabledKeyTypes，缺少新类型会继续隐藏；无线终端通过 forStack 读取 ENABLED_KEY_TYPES。默认迁移只追加当前魔力类型，setEnabledSet 用于读入时更新而不触发尚未就绪的宿主回调，后续保存标记保留玩家选择。无魔力存量时原终端仍不凭空创建库存条目。
+
+## 19. alpha.23 无线频道契约
+
+核对当前 AE2 19.2.17 的 IManagedGridNode、GridHelper.createConnection、GridNode、GridConnection、PathingCalculation、MEP2PTunnelPart 和 IEnergyService。GridNode 默认容量为 8／32 ×频道倍率，控制器节点为 CANNOT_CARRY 且从连接开始分配。只给自建虚拟节点及连接扩大容量，由原路径算法计算实际频道；普通电缆节点不修改。
+
+参考 ME P2P 在 tick 末创建／销毁自有连接、等待网络状态变化的生命周期；没有复制原 P2P 类或实现第二套库存。CableBus 方块会先接管右键，机械火花针对 AE 安装点需在 onItemUseFirst 调原 Botania 放置路径。原 SparkAttachable 验证、生成实体和副手染色均保留。

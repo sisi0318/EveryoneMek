@@ -100,6 +100,8 @@ public final class MechanicalSparkGameTests {
         try {
             viewer.getInventory().setItem(9, new ItemStack(MechanicalSparks.RANGE.get(), 10)); menu.quickMoveStack(viewer, 2);
             check(master.upgrade(0) == 8 && viewer.getInventory().getItem(9).getCount() == 2, "Controller shift click exceeded eight upgrades");
+            viewer.getInventory().setItem(10, new ItemStack(MechanicalSparks.CHANNEL.get(), 6)); menu.quickMoveStack(viewer, 3);
+            check(master.channelCapacity() == 256 && viewer.getInventory().getItem(10).getCount() == 2, "Channel slot did not cap at four modules");
             use(h, master, new ItemStack(BotaniaItems.SPARK_AUGMENT_ISOLATED));
             use(h, master, new ItemStack(BotaniaItems.PHANTOM_INK));
             check(master.getUpgrade().is(BotaniaItems.SPARK_AUGMENT_ISOLATED) && master.isInvisible(), "Native augment or ink was lost");
@@ -116,7 +118,7 @@ public final class MechanicalSparkGameTests {
             var disk = drops.stream().filter(item -> item.getItem().is(MechanicalSparks.MASTER.get())).findFirst().orElseThrow();
             check(!menu.stillValid(owner) && master.modules.isEmpty(), "Removed controller retained live inventory");
             var replacement = place(h, pos, disk.getItem().copy());
-            check(replacement.isMaster() && replacement.upgrade(0) == 8, "Native dismantle/reinstall lost controller modules");
+            check(replacement.isMaster() && replacement.upgrade(0) == 8 && replacement.upgrade(2) == 4, "Native dismantle/reinstall lost controller modules");
             replacement.discard(); drops.forEach(net.minecraft.world.entity.Entity::discard);
         } finally { owner.setShiftKeyDown(false); owner.closeContainer(); owner.getInventory().setItem(9, oldSlot); owner.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY); }
         h.succeed();

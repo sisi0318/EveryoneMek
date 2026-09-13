@@ -35,6 +35,7 @@ public final class SparkExpansion {
     }
     private static void tooltip(net.neoforged.neoforge.event.entity.player.ItemTooltipEvent event) {
         if (extended(event.getItemStack())) event.getToolTip().add(Component.translatable("tooltip.botanicalmekanism.spark_range", RANGE));
+        if (event.getItemStack().is(MechanicalSparks.CHANNEL.get())) event.getToolTip().add(Component.translatable("tooltip.botanicalmekanism.spark_channels"));
     }
     public static void supplyMachine(ManaMachine machine) {
         if (!machine.kind().chemical || machine.ticker % 20 != 0 || new MachineSparkPort(machine).isFull()) return;

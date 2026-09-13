@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.22** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.23** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.22.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.23.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -62,6 +62,29 @@
 池子之间传魔仍需按原来的方式安装火花升级。机械主火花不会改变聚集、扩散、弥散或隔离的作用。普通火花也能连接，但使用原来的距离；共享范围用于同组机械火花。
 
 一组内有多个主火花时，共享升级停止生效，拆下多余的主火花即可恢复。主火花或中间连接卸载、拆除、改色后，失去连接的火花恢复普通范围和速度。只连接同维度已加载的区块。
+
+## 火花无线 ME 连接
+
+1. 把机械主火花装在基地的 ME 电缆或 ME 控制器上。
+2. 空手右击火花，在“频道”槽放入 ME 频道模块。
+3. 给远端 ME 电缆装机械火花，使用与主火花相同的染色。范围内会自动连接。
+
+| 主火花内的频道模块 | 默认配置下的共享容量 |
+| --- | ---: |
+| 1 个 | 32 频道 |
+| 2 个 | 64 频道 |
+| 3 个 | 128 频道 |
+| 4 个 | 256 频道 |
+
+**超过 32 频道时，建议将主火花直接装在 ME 控制器上。** 普通电缆仍限 8 频道，致密电缆仍限 32；远端分成多条电缆使用。没有控制器时，仍受 AE 小网络的频道限制。其他频道倍率按 AE 的配置生效。
+
+频道模块每组只装一套，范围沿用主火花的范围升级，基础 12 格、最多 76 格，按三个方向分别计算。中继可以用一小段 ME 电缆加同色机械火花；频道路径只经过这些 ME 火花。每组最多 128 个接入火花，只连接同维度已加载且正在运行的区块。
+
+无线连接让远端终端、机器和样板供应器使用同一 ME 网络，包括盘内物品与魔力。它不提供额外库存。多个独立的 ME 控制器网络会拒绝无线合并；已有电缆通路不会再增加一条重复的无线边。
+
+需要持续供给 AE 电力。主火花基础耗电为 `4 + 容量 / 32` AE/t，每个无线分支约为 `8 + 距离 / 16 向上取整 + 容量 / 32` AE/t，另计原 AE 设备耗电。界面显示当前频道使用量、连接数和火花耗电。
+
+拆除、改色、移走范围升级、停止区块运行或断电会断开；恢复后自动重新接入。潜行用森林法杖照常拆卸，主火花保留三种共享升级。模块配方与用法已加入植物魔法词典。
 
 ## 机器
 
@@ -136,7 +159,7 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.22 已通过 49 项常规服务端测试和 5 项单元检查；Applied Botanics 共存的 47 项测试沿用 alpha.17 结果。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.23 已通过 51 项常规服务端测试、38 项未安装 AE2 的服务端测试和 5 项单元检查；Applied Botanics 共存的 52 项测试也已通过。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -173,3 +196,5 @@ The Corporea Orchid uses an ME Storage Bus style screen with 63 filter slots and
 Mechanical sparks use the original warm-white flame; masters use Botania's blue-violet master flame, without frames. Range and throughput upgrades use Air and Mana Rune textures with a small spark marker. Entity names distinguish the master. Simultaneous shared-menu clicks and dismantling were checked through the server container-click handler.
 
 Terminal mana visibility is enabled by default, including a one-time update for existing terminals. Later manual opt-outs are saved. This also covers wireless terminals and preserves other visibility choices. The Corporea Orchid supports continuous filter edits, drag painting/right-drag clearing and reverse cycling with right-click. Display-only inventory statistics are collected on demand, at most once per second while viewed.
+
+Mechanical sparks can form wireless ME links. Put the master on ME cable or directly on a Controller, insert one to four ME Channel Modules, and place matching mechanical sparks on remote cables. Capacity is 32/64/128/256 channels before AE configuration multipliers. Normal cable limits remain; use a Controller-mounted master and multiple remote branches for higher capacity. Range upgrades also cover wireless hops. Links use AE power, stay within loaded ticking chunks of one dimension, and never merge separate controller grids. Native spark controls and mana operation remain available on their original devices.

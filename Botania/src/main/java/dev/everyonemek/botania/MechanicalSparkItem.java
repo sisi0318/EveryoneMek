@@ -18,6 +18,14 @@ public final class MechanicalSparkItem extends ManaSparkItem {
         try { return action.get(); } finally { if (old == null) PLACING.remove(); else PLACING.set(old); }
     }
     @Override public InteractionResult useOn(UseOnContext context) { return placing(context.getItemInHand(), () -> super.useOn(context)); }
+    @Override public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
+        var tile = context.getLevel().getBlockEntity(context.getClickedPos());
+        if (tile == null || !SparkMeLink.Holder.anchor.test(tile)) return super.onItemUseFirst(stack, context);
+        // The early-use hook returns before GameMode restores the creative hand count.
+        int count = stack.getCount();
+        try { return useOn(context); }
+        finally { if (context.getPlayer() != null && context.getPlayer().isCreative()) stack.setCount(count); }
+    }
     public static ManaSparkEntity create(Level level) {
         var stack = PLACING.get();
         if (stack == null) return new ManaSparkEntity(level);

@@ -18,6 +18,10 @@ public final class MechanicalSparks {
     public static final DeferredItem<MechanicalSparkItem> MASTER = Content.ITEMS.register("master_mechanical_spark", () -> new MechanicalSparkItem(true));
     public static final DeferredItem<Item> RANGE = Content.ITEMS.register("spark_range_upgrade", () -> new Item(new Item.Properties()));
     public static final DeferredItem<Item> EFFICIENCY = Content.ITEMS.register("spark_efficiency_upgrade", () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> CHANNEL = Content.ITEMS.register("spark_channel_upgrade", () -> new Item(new Item.Properties()));
+    public static Item module(int slot) { return switch (slot) { case 0 -> RANGE.get(); case 1 -> EFFICIENCY.get(); case 2 -> CHANNEL.get(); default -> net.minecraft.world.item.Items.AIR; }; }
+    public static int moduleLimit(int slot) { return slot == 2 ? 4 : 8; }
+    public static int moduleSlot(net.minecraft.world.item.ItemStack stack) { for (int i = 0; i < 3; i++) if (stack.is(module(i))) return i; return -1; }
     public static final DeferredHolder<MenuType<?>, MenuType<SparkControllerMenu>> MENU = Content.MENUS.register("spark_controller",
           () -> IMenuTypeExtension.create((id, inventory, data) -> new SparkControllerMenu(id, inventory, data.readVarInt(), data.readVarInt())));
     public static void register(IEventBus bus) {

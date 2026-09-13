@@ -65,7 +65,7 @@ HELP['mana_storage_cell'].extend([
 ])
 
 
-SPARK_ITEMS = ('mechanical_spark', 'master_mechanical_spark', 'spark_range_upgrade', 'spark_efficiency_upgrade')
+SPARK_ITEMS = ('mechanical_spark', 'master_mechanical_spark', 'spark_range_upgrade', 'spark_efficiency_upgrade', 'spark_channel_upgrade')
 HELP.update({
     'mechanical_spark': [
         ('机械火花可以装在魔力池和储魔机器上。染色、火花升级、幻影墨水和森林法杖的用法照旧。机器顶部要允许魔力输入。', 'Attach a Mechanical Spark to a mana pool or mana-storing machine. Dyes, spark augments, Phantom Ink and the Wand work as usual. Machines need Mana input enabled on top.'),
@@ -79,10 +79,17 @@ HELP.update({
     'spark_range_upgrade': [('装入主机械火花，每个增加 8 格范围，最多 8 个。基础范围为 12 格，装满后为 76 格。距离按前后、左右和上下分别计算。$(p)范围加成用于同组机械火花；普通火花仍使用原有范围。', 'Each upgrade in a master adds eight blocks of range, up to eight upgrades. Range starts at 12 blocks and reaches 76, measured separately along each axis.$(p)The bonus connects mechanical sparks in the same group. Ordinary sparks keep their usual range.')],
     'spark_efficiency_upgrade': [('装入主机械火花，提高同组机械火花的传魔速度。每个增加一倍基础速度，最多 8 个，装满后为原来的 9 倍。不会增加魔力消耗。', 'Install in a master to increase its group\'s transfer speed. Each adds one base rate, up to eight upgrades for nine times the original speed. Mana cost is unchanged.')],
 })
+HELP['mechanical_spark'].append(('机械火花也能装在 ME 电缆和 ME 控制器上。把主火花接到基地网络，装入 ME 频道模块，再给远端电缆装同色机械火花，即可无线接入。', 'Mechanical sparks also attach to ME cables and controllers. Connect the master to your base network and insert ME Channel Modules, then put matching mechanical sparks on remote cables.'))
+HELP['spark_channel_upgrade'] = [
+    ('装入机械主火花的频道槽，最多 4 个。1、2、3、4 个模块分别承载 32、64、128、256 频道，同组共用。远端可以连接终端、机器和样板供应器。', 'Place up to four modules in the channel slot of the master spark. One, two, three and four modules carry 32, 64, 128 and 256 channels for the group. Remote terminals, machines and pattern providers join the same ME network.'),
+    ('高容量主火花请直接装在 ME 控制器上。普通电缆仍限 8 频道，致密电缆仍限 32；远端可以分多条电缆使用。没有控制器时，仍按 AE 的小网络限制运行。', 'For high capacity, put the master directly on an ME Controller. Ordinary cables still carry eight channels and dense cables 32; distribute remote devices across multiple branches. Without a controller, the AE ad-hoc network limit still applies.'),
+    ('范围沿用主火花里的范围升级。需要中继时，在途中放一段 ME 电缆并安装同色机械火花。只连接同维度已加载的火花；每组最多 128 个 ME 火花。', 'Range comes from the range upgrades in the master. To relay farther, place another matching mechanical spark on an ME cable along the way. Connections need loaded sparks in the same dimension, with up to 128 ME sparks per group.'),
+    ('无线连接需要 AE 电力。断电、拆除、改色或失去范围时停止连接，恢复后重新接入。独立的 ME 控制器网络不会自动合并。魔力火花原有的升级和法杖操作照旧。', 'Wireless links use AE power. They disconnect after power loss, removal, recoloring or loss of range, and reconnect when restored. Separate controller networks are not merged. Native spark augments and Wand controls still work.'),
+]
 HELP['mana_storage_cell'].append(('安装 Applied Botanics 后，这些魔力盘也能供给福鲁伊克斯魔力池。已有 Applied Botanics 魔力盘可以一起使用，终端中共用一个魔力条目，旧样板无需重做。', 'With Applied Botanics installed, these cells also supply Fluix Mana Pools. Existing Applied Botanics mana cells work alongside them. The terminal has one mana entry, and old patterns keep working.'))
 
 SHORT_TITLES = {
-    'mechanical_spark': 'Mechanical Spark', 'master_mechanical_spark': 'Master Spark',
+    'mechanical_spark': 'Mechanical Spark', 'master_mechanical_spark': 'Master Spark', 'spark_channel_upgrade': 'ME Channels',
     'spark_range_upgrade': 'Spark Range', 'spark_efficiency_upgrade': 'Spark Efficiency',
     'mana_lotus': 'Conduction Lotus', 'bionic_amaranthus': 'Jaded Amaranthus', 'bionic_clayconia': 'Clayconia',
     'bionic_agricarnation': 'Agricarnation', 'bionic_hopperhock': 'Hopperhock', 'bionic_rannuncarpus': 'Rannuncarpus',
@@ -128,7 +135,7 @@ def generate(root, write, zh, en, plants, recipes):
             for tier in TIERS:
                 pages.append({'type': 'patchouli:crafting', 'recipe': f'{MOD}:{cell_id(tier)}', 'flag': 'mod:ae2'})
         elif name in MACHINES or name in ('mechanical_apothecary', 'resonance_spark_augment', *SPARK_ITEMS):
-            pages.append({'type': 'patchouli:crafting', 'recipe': item})
+            pages.append({'type': 'patchouli:crafting', 'recipe': item, **({'flag': 'mod:ae2'} if name == 'spark_channel_upgrade' else {})})
         if name == 'mana_bridge':
             zh[f'{key}.appbot'] = '安装 Applied Botanics 后，可以将互通器连接福鲁伊克斯魔力池。池子要接上有电、有通道的 ME 网络，网络中放入魔力盘即可。现有五档魔力盘都能使用，无需另做一套。'
             en[f'{key}.appbot'] = 'With Applied Botanics, place the bridge beside a Fluix Mana Pool. Connect the pool to a powered ME network with a channel and a mana cell. All five existing cell tiers work; no separate set is needed.'

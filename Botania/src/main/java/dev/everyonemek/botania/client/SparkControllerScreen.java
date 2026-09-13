@@ -8,7 +8,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 public final class SparkControllerScreen extends AbstractContainerScreen<SparkControllerMenu> {
     public SparkControllerScreen(SparkControllerMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title); imageWidth = 176; imageHeight = 184; inventoryLabelY = 90;
+        super(menu, inventory, title); imageWidth = 176; imageHeight = 214; inventoryLabelY = 120;
     }
     private Component text(String key, Object... args) { return Component.translatable("gui.botanicalmekanism.spark." + key, args); }
     @Override protected void renderBg(GuiGraphics gui, float partial, int mx, int my) {
@@ -21,11 +21,18 @@ public final class SparkControllerScreen extends AbstractContainerScreen<SparkCo
     }
     @Override protected void renderLabels(GuiGraphics gui, int x, int y) {
         gui.drawCenteredString(font, title, imageWidth / 2, 7, 0xE3E9E7);
-        gui.drawCenteredString(font, text("range_label"), 61, 21, 0xADBAB8); gui.drawCenteredString(font, text("efficiency_label"), 115, 21, 0xADBAB8);
+        gui.drawCenteredString(font, text("range_label"), 43, 21, 0xADBAB8); gui.drawCenteredString(font, text("efficiency_label"), 88, 21, 0xADBAB8);
+        gui.drawCenteredString(font, text("channel_label"), 133, 21, 0xADBAB8);
         gui.drawString(font, text("range", menu.stat(0)), 8, 57, 0xCDE6E0, false);
         gui.drawString(font, text("rate", menu.stat(1)), 98, 57, 0xCDE6E0, false);
         gui.drawCenteredString(font, menu.stat(3) == 0 ? text("members", menu.stat(2)) : text(menu.stat(3) == 2 ? "conflict" : "no_master"), imageWidth / 2, 74, 0xADBAB8);
+        gui.drawString(font, text("channels", menu.stat(5), menu.stat(4) < 0 ? "∞" : menu.stat(4)), 8, 90, 0xCDE6E0, false);
+        gui.drawString(font, font.plainSubstrByWidth(text("me_status." + menu.stat(7)).getString(), 160), 8, 105, 0xADBAB8, false);
         gui.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0xADBAB8, false);
     }
-    @Override public void render(GuiGraphics gui, int mx, int my, float partial) { super.render(gui, mx, my, partial); renderTooltip(gui, mx, my); }
+    @Override public void render(GuiGraphics gui, int mx, int my, float partial) {
+        super.render(gui, mx, my, partial); renderTooltip(gui, mx, my);
+        if (mx >= leftPos + 8 && mx < leftPos + 168 && my >= topPos + 88 && my < topPos + 117)
+            gui.renderTooltip(font, font.split(text("me_status." + menu.stat(7)).copy().append("\n").append(text("me_details", menu.stat(6), menu.stat(8))), 220), mx, my);
+    }
 }

@@ -1,0 +1,34 @@
+{
+  "name": "item.botanicalmekanism.spark_channel_upgrade",
+  "icon": "botanicalmekanism:spark_channel_upgrade",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 29,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.spark_channel_upgrade.0",
+      "item": "botanicalmekanism:spark_channel_upgrade",
+      "title": "book.botanicalmekanism.spark_channel_upgrade.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.spark_channel_upgrade.1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.spark_channel_upgrade.2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.spark_channel_upgrade.3"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:spark_channel_upgrade",
+      "flag": "mod:ae2"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:spark_channel_upgrade": 0
+  }
+}

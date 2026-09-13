@@ -126,7 +126,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsManaDensityMixin', 'AppliedBotanicsCellCapacityMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsManaDensityMixin', 'AppliedBotanicsCellCapacityMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin', 'SparkMeNodeCapacityMixin', 'SparkMeConnectionCapacityMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -265,17 +265,31 @@ generate_mana_cell_models(write)
 for name, cn, english in [
     ('mechanical_spark', '机械火花', 'Mechanical Spark'), ('master_mechanical_spark', '机械主火花', 'Master Mechanical Spark'),
     ('spark_range_upgrade', '火花范围升级', 'Spark Range Upgrade'), ('spark_efficiency_upgrade', '火花效率升级', 'Spark Throughput Upgrade'),
+    ('spark_channel_upgrade', 'ME 频道模块', 'ME Channel Module'),
 ]:
     zh[f'item.{MOD}.{name}'], en[f'item.{MOD}.{name}'] = cn, english
 zh[f'entity.{MOD}.mechanical_spark'], en[f'entity.{MOD}.mechanical_spark'] = '机械火花', 'Mechanical Spark'
+zh[f'tooltip.{MOD}.spark_channels'] = '装入主火花，1～4 个模块提供 32／64／128／256 频道。'
+en[f'tooltip.{MOD}.spark_channels'] = 'Master slot: 1–4 modules carry 32/64/128/256 channels.'
 for key, cn, english in [
     ('title', '火花网络升级', 'Spark Network Upgrades'), ('range_label', '范围', 'Range'), ('efficiency_label', '效率', 'Speed'),
-    ('range', '范围：%s 格', 'Range: %s'), ('rate', '传输：×%s', 'Transfer: x%s'), ('members', '火花：%s', 'Sparks: %s'),
+    ('range', '范围：%s 格', 'Range: %s'), ('rate', '魔力：×%s', 'Mana: x%s'),
+    ('channel_label', '频道', 'ME'), ('channels', '频道：%s / %s', 'Channels: %s / %s'),
+    ('me_details', '无线连接：%s\n火花耗电：%s AE/t', 'Wireless links: %s\nSpark power: %s AE/t'), ('members', '火花：%s', 'Sparks: %s'),
     ('no_master', '需要机械主火花', 'Place a master spark'), ('conflict', '请拆下多余的主火花', 'Remove extra masters'), ('connected', '已连接主火花', 'Master connected'),
 ]: zh[f'gui.{MOD}.spark.{key}'], en[f'gui.{MOD}.spark.{key}'] = cn, english
+for key, cn, english in [
+    (0, '未安装 ME 频道模块', 'Install an ME Channel Module'), (1, '需要 AE2', 'Requires AE2'),
+    (2, '主火花需要 ME 电缆或控制器', 'Place the master on ME cable or a controller'), (3, '需要同色机械主火花', 'Needs a matching master spark'),
+    (4, '同一组有多个主火花', 'Multiple masters in this group'), (5, 'ME 网络电力不足', 'Insufficient ME power'),
+    (6, 'ME 网络正在连接', 'ME network is connecting'), (7, 'ME 已连接', 'ME connected'),
+    (8, '对端有独立控制器，未连接', 'A separate controller prevents connection'), (9, '没有可用的频道路径', 'No channel route in range'),
+    (12, 'ME 控制器结构冲突', 'ME controller structure conflict'),
+    (10, '每组最多 128 个 ME 火花', 'At most 128 ME sparks per group'), (11, '已通过电缆连接', 'Already connected by cable'),
+]: zh[f'gui.{MOD}.spark.me_status.{key}'], en[f'gui.{MOD}.spark.me_status.{key}'] = cn, english
 for name, native in [('mechanical_spark', 'mana_spark'), ('master_mechanical_spark', 'master_corporea_spark')]:
     write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'botania:item/{native}'})
-for name, native in [('spark_range_upgrade', 'rune_of_air'), ('spark_efficiency_upgrade', 'rune_of_mana')]:
+for name, native in [('spark_range_upgrade', 'rune_of_air'), ('spark_efficiency_upgrade', 'rune_of_mana'), ('spark_channel_upgrade', 'rune_of_pride')]:
     badge = [{'from': [10, 10, z], 'to': [16, 16, z], 'faces': {face: {'texture': '#star', 'uv': [0, 0, 16, 16]}}}
              for face, z in [('south', 8.6), ('north', 7.4)]]
     write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'loader': 'neoforge:composite',
@@ -286,6 +300,10 @@ write(f'data/{MOD}/recipe/mechanical_spark.json', {'type': 'minecraft:crafting_s
 shaped('master_mechanical_spark', [' C ', 'GFG', ' T '], {'C': 'mekanism:elite_control_circuit', 'G': 'botania:gaia_spirit', 'F': f'{MOD}:mechanical_spark', 'T': 'botania:terrasteel_ingot'})
 shaped('spark_range_upgrade', [' S ', 'PCP', ' S '], {'S': 'botania:manasteel_ingot', 'P': 'botania:mana_pearl', 'C': 'mekanism:upgrade_anchor'})
 shaped('spark_efficiency_upgrade', [' S ', 'DCD', ' S '], {'S': 'botania:manasteel_ingot', 'D': 'botania:mana_diamond', 'C': 'mekanism:upgrade_speed'})
+shaped('spark_channel_upgrade', ['EPE', 'ACA', 'EGE'], {'E': 'botania:elementium_ingot', 'P': 'ae2:engineering_processor', 'A': 'mekanism:alloy_atomic', 'C': 'ae2:me_p2p_tunnel', 'G': 'botania:gaia_spirit'})
+channel_recipe = json.loads((RES / f'data/{MOD}/recipe/spark_channel_upgrade.json').read_text(encoding='utf-8'))
+channel_recipe['neoforge:conditions'] = [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}]
+write(f'data/{MOD}/recipe/spark_channel_upgrade.json', channel_recipe)
 
 from lexicon_resources import generate as generate_lexicon
 generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)

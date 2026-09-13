@@ -9,6 +9,18 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 /** Loaded only after ModList confirms that AE2 is installed. */
 public final class AeCompat {
     public static void register(IEventBus bus) {
+        dev.everyonemek.botania.SparkMeLink.Holder.factory = SparkMeEndpoint::new;
+        dev.everyonemek.botania.SparkMeLink.Holder.anchor = tile -> tile.getType() == appeng.core.definitions.AEBlockEntities.CABLE_BUS.get()
+              || tile.getType() == appeng.core.definitions.AEBlockEntities.CONTROLLER.get();
+        SparkMeNetworks.register();
+        bus.addListener((RegisterCapabilitiesEvent event) -> {
+            var sparkApi = vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities.getBlockApiLookupById(vazkii.botania.api.mana.spark.ManaSparkAttachable.LOOKUP);
+            var manaApi = vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities.getBlockApiLookupById(vazkii.botania.api.mana.ManaReceiver.LOOKUP);
+            event.registerBlockEntity(sparkApi, appeng.core.definitions.AEBlockEntities.CABLE_BUS.get(), (tile, side) -> new SparkMeAnchor(tile));
+            event.registerBlockEntity(sparkApi, appeng.core.definitions.AEBlockEntities.CONTROLLER.get(), (tile, side) -> new SparkMeAnchor(tile));
+            event.registerBlockEntity(manaApi, appeng.core.definitions.AEBlockEntities.CABLE_BUS.get(), (tile, side) -> new SparkMeAnchor(tile));
+            event.registerBlockEntity(manaApi, appeng.core.definitions.AEBlockEntities.CONTROLLER.get(), (tile, side) -> new SparkMeAnchor(tile));
+        });
         var types = net.neoforged.neoforge.registries.DeferredRegister.create(appeng.api.stacks.AEKeyType.REGISTRY_KEY, dev.everyonemek.botania.BotanicalMekanism.ID);
         if (!dev.everyonemek.botania.AppliedBotanics.loaded()) { types.register("mana", () -> ManaKey.TYPE); types.register(bus); }
         bus.addListener((net.neoforged.neoforge.registries.RegisterEvent event) -> {

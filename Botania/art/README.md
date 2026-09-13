@@ -86,3 +86,7 @@ alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素�
 用户要求去掉方框。普通机械火花直接引用 `botania:item/mana_spark`，主火花引用 `botania:item/master_corporea_spark`，物品与实体光效一致；实体只覆写基底贴图，保留 Botania 的动画、染色星点、墨水及升级轨道。无需额外框架或新造徽章。
 
 范围升级以原 `rune_of_air` 为主体，效率升级以 `rune_of_mana` 为主体；右上角用原 `spark_star` 添加小型火花标记，区别于普通符文。所有 PNG 均来自运行时 Botania 依赖，未复制、修改或新增位图，原素材归属 Botania 作者并遵循其许可。`generate_resources.py` 维护物品模型，游戏内外观由玩家验收。
+
+## alpha.23 ME 频道模块
+
+频道模块沿用两种火花升级的符文风格，运行时引用 `botania:item/rune_of_pride` 并叠加原 spark_star 小标记。没有新增 PNG、框架或重绘火花；原暖白／蓝紫外观保留。
