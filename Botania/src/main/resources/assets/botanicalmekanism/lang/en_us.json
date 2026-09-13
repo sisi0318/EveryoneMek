@@ -16,6 +16,7 @@
   "block.botanicalmekanism.bionic_exoflame.description": "Heats nearby furnaces and speeds up smelting using electricity.",
   "block.botanicalmekanism.corporea_orchid": "Bionic Corporea Orchid",
   "block.botanicalmekanism.corporea_orchid.description": "Connects Corporea inventories to ME. Uses one channel.",
+  "block.botanicalmekanism.corporea_orchid.flavor": "(Do bionic flowers dream of electric bees?)",
   "block.botanicalmekanism.resonance_flower": "Resonance Flower",
   "block.botanicalmekanism.resonance_flower.description": "Links Resonance Buds into a mana network.",
   "block.botanicalmekanism.resonance_bud": "Resonance Bud",

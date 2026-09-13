@@ -37,6 +37,8 @@ for name, (cn, english, description_cn, description_en) in PLANTS.items():
     model = f'botania:block/{native}' if native else f'{MOD}:block/{name}'
     write(f'assets/{MOD}/blockstates/{name}.json', {'variants': {'': {'model': model}}})
     if name == 'corporea_orchid':
+        zh[key + '.flavor'] = '（仿生花会梦见电子蜜蜂吗）'
+        en[key + '.flavor'] = '(Do bionic flowers dream of electric bees?)'
         write(f'assets/{MOD}/models/block/{name}.json', {'parent': f'{MOD}:block/resonance_flower'})
     elif native is None:
         write(f'assets/{MOD}/models/block/{name}.json', {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'{MOD}:block/{name}'}})

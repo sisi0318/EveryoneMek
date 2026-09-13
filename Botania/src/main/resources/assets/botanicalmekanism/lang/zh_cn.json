@@ -16,6 +16,7 @@
   "block.botanicalmekanism.bionic_exoflame.description": "用电能加热附近的熔炉，并加快烧炼。",
   "block.botanicalmekanism.corporea_orchid": "仿生织网花",
   "block.botanicalmekanism.corporea_orchid.description": "让多媒体网络存取 ME 物品，占用一个通道。",
+  "block.botanicalmekanism.corporea_orchid.flavor": "（仿生花会梦见电子蜜蜂吗）",
   "block.botanicalmekanism.resonance_flower": "共鸣花",
   "block.botanicalmekanism.resonance_flower.description": "连接共鸣芽，组成魔力网络。",
   "block.botanicalmekanism.resonance_bud": "共鸣芽",

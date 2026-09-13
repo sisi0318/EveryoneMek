@@ -12,6 +12,9 @@ public final class PlantItem extends BlockItem {
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
         tooltip.add(Component.translatable(getBlock().getDescriptionId() + ".description"));
+        if (getBlock() == Content.CORPOREA.get()) {
+            tooltip.add(Component.translatable(getBlock().getDescriptionId() + ".flavor").withStyle(net.minecraft.ChatFormatting.GRAY));
+        }
         var data = stack.get(Content.STATE.get());
         if (data != null) {
             int energy = data.copyTag().getInt("fe");
