@@ -4,7 +4,7 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.12 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.13 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
@@ -12,6 +12,13 @@
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
 - 客户端游戏验收由用户进行，不运行客户端。alpha.11 验证带 AE2／JEI 联动的 37 项服务端 GameTest、无 AE2 的 27 项，以及费用和 GUI 契约共 3 项 JUnit，不代表客户端视觉或完整整合包验收。
+
+## alpha.13 魔力存储盘模型
+
+- 用户要求改魔力盘模型。`tools/mana_cell_models.py` 从总资源生成器调用，生成切角薄盘物品和独立 `block/drive/mana_storage_cell` 插槽模型。只引用磨制活石、魔力钢和原动态液面；不新增 PNG，不改存储组件、容量和配方。
+- `ManaAeClient.CELL_MODEL` 通过 `StorageCellModels.registerModel` 映射，`ClientEvents` 在可选 AE 条件下转发 `ModelEvent.RegisterAdditional`，用 `ModelResourceLocation.standalone` 注册独立模型，确保贴图与模型进入烘焙。当前 NeoForge 事件不接受裸 ResourceLocation。共用客户端入口不直接引用 AE 类型。
+- AE2 19.2.17 的插槽以 6×2×2 局部模型放入驱动器，ME 箱子也读取同一模型。原状态灯覆盖 x=4..5、y=0..1、z=-0.001；魔力窗口留在 x<4 的区域，不用蓝色静态标记遮掉红绿状态。只复制接口所需尺寸约定，几何为本项目原创。
+- `tools/preview_mana_cell.cjs` 读取实际 JSON、UV 和依赖材质，生成 `art/mana-cell-preview.png`；仅离线首帧／缩略图检查，不声称已验收游戏动画。模型改动做资源、编译和打包检查，不重跑全量服务端。
 
 ## alpha.12 魔力液面图标
 

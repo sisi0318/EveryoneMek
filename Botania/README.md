@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.12** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.13** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.12.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.13.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -71,6 +71,8 @@
 
 把盘放进 ME 驱动器或 ME 箱子，可以保存 **100 万魔力**，待机消耗 1 AE/t。
 
+魔力盘采用活石面板和魔力钢包边，蓝色液面窗口在装入驱动器或箱子后仍可辨认。
+
 1. 将 ME 输入总线贴在魔力池上，把魔力存入盘中。
 2. 在机器上接 ME 输出总线，拿着一张魔力盘右击总线的筛选格，选择魔力。
 3. 将机器连接总线的一面设为“魔力输入”。
@@ -108,6 +110,8 @@ Bionic flowers stand on blocks or cables and use electricity. Connect the Lotus 
 Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the blue liquid icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It can still use the pool selected in an older setup.
 
 A Mana Storage Cell holds 1,000,000 mana in an ME Drive or ME Chest and uses 1 AE/t. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
+
+The cell has a livingrock face, a manasteel rim and a blue mana window, also visible when inserted into an ME Drive or Chest.
 
 The Corporea Orchid connects item inventories to ME. Place ordinary sparks on the flower and chests, plus a separate master spark. Use samples to filter items. Optional autocrafting orders missing items using ME patterns and a CPU. Request again after crafting, or use a Corporea Interceptor and Retainer to remember and repeat the request.
 

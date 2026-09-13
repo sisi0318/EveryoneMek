@@ -46,3 +46,13 @@ alpha.4–alpha.6 的机械花药台曾使用独立工业机壳图稿 [mechanica
 ## alpha.12 魔力图标
 
 魔力资源图标直接引用 `botania:block/mana_water`，显示完整方形液面。此材质每帧为 16×16，共 32 帧，沿用原版每帧 2 tick 的动画。GUI 从方块图集取当前帧；存储盘窗口与魔力团模型引用相同材质。没有复制第三方 PNG 到运行资源，也没有新增原稿。最初生成的液滴提案未采用。
+
+## alpha.13 魔力存储盘模型
+
+[mana_cell_models.py](../tools/mana_cell_models.py) 生成切角薄盘和单独的驱动器插槽模型，入口仍为 `tools/generate_resources.py`。盘身采用磨制活石和魔力钢的原材质，保留动态液面窗口，下沿有三段接点。魔力钢包边仅截取原材质的深蓝区域，避免整张金属块纹理缩在窄边上。没有新增或改绘运行位图。
+
+AE `StorageCellModels` 接入专用插槽模型，ME 驱动器和 ME 箱子共用；窗口与原状态灯分开。材质只引用 Botania，未安装 AE 时物品模型仍能加载。
+
+![魔力盘模型离线预览](mana-cell-preview.png)
+
+运行 `node tools/preview_mana_cell.cjs` 可由实际 JSON、UV 和固定 Botania JAR 重建预览。图中液面为第一帧，底部附 16×16 缩略图的放大检查；不含 AE 独立绘制的状态灯，不是游戏截图。

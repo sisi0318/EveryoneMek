@@ -9,6 +9,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import vazkii.botania.api.block.WandHUD;
 import vazkii.botania.api.block_entity.BindableSpecialFlowerBlockEntity;
@@ -16,6 +17,10 @@ import vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities;
 
 @EventBusSubscriber(modid = BotanicalMekanism.ID, value = Dist.CLIENT)
 public final class ClientEvents {
+    @SubscribeEvent public static void models(ModelEvent.RegisterAdditional event) {
+        if (net.neoforged.fml.ModList.get().isLoaded("ae2")) dev.everyonemek.botania.compat.ae2.ManaAeClient.models(event);
+    }
+
     @SubscribeEvent public static void capabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(WandHUD.BLOCK_LOOKUP),
               Content.LOTUS_TILE.get(), (tile, unused) -> new BindableSpecialFlowerBlockEntity.BindableFlowerWandHud<>(tile));

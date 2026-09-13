@@ -250,16 +250,8 @@ write(f'data/{MOD}/recipe/mana_storage_cell.json', {
             'C': {'item': 'ae2:fluix_pearl'}, 'E': {'item': 'ae2:cell_component_4k'}},
     'result': {'id': f'{MOD}:mana_storage_cell', 'count': 1}})
 write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:block/mana_water'}})
-# A small livingrock case with an animated mana window, using existing Botania textures.
-write(f'assets/{MOD}/models/item/mana_storage_cell.json', {
-    'parent': 'minecraft:block/block', 'textures': {'case': 'botania:block/livingrock', 'core': 'botania:block/mana_water', 'particle': 'botania:block/livingrock'},
-    'display': {'gui': {'rotation': [15, -20, 0], 'translation': [0, 0, 0], 'scale': [1, 1, 1]},
-                'ground': {'rotation': [0, 0, 0], 'translation': [0, 2, 0], 'scale': [.5, .5, .5]},
-                'fixed': {'rotation': [0, 0, 0], 'scale': [.8, .8, .8]}},
-    'elements': [{'from': [2, 2, 6], 'to': [14, 14, 10], 'faces': {face: {'texture': '#case'} for face in ['north', 'south', 'east', 'west', 'up', 'down']}},
-                 {'from': [4, 4, 5.98], 'to': [12, 12, 5.98], 'faces': {'north': {'texture': '#core', 'uv': [0, 0, 16, 16]}}},
-                 {'from': [4, 4, 10.02], 'to': [12, 12, 10.02], 'faces': {'south': {'texture': '#core', 'uv': [0, 0, 16, 16]}}}]
-})
+from mana_cell_models import generate as generate_mana_cell_models
+generate_mana_cell_models(write)
 
 from lexicon_resources import generate as generate_lexicon
 generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)

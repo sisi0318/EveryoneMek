@@ -1,0 +1,124 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "case": "botania:block/polished_livingrock",
+    "metal": "botania:block/manasteel_block",
+    "core": "botania:block/mana_water",
+    "particle": "botania:block/polished_livingrock"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        6,
+        2,
+        2
+      ],
+      "faces": {
+        "down": {
+          "texture": "#case",
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "cullface": "north"
+        },
+        "up": {
+          "texture": "#case",
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "cullface": "north"
+        },
+        "north": {
+          "texture": "#case",
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "cullface": "north"
+        }
+      }
+    },
+    {
+      "from": [
+        0.5,
+        0.25,
+        -0.02
+      ],
+      "to": [
+        3.75,
+        1.75,
+        0.125
+      ],
+      "faces": {
+        "down": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "cullface": "north"
+        },
+        "up": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "cullface": "north"
+        },
+        "north": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "cullface": "north"
+        }
+      }
+    },
+    {
+      "from": [
+        0.75,
+        0.5,
+        -0.04
+      ],
+      "to": [
+        3.5,
+        1.5,
+        -0.04
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#core",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "cullface": "north"
+        }
+      }
+    }
+  ]
+}
