@@ -28,7 +28,7 @@ public final class ManaMachineBlock extends BlockTile<ManaMachine, Machine<ManaM
             // Consume this interaction before Mek treats the wand as a dismantling wrench.
             return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
-        if (kind.chemical && stack.is(vazkii.botania.common.item.BotaniaItems.MANA_SPARK)) {
+        if (kind.chemical && stack.getItem() instanceof vazkii.botania.common.item.ManaSparkItem) {
             if (!mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return net.minecraft.world.ItemInteractionResult.FAIL;
             return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         }

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " C ",
+    "GFG",
+    " T "
+  ],
+  "key": {
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "G": {
+      "item": "botania:gaia_spirit"
+    },
+    "F": {
+      "item": "botanicalmekanism:mechanical_spark"
+    },
+    "T": {
+      "item": "botania:terrasteel_ingot"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:master_mechanical_spark",
+    "count": 1
+  }
+}

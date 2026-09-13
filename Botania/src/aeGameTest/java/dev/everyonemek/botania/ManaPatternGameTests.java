@@ -38,8 +38,8 @@ public final class ManaPatternGameTests {
                 var converter = tamaized.ae2jeiintegration.api.integrations.jei.IngredientConverters.getConverter(ManaIngredient.TYPE);
                 check(converter != null && converter.getIngredientFromStack(new GenericStack(AEItemKey.of(Items.IRON_INGOT), 1)) == null, "Converter claimed an ordinary item");
                 var mana = converter.getStackFromIngredient(new ManaIngredient(amount));
-                check(mana.what() == ManaKey.INSTANCE && mana.amount() == amount && converter.getIngredientFromStack(mana).amount() == amount, "JEI converter changed the mana amount");
-                check(converter.getIngredientFromStack(new GenericStack(ManaKey.INSTANCE, 0)).amount() == 1, "Zero-count search lost the mana type");
+                check(mana.what() == ManaKeys.current() && mana.amount() == amount && converter.getIngredientFromStack(mana).amount() == amount, "JEI converter changed the mana amount");
+                check(converter.getIngredientFromStack(new GenericStack(ManaKeys.current(), 0)).amount() == 1, "Zero-count search lost the mana type");
                 return mana;
             } finally { list.set(null, oldList); map.set(null, oldMap); }
         } catch (ReflectiveOperationException e) { throw new RuntimeException(e); }
@@ -94,7 +94,7 @@ public final class ManaPatternGameTests {
               }).thenWaitUntil(() -> check(provider.getMainNode().getGrid().getStorageService().getInventory().getAvailableStacks().get(resultKey)
                     == (long) output.getCount() * batches, "Provider did not deliver mana, reagent and ingredients or receive runes: status=" + machine.status() + ", mana=" + machine.mana().getStored() + ", recipe=" + output + ", input=" + machine.inputs.stream().map(s -> s.getStack().toString()).toList() + ", extra=" + machine.extras.getFirst().getStack() + ", output=" + machine.outputs.stream().map(s -> s.getStack().toString()).toList()))
               .thenExecute(() -> {
-                  check(machine.mana().isEmpty() && manaChest.getInventory().getAvailableStacks().get(ManaKey.INSTANCE) == 0, "Pattern mana was not paid exactly once");
+                  check(machine.mana().isEmpty() && manaChest.getInventory().getAvailableStacks().get(ManaKeys.current()) == 0, "Pattern mana was not paid exactly once");
                   check(machine.inputs.stream().mapToInt(s -> s.getCount()).sum() == recipe.getCatalysts().size() && machine.extras.getFirst().isEmpty(), "Pattern left unpaid or duplicate ingredients");
                   ManaMachineGameTests.stop(machine);
               }).thenSucceed();

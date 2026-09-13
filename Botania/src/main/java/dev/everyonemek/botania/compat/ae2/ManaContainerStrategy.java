@@ -14,7 +14,7 @@ final class ManaContainerStrategy implements ContainerItemStrategy<ManaKey, Mana
         boolean valid() { return current.get() == original && original.getCount() == 1; }
     }
     private boolean accepts(ItemStack stack) { return stack.getCount() == 1 && (ManaStorageItem.isCell(stack) || stack.is(Content.MANA_PACKET.get())); }
-    @Override public GenericStack getContainedStack(ItemStack stack) { return accepts(stack) ? new GenericStack(ManaKey.INSTANCE, ManaStorageItem.stored(stack)) : null; }
+    @Override public GenericStack getContainedStack(ItemStack stack) { return accepts(stack) ? new GenericStack(ManaKeys.current(), ManaStorageItem.stored(stack)) : null; }
     @Override public Context findCarriedContext(Player player, AbstractContainerMenu menu) {
         return accepts(menu.getCarried()) ? new Context(menu::getCarried, menu.getCarried(), menu::broadcastChanges) : null;
     }

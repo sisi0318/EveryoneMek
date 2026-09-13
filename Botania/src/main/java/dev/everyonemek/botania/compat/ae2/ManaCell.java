@@ -15,18 +15,18 @@ public record ManaCell(ItemStack stack, ISaveProvider host) implements StorageCe
     };
     @Override public Component getDescription() { return stack.getHoverName(); }
     @Override public long insert(AEKey key, long amount, Actionable action, IActionSource source) {
-        if (key != ManaKey.INSTANCE || amount <= 0 || !HANDLER.isCell(stack)) return 0;
+        if (key != ManaKeys.current() || amount <= 0 || !HANDLER.isCell(stack)) return 0;
         long moved = Math.min(amount, Math.max(0, ManaStorageItem.capacity(stack) - ManaStorageItem.stored(stack)));
         if (action == Actionable.MODULATE && moved > 0) { ManaStorageItem.store(stack, ManaStorageItem.stored(stack) + moved); changed(); }
         return moved;
     }
     @Override public long extract(AEKey key, long amount, Actionable action, IActionSource source) {
-        if (key != ManaKey.INSTANCE || amount <= 0 || !HANDLER.isCell(stack)) return 0;
+        if (key != ManaKeys.current() || amount <= 0 || !HANDLER.isCell(stack)) return 0;
         long moved = Math.min(amount, ManaStorageItem.stored(stack));
         if (action == Actionable.MODULATE && moved > 0) { ManaStorageItem.store(stack, ManaStorageItem.stored(stack) - moved); changed(); }
         return moved;
     }
-    @Override public void getAvailableStacks(KeyCounter out) { if (HANDLER.isCell(stack) && ManaStorageItem.stored(stack) > 0) out.add(ManaKey.INSTANCE, ManaStorageItem.stored(stack)); }
+    @Override public void getAvailableStacks(KeyCounter out) { if (HANDLER.isCell(stack) && ManaStorageItem.stored(stack) > 0) out.add(ManaKeys.current(), ManaStorageItem.stored(stack)); }
     @Override public CellState getStatus() { long amount = ManaStorageItem.stored(stack); return amount == 0 ? CellState.EMPTY : amount >= ManaStorageItem.capacity(stack) ? CellState.FULL : CellState.TYPES_FULL; }
     @Override public double getIdleDrain() { return ManaStorageItem.idleDrain(stack); }
     @Override public boolean canFitInsideCell() { return ManaStorageItem.stored(stack) == 0; }

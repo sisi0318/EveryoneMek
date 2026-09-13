@@ -4,14 +4,28 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.16 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.17 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.16 验证 43 项常规服务端 GameTest、44 项含 Applied Botanics 的服务端 GameTest，以及 4 项 JUnit。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.17 验证 46 项常规服务端 GameTest、47 项含 Applied Botanics 的服务端 GameTest，以及 4 项 JUnit。不代表客户端视觉或完整整合包验收。
+
+## alpha.17 机械火花与统一 ME 魔力
+
+- 用户要求每个机械火花网络共用一套升级，保留原火花全部交互与角色。不再引入选网、成员或优先级界面。同维度、同色、相连机械火花每组一个主火花；普通火花互通，但不作为共享控制路径。
+- MechanicalSparkEntity 继承真实 ManaSparkEntity。MechanicalSparkPlacementMixin 只重定向 ManaSparkItem.attachSpark 的构造；MechanicalSparkItem 用 try/finally ThreadLocal 保存原物品副本，因为原方法先 shrink 再 new。发射器通过原 ManaSparkBehavior 放置，同样带作用域，放置校验、副手染色、原物品扣除不复制。
+- MechanicalSparkNetworks 只索引已加载实体，用分块桶和每 20 tick／失效后的组件查询。每主火花范围 12+8×范围升级（最多 8 个），沿机械节点连通；控制路径不自动搬运魔力，每条实际传输仍受两端距离限制。多个主火花的可达组件重合即全组冲突，禁用共享加成，避免按缩水范围反复分裂与合并。卸载、拆除、改色和升级变更失效，不加载区块。
+- 原 tick 的三个 1000 常量只对 MechanicalSparkEntity 乘 1+效率升级（最多 9 倍）；弥散玩家范围也用网络范围。原颜色、隔离／聚集／扩散／弥散、幻影墨水、森林法杖保留。原弥散 ManaItem 查询继续传 botania:mana_spark，不能传新物品导致原石板拒收。原生角色不会因主火花身份而替换。
+- 主火花拥有唯一 SimpleContainer 两槽，各最多 8；成员菜单直接操作它，不复制库存。SparkControllerMenu 从实体 ID 打开，服务器每次检查菜单、接触点距离、主火花仍连通及原机器安全。客户端即使看不到远端主实体也用同步槽和四项数据绘制。拆卸时把槽保存到 master 物品 CUSTOM_DATA.spark_controller，立即使旧实体失效并清空槽，避免旧菜单与掉落同时可提取。NBT 实体和物品均保存，未知旧内容不丢弃。
+- 界面 176×184，升级槽 (53,32)/(107,32)，背包 y101、快捷栏 y159；简单深底矩形。原 ManaSparkRenderer 绘制原火花和升级轨道，附 Mek 钢框，主火花加小标记；物品 JSON 同样运行时引用原图，不新增位图素材。
+- ManaKeys.current/type 是统一入口：有 Appbot 用其原 mana 类型，无 Appbot 用本模组类型。只注册一个实际 AEKeyType；RegisterEvent.addAlias 在两个历史 ID 间指向当前类型，旧样板／筛选 NBT 无需重做。不要同时注册两个真类型再期待别名覆盖。
+- 共存时只注册本模组 StorageCell handler，不再次注册同类型的 ContainerItemStrategy／总线／渲染器。原策略通过注册到自有盘和魔力团的 ManaItem capability 工作。ManaView 用 Long 保存，原 int API 限幅，魔力团分次取出，归零后消耗空物品；不接受原物品派发来偷偷充盘。
+- AppliedBotanicsManaDensityMixin 将资源存储密度统一为 8000，CellCapacityMixin 把其 1000 字节档换为 1024，五档容量与现有盘一致，已存数量不换算。ManaKeyMixin 将 Appbot 接口拆卸时的魔力转为可回收魔力团。OptionalJeiMixinPlugin 对所有 AppliedBotanics 前缀 Mixin 检查可选依赖。
+- 协议提升为 6，客户端与服务端一起更新。MechanicalSparkGameTests 覆盖真实手持与发射器放置、共享升级与角色传输、改色／冲突／拆除降级、菜单物品上限、原法杖拆装、墨水、实体保存。NeoForge FakePlayer.openMenu 本身为空，菜单测试用覆写捕获实际 MenuProvider 和额外实体 ID，不用普通假玩家断言界面打开。
+- ManaAeGameTests 同时验证历史 key ID 解码到唯一当前类型；原真实 AE 总线及样板 CPU 测试按 ManaKeys.current 运行。AppliedBotanicsPoolGameTests 使用本模组现有盘供给福鲁池，并验证 Appbot 同档盘容量、真实存取守恒及存储总线不递归。
 
 ## alpha.16 批次、原生接收和模型修复
 
@@ -31,7 +45,7 @@
 - 官方 1.6.0-alpha.3 对应 1.21.1／AE2 19.2.17，源码 1020173，SHA 和重定位清单见 appbot-compat.json。tools/prepare_appbot.py 验证原 JAR，再重定位两处旧 Botania API 类名、两个音效字段名及 life_essence→gaia_spirit 配方 ID，生成带 botania456 后缀的适配 JAR。字节码指令与贴图不重绘，保留原许可证并嵌入来源元数据；不要把适配包伪称原始官方 JAR。
 - 编译期可选 API 由 prepareAppbot 生成，不打入本模组 JAR。运行只在 -PwithAppbot=true 且 withAE2=true 时加依赖与 appbotGameTest 源集，默认不加载。共同类 AppliedBotanics 只判断模组及确切 FluixPoolBlockEntity 类名，实际 SafeMana 适配隔离在 compat/ae2。
 - ManaTransfer 给福鲁池使用 SafeMana.insert/extract 的实际返回量和 SIMULATE，不用 getMaxMana-getCurrentMana 的饱和快照估算可收量。接口每次检查存活、区块、节点与能量；普通池和永恒池原规则保留。
-- 共存范围为池子和实际资源传输，两个 AEKey 类型不互相冒充，也不迁移已有盘／样板。福鲁池读 Appbot 魔力盘，机器保留自己的 ME 存储视图。安装 Appbot 后普通池由其 ExternalStorageStrategy 提供；AppliedBotanicsStorageMixin 禁止 Appbot 再挂本模组机器或网络池本身，防止重复计数及递归。两边的输入／输出总线仍可通过真实资源转移。
+- alpha.16 曾将两类 ME 魔力分开；alpha.17 已统一，当前契约见上方。AppliedBotanicsStorageMixin 只排除 FluixPoolBlockEntity，禁止网络池再次挂载自身库存；机器的 SafeMana 视图由 Appbot 原策略接入。
 - Appbot MachinePort 实现 SafeMana，将实际侧面的模拟／执行转到 ManaAccess；不走其未知接收器的有损 Fail 适配。测试必须使用 ME 箱子正在使用的库存句柄；Appbot 原 ManaCellInventory 缓存自身数量，提前创建的脱离宿主句柄不会跟随另一个句柄更新。
 
 ## alpha.15 魔力盘透明度修复

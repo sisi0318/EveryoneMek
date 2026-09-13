@@ -1,0 +1,21 @@
+{
+  "name": "item.botanicalmekanism.spark_range_upgrade",
+  "icon": "botanicalmekanism:spark_range_upgrade",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 27,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.spark_range_upgrade.0",
+      "item": "botanicalmekanism:spark_range_upgrade",
+      "title": "book.botanicalmekanism.spark_range_upgrade.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:spark_range_upgrade"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:spark_range_upgrade": 0
+  }
+}

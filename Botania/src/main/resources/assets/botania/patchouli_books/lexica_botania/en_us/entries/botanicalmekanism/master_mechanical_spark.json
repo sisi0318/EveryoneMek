@@ -1,0 +1,29 @@
+{
+  "name": "item.botanicalmekanism.master_mechanical_spark",
+  "icon": "botanicalmekanism:master_mechanical_spark",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 26,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.master_mechanical_spark.0",
+      "item": "botanicalmekanism:master_mechanical_spark",
+      "title": "book.botanicalmekanism.master_mechanical_spark.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.master_mechanical_spark.1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.master_mechanical_spark.2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:master_mechanical_spark"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:master_mechanical_spark": 0
+  }
+}

@@ -25,11 +25,14 @@ import static dev.everyonemek.botania.ManaMachineGameTests.*;
 public final class AppliedBotanicsPoolGameTests {
     @GameTest(template = "empty", timeoutTicks = 250)
     public static void fluixPoolUsesItsMeInventoryAndCannotMountItTwice(GameTestHelper h) {
+        var nativeCell = StorageCells.getCellInventory(new ItemStack(ABItems.MANA_CELL_1K.get()), null);
+        check(nativeCell.insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, IActionSource.empty()) == ManaCellTier.K1.capacity,
+              "Native and addon mana cells disagree on tier capacity");
         check(h.getLevel().getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("appbot:mana_cell_housing")).isPresent(), "Appbot housing recipe did not load");
         var pos = new BlockPos(20, 3, 20); var owner = player(h, "fluix-pool");
         h.setBlock(pos.west(), AEBlocks.ME_CHEST.block()); var chest = (MEChestBlockEntity) h.getBlockEntity(pos.west());
-        var disk = new ItemStack(ABItems.MANA_CELL_1K.get()); var cell = StorageCells.getCellInventory(disk, null);
-        check(cell != null && cell.insert(ManaKey.KEY, 12000, Actionable.MODULATE, IActionSource.empty()) == 12000, "Appbot cell unavailable"); chest.setCell(disk);
+        var disk = new ItemStack(Content.MANA_CELL.get()); var cell = StorageCells.getCellInventory(disk, null);
+        check(cell != null && cell.insert(ManaKey.KEY, 12000, Actionable.MODULATE, IActionSource.empty()) == 12000, "Shared mana cell unavailable"); chest.setCell(disk);
         h.setBlock(pos.west(2), AEBlocks.CREATIVE_ENERGY_CELL.block()); h.setBlock(pos, ABBlocks.FLUIX_MANA_POOL.get());
         var pool = (FluixPoolBlockEntity) h.getBlockEntity(pos);
         var bridge = machine(h, pos.south(), ManaMachineKind.BRIDGE); power(bridge); stop(bridge);
@@ -52,7 +55,7 @@ public final class AppliedBotanicsPoolGameTests {
                   host.addPart(AEParts.GLASS_CABLE.item(AEColor.TRANSPARENT), null, owner); host.addPart(AEParts.STORAGE_BUS.asItem(), Direction.SOUTH, owner);
               }).thenIdle(20).thenExecute(() -> {
                   var inventory = pool.getMainNode().getGrid().getStorageService().getInventory().getAvailableStacks();
-                  check(inventory.get(ManaKey.KEY) == 12000 && inventory.get(dev.everyonemek.botania.compat.ae2.ManaKey.INSTANCE) == 0, "Network-backed pool was counted a second time");
+                  check(inventory.get(ManaKey.KEY) == 12000 && inventory.size() == 1, "Network-backed pool was counted a second time");
                   h.setBlock(pos, Blocks.AIR); check(access.extract(1000, false) == 0, "Removed Fluix pool retained access");
               }).thenSucceed();
     }

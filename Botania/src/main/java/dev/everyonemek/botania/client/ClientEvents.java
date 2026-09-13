@@ -18,6 +18,7 @@ import vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities;
 @EventBusSubscriber(modid = BotanicalMekanism.ID, value = Dist.CLIENT)
 public final class ClientEvents {
     @SubscribeEvent public static void renderers(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(dev.everyonemek.botania.MechanicalSparks.ENTITY.get(), MechanicalSparkRenderer::new);
         event.registerBlockEntityRenderer(dev.everyonemek.botania.ManaContent.MACHINE_TILES.get(dev.everyonemek.botania.ManaMachineKind.INFUSER).get(), InfusionCatalystRenderer::new);
     }
     @SubscribeEvent public static void modelLoaders(ModelEvent.RegisterGeometryLoaders event) {
@@ -35,6 +36,7 @@ public final class ClientEvents {
               Content.LOTUS_TILE.get(), (tile, unused) -> new BindableSpecialFlowerBlockEntity.BindableFlowerWandHud<>(tile));
     }
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event) {
+        event.register(dev.everyonemek.botania.MechanicalSparks.MENU.get(), SparkControllerScreen::new);
         event.register(dev.everyonemek.botania.ManaContent.MENU.get(), ManaMachineScreen::new);
         event.register(dev.everyonemek.botania.ApothecaryContent.MENU.get(), ApothecaryScreen::new);
         event.<dev.everyonemek.botania.FlowerMenu, net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<dev.everyonemek.botania.FlowerMenu>>register(Content.MENU.get(), (menu, inventory, title) -> menu.level.getBlockState(menu.position).is(Content.CORE.get())

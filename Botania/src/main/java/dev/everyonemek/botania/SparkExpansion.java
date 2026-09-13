@@ -41,14 +41,15 @@ public final class SparkExpansion {
         ManaSparkHelper.registerTransferFromSparksAround(ManaSparkHelper.getAttachedSpark(machine.getLevel(), machine.getBlockPos()), machine.getLevel(), machine.getBlockPos());
     }
     public static List<ManaSpark> nearby(ManaSpark origin, Level level, double x, double y, double z, DyeColor color) {
-        if (origin == null || !extended(origin)) return ManaSparkHelper.getSparksAround(level, x, y, z, color);
+        if (origin == null || !extended(origin) && !(origin instanceof MechanicalSparkEntity)) return ManaSparkHelper.getSparksAround(level, x, y, z, color);
+        int searchRange = Math.max(extended(origin) ? RANGE : 12, MechanicalSparkNetworks.range(origin));
         // Callers use either the block center or spark center; range is measured between sparks.
-        return level.getEntitiesOfClass(ManaSparkEntity.class, origin.entity().getBoundingBox().inflate(RANGE),
+        return level.getEntitiesOfClass(ManaSparkEntity.class, origin.entity().getBoundingBox().inflate(searchRange),
                     spark -> spark.getNetwork() == color && inRange(origin, spark)).stream().map(spark -> (ManaSpark) spark).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
     }
     private static boolean inRange(ManaSpark a, ManaSpark b) {
-        if (!extended(a) && !extended(b)) return true;
-        int range = extended(a) && extended(b) ? RANGE : ManaSparkHelper.SPARK_SCAN_RANGE;
+        if (!extended(a) && !extended(b) && !(a instanceof MechanicalSparkEntity) && !(b instanceof MechanicalSparkEntity)) return true;
+        int range = Math.max(extended(a) && extended(b) ? RANGE : ManaSparkHelper.SPARK_SCAN_RANGE, MechanicalSparkNetworks.sharedRange(a, b));
         var first = a.entity(); var second = b.entity();
         return first.level() == second.level() && Math.abs(first.getX()-second.getX()) <= range
               && Math.abs(first.getY()-second.getY()) <= range && Math.abs(first.getZ()-second.getZ()) <= range;
@@ -59,8 +60,10 @@ public final class SparkExpansion {
     }
     public static void refresh(ManaSparkEntity spark) {
         if (spark.level().isClientSide) return;
+        if (spark instanceof MechanicalSparkEntity) MechanicalSparkNetworks.invalidate(spark.level());
         // Also notify old long-distance peers when an augment/color is removed or changed.
-        for (var other : spark.level().getEntitiesOfClass(ManaSparkEntity.class, spark.getBoundingBox().inflate(RANGE))) other.updateTransfers();
+        int radius = spark instanceof MechanicalSparkEntity ? MechanicalSparkNetworks.MAX_RANGE : RANGE;
+        for (var other : spark.level().getEntitiesOfClass(ManaSparkEntity.class, spark.getBoundingBox().inflate(radius))) other.updateTransfers();
     }
     /** Return null to retain the native interaction unchanged. */
     public static InteractionResult interact(ManaSparkEntity spark, Player player, InteractionHand hand) {
@@ -70,8 +73,6 @@ public final class SparkExpansion {
         if (target instanceof ManaMachine && !IBlockSecurityUtils.INSTANCE.canAccess(player, spark.level(), pos, target)) return InteractionResult.FAIL;
         boolean installingRange = stack.is(Content.SPARK_AUGMENT.get()) && !extended(upgrade);
         boolean addingNative = upgrade.is(Content.SPARK_AUGMENT.get()) && stack.is(BotaniaTags.Items.MANA_SPARK_AUGMENTS) && !stack.is(Content.SPARK_AUGMENT.get());
-        // Native pool control augments remain pool controls. Machines accept range extension only.
-        if (target instanceof ManaMachine && stack.is(BotaniaTags.Items.MANA_SPARK_AUGMENTS) && !stack.is(Content.SPARK_AUGMENT.get())) return InteractionResult.FAIL;
         if (!installingRange && !addingNative) return null;
         if (!spark.level().isClientSide) {
             ItemStack updated = installingRange ? upgrade.isEmpty() ? new ItemStack(Content.SPARK_AUGMENT.get()) : upgrade.copy() : stack.copyWithCount(1);

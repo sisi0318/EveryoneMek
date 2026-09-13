@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.16** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.17** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.16.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.17.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -47,6 +47,19 @@
 普通池和永恒魔力池都能供魔。魔力池紧贴机器时，把相应一面设为输入，就能直接从池中取魔力。多个输入面合计每秒最多抽取 20,000 魔力，满了会自动停止。关闭输入面即可停止抽取。机器只保留一条蓝色魔力条，悬停可查看具体储量。
 
 为供魔的火花和收魔的火花各装一个共鸣增幅器，传送距离可提高到 32 格。用染料分组；潜行使用森林法杖可拆下升级。更详细的距离规则见 [WIRELESS.md](WIRELESS.md)。
+
+## 机械火花
+
+机械火花照常安装在魔力池或储魔机器上，染色、原有火花升级、幻影墨水和森林法杖的用法不变。
+
+- 每组相连、同色的机械火花放一个**机械主火花**。空手右击任意已连接的机械火花，即可打开共享升级栏。
+- **范围升级**：每个增加 8 格，每组最多 8 个，范围从 12 格提高到 76 格。
+- **效率升级**：每个增加一倍基础传输速度，每组最多 8 个，最高为原速的 9 倍，不额外消耗魔力。
+- 升级只放在主火花中。潜行用法杖先拆原有火花升级，再拆火花；共享升级会随主火花保留。
+
+池子之间传魔仍需按原来的方式安装火花升级。机械主火花不会改变聚集、扩散、弥散或隔离的作用。普通火花也能连接，但使用原来的距离；共享范围用于同组机械火花。
+
+一组内有多个主火花时，共享升级停止生效，拆下多余的主火花即可恢复。主火花或中间连接卸载、拆除、改色后，失去连接的火花恢复普通范围和速度。只连接同维度已加载的区块。
 
 ## 机器
 
@@ -99,9 +112,9 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 可选安装测试包中的 `appbot-1.6.0-alpha.3-botania456.jar`。它适配本项目使用的 Botania 快照，不要与原 Appbot JAR 同时安装。
 
-把福鲁伊克斯魔力池接入有电、有通道的 ME 网络，使用 **Applied Botanics 的魔力盘**存放魔力。本模组机器可以从紧贴的输入面取魔，互通器也能向池中供魔；资源直接进出该池连接的 ME 库存。池子离线时停止转移。
+把福鲁伊克斯魔力池接入有电、有通道的 ME 网络，使用现有的 **1k～256k 魔力盘**即可。本模组机器可以从紧贴的输入面取魔，互通器也能向池中供魔；资源直接进出该池连接的 ME 库存。池子离线时停止转移。
 
-两种模组的 ME 魔力类型保持各自原有格式，本模组的盘和已有样板不迁移。需要中转时，使用福鲁伊克斯魔力池配合互通器或机器端口。安装 Appbot 后，原池的 ME 存储总线由它接管，机器仍使用本模组的存储视图；网络池不重复挂载自身库存。
+终端只有一种魔力，已有的 Applied Botanics 魔力盘也能混用，同档容量一致。旧盘内的魔力和旧样板会继续使用，无需另做一套盘。福鲁池本身不再通过存储总线重复接入同一个网络。
 
 ## 样板供应器与 JEI
 
@@ -121,7 +134,7 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.16 已通过 43 项常规服务端测试、44 项安装 Applied Botanics 时的服务端测试，以及 4 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.17 已通过 46 项常规服务端测试、47 项安装 Applied Botanics 时的服务端测试，以及 4 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -147,4 +160,6 @@ The Pure Conversion Chamber and Mana Infusion Chamber now have eight inputs and 
 
 An infuser also reads its floor catalyst when its internal catalyst slot is empty. The active catalyst appears as the native pool overlay. Bind a spreader to a machine with the Wand of the Forest; bursts follow the receiving face's Mana input setting. Hover the single mana bar for amounts.
 
-Optional Applied Botanics support uses the supplied Botania-456-compatible alpha.3 JAR. Its Fluix Mana Pool connects machines to Appbot's ME mana storage. Appbot cells and this addon's cells retain their own key types; transfer between them through a pool or machine. Do not install both the original and compatibility Appbot JARs.
+Optional Applied Botanics support uses the supplied Botania-456-compatible alpha.3 JAR. Its Fluix Mana Pool uses the same ME mana as these cells and machines. Existing cells and patterns keep working, with matching capacities for each tier. No separate set of cells is needed. Do not install both the original and compatibility Appbot JARs.
+
+Mechanical sparks retain native dye, augments, ink and wand controls. One master per connected color group stores up to eight range and eight throughput upgrades. Each range upgrade adds eight blocks (12–76 total); throughput is 1–9 times the native rate. Empty-hand right-click any connected mechanical spark to open the shared slots. Extra masters disable bonuses until removed. Upgrades stay in the dismantled master item.

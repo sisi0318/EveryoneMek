@@ -34,7 +34,7 @@ public final class BrewPatternTransfer implements IRecipeTransferHandler<Pattern
         for (int i = 0; i < inputs.size(); i++) if (inputs.get(i).stream().anyMatch(s -> s.what() instanceof AEItemKey key && key.getItem() instanceof BrewContainer)) {
             inputs.set(i, List.of(GenericStack.fromItemStack(vessel.copyWithCount(1)))); break;
         }
-        if (mana > 0) inputs.add(List.of(new GenericStack(ManaKey.INSTANCE, mana)));
+        if (mana > 0) inputs.add(List.of(new GenericStack(ManaKeys.current(), mana)));
         if (inputs.size() > menu.getProcessingInputSlots().length) return helper.createUserErrorWithTooltip(Component.translatable("jei.botanicalmekanism.pattern_full"));
         if (execute) EncodingHelper.encodeProcessingRecipe(menu, inputs, List.of(GenericStack.fromItemStack(recipe.getOutput(vessel.copyWithCount(1)))));
         return null;

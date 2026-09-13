@@ -1,0 +1,21 @@
+{
+  "name": "item.botanicalmekanism.spark_efficiency_upgrade",
+  "icon": "botanicalmekanism:spark_efficiency_upgrade",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 28,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.spark_efficiency_upgrade.0",
+      "item": "botanicalmekanism:spark_efficiency_upgrade",
+      "title": "book.botanicalmekanism.spark_efficiency_upgrade.title"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:spark_efficiency_upgrade"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:spark_efficiency_upgrade": 0
+  }
+}

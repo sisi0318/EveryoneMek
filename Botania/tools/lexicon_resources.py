@@ -64,7 +64,25 @@ HELP['mana_storage_cell'].extend([
 ])
 
 
+SPARK_ITEMS = ('mechanical_spark', 'master_mechanical_spark', 'spark_range_upgrade', 'spark_efficiency_upgrade')
+HELP.update({
+    'mechanical_spark': [
+        ('机械火花可以装在魔力池和储魔机器上。染色、火花升级、幻影墨水和森林法杖的用法照旧。机器顶部要允许魔力输入。', 'Attach a Mechanical Spark to a mana pool or mana-storing machine. Dyes, spark augments, Phantom Ink and the Wand work as usual. Machines need Mana input enabled on top.'),
+        ('同色机械火花相互连接后，可以共用主火花里的范围和效率升级。每组只放一个主火花；空手右击任意已连接的机械火花，即可打开升级栏。', 'Connected mechanical sparks of the same color share their master spark\'s range and efficiency upgrades. Use one master per group. Empty-hand right-click any connected mechanical spark to open its upgrade slots.'),
+    ],
+    'master_mechanical_spark': [
+        ('主机械火花为一组机械火花提供升级。空手右击，放入范围升级和效率升级，各最多 8 个。也可以拿着升级直接右击已连接的机械火花。', 'The Master Mechanical Spark holds upgrades for its group. Right-click with an empty hand and insert up to eight range and eight efficiency upgrades. You can also apply an upgrade directly to any connected mechanical spark.'),
+        ('主火花也能安装原有火花升级。池子之间传魔时，仍需按原来的方式安装聚集或扩散等升级。$(p)一组里放了多个主火花，会暂停共享升级。拆下多余的主火花即可恢复。', 'The master also accepts ordinary spark augments. Pool-to-pool transfer still needs the usual Dominant, Recessive or other appropriate augment.$(p)Multiple masters in one group disable shared upgrades. Remove the extra master to restore them.'),
+        ('潜行使用森林法杖，先拆下原有火花升级，再拆下火花。范围与效率升级会随主火花一起保留。$(p)火花只能连接同维度已加载的区块。主火花卸载或拆除后，共享升级停止生效。', 'Sneak-use the Wand to remove the native augment first, then the spark. Range and efficiency upgrades stay inside the master item.$(p)Connections require loaded chunks in the same dimension. Shared upgrades stop when the master unloads or is removed.'),
+    ],
+    'spark_range_upgrade': [('装入主机械火花，每个增加 8 格范围，最多 8 个。基础范围为 12 格，装满后为 76 格。距离按前后、左右和上下分别计算。$(p)范围加成用于同组机械火花；普通火花仍使用原有范围。', 'Each upgrade in a master adds eight blocks of range, up to eight upgrades. Range starts at 12 blocks and reaches 76, measured separately along each axis.$(p)The bonus connects mechanical sparks in the same group. Ordinary sparks keep their usual range.')],
+    'spark_efficiency_upgrade': [('装入主机械火花，提高同组机械火花的传魔速度。每个增加一倍基础速度，最多 8 个，装满后为原来的 9 倍。不会增加魔力消耗。', 'Install in a master to increase its group\'s transfer speed. Each adds one base rate, up to eight upgrades for nine times the original speed. Mana cost is unchanged.')],
+})
+HELP['mana_storage_cell'].append(('安装 Applied Botanics 后，这些魔力盘也能供给福鲁伊克斯魔力池。已有 Applied Botanics 魔力盘可以一起使用，终端中共用一个魔力条目，旧样板无需重做。', 'With Applied Botanics installed, these cells also supply Fluix Mana Pools. Existing Applied Botanics mana cells work alongside them. The terminal has one mana entry, and old patterns keep working.'))
+
 SHORT_TITLES = {
+    'mechanical_spark': 'Mechanical Spark', 'master_mechanical_spark': 'Master Spark',
+    'spark_range_upgrade': 'Spark Range', 'spark_efficiency_upgrade': 'Spark Efficiency',
     'mana_lotus': 'Conduction Lotus', 'bionic_amaranthus': 'Jaded Amaranthus', 'bionic_clayconia': 'Clayconia',
     'bionic_agricarnation': 'Agricarnation', 'bionic_hopperhock': 'Hopperhock', 'bionic_rannuncarpus': 'Rannuncarpus',
     'bionic_exoflame': 'Exoflame', 'mechanical_apothecary': 'Apothecary', 'mana_bridge': 'Mana Bridge', 'mana_charger': 'Mana Charger',
@@ -83,7 +101,7 @@ def generate(root, write, zh, en, plants, recipes):
     mechanical = {row[0]: row for row in recipes if row[0] not in ('resonance_flower', 'resonance_bud')}
     for index, (name, descriptions) in enumerate(HELP.items()):
         item = f'{MOD}:{name}'; key = f'book.{MOD}.{name}'
-        title = f'item.{MOD}.{name}' if name in ('resonance_spark_augment', 'mana_storage_cell', 'mana_packet') else f'block.{MOD}.{name}'
+        title = f'item.{MOD}.{name}' if name in ('resonance_spark_augment', 'mana_storage_cell', 'mana_packet', *SPARK_ITEMS) else f'block.{MOD}.{name}'
         zh[f'{key}.title'], en[f'{key}.title'] = zh[title], SHORT_TITLES[name]
         pages = []
         for page, (cn, english) in enumerate(descriptions):
@@ -108,11 +126,11 @@ def generate(root, write, zh, en, plants, recipes):
             from mana_cell_models import TIERS, cell_id
             for tier in TIERS:
                 pages.append({'type': 'patchouli:crafting', 'recipe': f'{MOD}:{cell_id(tier)}', 'flag': 'mod:ae2'})
-        elif name in MACHINES or name in ('mechanical_apothecary', 'resonance_spark_augment'):
+        elif name in MACHINES or name in ('mechanical_apothecary', 'resonance_spark_augment', *SPARK_ITEMS):
             pages.append({'type': 'patchouli:crafting', 'recipe': item})
         if name == 'mana_bridge':
-            zh[f'{key}.appbot'] = '安装 Applied Botanics 后，可以将互通器连接福鲁伊克斯魔力池。池子要接上有电、有通道的 ME 网络，并使用 Applied Botanics 的魔力盘。选择抽取或供给，即可在 ME 库存和加压管道间输送魔力。'
-            en[f'{key}.appbot'] = 'With Applied Botanics, place the bridge beside a Fluix Mana Pool. Connect the pool to a powered ME network with a channel and Applied Botanics mana cells. Choose draw or supply to transfer mana between ME and pressurized tubes.'
+            zh[f'{key}.appbot'] = '安装 Applied Botanics 后，可以将互通器连接福鲁伊克斯魔力池。池子要接上有电、有通道的 ME 网络，网络中放入魔力盘即可。现有五档魔力盘都能使用，无需另做一套。'
+            en[f'{key}.appbot'] = 'With Applied Botanics, place the bridge beside a Fluix Mana Pool. Connect the pool to a powered ME network with a channel and a mana cell. All five existing cell tiers work; no separate set is needed.'
             pages.append({'type': 'patchouli:text', 'text': f'{key}.appbot', 'flag': 'mod:appbot'})
         write(f'{BASE}/entries/botanicalmekanism/{name}.json', {'name': title, 'icon': item, 'category': 'botania:botanicalmekanism',
               'sortnum': index, 'pages': pages, 'extra_recipe_mappings': {f'{MOD}:{cell_id(t)}': 0 for t in TIERS} if name == 'mana_storage_cell' else {item: 0}})

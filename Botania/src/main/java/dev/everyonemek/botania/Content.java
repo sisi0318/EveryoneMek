@@ -81,6 +81,8 @@ public final class Content {
                   output.accept(LOTUS.get());
                   for (var block : bionics()) output.accept(block.get());
                   output.accept(SPARK_AUGMENT.get());
+                  output.accept(MechanicalSparks.SPARK.get()); output.accept(MechanicalSparks.MASTER.get());
+                  output.accept(MechanicalSparks.RANGE.get()); output.accept(MechanicalSparks.EFFICIENCY.get());
                   if (net.neoforged.fml.ModList.get().isLoaded("ae2")) { output.accept(CORPOREA.get()); MANA_CELLS.values().forEach(cell -> output.accept(cell.get())); }
                   output.accept(ApothecaryContent.BLOCK);
                   for (var block : ManaContent.MACHINES.values()) output.accept(block);
@@ -95,6 +97,10 @@ public final class Content {
         });
     }
     private static void capabilities(RegisterCapabilitiesEvent event) {
+        var manaItems = MANA_CELLS.values().stream().map(DeferredItem::get).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+        manaItems.add(MANA_PACKET.get());
+        event.registerItem(BotaniaNeoForgeCapabilities.getItemApiLookupById(vazkii.botania.api.mana.ManaItem.LOOKUP),
+              (stack, unused) -> stack.getCount() == 1 ? new ManaStorageItem.ManaView(stack) : null, manaItems.toArray(Item[]::new));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, LOTUS_TILE.get(), (tile, side) -> Flowers.energy(tile));
         for (var type : bionicTypes()) event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, type,
               (tile, side) -> Flowers.isBionic(tile) ? Flowers.energy(tile) : null);

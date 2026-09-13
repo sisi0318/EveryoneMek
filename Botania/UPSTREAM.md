@@ -157,3 +157,10 @@
 - 原池的 PoolOverlayProvider、RenderHelper.ICON_OVERLAY 与 renderIconFullBright 用于催化器虚影。布局来自本项目盆内尺寸，不复制原池渲染器。
 - [BotanicalMachinery](https://github.com/ChaoticTrials/BotanicalMachinery/tree/3b728b192f0c9e799c1537fb6f0012fb40f377f6) 核对 ScreenMechanicalManaInfuser、ContainerMenuMechanicalDaisy、ScreenBase；[ExtraMachinery](https://github.com/lentel27/ExtraMachinery/tree/b1092e75c9e94637b19b6490968e4b16a65f9659) 核对 ExtraScreenBase 的资源条与槽位信息。仅参考操作分组和简洁显示，不复制源码或图片，版本不作为 1.21.1 API 契约。
 - [Applied Botanics alpha.3](https://github.com/ramidzkh/Applied-Botanics/releases/tag/1.6.0-alpha.3) 与 [对应源码](https://github.com/ramidzkh/Applied-Botanics/tree/10201733d07f1e2a20ef69b816a67f633d9d6ffc) 核对 SafeMana、FluixPoolBlockEntity、ManaExternalStorageStrategy。代码 LGPL-3.0，素材 CC BY-NC-SA 3.0；适配脚本、变更清单与上游 SHA 随项目提供，原 JAR 保留于构建依赖目录。仅改两个类引用名、两个音效字段名、一项配方 ID 和兼容版本标记。
+
+## 15. alpha.17 原火花与 ME 类型迁移
+
+- 在固定 Botania 快照核对 ManaSparkItem.attachSpark、ManaSparkBehavior、ManaSparkEntity.tick/updateTransfers/interact/dropAndKill 和原 BaseSparkRenderer／ManaSparkRenderer。只以定点 Mixin 更换本模组实体构造、数值与带库存掉落，不复制整套原实体实现。
+- 在 NeoForge 21.1.241 核对 IRegistryExtension.addAlias 与 MappedRegistry.resolve、RegistrySnapshot 别名同步；在 AE2 19.2.17 核对 AEKey.TYPE_FIELD（#t）与 MapCodec 的类型派发。只保留一个真实注册类型，两个旧 ID 都解码到当前类型。
+- Appbot 固定 alpha.3 的 ManaContainerItemStrategy 通过 ManaItem 查询，ContainerItemStrategy.register 使用 putIfAbsent，不能再给它注册第二个策略。本模组给盘与魔力团提供真实 ManaItem 视图，复用原策略。
+- Appbot 原 ManaKeyType.getAmountPerByte 为 500，ManaCellItem.getTotalBytes 按 1000 字节／k；共存时定点调整为 8000 和 1024，与本模组原五档容量统一。存量数字不缩放。原 ManaKey.addDrops 仅放粒子，共存时改为已实现的魔力团以保留拆卸资源。

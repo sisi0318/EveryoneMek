@@ -10,17 +10,24 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 public final class AeCompat {
     public static void register(IEventBus bus) {
         var types = net.neoforged.neoforge.registries.DeferredRegister.create(appeng.api.stacks.AEKeyType.REGISTRY_KEY, dev.everyonemek.botania.BotanicalMekanism.ID);
-        types.register("mana", () -> ManaKey.TYPE); types.register(bus);
+        if (!dev.everyonemek.botania.AppliedBotanics.loaded()) { types.register("mana", () -> ManaKey.TYPE); types.register(bus); }
+        bus.addListener((net.neoforged.neoforge.registries.RegisterEvent event) -> {
+            if (event.getRegistryKey().equals(appeng.api.stacks.AEKeyType.REGISTRY_KEY)) {
+                var appbot = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("appbot", "mana");
+                event.getRegistry().addAlias(dev.everyonemek.botania.AppliedBotanics.loaded() ? ManaKey.ID : appbot,
+                      dev.everyonemek.botania.AppliedBotanics.loaded() ? appbot : ManaKey.ID);
+            }
+        });
         bus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() -> {
             appeng.api.storage.StorageCells.addCellHandler(ManaCell.HANDLER);
+            // Appbot's native strategies already cover pools and our SafeMana machine adapter.
+            if (dev.everyonemek.botania.AppliedBotanics.loaded()) return;
             appeng.api.behaviors.GenericSlotCapacities.register(ManaKey.TYPE, 100_000L);
             appeng.api.behaviors.ContainerItemStrategy.register(ManaKey.TYPE, ManaKey.class, new ManaContainerStrategy());
             appeng.api.behaviors.StackImportStrategy.register(ManaKey.TYPE, ManaBusStorage::at);
             appeng.api.behaviors.StackExportStrategy.register(ManaKey.TYPE, ManaBusStorage::at);
             appeng.api.behaviors.ExternalStorageStrategy.register(ManaKey.TYPE, (level, pos, side) -> (extractable, changed) -> {
                 var access = dev.everyonemek.botania.ManaAccess.at(level, pos, side);
-                // Appbot owns pool storage-bus views when installed. Do not mount the same pool twice.
-                if (dev.everyonemek.botania.AppliedBotanics.loaded() && access != null && access.original() instanceof vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity) return null;
                 return access == null ? null : new ManaBusStorage(access, extractable, changed);
             });
         }));

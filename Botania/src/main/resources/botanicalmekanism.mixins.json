@@ -12,7 +12,12 @@
     "SparkTransfersAccess",
     "SparkRangeMixin",
     "SparkRequestMixin",
-    "AppliedBotanicsStorageMixin"
+    "AppliedBotanicsStorageMixin",
+    "AppliedBotanicsManaKeyMixin",
+    "AppliedBotanicsManaDensityMixin",
+    "AppliedBotanicsCellCapacityMixin",
+    "MechanicalSparkPlacementMixin",
+    "MechanicalSparkMixin"
   ],
   "plugin": "dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin",
   "client": [

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "DCD",
+    " S "
+  ],
+  "key": {
+    "S": {
+      "item": "botania:manasteel_ingot"
+    },
+    "D": {
+      "item": "botania:mana_diamond"
+    },
+    "C": {
+      "item": "mekanism:upgrade_speed"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:spark_efficiency_upgrade",
+    "count": 1
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " S ",
+    "CFC",
+    " S "
+  ],
+  "key": {
+    "S": {
+      "item": "botania:manasteel_ingot"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "F": {
+      "item": "botania:mana_spark"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:mechanical_spark"
+  }
+}

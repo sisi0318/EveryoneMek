@@ -22,19 +22,19 @@ public final class ManaBusStorage implements MEStorage, StackImportStrategy, Sta
         @Override public long transfer(StackTransferContext context, AEKey key, long amount) { return current().transfer(context, key, amount); }
         @Override public long push(AEKey key, long amount, Actionable mode) { return current().push(key, amount, mode); }
     }
-    @Override public Component getDescription() { return ManaKey.INSTANCE.getDisplayName(); }
+    @Override public Component getDescription() { return ManaKeys.current().getDisplayName(); }
     @Override public void getAvailableStacks(KeyCounter out) {
         if (access != null) {
             long amount = extractableOnly ? access.extract(Long.MAX_VALUE, true) : access.stored();
-            if (amount > 0) out.add(ManaKey.INSTANCE, amount);
+            if (amount > 0) out.add(ManaKeys.current(), amount);
         }
     }
     @Override public long insert(AEKey key, long amount, Actionable action, IActionSource source) {
-        if (access == null || key != ManaKey.INSTANCE) return 0;
+        if (access == null || key != ManaKeys.current()) return 0;
         long moved = access.insert(amount, action == Actionable.SIMULATE); if (moved > 0 && action == Actionable.MODULATE) changed.run(); return moved;
     }
     @Override public long extract(AEKey key, long amount, Actionable action, IActionSource source) {
-        if (access == null || key != ManaKey.INSTANCE) return 0;
+        if (access == null || key != ManaKeys.current()) return 0;
         long moved = access.extract(amount, action == Actionable.SIMULATE); if (moved > 0 && action == Actionable.MODULATE) changed.run(); return moved;
     }
     private void recover(long amount) {
@@ -43,20 +43,20 @@ public final class ManaBusStorage implements MEStorage, StackImportStrategy, Sta
         net.minecraft.world.Containers.dropItemStack(access.level(), pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5, ManaStorageItem.recovery(amount));
     }
     @Override public boolean transfer(StackTransferContext context) {
-        if (access == null || !context.hasOperationsLeft() || !context.isKeyTypeEnabled(ManaKey.TYPE)
-              || context.isInFilter(ManaKey.INSTANCE) == context.isInverted()) return false;
+        if (access == null || !context.hasOperationsLeft() || !context.isKeyTypeEnabled(ManaKeys.type())
+              || context.isInFilter(ManaKeys.current()) == context.isInverted()) return false;
         var inventory = context.getInternalStorage().getInventory(); var source = context.getActionSource();
-        long limit = Math.min(context.getOperationsRemaining() * (long) ManaKey.TYPE.getAmountPerOperation(), access.extract(Long.MAX_VALUE, true));
-        long accepted = StorageHelper.poweredInsert(context.getEnergySource(), inventory, ManaKey.INSTANCE, limit, source, Actionable.SIMULATE);
+        long limit = Math.min(context.getOperationsRemaining() * (long) ManaKeys.type().getAmountPerOperation(), access.extract(Long.MAX_VALUE, true));
+        long accepted = StorageHelper.poweredInsert(context.getEnergySource(), inventory, ManaKeys.current(), limit, source, Actionable.SIMULATE);
         if (accepted <= 0) return false;
         long taken = access.extract(accepted, false);
-        long inserted = StorageHelper.poweredInsert(context.getEnergySource(), inventory, ManaKey.INSTANCE, taken, source, Actionable.MODULATE);
+        long inserted = StorageHelper.poweredInsert(context.getEnergySource(), inventory, ManaKeys.current(), taken, source, Actionable.MODULATE);
         if (inserted < taken) recover(taken - inserted - access.refund(taken - inserted));
-        if (inserted > 0) context.reduceOperationsRemaining(Math.max(1, inserted / ManaKey.TYPE.getAmountPerOperation()));
+        if (inserted > 0) context.reduceOperationsRemaining(Math.max(1, inserted / ManaKeys.type().getAmountPerOperation()));
         return inserted > 0;
     }
     @Override public long transfer(StackTransferContext context, AEKey key, long amount) {
-        if (access == null || key != ManaKey.INSTANCE || amount <= 0 || !context.isKeyTypeEnabled(ManaKey.TYPE)) return 0;
+        if (access == null || key != ManaKeys.current() || amount <= 0 || !context.isKeyTypeEnabled(ManaKeys.type())) return 0;
         var inventory = context.getInternalStorage().getInventory(); var source = context.getActionSource();
         long available = StorageHelper.poweredExtraction(context.getEnergySource(), inventory, key, amount, source, Actionable.SIMULATE);
         long accepted = access.insert(available, true);

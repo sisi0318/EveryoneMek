@@ -16,6 +16,6 @@ public abstract class AppliedBotanicsStorageMixin {
     @Inject(method = "createWrapper", at = @At("HEAD"), cancellable = true)
     private void botanicalmekanism$singleView(boolean extractable, Runnable changed, CallbackInfoReturnable<MEStorage> result) {
         var receiver = apiCache.getCapability();
-        if (receiver instanceof AppliedBotanicsCompat.MachinePort || receiver instanceof appbot.block.FluixPoolBlockEntity) result.setReturnValue(null);
+        if (receiver instanceof appbot.block.FluixPoolBlockEntity) result.setReturnValue(null);
     }
 }

@@ -9,7 +9,7 @@ public final class ManaIngredientConverter implements IngredientConverter<ManaIn
     public static void register() { IngredientConverters.register(new ManaIngredientConverter()); }
     @Override public IIngredientType<ManaIngredient> getIngredientType() { return ManaIngredient.TYPE; }
     @Override public ManaIngredient getIngredientFromStack(GenericStack stack) {
-        return stack.what() == ManaKey.INSTANCE ? new ManaIngredient(Math.max(1, stack.amount())) : null;
+        return stack.what() == ManaKeys.current() ? new ManaIngredient(Math.max(1, stack.amount())) : null;
     }
-    @Override public GenericStack getStackFromIngredient(ManaIngredient ingredient) { return new GenericStack(ManaKey.INSTANCE, ingredient.amount()); }
+    @Override public GenericStack getStackFromIngredient(ManaIngredient ingredient) { return new GenericStack(ManaKeys.current(), ingredient.amount()); }
 }

@@ -19,6 +19,22 @@ public final class ManaStorageItem extends Item {
     }
     public static void store(ItemStack stack, long amount) { stack.set(Content.STORED_MANA.get(), Math.max(0, amount)); }
     public static ItemStack recovery(long amount) { var stack = new ItemStack(Content.MANA_PACKET.get()); store(stack, amount); return stack; }
+    public record ManaView(ItemStack stack) implements vazkii.botania.api.mana.ManaItem {
+        @Override public int getMana() { return (int) Math.min(Integer.MAX_VALUE, stored(stack)); }
+        @Override public int getMaxMana() { return isCell(stack) ? (int) capacity(stack) : getMana(); }
+        @Override public void addMana(int amount) {
+            if (stack.isEmpty() || amount > 0 && !isCell(stack)) return;
+            long next = Math.max(0, stored(stack) + (long) amount);
+            if (isCell(stack)) next = Math.min(next, capacity(stack));
+            store(stack, next); if (!isCell(stack) && next == 0) stack.shrink(1);
+        }
+        @Override public boolean canReceiveManaFromPool(net.minecraft.world.level.block.entity.BlockEntity pool) { return isCell(stack); }
+        @Override public boolean canDrainManaToPool(net.minecraft.world.level.block.entity.BlockEntity pool) { return true; }
+        @Override public boolean acceptDispatchedManaFromItem(ItemStack other) { return false; }
+        @Override public boolean refuseRequestedManaFromItem(ItemStack other) { return true; }
+        @Override public boolean canSendRequestedManaToItem(ItemStack other) { return false; }
+        @Override public boolean isNoExport() { return false; }
+    }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
         lines.add(Component.translatable(tier != null ? "tooltip.botanicalmekanism.mana_cell" : "tooltip.botanicalmekanism.mana_packet", stored(stack), capacity(stack)));
     }

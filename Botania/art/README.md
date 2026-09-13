@@ -70,3 +70,9 @@ alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素�
 `tools/model_surfaces.py` 对原立方体做表面裁切，去除相交内部面和重叠外面，并按原方向重算 UV。12 台装置保留原造型、材质和碰撞实体；无新位图。`botanical-machines-preview.png` 已从生成后的表面重建，轴向共面面积重叠检查为零。
 
 灌注室的催化符号由客户端渲染器调用 Botania 原 PoolOverlayProvider 与 ICON_OVERLAY 图层，显示当前实际生效的内置或底部催化器。这个动态效果不在静态模型预览中，游戏内由用户验收。
+
+## alpha.17 机械火花
+
+机械火花沿用 Botania 原火花贴图和实体渲染，在外侧加一圈由 `mekanism:block/block_steel` 绘制的细框；机械主火花多一个小标记。物品模型使用 NeoForge CompositeModel 引用原火花子模型，框架前后两面都显示，避开原火花平面以免闪烁。原染色星点、升级轨道和幻影墨水由 Botania 渲染器继续处理。
+
+生成入口为 `tools/generate_resources.py`，实体渲染为 `client/MechanicalSparkRenderer`。未复制第三方 PNG 或新增位图；Botania、Mek 材质仅按运行路径引用。实体动态效果由玩家游戏内验收。

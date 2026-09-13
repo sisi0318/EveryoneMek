@@ -12,6 +12,7 @@ public final class BotanicalMekanism {
     public BotanicalMekanism(IEventBus bus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, Balance.SPEC);
         Content.register(bus);
+        MechanicalSparks.register(bus);
         ApothecaryContent.register(bus);
         ManaContent.register(bus);
         SparkExpansion.register(bus);

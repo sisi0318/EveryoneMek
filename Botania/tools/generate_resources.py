@@ -124,7 +124,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsManaDensityMixin', 'AppliedBotanicsCellCapacityMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -256,6 +256,41 @@ for tier in TIERS:
 write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:block/mana_water'}})
 from mana_cell_models import generate as generate_mana_cell_models
 generate_mana_cell_models(write)
+
+# Mechanical sparks retain the native item sprite and use existing Mek materials.
+for name, cn, english in [
+    ('mechanical_spark', '机械火花', 'Mechanical Spark'), ('master_mechanical_spark', '机械主火花', 'Master Mechanical Spark'),
+    ('spark_range_upgrade', '火花范围升级', 'Spark Range Upgrade'), ('spark_efficiency_upgrade', '火花效率升级', 'Spark Throughput Upgrade'),
+]:
+    zh[f'item.{MOD}.{name}'], en[f'item.{MOD}.{name}'] = cn, english
+zh[f'entity.{MOD}.mechanical_spark'], en[f'entity.{MOD}.mechanical_spark'] = '机械火花', 'Mechanical Spark'
+for key, cn, english in [
+    ('title', '火花网络升级', 'Spark Network Upgrades'), ('range_label', '范围', 'Range'), ('efficiency_label', '效率', 'Speed'),
+    ('range', '范围：%s 格', 'Range: %s'), ('rate', '传输：×%s', 'Transfer: x%s'), ('members', '火花：%s', 'Sparks: %s'),
+    ('no_master', '需要机械主火花', 'Place a master spark'), ('conflict', '请拆下多余的主火花', 'Remove extra masters'), ('connected', '已连接主火花', 'Master connected'),
+]: zh[f'gui.{MOD}.spark.{key}'], en[f'gui.{MOD}.spark.{key}'] = cn, english
+for name, parent in [('spark_range_upgrade', 'upgrade_anchor'), ('spark_efficiency_upgrade', 'upgrade_speed')]:
+    write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'mekanism:item/{parent}'})
+for name in ['mechanical_spark', 'master_mechanical_spark']:
+    frame = []
+    for x, y, X, Y in [(2, 2, 14, 3), (2, 13, 14, 14), (2, 3, 3, 13), (13, 3, 14, 13)]:
+        frame.append({'from': [x, y, 8.55], 'to': [X, Y, 8.55], 'faces': {'south': {'texture': '#steel', 'uv': [4, 4, 12, 12]}}})
+    if name == 'master_mechanical_spark':
+        frame.append({'from': [6, 14, 8.57], 'to': [10, 15, 8.57], 'faces': {'south': {'texture': '#mana', 'uv': [0, 0, 16, 16]}}})
+    import copy
+    for front in list(frame):
+        back = copy.deepcopy(front)
+        back['from'][2] = back['to'][2] = 16 - front['from'][2]
+        back['faces'] = {'north': back['faces']['south']}
+        frame.append(back)
+    write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'loader': 'neoforge:composite',
+          'textures': {'particle': 'botania:item/mana_spark'}, 'children': {'spark': {'parent': 'botania:item/mana_spark'},
+          'frame': {'textures': {'steel': 'mekanism:block/block_steel', 'mana': 'botania:block/mana_water'}, 'elements': frame}}})
+write(f'data/{MOD}/recipe/mechanical_spark.json', {'type': 'minecraft:crafting_shaped', 'pattern': [' S ', 'CFC', ' S '],
+      'key': {'S': {'item': 'botania:manasteel_ingot'}, 'C': {'item': 'mekanism:basic_control_circuit'}, 'F': {'item': 'botania:mana_spark'}}, 'result': {'id': f'{MOD}:mechanical_spark'}})
+shaped('master_mechanical_spark', [' C ', 'GFG', ' T '], {'C': 'mekanism:elite_control_circuit', 'G': 'botania:gaia_spirit', 'F': f'{MOD}:mechanical_spark', 'T': 'botania:terrasteel_ingot'})
+shaped('spark_range_upgrade', [' S ', 'PCP', ' S '], {'S': 'botania:manasteel_ingot', 'P': 'botania:mana_pearl', 'C': 'mekanism:upgrade_anchor'})
+shaped('spark_efficiency_upgrade', [' S ', 'DCD', ' S '], {'S': 'botania:manasteel_ingot', 'D': 'botania:mana_diamond', 'C': 'mekanism:upgrade_speed'})
 
 from lexicon_resources import generate as generate_lexicon
 generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)

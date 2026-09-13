@@ -30,7 +30,7 @@ public final class ManaAeClient {
     }
 
     public static void register() {
-        AEKeyRendering.register(ManaKey.TYPE, ManaKey.class, new AEKeyRenderHandler<ManaKey>() {
+        if (!dev.everyonemek.botania.AppliedBotanics.loaded()) AEKeyRendering.register(ManaKey.TYPE, ManaKey.class, new AEKeyRenderHandler<ManaKey>() {
             @Override public void drawInGui(Minecraft minecraft, GuiGraphics gui, int x, int y, ManaKey key) { dev.everyonemek.botania.client.ManaIcon.draw(gui, x, y); }
             @Override public void drawOnBlockFace(PoseStack pose, MultiBufferSource buffers, ManaKey key, float scale, int light, Level level) {
                 AEKeyRendering.drawOnBlockFace(pose, buffers, AEItemKey.of(Content.MANA_PACKET.get()), scale, light, level);

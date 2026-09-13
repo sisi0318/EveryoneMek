@@ -19,7 +19,7 @@ public record MachineSparkPort(ManaMachine machine, Direction face) implements M
     @Override public Level getManaReceiverLevel() { return machine.getLevel(); }
     @Override public BlockPos getManaReceiverPos() { return machine.getBlockPos(); }
     @Override public boolean canAttachSpark(ItemStack stack) { return Flowers.live(machine) && machine.kind().chemical; }
-    @Override public boolean canHaveAugment(ItemStack augment) { return augment.is(Content.SPARK_AUGMENT.get()); }
+    @Override public boolean canHaveAugment(ItemStack augment) { return augment.is(vazkii.botania.common.lib.BotaniaTags.Items.MANA_SPARK_AUGMENTS); }
     @Override public void attachSpark(ManaSpark spark) { ManaSparkHelper.registerTransferFromSparksAround(spark, machine.getLevel(), machine.getBlockPos()); }
     @Override public int getCurrentMana() { return Flowers.live(machine) ? (int) machine.mana().getStored() : 0; }
     @Override public int getAvailableSpaceForMana() {
