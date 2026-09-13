@@ -15,6 +15,14 @@
       "text": "book.botanicalmekanism.ore_processor.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.ore_processor.2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.ore_processor.3"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:ore_processor"
     }

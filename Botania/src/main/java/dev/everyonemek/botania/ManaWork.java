@@ -21,14 +21,21 @@ import vazkii.botania.common.lib.BotaniaTags;
 
 /** Recipe planning uses copies; resources and random results are committed once, together. */
 public final class ManaWork {
+    public static final int PURE_BATCH_SIZE = 8;
     public record Choice(ResourceLocation id, ItemStack icon) { }
-    public record Result(ResourceLocation id, int mana, int weight, List<ItemStack> products, StateIngredient randomOutput) { }
+    public record Result(ResourceLocation id, int mana, int weight, List<ItemStack> products, StateIngredient randomOutput, List<PureConversionWork.Roll> batchRolls) {
+        public Result(ResourceLocation id, int mana, int weight, List<ItemStack> products, StateIngredient randomOutput) {
+            this(id, mana, weight, products, randomOutput, List.of());
+        }
+    }
     public record Plan(int[] used, int[] extraUsed, Map<Integer, ItemStack> retained, boolean extraValid,
                        int ticks, List<Result> results, List<ItemStack> consumed, List<ItemStack> extraSignature) {
         public int maxMana() { return results.stream().mapToInt(Result::mana).max().orElse(0); }
         public boolean canOutput(ManaMachine tile) {
             for (var result : results) {
-                if (result.randomOutput() == null) {
+                if (!result.batchRolls().isEmpty()) {
+                    if (!PureConversionWork.canOutput(tile, result)) return false;
+                } else if (result.randomOutput() == null) {
                     if (tile.mergeOutputs(result.products()) == null) return false;
                 } else for (var state : result.randomOutput().getDisplayed()) {
                     var products = new ArrayList<>(result.products()); products.add(new ItemStack(state.getBlock()));
@@ -39,12 +46,21 @@ public final class ManaWork {
         }
         public CompoundTag signature(ManaMachine tile) {
             var tag = new CompoundTag(); tag.putInt("ticks", ticks);
+            if (tile.kind() == ManaMachineKind.INFUSER) tag.putInt("catalyst_state", net.minecraft.world.level.block.Block.getId(tile.infusionCatalyst()));
             tag.put("consumed", stacks(tile, consumed)); tag.put("extra_stacks", stacks(tile, extraSignature));
             var resultTags = new ListTag();
             for (var result : results) {
                 var entry = new CompoundTag(); entry.putString("id", result.id().toString()); entry.putInt("mana", result.mana()); entry.putInt("weight", result.weight());
                 entry.put("products", stacks(tile, result.products()));
                 if (result.randomOutput() != null) entry.put("random_outputs", stacks(tile, result.randomOutput().getDisplayed().stream().map(s -> new ItemStack(s.getBlock())).toList()));
+                if (!result.batchRolls().isEmpty()) {
+                    var rolls = new ListTag();
+                    for (var output : result.batchRolls()) {
+                        var roll = new CompoundTag(); roll.putString("recipe", output.id().toString()); roll.putInt("count", output.count());
+                        roll.put("outputs", stacks(tile, output.output().getDisplayed().stream().map(s -> new ItemStack(s.getBlock())).toList())); rolls.add(roll);
+                    }
+                    entry.put("batch_rolls", rolls);
+                }
                 resultTags.add(entry);
             }
             tag.put("results", resultTags);
@@ -56,6 +72,8 @@ public final class ManaWork {
             for (var result : results) { roll -= result.weight(); if (roll < 0) { selected = result; break; } }
             var products = new ArrayList<>(selected.products());
             if (selected.randomOutput() != null) products.add(new ItemStack(selected.randomOutput().pick(tile.getLevel().random).getBlock()));
+            for (var output : selected.batchRolls()) for (int i = 0; i < output.count(); i++)
+                products.add(new ItemStack(output.output().pick(tile.getLevel().random).getBlock()));
             var merged = Objects.requireNonNull(tile.mergeOutputs(products), "Reserved output changed during atomic craft");
             tile.mana().extract(selected.mana(), Action.EXECUTE, AutomationType.INTERNAL);
             for (int i = 0; i < used.length; i++) tile.inputs.get(i).shrinkStack(used[i], Action.EXECUTE);
@@ -128,12 +146,12 @@ public final class ManaWork {
         holders.sort(Comparator.comparing(holder -> holder.id().toString()));
         if (tile.kind() == ManaMachineKind.INFUSER) holders.sort(Comparator.comparingInt(holder ->
               ((ManaInfusionRecipe) holder.value()).getRecipeCatalyst() == StateIngredients.NONE ? 1 : 0));
+        if (tile.kind() == ManaMachineKind.PURE) return PureConversionWork.find(tile, inputs, holders);
+        if (tile.kind() == ManaMachineKind.INFUSER) return InfusionBatchWork.find(tile, inputs, holders);
         Plan missingExtra = null;
         for (var holder : holders) {
             if (!tile.recipeLock().isEmpty() && !holder.id().toString().equals(tile.recipeLock())) continue;
             Plan plan = switch (tile.kind()) {
-                case INFUSER -> infusion(tile, holder, inputs);
-                case PURE -> pure(tile, holder, inputs);
                 case RUNIC, TERRA, BREWERY -> processing(tile, holder, inputs);
                 default -> null;
             };
@@ -144,30 +162,15 @@ public final class ManaWork {
         }
         return missingExtra;
     }
-    private static Plan infusion(ManaMachine tile, RecipeHolder<?> holder, List<ItemStack> inputs) {
-        var recipe = (ManaInfusionRecipe) holder.value();
-        if (!recipe.matches(inputs.getFirst().copy()) || !catalystMatches(tile, recipe)) return null;
-        var output = recipe.getRecipeOutput(tile.getLevel().registryAccess(), inputs.getFirst().copy());
-        if (output.isEmpty() || !validMana(recipe.getManaToConsume())) return null;
-        List<ItemStack> products = new ArrayList<>(); products.add(output.copy());
-        return simple(tile, holder.id(), inputs, recipe.getManaToConsume(), 100, products, null);
-    }
-    private static boolean catalystMatches(ManaMachine tile, ManaInfusionRecipe recipe) {
+    static boolean catalystMatches(ManaMachine tile, ManaInfusionRecipe recipe) {
         if (recipe.getRecipeCatalyst() == StateIngredients.NONE) return true;
-        BlockState state = catalystState(tile.extras.getFirst().getStack()); return state != null && recipe.getRecipeCatalyst().test(state);
+        return recipe.getRecipeCatalyst().test(tile.infusionCatalyst());
     }
     // Only native catalyst blocks have a defined machine context. Third-party stateful catalysts need an adapter.
     static BlockState catalystState(ItemStack stack) {
         var state = itemState(stack);
         return state != null && (state.is(vazkii.botania.common.block.BotaniaBlocks.ALCHEMY_CATALYST)
               || state.is(vazkii.botania.common.block.BotaniaBlocks.CONJURATION_CATALYST)) ? state : null;
-    }
-    private static Plan pure(ManaMachine tile, RecipeHolder<?> holder, List<ItemStack> inputs) {
-        var recipe = (PureDaisyRecipe) holder.value(); var state = itemState(inputs.getFirst());
-        if (state == null || !safeStateRecipe(recipe) || !safeOutput(recipe.getOutput())
-              || !recipe.matches(tile.getLevel(), tile.getBlockPos(), state)) return null;
-        // One output every native check interval: equal throughput to all eight native positions occupied.
-        return simple(tile, holder.id(), inputs, 0, Math.max(1, recipe.getTime()), List.of(), recipe.getOutput());
     }
     @SuppressWarnings("unchecked")
     private static Plan processing(ManaMachine tile, RecipeHolder<?> holder, List<ItemStack> inputs) {
@@ -207,13 +210,14 @@ public final class ManaWork {
         }
         return new Plan(used, extraUsed, retained, extraValid, ticks, List.of(new Result(holder.id(), cost, 1, products, null)), consumed, extraSignature);
     }
-    private static Plan simple(ManaMachine tile, ResourceLocation id, List<ItemStack> inputs, int mana, int ticks, List<ItemStack> products, StateIngredient random) {
-        return new Plan(new int[]{1}, new int[tile.extras.size()], Map.of(), true, ticks,
-              List.of(new Result(id, mana, 1, products, random)), List.of(inputs.getFirst().copyWithCount(1)),
-              tile.extras.stream().map(slot -> slot.getStack().copyWithCount(1)).toList());
-    }
     private static Plan random(ManaMachine tile, List<ItemStack> inputs) {
-        var state = itemState(inputs.getFirst()); if (state == null) return null;
+        for (int slot = 0; slot < inputs.size(); slot++) {
+            var plan = random(tile, inputs, slot); if (plan != null) return plan;
+        }
+        return null;
+    }
+    private static Plan random(ManaMachine tile, List<ItemStack> inputs, int slot) {
+        var state = itemState(inputs.get(slot)); if (state == null) return null;
         RecipeType<OrechidRecipe> type = BotaniaRecipeTypes.MARIMORPHOSIS_TYPE;
         if (tile.kind() == ManaMachineKind.ORE) {
             var flower = tile.extras.getFirst().getStack();
@@ -233,10 +237,11 @@ public final class ManaWork {
         }
         if (results.isEmpty()) return null;
         results.sort(Comparator.comparing(result -> result.id().toString()));
-        return new Plan(new int[]{1}, new int[tile.extras.size()], Map.of(), true, ticks, results,
-              List.of(inputs.getFirst().copyWithCount(1)), tile.extras.stream().map(slot -> slot.getStack().copyWithCount(1)).toList());
+        int[] used = new int[inputs.size()]; used[slot] = 1;
+        return new Plan(used, new int[tile.extras.size()], Map.of(), true, ticks, results,
+              List.of(inputs.get(slot).copyWithCount(1)), tile.extras.stream().map(extra -> extra.getStack().copyWithCount(1)).toList());
     }
-    private static boolean validMana(int value) { return value >= 0 && value <= ManaMachine.MANA_CAPACITY; }
+    static boolean validMana(int value) { return value >= 0 && value <= ManaMachine.MANA_CAPACITY; }
     private static long boundedRandom(net.minecraft.util.RandomSource random, long bound) {
         long bits, value;
         do { bits = random.nextLong() >>> 1; value = bits % bound; } while (bits - value + bound - 1 < 0);

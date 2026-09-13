@@ -124,7 +124,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):

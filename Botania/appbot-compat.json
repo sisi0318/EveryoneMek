@@ -1,0 +1,16 @@
+{
+  "repository": "ramidzkh/Applied-Botanics",
+  "version": "1.6.0-alpha.3",
+  "filename": "appbot-1.6.0-alpha.3.jar",
+  "sha256": "997a68cd404b6cd503d21b5147d8063a9375ac386203b594ec15d6e274b29b79",
+  "source_commit": "10201733d07f1e2a20ef69b816a67f633d9d6ffc",
+  "output": "appbot-1.6.0-alpha.3-botania456.jar",
+  "code_license": "LGPL-3.0",
+  "assets_license": "CC-BY-NC-SA-3.0",
+  "resource_remappings": {"botania:life_essence": "botania:gaia_spirit"},
+  "member_remappings": {"manaPoolCraft": "MANA_POOL_CRAFT", "blackLotus": "BLACK_LOTUS"},
+  "remappings": {
+    "vazkii/botania/api/BotaniaForgeCapabilities": "vazkii/botania/api/neoforge/BotaniaNeoForgeCapabilities",
+    "vazkii/botania/api/mana/spark/SparkAttachable": "vazkii/botania/api/mana/spark/ManaSparkAttachable"
+  }
+}

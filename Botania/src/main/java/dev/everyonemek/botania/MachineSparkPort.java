@@ -13,7 +13,9 @@ import vazkii.botania.api.mana.spark.ManaSparkAttachable;
 import vazkii.botania.api.mana.spark.ManaSparkHelper;
 
 /** Native spark view of the machine's one Chemical tank. It is not a mana pool. */
-public record MachineSparkPort(ManaMachine machine) implements ManaReceiver, ManaSparkAttachable {
+public record MachineSparkPort(ManaMachine machine, Direction face) implements ManaReceiver, ManaSparkAttachable {
+    public MachineSparkPort(ManaMachine machine) { this(machine, Direction.UP); }
+    public MachineSparkPort { if (face == null) face = Direction.UP; }
     @Override public Level getManaReceiverLevel() { return machine.getLevel(); }
     @Override public BlockPos getManaReceiverPos() { return machine.getBlockPos(); }
     @Override public boolean canAttachSpark(ItemStack stack) { return Flowers.live(machine) && machine.kind().chemical; }
@@ -22,19 +24,19 @@ public record MachineSparkPort(ManaMachine machine) implements ManaReceiver, Man
     @Override public int getCurrentMana() { return Flowers.live(machine) ? (int) machine.mana().getStored() : 0; }
     @Override public int getAvailableSpaceForMana() {
         if (!Flowers.live(machine)) return 0;
-        var handler = machine.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), machine.getBlockPos(), Direction.UP);
+        var handler = machine.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), machine.getBlockPos(), face);
         int space = (int) machine.mana().getNeeded();
         return handler == null || space == 0 ? 0 : space - (int) handler.insertChemical(new ChemicalStack(ManaContent.MANA, space), Action.SIMULATE).getAmount();
     }
     @Override public boolean isFull() { return getAvailableSpaceForMana() == 0; }
     @Override public boolean areIncomingTransfersDone() { return isFull(); }
-    @Override public boolean canReceiveManaFromBursts() { return false; }
+    @Override public boolean canReceiveManaFromBursts() { return getAvailableSpaceForMana() > 0; }
     @Override public void receiveMana(int amount) {
         if (!Flowers.live(machine) || machine.getLevel().isClientSide) return;
         if (amount > 0) {
-            var handler = machine.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), machine.getBlockPos(), Direction.UP);
+            var handler = machine.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), machine.getBlockPos(), face);
             if (handler != null) handler.insertChemical(new ChemicalStack(ManaContent.MANA, amount), Action.EXECUTE);
-        } else if (amount < 0) {
+        } else if (amount < 0 && face == Direction.UP) {
             // Preserve accounting even if an externally configured native spark asks to drain.
             machine.mana().extract(-(long) amount, Action.EXECUTE, AutomationType.INTERNAL);
         }

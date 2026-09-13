@@ -28,7 +28,8 @@ public final class SparkExpansion {
     }
     private static void capabilities(RegisterCapabilitiesEvent event) {
         for (var entry : ManaContent.MACHINE_TILES.entrySet()) if (entry.getKey().chemical) {
-            event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(ManaReceiver.LOOKUP), entry.getValue().get(), (tile, side) -> new MachineSparkPort(tile));
+            event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(ManaReceiver.LOOKUP), entry.getValue().get(), (tile, side) -> AppliedBotanics.loaded()
+                  ? dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.receiver(tile, side) : new MachineSparkPort(tile, side));
             event.registerBlockEntity(BotaniaNeoForgeCapabilities.getBlockApiLookupById(ManaSparkAttachable.LOOKUP), entry.getValue().get(), (tile, side) -> new MachineSparkPort(tile));
         }
     }

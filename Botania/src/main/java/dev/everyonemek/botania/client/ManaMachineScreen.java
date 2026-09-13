@@ -64,13 +64,11 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
                 button(82, 82, 64, () -> text("target_apply"), () -> send(2, target.getText()));
                 addRenderableWidget(new GuiInnerScreen(this, 152, 82, 44, 16, () -> List.of(Component.literal(tile.targetPercent() + "%"))));
             }
-            addRenderableWidget(new GuiInnerScreen(this, 16, 120, 204, 16, () -> List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY))));
         } else if (!tile.kind().controller()) {
             addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 113, 48));
-            if (tile.kind().chemical) addRenderableWidget(new GuiInnerScreen(this, 16, 120, 204, 16, () -> List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY))));
-            if (!tile.kind().random()) button(16, 162, 204, this::recipeLabel, () -> addWindow(new GuiManaRecipeSelector(this, menu)));
+            if (!tile.kind().random()) button(16, 142, 204, this::recipeLabel, () -> addWindow(new GuiManaRecipeSelector(this, menu)));
         }
-        addRenderableWidget(new GuiInnerScreen(this, 16, tile.kind().controller() ? 162 : 142, 204, 16, () -> List.of(
+        addRenderableWidget(new GuiInnerScreen(this, 16, 122, 204, 16, () -> List.of(
               pendingRevision >= 0 ? text("applying") : !menu.state.getBoolean("accepted") && menu.state.contains("revision") ? text("rejected") : text("status." + tile.status()))));
     }
     @Override public void containerTick() {

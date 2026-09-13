@@ -18,14 +18,27 @@ public final class ManaTransfer {
     public static ManaPoolBlockEntity pool(Level level, BlockPos position) {
         if (level == null || !level.hasChunkAt(position)) return null;
         var tile = level.getBlockEntity(position);
-        return tile != null && !tile.isRemoved() && tile.getClass() == ManaPoolBlockEntity.class
+        return tile != null && !tile.isRemoved() && (tile.getClass() == ManaPoolBlockEntity.class || AppliedBotanics.isPool(tile))
               && tile.getBlockState().getBlock() instanceof ManaPoolBlock ? (ManaPoolBlockEntity) tile : null;
     }
     public static boolean canTake(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canSpare(); }
     public static boolean canGive(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canAccept(); }
+    public static int space(ManaPoolBlockEntity pool) {
+        if (!Flowers.live(pool) || !canGive(pool)) return 0;
+        return AppliedBotanics.isPool(pool) ? dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.insert(pool, Integer.MAX_VALUE, true)
+              : Math.max(0, pool.getMaxMana() - pool.getCurrentMana());
+    }
+    public static int give(ManaPoolBlockEntity pool, int amount, boolean simulate) {
+        if (amount <= 0 || !Flowers.live(pool) || !canGive(pool)) return 0;
+        if (AppliedBotanics.isPool(pool)) return dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.insert(pool, amount, simulate);
+        int accepted = Math.min(amount, space(pool));
+        if (simulate || accepted == 0) return accepted;
+        int before = pool.getCurrentMana(); pool.receiveMana(accepted); return Math.max(0, pool.getCurrentMana() - before);
+    }
     public static boolean creative(ManaPoolBlockEntity pool) { return pool.getBlockState().getBlock() instanceof ManaPoolBlock block && block.isCreative(); }
     public static int take(ManaPoolBlockEntity pool, int amount, boolean simulate) {
         if (amount <= 0 || !canTake(pool) || !Flowers.live(pool)) return 0;
+        if (AppliedBotanics.isPool(pool)) return dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.extract(pool, amount, simulate);
         int taken = Math.min(amount, Math.max(0, pool.getCurrentMana()));
         // The Everlasting Pool always reports full. Its supply does not reduce that value.
         if (simulate || creative(pool)) return taken;
@@ -34,6 +47,7 @@ public final class ManaTransfer {
     }
     public static int refund(ManaPoolBlockEntity pool, int amount) {
         if (amount <= 0 || !Flowers.live(pool)) return 0;
+        if (AppliedBotanics.isPool(pool)) return dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.insert(pool, amount, false);
         if (creative(pool)) return amount;
         int before = pool.getCurrentMana();
         pool.receiveMana(Math.min(amount, Math.max(0, pool.getMaxMana() - before)));
@@ -74,7 +88,7 @@ public final class ManaTransfer {
     private static void bridge(ManaMachine tile, ManaPoolBlockEntity pool) {
         boolean take = tile.mode() == 0;
         long amount = Math.min(take ? tile.poolPullRemaining() : RATE, take ? Math.min(pool.getCurrentMana(), tile.mana().getNeeded())
-              : Math.min(pool.getMaxMana() - pool.getCurrentMana(), tile.mana().getStored()));
+              : Math.min(space(pool), tile.mana().getStored()));
         if (!(take ? canTake(pool) : canGive(pool))) { tile.status(ManaMachine.ITEM_DENIED); return; }
         if (amount <= 0) { tile.status(ManaMachine.READY); return; }
         if (!tile.spendEnergy(tile.energy().getEnergyPerTick())) { tile.status(ManaMachine.NO_ENERGY); return; }
@@ -84,8 +98,7 @@ public final class ManaTransfer {
             if (!remainder.isEmpty()) refund(pool, (int) remainder.getAmount());
             tile.recordPoolPull(taken - (int) remainder.getAmount());
         } else {
-            int before = pool.getCurrentMana(); pool.receiveMana((int) amount);
-            tile.mana().extract(pool.getCurrentMana() - before, Action.EXECUTE, AutomationType.INTERNAL);
+            tile.mana().extract(give(pool, (int) amount, false), Action.EXECUTE, AutomationType.INTERNAL);
         }
         pool.setChanged(); tile.markForSave(); tile.status(ManaMachine.WORKING);
     }
@@ -106,14 +119,16 @@ public final class ManaTransfer {
         if (charge ? !canTake(pool) || !item.canReceiveManaFromPool(pool)
               : !canGive(pool) || item.isNoExport() || !item.canDrainManaToPool(pool)) { tile.status(ManaMachine.ITEM_DENIED); return; }
         int amount = Math.min(RATE, charge ? Math.min(target - item.getMana(), pool.getCurrentMana())
-              : Math.min(item.getMana() - target, pool.getMaxMana() - pool.getCurrentMana()));
+              : Math.min(item.getMana() - target, space(pool)));
         if (amount <= 0) { tile.status(charge ? ManaMachine.NO_MANA : ManaMachine.MANA_FULL); return; }
         int before = item.getMana(); item.addMana(charge ? amount : -amount);
         int moved = charge ? item.getMana() - before : before - item.getMana();
         // A rejected or invalid item mutation never touches the original item or pool.
         if (moved <= 0 || moved > amount) { tile.status(ManaMachine.ITEM_DENIED); return; }
         if (!tile.spendEnergy(tile.energy().getEnergyPerTick())) { tile.status(ManaMachine.NO_ENERGY); return; }
-        pool.receiveMana(charge ? -moved : moved); pool.setChanged();
+        int transferred = charge ? take(pool, moved, false) : give(pool, moved, false);
+        if (transferred != moved) item.addMana(charge ? transferred - moved : moved - transferred);
+        pool.setChanged();
         tile.inputs.getFirst().setStackUnchecked(copy); tile.markForSave(); tile.status(ManaMachine.WORKING);
     }
     private static void chargerBuffer(ManaMachine tile) {

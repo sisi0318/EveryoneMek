@@ -11,7 +11,8 @@
     "EnchanterControlMixin",
     "SparkTransfersAccess",
     "SparkRangeMixin",
-    "SparkRequestMixin"
+    "SparkRequestMixin",
+    "AppliedBotanicsStorageMixin"
   ],
   "plugin": "dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin",
   "client": [

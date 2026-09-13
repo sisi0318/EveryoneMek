@@ -24,7 +24,7 @@ import static dev.everyonemek.botania.ManaMachineGameTests.*;
 @GameTestHolder(BotanicalMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class AdvancedManaGameTests {
-    @GameTest(template = "empty", timeoutTicks = 460)
+    @GameTest(template = "empty", timeoutTicks = 1300)
     public static void pureBrewAndTerraRespectNativeCostsAndPlatform(GameTestHelper h) {
         var pure = machine(h, new BlockPos(12, 2, 12), ManaMachineKind.PURE); power(pure); pure.inputs.getFirst().setStack(new ItemStack(Items.STONE));
         check(ManaWork.choices(pure).stream().noneMatch(choice -> choice.id().getPath().contains("deepslate")), "Pure converter accepted a world-function recipe");
@@ -60,22 +60,23 @@ public final class AdvancedManaGameTests {
     @GameTest(template = "empty", timeoutTicks = 30)
     public static void randomOresReserveSpaceAndPersistCommittedResult(GameTestHelper h) {
         var ore = machine(h, new BlockPos(18, 2, 18), ManaMachineKind.ORE); power(ore); mana(ore, 200000);
-        ore.inputs.getFirst().setStack(new ItemStack(Items.STONE)); ore.extras.getFirst().setStack(new ItemStack(BotaniaBlocks.ORECHID));
+        ore.inputs.getFirst().setStack(new ItemStack(Items.DIRT)); ore.inputs.getLast().setStack(new ItemStack(Items.STONE));
+        ore.extras.getFirst().setStack(new ItemStack(BotaniaBlocks.ORECHID));
         var plan = ManaWork.find(ore); check(plan != null && plan.results().size() > 1, "Ore table did not match stone");
         ore.outputs.forEach(slot -> slot.setStack(new ItemStack(Items.COBBLESTONE, 64)));
         long energy = ore.energy().getEnergy(); ore.onUpdateServer();
         check(ore.status() == ManaMachine.OUTPUT_FULL && ore.energy().getEnergy() == energy && ore.mana().getStored() == 200000, "Blocked random work spent resources");
         ore.outputs.forEach(slot -> slot.setStackUnchecked(ItemStack.EMPTY));
         for (int tick = 0; tick < plan.ticks(); tick++) ore.onUpdateServer();
-        check(ore.inputs.getFirst().isEmpty() && !ore.outputs.getFirst().isEmpty(), "Ore batch did not commit");
+        check(ore.inputs.getLast().isEmpty() && ore.inputs.getFirst().getStack().is(Items.DIRT) && !ore.outputs.getFirst().isEmpty(), "Ore did not use the matching later input slot");
         var result = ore.outputs.getFirst().getStack();
         check(plan.results().stream().anyMatch(option -> option.mana() == 200000 - ore.mana().getStored()
               && option.randomOutput().getDisplayed().stream().anyMatch(state -> result.is(state.getBlock().asItem()))), "Ore selection did not pay its actual recipe cost");
         save(h, ore); stop(ore);
-        var morph = machine(h, new BlockPos(28, 2, 18), ManaMachineKind.METAMORPHIC); power(morph); mana(morph, 10000); morph.inputs.getFirst().setStack(new ItemStack(Items.STONE));
+        var morph = machine(h, new BlockPos(28, 2, 18), ManaMachineKind.METAMORPHIC); power(morph); mana(morph, 10000); morph.inputs.getLast().setStack(new ItemStack(Items.STONE));
         var morphPlan = ManaWork.find(morph); check(morphPlan != null, "Metamorphic table missing");
         for (int i = 0; i < morphPlan.ticks(); i++) morph.onUpdateServer();
-        check(!morph.outputs.getFirst().isEmpty(), "Metamorphic conversion failed"); stop(morph);
+        check(morph.inputs.getLast().isEmpty() && !morph.outputs.getFirst().isEmpty(), "Metamorphic conversion did not use its later input slot"); stop(morph);
         ore.inputs.getFirst().setStack(new ItemStack(Items.NETHERRACK)); ore.extras.getFirst().setStack(new ItemStack(BotaniaBlocks.ORECHID_IGNEM));
         check(h.getLevel().dimensionType().hasCeiling() || ManaWork.find(ore) == null, "Ignem ignored the native ceiling condition"); h.succeed();
     }

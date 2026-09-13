@@ -35,6 +35,15 @@ HELP = {
     'mana_packet': [('拆除存有魔力的 ME 接口等装置时，散出的魔力会聚成魔力团。对魔力池或机器使用，可以把魔力放回去；也可以交回 ME 终端。', 'Breaking an ME Interface or similar block that holds mana releases a Mana Wisp. Use it on a mana pool or machine to return the mana, or deposit it through an ME terminal.')],
 }
 
+HELP['pure_converter'].append(('八个材料槽可以混放原木、石头等材料，每轮合计处理最多 8 个，不足 8 个也会开始。活木、活石基础用时约 60 秒，可用速度升级缩短。输出需要能放下整批产物。', 'Mix logs, stone and other materials in the eight input slots. Each cycle converts up to eight items; smaller batches also work. Livingwood and livingrock take about 60 seconds before speed upgrades. Leave room for the whole batch.'))
+HELP['mana_infuser'].append(('八个材料槽每秒合计灌注最多 8 个物品，可以混放不同材料。每件都要支付配方所需的魔力；魔力不足时等待补充。速度升级可以进一步加快加工。', 'The eight input slots infuse up to eight items per second, including mixed materials. Each item uses its recipe mana cost. Work waits for enough mana, and speed upgrades make it faster.'))
+for name in ['ore_processor', 'metamorphic_stone']:
+    HELP[name].append(('八个材料槽可以持续接收管道送来的材料，机器会从中选择可加工的一件。', 'Eight input slots buffer incoming materials. The machine chooses one matching item for each operation.'))
+
+HELP['mana_infuser'].append(('炼金催化器或炼造催化器也可以放在机器正下方。槽内放有催化器时优先使用槽内的，盆中会显示当前生效的催化符号。', 'Place an Alchemy or Conjuration Catalyst directly beneath the chamber, or put one in its catalyst slot. The slot takes priority. The basin shows the active catalyst symbol.'))
+for name in ['mana_bridge', 'mana_charger', 'mana_infuser', 'runic_forge', 'terra_condenser', 'botanical_brewery', 'ore_processor', 'metamorphic_stone', 'mana_enchanter_controller']:
+    HELP[name].append(('森林法杖切到绑定模式，潜行右击发射器，再潜行右击机器，即可从发射器供魔。魔力脉冲命中的那一面需要设为魔力输入。', 'Switch the Wand to Bind mode, sneak-use it on a spreader, then on the machine. The face hit by its bursts must allow Mana input.'))
+
 HELP['corporea_orchid'].extend([
     ('在设置中点击快捷栏物品，再点击样品格，就能指定允许通过的物品。右击样品格可清除。$(p)同一种物品若有不同名字或附魔，可以选择是否区分。', 'Click a hotbar item and then a sample slot to choose which items may pass. Right-click a sample to clear it.$(p)You can choose whether names and enchantments should count as different items.'),
     ('开启自动合成后，漏斗取货时若库存不足，织网花会请 ME 制作缺少的物品。网络中需要相应的样板、材料和合成 CPU。$(p)最多同时保留 4 项任务，每项最多制作 4,096 件。', 'With autocrafting enabled, the Orchid asks ME to make items missing from a funnel request. The network needs a matching pattern, ingredients and a crafting CPU.$(p)It keeps up to four jobs, with at most 4,096 items per job.'),
@@ -101,5 +110,9 @@ def generate(root, write, zh, en, plants, recipes):
                 pages.append({'type': 'patchouli:crafting', 'recipe': f'{MOD}:{cell_id(tier)}', 'flag': 'mod:ae2'})
         elif name in MACHINES or name in ('mechanical_apothecary', 'resonance_spark_augment'):
             pages.append({'type': 'patchouli:crafting', 'recipe': item})
+        if name == 'mana_bridge':
+            zh[f'{key}.appbot'] = '安装 Applied Botanics 后，可以将互通器连接福鲁伊克斯魔力池。池子要接上有电、有通道的 ME 网络，并使用 Applied Botanics 的魔力盘。选择抽取或供给，即可在 ME 库存和加压管道间输送魔力。'
+            en[f'{key}.appbot'] = 'With Applied Botanics, place the bridge beside a Fluix Mana Pool. Connect the pool to a powered ME network with a channel and Applied Botanics mana cells. Choose draw or supply to transfer mana between ME and pressurized tubes.'
+            pages.append({'type': 'patchouli:text', 'text': f'{key}.appbot', 'flag': 'mod:appbot'})
         write(f'{BASE}/entries/botanicalmekanism/{name}.json', {'name': title, 'icon': item, 'category': 'botania:botanicalmekanism',
               'sortnum': index, 'pages': pages, 'extra_recipe_mappings': {f'{MOD}:{cell_id(t)}': 0 for t in TIERS} if name == 'mana_storage_cell' else {item: 0}})

@@ -31,7 +31,8 @@ public final class FlowerPackets {
     }
     public static void register(RegisterPayloadHandlersEvent event) {
         // The joining screen requires acknowledged settings and connect-as support on both ends.
-        var registrar = event.registrar("4");
+        // Expanded machine menus require matching client/server slot layouts.
+        var registrar = event.registrar("5");
         registrar.playToServer(Settings.TYPE, Settings.CODEC, FlowerPackets::handleSettings);
         registrar.playToServer(FillRecipe.TYPE, FillRecipe.CODEC, (packet, context) -> context.enqueueWork(() -> {
             var player = context.player(); var menu = player.containerMenu;

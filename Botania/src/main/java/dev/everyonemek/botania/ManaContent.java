@@ -43,6 +43,11 @@ public final class ManaContent {
             block.forItemHolder(holder -> {
                 holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
                     var slots = ItemSlotsBuilder.builder();
+                    if (kind.expandedInputs()) {
+                        slots.addInput(1 + kind.extras).addOutput(kind.originalOutputs()).addEnergy().addInput(kind.inputs - 1);
+                        if (kind.outputs > kind.originalOutputs()) slots.addOutput(kind.outputs - kind.originalOutputs());
+                        return slots.build();
+                    }
                     if (kind.inputs + kind.extras > 0) slots.addInput(kind.inputs + kind.extras);
                     if (kind.outputs > 0) slots.addOutput(kind.outputs);
                     return slots.addEnergy().build();

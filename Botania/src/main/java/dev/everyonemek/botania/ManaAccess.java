@@ -27,9 +27,7 @@ public record ManaAccess(Level level, BlockPos pos, Direction side, BlockEntity 
     public long insert(long amount, boolean simulate) {
         if (amount <= 0 || !live()) return 0;
         if (original instanceof ManaPoolBlockEntity pool) {
-            if (!ManaTransfer.canGive(pool)) return 0;
-            int accepted = (int) Math.min(amount, pool.getMaxMana() - pool.getCurrentMana());
-            if (!simulate && accepted > 0) { pool.receiveMana(accepted); pool.setChanged(); } return accepted;
+            return ManaTransfer.give(pool, (int) Math.min(amount, Integer.MAX_VALUE), simulate);
         }
         var handler = handler(); if (handler == null) return 0;
         long wanted = Math.min(amount, ManaMachine.MANA_CAPACITY);

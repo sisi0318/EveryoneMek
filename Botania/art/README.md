@@ -63,3 +63,10 @@ AE 原盘材质与模型属于 Applied Energistics 2 作者，按 [AE2 的素材
 
 
 alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素材与模型保持上述版本。此离线预览由原图和 JSON 标签位置拼合，不执行 Minecraft 的 ItemColor；不能用它替代渲染回调检查或游戏内验收。
+
+
+## alpha.16 共面修复与催化符号
+
+`tools/model_surfaces.py` 对原立方体做表面裁切，去除相交内部面和重叠外面，并按原方向重算 UV。12 台装置保留原造型、材质和碰撞实体；无新位图。`botanical-machines-preview.png` 已从生成后的表面重建，轴向共面面积重叠检查为零。
+
+灌注室的催化符号由客户端渲染器调用 Botania 原 PoolOverlayProvider 与 ICON_OVERLAY 图层，显示当前实际生效的内置或底部催化器。这个动态效果不在静态模型预览中，游戏内由用户验收。

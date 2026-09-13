@@ -15,6 +15,18 @@
       "text": "book.botanicalmekanism.mana_infuser.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_infuser.2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_infuser.3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_infuser.4"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_infuser"
     }

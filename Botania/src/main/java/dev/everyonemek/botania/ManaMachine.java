@@ -44,6 +44,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     private boolean readingSettings, reservingSide;
     private long poolPullTick = Long.MIN_VALUE;
     private int poolPulled;
+    private int catalystVisualState = -1;
     // Controller bookkeeping holds identifiers only; native devices own their in-flight resources.
     CompoundTag controller = new CompoundTag();
 
@@ -90,6 +91,16 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         else if (amount < 0) mana.extract(-(long) amount, Action.EXECUTE, AutomationType.INTERNAL);
     }
     public ManaMachineKind kind() { return ((ManaMachineBlock) getBlockState().getBlock()).kind; }
+    public BlockState infusionCatalyst() {
+        var air = net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+        if (kind() != ManaMachineKind.INFUSER || level == null) return air;
+        var stored = extras.getFirst().getStack();
+        if (!stored.isEmpty()) { var state = ManaWork.catalystState(stored); return state == null ? air : state; }
+        var below = getBlockPos().below(); return level.hasChunkAt(below) ? level.getBlockState(below) : air;
+    }
+    public BlockState catalystVisual() {
+        return catalystVisualState < 0 ? infusionCatalyst() : net.minecraft.world.level.block.Block.stateById(catalystVisualState);
+    }
     @Override protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {
         var builder = EnergyContainerHelper.forSideWithConfig(this);
         builder.addContainer(energy = MachineEnergyContainer.input(this, listener)); return builder.build();
@@ -103,7 +114,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     @Override protected IInventorySlotHolder getInitialInventory(IContentsListener listener) {
         var builder = InventorySlotHelper.forSideWithConfig(this);
         inputs = new ArrayList<>(); extras = new ArrayList<>(); outputs = new ArrayList<>();
-        for (int i = 0; i < kind().inputs; i++) {
+        for (int i = 0; i < kind().originalInputs(); i++) {
             var slot = BasicInventorySlot.at((stack, automation) -> automation != AutomationType.EXTERNAL, (stack, automation) -> true,
                   stack -> ManaWork.accepts(kind(), getLevel(), stack, false), listener,
                   kind() == ManaMachineKind.ENCHANTER ? 106 : 16 + i % 4 * 18, kind() == ManaMachineKind.ENCHANTER ? 50 : 32 + i / 4 * 18);
@@ -115,13 +126,39 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
                   kind().extras == 1 ? 106 : 16 + i % 4 * 18, kind().extras == 1 ? 86 : 32 + i / 4 * 18);
             extras.add(slot); builder.addSlot(slot);
         }
-        for (int i = 0; i < kind().outputs; i++) {
+        for (int i = 0; i < kind().originalOutputs(); i++) {
             var slot = OutputInventorySlot.at(listener, 152 + i % 3 * 18, 32 + i / 3 * 18); outputs.add(slot); builder.addSlot(slot);
         }
-        builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 206, 86)); return builder.build();
+        builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 206, 86));
+        if (kind().expandedInputs()) {
+            // Append new slots after the old input, reagent, outputs and power slot.
+            for (int i = 1; i < kind().inputs; i++) {
+                var slot = BasicInventorySlot.at((stack, automation) -> automation != AutomationType.EXTERNAL, (stack, automation) -> true,
+                      stack -> ManaWork.accepts(kind(), getLevel(), stack, false), listener, 16 + i % 4 * 18, 32 + i / 4 * 18);
+                inputs.add(slot); builder.addSlot(slot);
+            }
+            for (int i = kind().originalOutputs(); i < kind().outputs; i++) {
+                var slot = OutputInventorySlot.at(listener, 152 + i % 3 * 18, 32 + i / 3 * 18); outputs.add(slot); builder.addSlot(slot);
+            }
+        }
+        return builder.build();
+    }
+    @Override public void applyInventorySlots(net.minecraft.world.level.block.entity.BlockEntity.DataComponentInput input, List<IInventorySlot> slots,
+          mekanism.common.attachments.containers.item.AttachedItems attached) {
+        int previousSize = kind().originalInputs() + kind().extras + kind().originalOutputs() + 1;
+        if (kind().expandedInputs() && attached.size() == previousSize && slots.size() > previousSize) {
+            var expanded = new ArrayList<>(attached.containers());
+            while (expanded.size() < slots.size()) expanded.add(ItemStack.EMPTY);
+            attached = new mekanism.common.attachments.containers.item.AttachedItems(expanded);
+        }
+        super.applyInventorySlots(input, slots, attached);
     }
     @Override protected boolean onUpdateServer() {
         boolean update = super.onUpdateServer(); energySlot.fillContainerOrConvert(); setActive(false);
+        if (kind() == ManaMachineKind.INFUSER) {
+            int current = net.minecraft.world.level.block.Block.getId(infusionCatalyst());
+            if (current != catalystVisualState) { catalystVisualState = current; sendUpdatePacket(); }
+        }
         SparkExpansion.supplyMachine(this);
         ManaTransfer.fillFromAdjacentPools(this);
         if (!canFunction()) { status = REDSTONE; return update; }
@@ -248,5 +285,14 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         readingSettings = true; try { super.loadAdditional(tag, provider); } finally { readingSettings = false; }
         readSettings(tag.getCompound("machine_settings")); duration = Math.clamp(tag.getInt("duration"), 1, 2_000_000);
         progress = Math.clamp(tag.getInt("progress"), 0, duration - 1); signature = tag.contains("work") ? tag.getCompound("work") : null;
+    }
+    @Override public CompoundTag getReducedUpdateTag(HolderLookup.Provider provider) {
+        var tag = super.getReducedUpdateTag(provider);
+        if (kind() == ManaMachineKind.INFUSER) tag.putInt("infusion_catalyst", net.minecraft.world.level.block.Block.getId(infusionCatalyst()));
+        return tag;
+    }
+    @Override public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
+        super.handleUpdateTag(tag, provider);
+        if (tag.contains("infusion_catalyst")) catalystVisualState = tag.getInt("infusion_catalyst");
     }
 }

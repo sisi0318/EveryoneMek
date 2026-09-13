@@ -60,3 +60,10 @@ type="optional"
 versionRange="[1.2.1,2)"
 ordering="AFTER"
 side="CLIENT"
+
+[[dependencies.botanicalmekanism]]
+modId="appbot"
+type="optional"
+versionRange="[1.6.0-alpha.3,1.7)"
+ordering="AFTER"
+side="BOTH"

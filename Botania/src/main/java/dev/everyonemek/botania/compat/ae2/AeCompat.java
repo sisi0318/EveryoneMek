@@ -19,6 +19,8 @@ public final class AeCompat {
             appeng.api.behaviors.StackExportStrategy.register(ManaKey.TYPE, ManaBusStorage::at);
             appeng.api.behaviors.ExternalStorageStrategy.register(ManaKey.TYPE, (level, pos, side) -> (extractable, changed) -> {
                 var access = dev.everyonemek.botania.ManaAccess.at(level, pos, side);
+                // Appbot owns pool storage-bus views when installed. Do not mount the same pool twice.
+                if (dev.everyonemek.botania.AppliedBotanics.loaded() && access != null && access.original() instanceof vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity) return null;
                 return access == null ? null : new ManaBusStorage(access, extractable, changed);
             });
         }));

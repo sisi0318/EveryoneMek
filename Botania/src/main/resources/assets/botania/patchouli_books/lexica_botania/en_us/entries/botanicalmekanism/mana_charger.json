@@ -23,6 +23,10 @@
       "text": "book.botanicalmekanism.mana_charger.3"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_charger.4"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_charger"
     }

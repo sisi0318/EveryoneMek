@@ -149,3 +149,11 @@
 
 - AE2 19.2.17 的 BasicStorageCell.getColor 对盘身返回 0xFFFFFF，对状态灯返回 CellState RGB；InitItemColors.init 注册时统一调用 makeOpaque，将结果交 FastColor.ARGB32.opaque。
 - 当前 Minecraft ItemRenderer.renderQuadList 读取 FastColor.ARGB32.alpha(i)，未补 alpha 的 RGB 会使原盘身完全透明。魔力标签没有 tintIndex，仍能显示，因此截图仅剩小条。复用 AE 颜色函数时必须保留注册层的不透明转换。
+
+
+## 14. alpha.16 原生行为和界面参考
+
+- PureDaisyBlockEntity 的 POSITIONS 有 8 项，每 tick 只递减当前项。批次基准 time×8；ManaSpreaderBlockEntity.bindTo 使用目标碰撞形状中心定向，ManaBurstEntity.onHitBlock 按 hit.getDirection 查询 ManaReceiver。
+- 原池的 PoolOverlayProvider、RenderHelper.ICON_OVERLAY 与 renderIconFullBright 用于催化器虚影。布局来自本项目盆内尺寸，不复制原池渲染器。
+- [BotanicalMachinery](https://github.com/ChaoticTrials/BotanicalMachinery/tree/3b728b192f0c9e799c1537fb6f0012fb40f377f6) 核对 ScreenMechanicalManaInfuser、ContainerMenuMechanicalDaisy、ScreenBase；[ExtraMachinery](https://github.com/lentel27/ExtraMachinery/tree/b1092e75c9e94637b19b6490968e4b16a65f9659) 核对 ExtraScreenBase 的资源条与槽位信息。仅参考操作分组和简洁显示，不复制源码或图片，版本不作为 1.21.1 API 契约。
+- [Applied Botanics alpha.3](https://github.com/ramidzkh/Applied-Botanics/releases/tag/1.6.0-alpha.3) 与 [对应源码](https://github.com/ramidzkh/Applied-Botanics/tree/10201733d07f1e2a20ef69b816a67f633d9d6ffc) 核对 SafeMana、FluixPoolBlockEntity、ManaExternalStorageStrategy。代码 LGPL-3.0，素材 CC BY-NC-SA 3.0；适配脚本、变更清单与上游 SHA 随项目提供，原 JAR 保留于构建依赖目录。仅改两个类引用名、两个音效字段名、一项配方 ID 和兼容版本标记。

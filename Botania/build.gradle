@@ -11,6 +11,13 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 def upstream = new groovy.json.JsonSlurper().parse(file('upstream-lock.json'))
 def botaniaJar = layout.buildDirectory.file("dependencies/${upstream.filename}")
 def withAE2 = providers.gradleProperty('withAE2').map { it.toBoolean() }.getOrElse(true)
+def withAppbot = withAE2 && providers.gradleProperty('withAppbot').map { it.toBoolean() }.getOrElse(false)
+def appbotJar = layout.buildDirectory.file('dependencies/appbot-1.6.0-alpha.3-botania456.jar')
+def prepareAppbot = tasks.register('prepareAppbot', Exec) {
+    inputs.files('appbot-compat.json', 'tools/prepare_appbot.py', 'third-party/appbot/LICENSE', 'third-party/appbot/NOTICE.md')
+    outputs.file(appbotJar)
+    commandLine 'python', 'tools/prepare_appbot.py'
+}
 def prepareBotania = tasks.register('prepareBotania', Exec) {
     inputs.files('upstream-lock.json', 'tools/prepare_botania.py')
     outputs.file(botaniaJar)
@@ -26,6 +33,10 @@ sourceSets {
         compileClasspath += sourceSets.main.output + sourceSets.gameTest.output
         runtimeClasspath += sourceSets.main.output + sourceSets.gameTest.output
     }
+    appbotGameTest {
+        compileClasspath += sourceSets.main.output + sourceSets.gameTest.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.gameTest.output
+    }
 }
 configurations {
     gameTestImplementation.extendsFrom implementation
@@ -33,6 +44,9 @@ configurations {
     aeGameTestImplementation.extendsFrom gameTestImplementation
     aeGameTestCompileOnly.extendsFrom compileOnly
     aeGameTestRuntimeOnly.extendsFrom runtimeOnly
+    appbotGameTestImplementation.extendsFrom gameTestImplementation
+    appbotGameTestCompileOnly.extendsFrom compileOnly
+    appbotGameTestRuntimeOnly.extendsFrom runtimeOnly
 }
 repositories {
     maven { url = 'https://cursemaven.com'; content { includeGroup 'curse.maven' } }
@@ -45,6 +59,7 @@ neoForge {
     version = project.neo_version
     addModdingDependenciesTo sourceSets.gameTest
     addModdingDependenciesTo sourceSets.aeGameTest
+    addModdingDependenciesTo sourceSets.appbotGameTest
     runs {
         client { client() }
         server { server(); programArgument '--nogui' }
@@ -58,6 +73,7 @@ neoForge {
         botanicalmekanism {
             sourceSet sourceSets.main; sourceSet sourceSets.gameTest
             if (withAE2) sourceSet sourceSets.aeGameTest
+            if (withAppbot) sourceSet sourceSets.appbotGameTest
         }
     }
 }
@@ -70,6 +86,8 @@ dependencies {
     runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.27.0.335'
     compileOnly 'curse.maven:ae2-jei-integration-1074338:7727898'
     compileOnly('org.appliedenergistics:appliedenergistics2:19.2.17') { transitive = false }
+    compileOnly files(appbotJar).builtBy(prepareAppbot)
+    if (withAppbot) runtimeOnly files(appbotJar).builtBy(prepareAppbot)
     if (withAE2) {
         runtimeOnly 'org.appliedenergistics:appliedenergistics2:19.2.17'
         runtimeOnly 'curse.maven:ae2-jei-integration-1074338:7727898'
@@ -83,6 +101,7 @@ tasks.named('test', Test) { useJUnitPlatform() }
 tasks.named('check') {
     dependsOn 'compileGameTestJava'
     if (withAE2) dependsOn 'compileAeGameTestJava'
+    if (withAppbot) dependsOn 'compileAppbotGameTestJava'
 }
 tasks.named('jar', Jar) { from('LICENSE') }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }

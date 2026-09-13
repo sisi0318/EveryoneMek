@@ -15,6 +15,10 @@
       "text": "book.botanicalmekanism.runic_forge.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.runic_forge.2"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:runic_forge"
     }

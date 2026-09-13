@@ -11,6 +11,10 @@
       "title": "book.botanicalmekanism.pure_converter.title"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.pure_converter.1"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:pure_converter"
     }

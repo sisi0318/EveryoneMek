@@ -15,8 +15,17 @@
       "text": "book.botanicalmekanism.mana_bridge.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_bridge.2"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_bridge"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_bridge.appbot",
+      "flag": "mod:appbot"
     }
   ],
   "extra_recipe_mappings": {

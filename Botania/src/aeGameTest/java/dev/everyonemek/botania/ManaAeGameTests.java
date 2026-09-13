@@ -67,6 +67,7 @@ public final class ManaAeGameTests {
     }
     @GameTest(template = "empty", timeoutTicks = 180)
     public static void nativeStorageBusShowsAndExtractsPoolMana(GameTestHelper h) {
+        var poolKey = AppliedBotanics.loaded() ? AppliedBotanicsCompat.poolKey() : ManaKey.INSTANCE;
         var pos = new BlockPos(20, 3, 20); var pool = pool(h, pos.north(), 12000); var owner = player(h, "mana-storage-bus");
         h.setBlock(pos, AEBlocks.CABLE_BUS.block()); h.setBlock(pos.west(), AEBlocks.CREATIVE_ENERGY_CELL.block());
         var host = PartHelper.getPartHost(h.getLevel(), h.absolutePos(pos));
@@ -74,22 +75,22 @@ public final class ManaAeGameTests {
         var bus = host.addPart(AEParts.STORAGE_BUS.asItem(), Direction.NORTH, owner);
         h.startSequence().thenWaitUntil(() -> {
             check(bus.getGridNode() != null && bus.getGridNode().isActive(), "Storage bus not connected");
-            check(bus.getGridNode().getGrid().getStorageService().getInventory().getAvailableStacks().get(ManaKey.INSTANCE) == 12000, "Storage bus did not mount mana");
+            check(bus.getGridNode().getGrid().getStorageService().getInventory().getAvailableStacks().get(poolKey) == 12000, "Storage bus did not mount mana");
         }).thenExecute(() -> {
             var storage = bus.getGridNode().getGrid().getStorageService().getInventory();
-            check(storage.extract(ManaKey.INSTANCE, 3000, Actionable.SIMULATE, IActionSource.empty()) == 3000 && pool.getCurrentMana() == 12000, "Storage bus simulation changed pool");
-            check(storage.extract(ManaKey.INSTANCE, 3000, Actionable.MODULATE, IActionSource.empty()) == 3000 && pool.getCurrentMana() == 9000, "Storage bus used a separate mana inventory");
-            check(storage.insert(ManaKey.INSTANCE, 2000, Actionable.MODULATE, IActionSource.empty()) == 2000 && pool.getCurrentMana() == 11000, "Storage bus could not return mana to pool");
+            check(storage.extract(poolKey, 3000, Actionable.SIMULATE, IActionSource.empty()) == 3000 && pool.getCurrentMana() == 12000, "Storage bus simulation changed pool");
+            check(storage.extract(poolKey, 3000, Actionable.MODULATE, IActionSource.empty()) == 3000 && pool.getCurrentMana() == 9000, "Storage bus used a separate mana inventory");
+            check(storage.insert(poolKey, 2000, Actionable.MODULATE, IActionSource.empty()) == 2000 && pool.getCurrentMana() == 11000, "Storage bus could not return mana to pool");
             h.setBlock(pos.north(), Blocks.AIR);
-            check(storage.extract(ManaKey.INSTANCE, 1, Actionable.MODULATE, IActionSource.empty()) == 0, "Storage bus retained a removed pool");
+            check(storage.extract(poolKey, 1, Actionable.MODULATE, IActionSource.empty()) == 0, "Storage bus retained a removed pool");
             h.setBlock(pos.north(), vazkii.botania.common.block.BotaniaBlocks.CREATIVE_MANA_POOL);
         }).thenWaitUntil(() -> {
             var storage = bus.getGridNode().getGrid().getStorageService().getInventory();
-            check(storage.getAvailableStacks().get(ManaKey.INSTANCE) == 1_000_000, "Storage bus did not recognize replacement everlasting pool");
+            check(storage.getAvailableStacks().get(poolKey) == 1_000_000, "Storage bus did not recognize replacement everlasting pool");
         }).thenExecute(() -> {
             var storage = bus.getGridNode().getGrid().getStorageService().getInventory();
-            check(storage.extract(ManaKey.INSTANCE, 3000, Actionable.SIMULATE, IActionSource.empty()) == 3000, "Everlasting ME simulation failed");
-            check(storage.extract(ManaKey.INSTANCE, 3000, Actionable.MODULATE, IActionSource.empty()) == 3000, "Everlasting ME extraction failed");
+            check(storage.extract(poolKey, 3000, Actionable.SIMULATE, IActionSource.empty()) == 3000, "Everlasting ME simulation failed");
+            check(storage.extract(poolKey, 3000, Actionable.MODULATE, IActionSource.empty()) == 3000, "Everlasting ME extraction failed");
             check(((vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity) h.getBlockEntity(pos.north())).getCurrentMana() == 1_000_000, "AE drained the everlasting pool");
         }).thenSucceed();
     }
