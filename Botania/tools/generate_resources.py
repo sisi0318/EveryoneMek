@@ -126,7 +126,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsManaDensityMixin', 'AppliedBotanicsCellCapacityMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsManaDensityMixin', 'AppliedBotanicsCellCapacityMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -216,7 +216,9 @@ corporea_messages.update({
     'filter.0': ('筛选：全部', 'Filter: all'), 'filter.1': ('筛选：仅样品', 'Filter: allow'), 'filter.2': ('筛选：排除样品', 'Filter: deny'),
     'exact': ('精确匹配', 'Exact match'), 'item_only': ('只看种类', 'Item type'),
     'samples': ('样品', 'Filter'), 'hotbar': ('物品', 'Hotbar'), 'clear': ('清空筛选', 'Clear filter'),
-    'sample_help': ('拿起物品后点击样品格，或 Shift 点击背包物品。右击清除，样品不会消耗物品。', 'Click a filter slot with a held item, or Shift-click an inventory item. Right-click to clear. Samples do not consume items.'),
+    'sample_help': ('拿起物品后点击或拖过样品格，Shift 点击背包物品可快速添加。按住右键拖动可清除，取样不消耗物品。', 'Click or drag over filter slots with a held item. Shift-click inventory items to add samples. Right-drag clears slots without consuming items.'),
+    'cycle_help': ('左键下一项，右键上一项。', 'Left-click: next. Right-click: previous.'),
+    'samples_inactive': ('当前允许全部物品通过。点击左侧筛选按钮，启用或排除样品。', 'All items may pass. Use the filter button on the left to allow or exclude samples.'),
     'craft.on': ('合成：开', 'Craft: on'), 'craft.off': ('合成：关', 'Craft: off'),
     'crafting': ('合成：%s · %s 项', 'Craft: %s · %s jobs'),
     'craft_help': ('缺货时让 ME 自动制作。需要样板和合成 CPU，做好后再取一次货。', 'Asks ME to craft missing items. Requires a pattern and crafting CPU; request the items again when ready.'),

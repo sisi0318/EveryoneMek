@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.extensibility.*;
 /** Do not resolve Botania's optional JEI category hierarchy when JEI is absent. */
 public final class OptionalJeiMixinPlugin implements IMixinConfigPlugin {
     @Override public boolean shouldApplyMixin(String target, String mixin) {
+        if (mixin.endsWith("ManaTerminalDefaultsMixin") || mixin.endsWith("ManaWirelessDefaultsMixin"))
+            return net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("ae2") != null;
         if (mixin.substring(mixin.lastIndexOf('.') + 1).startsWith("AppliedBotanics")) return net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("appbot") != null;
         return !mixin.endsWith("JeiMixin") || net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("jei") != null;
     }

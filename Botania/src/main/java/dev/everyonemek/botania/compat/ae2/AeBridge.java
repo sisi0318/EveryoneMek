@@ -35,6 +35,7 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
     private final BridgeCrafting crafting;
     private final ExportStorage storage = new ExportStorage();
     private long budgetTick = Long.MIN_VALUE;
+    private long displayTick = Long.MIN_VALUE;
     private int spent, lastMoved, displayNodes, displayTypes, displayMeTypes;
     private long displayItems, displayMeItems;
     private String status = "connecting";
@@ -169,7 +170,11 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
         else if (!node.isActive()) status = "no_channel";
         else status = topology().problem();
         if (status.isEmpty()) status = "ready";
-        if (flower.getLevel().getGameTime() % 20 != 0) return;
+    }
+    private void refreshDisplay() {
+        long now = flower.getLevel().getGameTime();
+        if (displayTick != Long.MIN_VALUE && now - displayTick < 20) return;
+        displayTick = now;
         displayItems = displayMeItems = 0; displayTypes = displayMeTypes = displayNodes = 0;
         var topology = usable();
         if (topology != null) {
@@ -183,6 +188,7 @@ public final class AeBridge implements BridgeBackend, IInWorldGridNodeHost, IAct
         }
     }
     @Override public void describe(CompoundTag state) {
+        refreshDisplay();
         crafting.describe(state); state.putString("status", status); state.putBoolean("ae_connected", connected());
         state.putInt("nodes", displayNodes); state.putInt("types", displayTypes); state.putInt("me_types", displayMeTypes);
         state.putLong("items", displayItems); state.putLong("me_items", displayMeItems); state.putInt("moved", lastMoved);

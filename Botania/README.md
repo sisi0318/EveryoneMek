@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.21** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.22** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.21.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.22.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -106,7 +106,7 @@
 2. 在机器上接 ME 输出总线，拿着一张魔力盘右击总线的筛选格，选择魔力。
 3. 将机器连接总线的一面设为“魔力输入”。
 
-ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类别会显示储量。拿着魔力盘在终端中点击魔力，可以装入或归还；Shift 点击可转移更多。
+ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力，旧终端会自动补开一次；之后手动关闭仍会保留。只有存入魔力后才会出现存量条目。拿着魔力盘在终端中点击魔力，可以装入或归还；Shift 点击可转移更多。
 
 拆掉存有魔力的 ME 接口等装置时，会掉落魔力团。对池子或机器使用，可将魔力放回去。存储盘和魔力团拆装、重进世界后仍保留魔力。
 
@@ -130,13 +130,13 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 织网花让 ME 终端存取多媒体箱子，也让多媒体漏斗从 ME 取货。它需要 ME 电力和一个通道。
 
-花和箱子上安装普通多媒体火花，主火花另放。空手右击花，按 ME 存储总线式界面设置：上方 63 个样品格，下方完整背包，方向、筛选和自动合成开关在左侧。拿起物品后点击样品格或 Shift 点击背包物品即可取样，右击清除。具体摆法和固定器用法见 [CORPOREA.md](CORPOREA.md)。
+花和箱子上安装普通多媒体火花，主火花另放。空手右击花，按 ME 存储总线式界面设置：上方 63 个样品格，下方完整背包，方向、筛选和自动合成开关在左侧。拿起物品后点击或拖过样品格即可取样，Shift 点击背包可快速添加；按住右键拖动可批量清除。方向和筛选按钮支持左键下一项、右键上一项，连续操作不会被等待回信挡住。具体摆法和固定器用法见 [CORPOREA.md](CORPOREA.md)。
 
 ## 开发与测试
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.21 已通过 48 项常规服务端测试和 4 项单元检查；Applied Botanics 共存的 47 项测试沿用 alpha.17 结果。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.22 已通过 49 项常规服务端测试和 5 项单元检查；Applied Botanics 共存的 47 项测试沿用 alpha.17 结果。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -171,3 +171,5 @@ The Corporea Orchid uses an ME Storage Bus style screen with 63 filter slots and
 充能座已移除单独的选池按钮。充能时从魔力输入面取魔；抽出物品魔力时先存入机内，设为输出并开启弹出的一面可以向紧贴的魔力池回充。抽出模式不会再从相邻池吸回魔力，输出受阻时留在机内。
 
 Mechanical sparks use the original warm-white flame; masters use Botania's blue-violet master flame, without frames. Range and throughput upgrades use Air and Mana Rune textures with a small spark marker. Entity names distinguish the master. Simultaneous shared-menu clicks and dismantling were checked through the server container-click handler.
+
+Terminal mana visibility is enabled by default, including a one-time update for existing terminals. Later manual opt-outs are saved. This also covers wireless terminals and preserves other visibility choices. The Corporea Orchid supports continuous filter edits, drag painting/right-drag clearing and reverse cycling with right-click. Display-only inventory statistics are collected on demand, at most once per second while viewed.

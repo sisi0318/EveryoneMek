@@ -17,7 +17,9 @@
     "AppliedBotanicsManaDensityMixin",
     "AppliedBotanicsCellCapacityMixin",
     "MechanicalSparkPlacementMixin",
-    "MechanicalSparkMixin"
+    "MechanicalSparkMixin",
+    "ManaTerminalDefaultsMixin",
+    "ManaWirelessDefaultsMixin"
   ],
   "plugin": "dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin",
   "client": [

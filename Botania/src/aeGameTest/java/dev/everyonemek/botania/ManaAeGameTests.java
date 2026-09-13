@@ -23,6 +23,32 @@ import static dev.everyonemek.botania.BotanicalGameTests.*;
 @GameTestHolder(BotanicalMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class ManaAeGameTests {
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void terminalsEnableManaOnceWithoutResettingLaterPlayerChoices(GameTestHelper h) {
+        var owner = player(h, "mana-visibility"); var pos = new BlockPos(20, 3, 20);
+        h.setBlock(pos, AEBlocks.CABLE_BUS.block()); var host = PartHelper.getPartHost(h.getLevel(), h.absolutePos(pos));
+        host.addPart(AEParts.GLASS_CABLE.item(AEColor.TRANSPARENT), null, owner);
+        var terminal = host.addPart(AEParts.TERMINAL.asItem(), Direction.SOUTH, owner);
+        var selection = terminal.getKeyTypeSelection(); var mana = ManaKeys.type();
+        check(selection.isEnabled(mana), "New terminal hides mana by default");
+        var old = new net.minecraft.nbt.CompoundTag(); terminal.writeToNBT(old, h.getLevel().registryAccess());
+        var types = new net.minecraft.nbt.ListTag(); types.add(net.minecraft.nbt.StringTag.valueOf(AEKeyType.items().getId().toString()));
+        old.put("enabledKeyTypes", types); old.remove(ManaVisibilityDefaults.MARKER);
+        terminal.readFromNBT(old, h.getLevel().registryAccess());
+        check(selection.isEnabled(mana) && selection.isEnabled(AEKeyType.items()) && !selection.isEnabled(AEKeyType.fluids()), "Old terminal did not enable only mana");
+        selection.setEnabled(mana, false);
+        var saved = new net.minecraft.nbt.CompoundTag(); terminal.writeToNBT(saved, h.getLevel().registryAccess()); terminal.readFromNBT(saved, h.getLevel().registryAccess());
+        check(!selection.isEnabled(mana), "Reload reset a deliberate mana opt-out");
+        var wireless = new ItemStack(AEItems.WIRELESS_TERMINAL.asItem());
+        wireless.set(appeng.api.ids.AEComponents.ENABLED_KEY_TYPES, java.util.List.of(AEKeyType.items()));
+        var custom = net.minecraft.network.chat.Component.literal("Named terminal"); wireless.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, custom);
+        var mobile = appeng.api.util.KeyTypeSelection.forStack(wireless, type -> true);
+        check(mobile.isEnabled(mana) && !mobile.isEnabled(AEKeyType.fluids()) && wireless.getHoverName().equals(custom), "Wireless migration changed unrelated settings");
+        mobile.setEnabled(mana, false);
+        var restored = ItemStack.parseOptional(h.getLevel().registryAccess(), (net.minecraft.nbt.CompoundTag) wireless.saveOptional(h.getLevel().registryAccess()));
+        check(!appeng.api.util.KeyTypeSelection.forStack(restored, type -> true).isEnabled(mana), "Wireless opt-out was not saved");
+        h.succeed();
+    }
     private static void sidePacket(net.minecraft.server.level.ServerPlayer owner, ManaMachine machine, mekanism.common.network.MekClickType click) {
         var oldMenu = owner.containerMenu; var oldPos = owner.position();
         try {

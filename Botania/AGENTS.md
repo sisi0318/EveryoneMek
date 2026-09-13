@@ -4,14 +4,23 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.21 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.22 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.21 验证 48 项常规服务端 GameTest 与 4 项 JUnit；Applied Botanics 共存的 47 项验证沿用 alpha.17。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.22 验证 49 项常规服务端 GameTest 与 5 项 JUnit；Applied Botanics 共存的 47 项验证沿用 alpha.17。不代表客户端视觉或完整整合包验收。
+
+## alpha.22 织网花操作与终端默认显示
+
+- 用户确认优化界面／操作和功能／性能。CorporeaFlowerScreen 不再用全局 pending 禁止后续点击，沿用原服务器设置包；SettingsProgress 跟踪全部提交的 revision，支持部分／合并回包和整数回绕。模式循环按同一操作最后未确认的目标计算，显示设置仍取服务器确认值。样品仅在独立待确认视图预览，确认／拒绝后以服务器样品替换，不改实际库存。
+- 左键拖拽取样、右键拖拽清空，同一手势同一格只发一次；离开筛选区继续持有物品，释放时消费本次手势，避免落入物品栏拖分／丢弃。方向与筛选右键反向循环。状态使用正常字号、网格下显示确认的样品数量，全部通过时样品灰显；只在新 Snapshot 对象到达时解析样品，提示文字变化时才重建 Tooltip。
+- AeBridge.tick 保留连接检查、预算和合成推进；显示用 scan／ME 数量统计移到 describe 中的 refreshDisplay，最多每 20 tick 一次，没人读取描述时不做这次整网统计。实际存取仍走实时 usable／port.handler，不缓存资源或延迟安全检查。
+- 用户的 AE 存量不显示最终确认是终端没有勾选魔力，盘读写无故障；不要据此前的排查假设改写魔力存量、单位或重置网络。用户随后明确要求默认打开魔力显示。
+- ManaVisibilityDefaults 仅为终端默认显示做一次迁移。ManaTerminalDefaultsMixin 在 AbstractTerminalPart.readFromNBT 尾部补开当前 ManaKeys.type，writeToNBT 记初始化标记；保留其他类型。ManaWirelessDefaultsMixin 仅处理 WirelessTerminalItem 的 forStack 结果，在原 CUSTOM_DATA 追加标记并保留其他组件。已有标记时尊重用户后来关闭的设置，不每次强制勾选，也不影响总线工作类型或物品盘分区。
+- 两个新增 AE Mixin 都在 OptionalJeiMixinPlugin 中按 AE2 存在与否跳过。普通／合成／样板终端继承同一原基类，无线合成终端继承 WirelessTerminalItem。ManaAeGameTests 覆盖旧终端一次补开、手动关闭后重载、无线盘组件保存和其他筛选保持；SettingsProgressTest 覆盖快速编辑和合并回包。菜单协议、槽位与资源持久化格式不改。
 
 ## alpha.21 火花身份、材质与共享升级检查
 
