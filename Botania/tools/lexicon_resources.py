@@ -41,6 +41,14 @@ HELP['corporea_orchid'].extend([
     ('做好以后，再让漏斗取一次货即可。也可以用多媒体拦截器和多媒体固定器记录缺少的数量，收到红石信号后再次取货。', 'Once crafting finishes, request the items again. A Corporea Interceptor and Retainer can remember the missing amount and repeat the request when given a redstone signal.'),
 ])
 
+for name in ['mana_charger', 'mana_infuser', 'runic_forge', 'terra_condenser', 'botanical_brewery', 'ore_processor', 'metamorphic_stone', 'mana_enchanter_controller']:
+    HELP[name].append(('魔力池紧贴机器时，把相应一面设为魔力输入，即可直接取魔力。多个面合计每秒最多 20,000 魔力，满了会自动停下。', 'A pool touching a Mana input face can supply this machine directly. All faces share a limit of 20,000 mana per second. Transfer stops when full.'))
+HELP['mana_storage_cell'].extend([
+    ('样板供应器能把网络中的魔力和材料一起送出。接收面的魔力设为输入；需要送入辅料时，物品设为输入/输出，也能从这里送回成品。', 'A Pattern Provider can send mana and ingredients together. Set the receiving Mana face to Input. Use Item Input/Output to receive reagents and return products through that face.'),
+    ('安装 AE2 JEI Integration 后，在样板终端使用 JEI 加号，就会带入灌注、符文、泰拉和酿造所需的魔力。也可以搜索“魔力”，拖入样板再修改数量。', 'With AE2 JEI Integration installed, the JEI plus button includes mana for infusion, rune, terra and brewing patterns. You can also search for Mana and drag it into a pattern before adjusting the amount.'),
+    ('酿造会按页面显示的容器填写魔力和成品。用来催化的符文、炼金催化器等先放进机器，不必写进样板。', 'Brewing uses the displayed vessel for its mana cost and output. Preload reusable runes and catalysts in the machine; they do not need to be included in the pattern.'),
+])
+
 
 SHORT_TITLES = {
     'mana_lotus': 'Conduction Lotus', 'bionic_amaranthus': 'Jaded Amaranthus', 'bionic_clayconia': 'Clayconia',

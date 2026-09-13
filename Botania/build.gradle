@@ -35,6 +35,7 @@ configurations {
     aeGameTestRuntimeOnly.extendsFrom runtimeOnly
 }
 repositories {
+    maven { url = 'https://cursemaven.com'; content { includeGroup 'curse.maven' } }
     maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
     maven { url = 'https://maven.blamejared.com/'; content { includeGroup 'vazkii.patchouli'; includeGroup 'mezz.jei' } }
     maven { url = 'https://maven.theillusivec4.top/'; content { includeGroup 'top.theillusivec4.curios' } }
@@ -65,10 +66,14 @@ dependencies {
     implementation files(botaniaJar).builtBy(prepareBotania)
     implementation 'vazkii.patchouli:Patchouli:1.21.1-92-NEOFORGE'
     implementation 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
-    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.22.1.316'
-    runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.22.1.316'
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.27.0.335'
+    runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.27.0.335'
+    compileOnly 'curse.maven:ae2-jei-integration-1074338:7727898'
     compileOnly('org.appliedenergistics:appliedenergistics2:19.2.17') { transitive = false }
-    if (withAE2) runtimeOnly 'org.appliedenergistics:appliedenergistics2:19.2.17'
+    if (withAE2) {
+        runtimeOnly 'org.appliedenergistics:appliedenergistics2:19.2.17'
+        runtimeOnly 'curse.maven:ae2-jei-integration-1074338:7727898'
+    }
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.ow2.asm:asm-tree:9.8'

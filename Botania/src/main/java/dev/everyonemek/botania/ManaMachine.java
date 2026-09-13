@@ -42,6 +42,8 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     private int mode, poolSide, targetPercent = 100;
     private String recipeLock = "";
     private boolean readingSettings, reservingSide;
+    private long poolPullTick = Long.MIN_VALUE;
+    private int poolPulled;
     // Controller bookkeeping holds identifiers only; native devices own their in-flight resources.
     CompoundTag controller = new CompoundTag();
 
@@ -51,6 +53,8 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         for (RelativeSide side : RelativeSide.values()) item.setDataType(DataType.INPUT, side);
         if (!extras.isEmpty()) {
             item.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false, new ArrayList<IInventorySlot>(extras)));
+            var combined = new ArrayList<IInventorySlot>(extras); combined.addAll(inputs); combined.addAll(outputs);
+            item.addSlotInfo(DataType.INPUT_OUTPUT, new InventorySlotInfo(true, true, combined));
             item.setDataType(DataType.EXTRA, RelativeSide.BACK);
         }
         item.setDataType(DataType.OUTPUT, RelativeSide.RIGHT); item.setDataType(DataType.ENERGY, RelativeSide.BOTTOM); item.setEjecting(true);
@@ -119,6 +123,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     @Override protected boolean onUpdateServer() {
         boolean update = super.onUpdateServer(); energySlot.fillContainerOrConvert(); setActive(false);
         SparkExpansion.supplyMachine(this);
+        ManaTransfer.fillFromAdjacentPools(this);
         if (!canFunction()) { status = REDSTONE; return update; }
         if (kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER) { ManaTransfer.tick(this); return update; }
         if (kind().controller()) { NativeControllers.tick(this); return update; }
@@ -166,6 +171,11 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     public void setOutputs(List<ItemStack> merged) { for (int i = 0; i < outputs.size(); i++) outputs.get(i).setStackUnchecked(merged.get(i)); }
     public MachineEnergyContainer<ManaMachine> energy() { return energy; }
     public IChemicalTank mana() { return mana; }
+    int poolPullRemaining() {
+        if (poolPullTick != level.getGameTime()) { poolPullTick = level.getGameTime(); poolPulled = 0; }
+        return Math.max(0, ManaTransfer.RATE - poolPulled);
+    }
+    void recordPoolPull(int amount) { poolPullRemaining(); poolPulled += amount; }
     public int status() { return status; }
     public void status(int value) { status = value; setActive(value == WORKING); }
     public int progressTicks() { return progress; }

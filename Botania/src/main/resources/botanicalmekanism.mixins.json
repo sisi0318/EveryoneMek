@@ -13,9 +13,14 @@
     "SparkRangeMixin",
     "SparkRequestMixin"
   ],
+  "plugin": "dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin",
   "client": [
     "ManaSideConfigMixin",
-    "ManaConfigTabMixin"
+    "ManaConfigTabMixin",
+    "ManaInfusionJeiMixin",
+    "RunicJeiMixin",
+    "TerraJeiMixin",
+    "BrewJeiMixin"
   ],
   "injectors": {
     "defaultRequire": 1

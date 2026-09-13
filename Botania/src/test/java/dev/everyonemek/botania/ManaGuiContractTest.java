@@ -27,4 +27,13 @@ class ManaGuiContractTest {
         assertTrue(tab.fields.stream().anyMatch(f -> f.name.equals("config") && f.desc.equals("Lmekanism/client/gui/element/window/GuiSideConfiguration;")));
         assertTrue(read(tab.superName).methods.stream().anyMatch(m -> m.name.equals("drawBackgroundOverlay") && m.desc.equals("(Lnet/minecraft/client/gui/GuiGraphics;)V")));
     }
+    @Test void manaRecipeHooksMatchTypedBotaniaMethods() throws IOException {
+        var methods = java.util.Map.of("ManaPoolRecipeCategory", "ManaInfusionRecipe", "RunicAltarRecipeCategory", "RunicAltarRecipe",
+              "TerrestrialAgglomerationRecipeCategory", "TerrestrialAgglomerationRecipe", "BreweryRecipeCategory", "BotanicalBreweryRecipe");
+        for (var entry : methods.entrySet()) {
+            var category = read("vazkii/botania/client/integration/jei/" + entry.getKey());
+            String descriptor = "(Lmezz/jei/api/gui/builder/IRecipeLayoutBuilder;Lvazkii/botania/api/recipe/" + entry.getValue() + ";Lmezz/jei/api/recipe/IFocusGroup;)V";
+            assertTrue(category.methods.stream().anyMatch(m -> m.name.equals("setRecipe") && m.desc.equals(descriptor)), entry.getKey());
+        }
+    }
 }

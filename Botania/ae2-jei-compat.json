@@ -1,0 +1,16 @@
+{
+  "minecraft": "1.21.1",
+  "ae2": "19.2.17",
+  "integration_version": "1.2.1",
+  "integration_coordinate": "curse.maven:ae2-jei-integration-1074338:7727898",
+  "integration_filename": "ae2jeiintegration-1.2.1.jar",
+  "integration_sha256": "2989c5d762d3f14a58b4db6519daaff81e719dff3445a2b39328948ac23e548b",
+  "source": "https://github.com/Tamaized/AE2-JEI-Integration",
+  "source_commit": "ce16a255305e95e0ad670ca2755cdf8202d0395d",
+  "release": "https://www.curseforge.com/minecraft/mc-mods/ae2-jei-integration/files/7727898",
+  "license": "LGPL-3.0",
+  "jei_version": "19.27.0.335",
+  "jei_sha256": "e28b15e1a806d2dc5d267f7662f335c508054ed610fe2766ffb09f27ea463fba",
+  "integration_api": "tamaized.ae2jeiintegration.api.integrations.jei.IngredientConverters.register",
+  "note": "The old ServiceLoader path in IngredientConverter javadoc is not the registration path used by this release."
+}

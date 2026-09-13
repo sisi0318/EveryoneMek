@@ -4,6 +4,7 @@ import java.util.List;
 import dev.everyonemek.botania.mixin.ManaPoolAccess;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
+import mekanism.api.RelativeSide;
 import mekanism.api.chemical.ChemicalStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -22,15 +23,42 @@ public final class ManaTransfer {
     }
     public static boolean canTake(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canSpare(); }
     public static boolean canGive(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canAccept(); }
+    /** Passive input, like a pipe or spark: all faces share one per-machine, per-world-tick budget. */
+    public static int fillFromAdjacentPools(ManaMachine tile) {
+        if (!tile.kind().chemical || !Flowers.live(tile) || tile.getLevel().isClientSide || tile.mana().getNeeded() == 0) return 0;
+        int moved = 0;
+        var sides = RelativeSide.values();
+        int start = (int) Math.floorMod(tile.getLevel().getGameTime(), sides.length);
+        for (int offset = 0; offset < sides.length && tile.poolPullRemaining() > 0; offset++) {
+            var direction = sides[(start + offset) % sides.length].getDirection(tile.getDirection());
+            var pos = tile.getBlockPos().relative(direction);
+            // A legacy draining charger must not pull back the mana it is returning to its selected pool.
+            if (tile.kind() == ManaMachineKind.CHARGER && tile.mode() == 1 && pos.equals(tile.targetPos())) continue;
+            var pool = pool(tile.getLevel(), pos);
+            if (pool == null || !canTake(pool) || pool.getCurrentMana() <= 0) continue;
+            var receiver = tile.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), tile.getBlockPos(), direction);
+            if (receiver == null) continue;
+            int wanted = Math.min(tile.poolPullRemaining(), pool.getCurrentMana());
+            int accepted = wanted - (int) receiver.insertChemical(new ChemicalStack(ManaContent.MANA, wanted), Action.SIMULATE).getAmount();
+            if (accepted <= 0) continue;
+            int before = pool.getCurrentMana(); pool.receiveMana(-accepted);
+            int taken = before - pool.getCurrentMana();
+            if (taken <= 0) continue;
+            int remainder = (int) receiver.insertChemical(new ChemicalStack(ManaContent.MANA, taken), Action.EXECUTE).getAmount();
+            if (remainder > 0) pool.receiveMana(remainder);
+            tile.recordPoolPull(taken - remainder); moved += taken - remainder;
+        }
+        return moved;
+    }
     public static void tick(ManaMachine tile) {
         var pool = pool(tile.getLevel(), tile.targetPos());
-        if (pool == null && tile.kind() == ManaMachineKind.CHARGER) { chargerBuffer(tile); return; }
+        if (tile.kind() == ManaMachineKind.CHARGER && (tile.mode() == 0 || pool == null)) { chargerBuffer(tile); return; }
         if (pool == null) { tile.status(ManaMachine.NO_POOL); return; }
         if (tile.kind() == ManaMachineKind.BRIDGE) bridge(tile, pool); else charger(tile, pool);
     }
     private static void bridge(ManaMachine tile, ManaPoolBlockEntity pool) {
         boolean take = tile.mode() == 0;
-        long amount = Math.min(RATE, take ? Math.min(pool.getCurrentMana(), tile.mana().getNeeded())
+        long amount = Math.min(take ? tile.poolPullRemaining() : RATE, take ? Math.min(pool.getCurrentMana(), tile.mana().getNeeded())
               : Math.min(pool.getMaxMana() - pool.getCurrentMana(), tile.mana().getStored()));
         if (!(take ? canTake(pool) : canGive(pool))) { tile.status(ManaMachine.ITEM_DENIED); return; }
         if (amount <= 0) { tile.status(ManaMachine.READY); return; }
@@ -40,6 +68,7 @@ public final class ManaTransfer {
             int taken = before - pool.getCurrentMana();
             var remainder = tile.mana().insert(new ChemicalStack(ManaContent.MANA, taken), Action.EXECUTE, AutomationType.INTERNAL);
             if (!remainder.isEmpty()) pool.receiveMana((int) remainder.getAmount());
+            tile.recordPoolPull(taken - (int) remainder.getAmount());
         } else {
             int before = pool.getCurrentMana(); pool.receiveMana((int) amount);
             tile.mana().extract(pool.getCurrentMana() - before, Action.EXECUTE, AutomationType.INTERNAL);

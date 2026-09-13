@@ -4,14 +4,27 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.10 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.11 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.10 验证带 AE2 的 34 项服务端 GameTest、无 AE2 的 25 项，以及费用和 GUI 契约共 2 项 JUnit，不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.11 验证带 AE2／JEI 联动的 37 项服务端 GameTest、无 AE2 的 27 项，以及费用和 GUI 契约共 3 项 JUnit，不代表客户端视觉或完整整合包验收。
+
+## alpha.11 输入面直接取魔力与 JEI 样板
+
+- `ManaTransfer.fillFromAdjacentPools` 在机器 server tick 的加工／红石检查前补充唯一魔力罐，像管道和火花一样允许停机备料。只检查相邻已加载的普通原池，每个世界 tick 轮换六面，按实际方向的 Chemical capability 模拟可收量，再从池扣除、实际插入，剩余退回；遵守 canSpare，不接创造池。
+- `ManaMachine.poolPullRemaining/recordPoolPull` 让六面和互通器原抽取路径共享每机器每世界 tick 1000 魔力上限，重复回调不会增加额度。互通器原指定池面仍按原模式处理。充能座充入物品统一用内部罐，不再绕过侧面配置直接抽旧目标池；旧抽出回池线路保留，补料跳过正被回充的旧目标池，防止吸回。
+- `AdjacentPoolGameTests` 验证旋转后的六面、Mek 设置包、INPUT_OUTPUT／OUTPUT／NONE、重复调用和合并带宽、池许可／创造池、满仓余量、拆除和实际灌注加工。先前手动充能测试现在先配置输入面并补充机器罐。
+- AE2 JEI Integration 固定 1.2.1，Curse Maven `curse.maven:ae2-jei-integration-1074338:7727898`，JEI 按其源码声明配套 19.27.0.335。版本、源码 ce16a25 与 SHA 见 ae2-jei-compat.json。compileOnly 接 API，运行依赖随 withAE2 关闭，主模组对其仍是可选依赖。
+- `compat/jei/ManaIngredient` 是有数量的 JEI 材料，不是物品和魔力来源。`ManaJei` 注册列表、渲染、查询及数量；`ManaIngredientConverter` 用发布 JAR 的 `IngredientConverters.register` 接入拖放和配方转换，不使用旧 JavaDoc 里遗留的 appeng ServiceLoader 路径。
+- JEI 19.27 的 IRecipeCategoryDecorator 只能装饰绘制／提示，不能添加输入槽。三个窄客户端 Mixin 在 Botania 灌注／符文／泰拉的 typed setRecipe 尾部加魔力输入槽，保留原分类和图案。使用明确描述符避开泛型桥方法，防止重复添加；ASM 契约核对四种 setRecipe。OptionalJeiMixinPlugin 在 JEI 缺失时跳过这组 Mixin。
+- 酿造容器会改变成本／产物，不能把多个容器和多个魔力数量独立交给 AE 的最优库存选择。BrewRecipe 使用不可见材料提供 JEI 用途查询，公开 decorator 根据当前可见容器画魔力；`BrewPatternTransfer` 固定同一容器、成本和成品后交 EncodingHelper，注册通过可选集成的静态入口隔离 AE 类型。
+- 物品 INPUT_OUTPUT 视图加入辅料槽并优先接收辅料；默认 INPUT／EXTRA 配置不改，物品实体槽序不变，输入槽的 EXTERNAL 提取仍被拒绝。ManaMachine 与 MechanicalApothecary 都使用该视图，样板供应器可在同一面送材料、辅料并收回成品。
+- `ManaPatternGameTests` 使用原合成 CPU、样板供应器、真实物品／魔力盘，编入魔力和消耗材料完成三批风之符文，并从输入/输出面回收到 ME；先用真实 Mek 包关闭魔力面验证不会提前送材料。催化物事先放机器，不计入消耗样板。Converter 测试临时注册 API 后在 finally 恢复全局表。
+- 测试选具体风之符文，不从“没有催化物的首个配方”猜普通符文。固定上游该过滤会选到需要命名标签的玩家头颅配方，普通名字为空的展示物不能完成它。
 
 ## alpha.10 火花充能、魔力配置与 AE 魔力
 

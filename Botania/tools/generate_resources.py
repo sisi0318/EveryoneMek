@@ -124,7 +124,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin'], 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -235,6 +235,9 @@ for key, (cn, english) in corporea_messages.items(): zh[f'gui.{MOD}.corporea.{ke
 # Portable mana uses addon-owned data, including when AE2 is absent.
 for key, cn, english in [
     ('gui.botanicalmekanism.mana_type', '魔力', 'Mana'),
+    ('jei.botanicalmekanism.mana_amount', '魔力：%s', 'Mana: %s'),
+    ('jei.botanicalmekanism.choose_vessel', '请选择药剂容器', 'Choose a brew vessel'),
+    ('jei.botanicalmekanism.pattern_full', '样板放不下这些材料', 'Too many ingredients for this pattern'),
     ('item.botanicalmekanism.mana_storage_cell', 'ME 魔力存储盘', 'ME Mana Storage Cell'),
     ('item.botanicalmekanism.mana_packet', '魔力团', 'Mana Wisp'),
     ('tooltip.botanicalmekanism.mana_cell', '魔力：%s / %s', 'Mana: %s / %s'),

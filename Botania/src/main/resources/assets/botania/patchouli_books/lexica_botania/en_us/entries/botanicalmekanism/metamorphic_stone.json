@@ -11,6 +11,10 @@
       "title": "book.botanicalmekanism.metamorphic_stone.title"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.metamorphic_stone.1"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:metamorphic_stone"
     }

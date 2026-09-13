@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.10** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.11** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -14,12 +14,13 @@
 | Botania | 固定构建 `botania-neoforge-1.21.1-456-SNAPSHOT.jar`，提交 d617ef0 |
 | Patchouli | 1.21.1-92-NEOFORGE |
 | Curios | 9.5.1+1.21.1 |
-| JEI（可选） | 19.22.1.316 |
+| JEI（可选） | 19.27.0.335 |
 | AE2（可选） | 19.2.17，另需 GuideME 21.1.1 |
+| AE2 JEI Integration（可选） | 1.2.1，提供样板加号填充和拖放 |
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.10.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.11.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -40,6 +41,8 @@
 **拿着火花右击魔力机器即可安装。** 给附近的魔力池也装上同色火花，机器便能从池中取魔力。充能座现在也可以这样供魔，不必贴着池子摆放。
 
 打开机器左侧的侧面配置，选择火花图标的“魔力”页。六面图可以设置输入、输出或关闭。火花从顶部供魔，因此顶部需要设为输入。加压管道和 ME 总线也遵守这里的设置。
+
+魔力池紧贴机器时，把相应一面设为输入，就能直接从池中取魔力。多个输入面合计每秒最多抽取 20,000 魔力，满了会自动停止。关闭输入面即可停止抽取。
 
 为供魔的火花和收魔的火花各装一个共鸣增幅器，传送距离可提高到 32 格。用染料分组；潜行使用森林法杖可拆下升级。更详细的距离规则见 [WIRELESS.md](WIRELESS.md)。
 
@@ -76,6 +79,14 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 拆掉存有魔力的 ME 接口等装置时，会掉落魔力团。对池子或机器使用，可将魔力放回去。存储盘和魔力团拆装、重进世界后仍保留魔力。
 
+## 样板供应器与 JEI
+
+样板供应器可以把 ME 网络中的魔力和材料一起送给机器。接收面的“魔力”设为输入；需要同时送辅料时，将“物品”设为输入/输出。这个面也能把成品送回供应器。电能仍需单独提供。
+
+安装 [AE2 JEI Integration 1.2.1](https://www.curseforge.com/minecraft/mc-mods/ae2-jei-integration/files/7727898) 后，打开样板编码终端，在 JEI 的灌注、符文、泰拉或酿造配方上点加号，就会带入所需魔力。酿造按页面当前显示的容器填写。也可以在 JEI 中搜索“魔力”，拖入样板后修改数量。
+
+不消耗的符文和催化器先放进机器。需要命名物品等特殊材料的配方，请用对应物品调整样板。
+
 ## 仿生织网花
 
 织网花让 ME 终端存取多媒体箱子，也让多媒体漏斗从 ME 取货。它需要 ME 电力和一个通道。
@@ -86,7 +97,7 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。已通过 34 项带 AE2、25 项无 AE2 服务端测试，以及 2 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。已通过 37 项带 AE2／JEI 联动、27 项无 AE2 服务端测试，以及 3 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -101,3 +112,5 @@ A Mana Storage Cell holds 1,000,000 mana in an ME Drive or ME Chest and uses 1 A
 The Corporea Orchid connects item inventories to ME. Place ordinary sparks on the flower and chests, plus a separate master spark. Use samples to filter items. Optional autocrafting orders missing items using ME patterns and a CPU. Request again after crafting, or use a Corporea Interceptor and Retainer to remember and repeat the request.
 
 Use the JEI plus button to fill supported machine recipes; Shift fills more. Water, electricity, mana and required structures are supplied normally.
+
+Machines can also draw from pools touching their configured Mana input faces, up to 20,000 mana per second in total. AE pattern providers can supply mana alongside ingredients; set the receiving Item face to Input/Output when it must also accept reagents and return products. With AE2 JEI Integration 1.2.1, the JEI plus button includes mana for infusion, rune, terra and brewing patterns. Mana can also be searched and dragged from JEI. Preload reusable catalysts.

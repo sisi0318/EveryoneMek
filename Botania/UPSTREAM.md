@@ -128,3 +128,10 @@
 - StorageCell.persist 用来落盘，ISaveProvider.saveChanges 用来通知宿主。MEChest 的宿主保存会再次调用 persist；组件即时写入型自定义盘的 persist 不可再次调用 host.saveChanges。
 - Mek 10.7.19.85 GuiSideConfiguration 的 tile 字段擦除为 TileEntityMekanism，renderForeground 调 MekanismLang.translate(Object[]) 取得配置标题；GuiConfigTypeTab 继承 GuiInsetElement。客户端修改范围限制到本模组魔力机器，ASM 检查这些符号。
 - 文案直接核对固定 JAR 中的 description.mekanism.energy_cube／chemical_tank／enrichment_chamber，及 botania.page.sparks0／sparks1／pool0／corporeaRetainer0-4。采用用途短提示和步骤式词典说明，不复制大段原文。
+
+## 11. alpha.11 样板与 JEI 联动
+
+- [AE2 JEI Integration](https://github.com/Tamaized/AE2-JEI-Integration) 核对源码 ce16a255305e95e0ad670ca2755cdf8202d0395d，发布 JAR 为 CurseForge 文件 7727898／1.2.1。API 的有效入口是 `tamaized.ae2jeiintegration.api.integrations.jei.IngredientConverters.register`。源码与 JAR 均未修改、未打进本模组，许可 LGPL-3.0。
+- `GenericEntryStackHelper` 把 JEI INPUT 槽经 converter 转成 GenericStack；`EncodePatternTransferHandler` 交给 AE 的 EncodingHelper。原生 Botania 魔力条不是 INPUT 材料，因此需要补充槽位。
+- AE2 19.2.17 的 PatternProviderTargetCache 用 ExternalStorageStrategy 拼接物品、魔力等存储视图，实际供给由它调用 insert，而不是仅靠导出总线的 push。已有 ManaBusStorage 外部存储注册可接住魔力，实际 CPU 合成已验证。
+- IRecipeCategoryDecorator 没有 setRecipe 扩展口，添加输入槽采用四个客户端 typed-method Mixin；酿造绘制使用公开 decorator，编码锁定当前容器避免自动库存选择造成成本错配。JEI、AE2 与桥接模组缺失时不加载相应功能。

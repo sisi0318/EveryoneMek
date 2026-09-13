@@ -19,6 +19,18 @@
       "text": "book.botanicalmekanism.mana_storage_cell.2"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_storage_cell.3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_storage_cell.4"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_storage_cell.5"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_storage_cell",
       "flag": "mod:ae2"

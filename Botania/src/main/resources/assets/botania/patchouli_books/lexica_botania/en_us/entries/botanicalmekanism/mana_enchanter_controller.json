@@ -15,6 +15,10 @@
       "text": "book.botanicalmekanism.mana_enchanter_controller.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_enchanter_controller.2"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_enchanter_controller"
     }

@@ -43,7 +43,7 @@ side="BOTH"
 [[dependencies.botanicalmekanism]]
 modId="jei"
 type="optional"
-versionRange="[19,20)"
+versionRange="[19.27.0.335,20)"
 ordering="AFTER"
 side="CLIENT"
 
@@ -53,3 +53,10 @@ type="optional"
 versionRange="[19.2.17,20)"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.botanicalmekanism]]
+modId="ae2jeiintegration"
+type="optional"
+versionRange="[1.2.1,2)"
+ordering="AFTER"
+side="CLIENT"

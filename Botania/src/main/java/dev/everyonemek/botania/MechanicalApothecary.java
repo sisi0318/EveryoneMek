@@ -49,6 +49,8 @@ public final class MechanicalApothecary extends TileEntityConfigurableMachine {
         var outputSlots = new ArrayList<IInventorySlot>(outputs); outputSlots.add(bucketOutput);
         var items = configComponent.setupItemIOConfig(inputSlots, outputSlots, energySlot, false);
         items.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false, reagent));
+        var combined = new ArrayList<IInventorySlot>(); combined.add(reagent); combined.addAll(inputSlots); combined.addAll(outputSlots);
+        items.addSlotInfo(DataType.INPUT_OUTPUT, new InventorySlotInfo(true, true, combined));
         for (RelativeSide side : RelativeSide.values()) items.setDataType(DataType.INPUT, side);
         items.setDataType(DataType.EXTRA, RelativeSide.BACK);
         items.setDataType(DataType.OUTPUT, RelativeSide.RIGHT);

@@ -25,6 +25,8 @@ import vazkii.botania.client.integration.jei.PetalApothecaryRecipeCategory;
 public final class ApothecaryJei implements IModPlugin {
     private static final RecipeType<MechanicalFlowerRecipe> TYPE = RecipeType.create(BotanicalMekanism.ID, "mechanical_apothecary", MechanicalFlowerRecipe.class);
     @Override public ResourceLocation getPluginUid() { return ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "apothecary_jei"); }
+    @Override public void registerIngredients(IModIngredientRegistration registration) { dev.everyonemek.botania.compat.jei.ManaJei.register(registration); }
+    @Override public void registerAdvanced(IAdvancedRegistration registration) { dev.everyonemek.botania.compat.jei.ManaJei.decorateBrew(registration); }
     @Override public void registerCategories(IRecipeCategoryRegistration registration) { registration.addRecipeCategories(new Category(registration.getJeiHelpers().getGuiHelper())); }
     @Override public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(ApothecaryContent.BLOCK), PetalApothecaryRecipeCategory.TYPE, TYPE);
@@ -44,6 +46,9 @@ public final class ApothecaryJei implements IModPlugin {
     }
     @Override public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
         registration.addRecipeTransferHandler(new MachineJeiTransfer<>(ApothecaryMenu.class, ApothecaryContent.MENU.get(), TYPE, registration.getTransferHelper()), TYPE);
+        if (net.neoforged.fml.ModList.get().isLoaded("ae2jeiintegration")) {
+            dev.everyonemek.botania.compat.ae2.BrewPatternTransfer.register(registration);
+        }
         var petal = PetalApothecaryRecipeCategory.TYPE;
         registration.addRecipeTransferHandler(new MachineJeiTransfer<>(ApothecaryMenu.class, ApothecaryContent.MENU.get(), petal, registration.getTransferHelper()), petal);
         transfer(registration, vazkii.botania.client.integration.jei.ManaPoolRecipeCategory.TYPE);

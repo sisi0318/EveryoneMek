@@ -72,7 +72,9 @@ public final class ManaMachineGameTests {
             check(pool.getCurrentMana() == total && bridge.mana().isEmpty(), "Chemical-to-pool transfer duplicated or lost mana");
             var charger = machine(h, new BlockPos(13, 2, 11), ManaMachineKind.CHARGER); power(charger); stop(charger);
             charger.applySetting(1, Integer.toString(RelativeSide.fromDirections(charger.getDirection(), Direction.WEST).ordinal()));
+            AdjacentPoolGameTests.configure(owner, charger, RelativeSide.fromDirections(charger.getDirection(), Direction.WEST), DataType.INPUT);
             var tablet = new ItemStack(BotaniaItems.MANA_TABLET); charger.inputs.getFirst().setStack(tablet);
+            ManaTransfer.fillFromAdjacentPools(charger);
             ManaTransfer.tick(charger);
             int charged = ManaItem.LOOKUP.find(charger.inputs.getFirst().getStack()).getMana();
             check(charged == 1000 && pool.getCurrentMana() == total - charged, "Charger failed real-pool mana conservation");
