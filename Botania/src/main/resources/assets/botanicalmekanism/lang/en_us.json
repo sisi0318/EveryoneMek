@@ -338,7 +338,7 @@
   "book.botanicalmekanism.mana_charger.1": "Right-click the stand with a spark, then attach a matching spark to a nearby mana pool. Pipes and ME export buses can also supply mana. Use the Mana tab in side configuration to set input and output faces.",
   "book.botanicalmekanism.mana_charger.2": "Switch the Wand to Bind mode, sneak-use it on a spreader, then on the machine. The face hit by its bursts must allow Mana input.",
   "book.botanicalmekanism.mana_charger.3": "A pool touching a Mana input face can supply this machine directly. All faces share a limit of 20,000 mana per second. Transfer stops when full.",
-  "book.botanicalmekanism.mana_charger.4": "To choose an adjacent target, open Connection Settings on the left and click its side. The selection remains active after closing the window.",
+  "book.botanicalmekanism.mana_charger.4": "To charge items, set the face touching a pool to Mana input. Drained item mana stays in the stand; enable an output face and auto-eject to return it to an adjacent pool. No separate pool direction is needed.",
   "book.botanicalmekanism.mana_infuser.title": "Mana Infusion",
   "book.botanicalmekanism.mana_infuser.0": "The $(item)Mana Infusion Chamber$(0) uses electricity and mana to make manasteel, mana pearls and other infused materials.$(p)An Alchemy Catalyst or Conjuration Catalyst in the extra slot enables its corresponding recipes.",
   "book.botanicalmekanism.mana_infuser.1": "The eight input slots infuse up to eight items per second, including mixed materials. Each item uses its recipe mana cost. Work waits for enough mana, and speed upgrades make it faster.",

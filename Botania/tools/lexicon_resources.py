@@ -53,8 +53,9 @@ HELP['corporea_orchid'].extend([
 for name in ['mana_charger', 'mana_infuser', 'runic_forge', 'terra_condenser', 'botanical_brewery', 'ore_processor', 'metamorphic_stone', 'mana_enchanter_controller']:
     HELP[name].append(('魔力池紧贴机器时，把相应一面设为魔力输入，即可直接取魔力。多个面合计每秒最多 20,000 魔力，满了会自动停下。', 'A pool touching a Mana input face can supply this machine directly. All faces share a limit of 20,000 mana per second. Transfer stops when full.'))
 HELP['mana_storage_cell'].append(('五档待机消耗依次为 0.5、1、1.5、2 和 2.5 AE/t。制作时使用对应档位的 ME 存储组件。$(p)旧魔力盘会作为 1k 盘继续使用，盘内已有魔力不变。', 'Idle power is 0.5, 1, 1.5, 2 and 2.5 AE/t, respectively. Craft each tier with its matching ME storage component.$(p)Existing mana cells become 1k cells and keep their contents.'))
+HELP['mana_charger'].append(('充能时，将贴着魔力池的一面设为魔力输入，即可直接取魔。抽出物品魔力时，魔力先存进充能座；把相应一面设为输出并开启弹出，可送回紧贴的魔力池。无需另选池子方向。', 'To charge items, set the face touching a pool to Mana input. Drained item mana stays in the stand; enable an output face and auto-eject to return it to an adjacent pool. No separate pool direction is needed.'))
 HELP['mana_bridge'].append(('永恒魔力池也能供魔，池内魔力不会减少。机器仍按每秒最多 20,000 魔力输送。', 'An Everlasting Mana Pool supplies mana without running out. The machine still transfers up to 20,000 mana per second.'))
-for name in ['mana_charger', 'elven_trade_controller', 'mana_enchanter_controller']:
+for name in ['elven_trade_controller', 'mana_enchanter_controller']:
     HELP[name].append(('需要选择相邻目标时，打开左侧的“连接设置”，点击目标所在的一面。关闭窗口后仍按所选方向工作。', 'To choose an adjacent target, open Connection Settings on the left and click its side. The selection remains active after closing the window.'))
 
 HELP['mana_storage_cell'].extend([

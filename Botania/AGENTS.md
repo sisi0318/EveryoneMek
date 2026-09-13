@@ -4,14 +4,21 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.19 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.20 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.18 验证 46 项常规服务端 GameTest 与 4 项 JUnit；Applied Botanics 共存的 47 项验证沿用 alpha.17。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.20 验证 47 项常规服务端 GameTest 与 4 项 JUnit；Applied Botanics 共存的 47 项验证沿用 alpha.17。不代表客户端视觉或完整整合包验收。
+
+## alpha.20 充能座统一六面配置
+
+- 用户指出充能座的额外魔力选池图标重复，确认输入面已经会自动从紧邻魔力池取魔。仅移除 CHARGER 的 GuiPoolConnectionTab，不把同一个入口换个位置重新加回去。BRIDGE 与原结构控制器仍需要选择专属相邻目标，不改它们的操作。
+- 充能与抽出物品魔力都由 chargerBuffer 处理，旧 pool_side 字段保留兼容保存，但不再左右充能座行为。抽出资源先存唯一机内罐，出不去时保留；原直接向指定池扣物品／加池的支路已删。
+- fillFromAdjacentPools 在充能座 mode=1 时改走 drainToAdjacentPools，并停止从相邻输入池补魔，防止吸回刚输出的魔力。需 Chemical config.isEjecting 且实际侧面 capability 可提取，按真实池容量 SIMULATE→提取→接收→余量退回。所有相邻池共用原每世界 tick 1000 额度；范围只检查相邻已加载区块。
+- AdjacentPoolGameTests 新增真实 PacketSideData 和 PacketEjectConfiguration 驱动的出池回归：关闭弹出、关面、输入面不被抽取、INPUT_OUTPUT 不反吸、满池与部分空间。旧充放测试改为验证机内保留的资源，资源总账包含该缓冲。协议与槽位不变。
 
 ## alpha.18 织网花存储总线式界面
 
@@ -69,7 +76,7 @@
 - `ManaCellTier` 为不依赖 AE 的共同枚举，1/4/16/64/256 × 1024 × 8000 魔力；容量 8,192,000、32,768,000、131,072,000、524,288,000、2,097,152,000。待机 0.5/1/1.5/2/2.5 AE/t。1k 保留 mana_storage_cell ID；四档追加 _4k 等后缀，Content.MANA_CELL 仍是旧 ID 别名。stored_mana Long 组件不变，所有容器策略按物品档位取得容量，不再只认单个物品。
 - ManaKey.getAmountPerByte 同步 8000（原 AE 流体密度），每次操作仍为 1000，显示与配方仍 1 单位 = 1 魔力。AE 合成存储的 5200 魔力输入现在计 5.2 字节，另加其他材料和树开销；这不是 JVM 堆用量或性能实测。
 - `ManaTransfer.pool` 接受原永恒池，仍检查精确原池类、存活和已加载区块。永恒池 getCurrentMana 始终等于容量，take 不按减少量结算、不改池内数值；SIMULATE 无副作用，refund 返回刚取出的余量。普通池仍按实际差值。ManaAccess、ManaEndpoint 和互通器／六面补魔统一使用该方法；canSpare、满仓与 RATE 限制仍有效。
-- `GuiPoolConnectionTab` 使用原 GuiWindowCreatorTab／GuiWindow，位置 (-26,64)，用于 BRIDGE、CHARGER 和两个 controller。窗口六个方向按钮发送原 action=1 Settings 包，显示服务器确认的 side/revision，关闭后设置保留。主页移除 targetSide 按钮；存档 pool_side、原端口配置和连接行为不改。
+- `GuiPoolConnectionTab` 使用原 GuiWindowCreatorTab／GuiWindow，位置 (-26,64)，当时用于 BRIDGE、CHARGER 和两个 controller；alpha.20 起移除 CHARGER 的此入口。窗口六个方向按钮发送原 action=1 Settings 包，显示服务器确认的 side/revision，关闭后设置保留。主页移除 targetSide 按钮；存档 pool_side、原端口配置和连接行为不改。
 - 现有 ManaAeGameTests 覆盖五档 Long.MAX_VALUE 模拟、满盘、共享句柄、存档、大额提取、256k 筛选，以及真实 ME 总线替换为永恒池后供魔；AdjacentPoolGameTests 新增真实设置包选方向、永恒池自定义 manaCap、共享上限、满罐余量、关闭输入和拆除失效。alpha.14 本地只跑一次带 AE 的 38 项服务端测试，全部通过，不为后续文档／预览重跑。
 
 ## alpha.13 魔力存储盘模型（历史）
@@ -86,7 +93,7 @@
 ## alpha.11 输入面直接取魔力与 JEI 样板
 
 - `ManaTransfer.fillFromAdjacentPools` 在机器 server tick 的加工／红石检查前补充唯一魔力罐，像管道和火花一样允许停机备料。只检查相邻已加载的原池（alpha.14 增加永恒池），每个世界 tick 轮换六面，按实际方向的 Chemical capability 模拟可收量，再从池扣除、实际插入，剩余退回；遵守 canSpare；永恒池按 alpha.14 的无限供给结算。
-- `ManaMachine.poolPullRemaining/recordPoolPull` 让六面和互通器原抽取路径共享每机器每世界 tick 1000 魔力上限，重复回调不会增加额度。互通器原指定池面仍按原模式处理。充能座充入物品统一用内部罐，不再绕过侧面配置直接抽旧目标池；旧抽出回池线路保留，补料跳过正被回充的旧目标池，防止吸回。
+- `ManaMachine.poolPullRemaining/recordPoolPull` 让六面和互通器原抽取路径共享每机器每世界 tick 1000 魔力上限，重复回调不会增加额度。互通器原指定池面仍按原模式处理。充能座充入物品统一用内部罐，不再绕过侧面配置直接抽旧目标池；当时保留的旧抽出回池线路已在 alpha.20 替换为六面输出，详见顶部。
 - `AdjacentPoolGameTests` 验证旋转后的六面、Mek 设置包、INPUT_OUTPUT／OUTPUT／NONE、重复调用和合并带宽、池许可／创造池、满仓余量、拆除和实际灌注加工。先前手动充能测试现在先配置输入面并补充机器罐。
 - AE2 JEI Integration 固定 1.2.1，Curse Maven `curse.maven:ae2-jei-integration-1074338:7727898`，JEI 按其源码声明配套 19.27.0.335。版本、源码 ce16a25 与 SHA 见 ae2-jei-compat.json。compileOnly 接 API，运行依赖随 withAE2 关闭，主模组对其仍是可选依赖。
 - `compat/jei/ManaIngredient` 是有数量的 JEI 材料，不是物品和魔力来源。`ManaJei` 注册列表、渲染、查询及数量；`ManaIngredientConverter` 用发布 JAR 的 `IngredientConverters.register` 接入拖放和配方转换，不使用旧 JavaDoc 里遗留的 appeng ServiceLoader 路径。

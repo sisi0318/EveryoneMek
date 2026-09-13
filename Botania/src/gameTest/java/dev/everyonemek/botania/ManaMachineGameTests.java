@@ -71,7 +71,6 @@ public final class ManaMachineGameTests {
             check(bridge.applySetting(0, "1"), "Bridge mode was rejected"); ManaTransfer.tick(bridge);
             check(pool.getCurrentMana() == total && bridge.mana().isEmpty(), "Chemical-to-pool transfer duplicated or lost mana");
             var charger = machine(h, new BlockPos(13, 2, 11), ManaMachineKind.CHARGER); power(charger); stop(charger);
-            charger.applySetting(1, Integer.toString(RelativeSide.fromDirections(charger.getDirection(), Direction.WEST).ordinal()));
             AdjacentPoolGameTests.configure(owner, charger, RelativeSide.fromDirections(charger.getDirection(), Direction.WEST), DataType.INPUT);
             var tablet = new ItemStack(BotaniaItems.MANA_TABLET); charger.inputs.getFirst().setStack(tablet);
             ManaTransfer.fillFromAdjacentPools(charger);
@@ -79,7 +78,8 @@ public final class ManaMachineGameTests {
             int charged = ManaItem.LOOKUP.find(charger.inputs.getFirst().getStack()).getMana();
             check(charged == 1000 && pool.getCurrentMana() == total - charged, "Charger failed real-pool mana conservation");
             charger.applySetting(0, "1"); ManaTransfer.tick(charger); ManaTransfer.tick(charger);
-            check(pool.getCurrentMana() == total && !charger.outputs.getFirst().isEmpty() && charger.inputs.getFirst().isEmpty(), "Charger did not drain and output the item");
+            check(pool.getCurrentMana() + charger.mana().getStored() == total && charger.mana().getStored() == charged
+                  && !charger.outputs.getFirst().isEmpty() && charger.inputs.getFirst().isEmpty(), "Charger did not drain into its buffer and output the item");
             var target = machine(h, new BlockPos(23, 2, 11), ManaMachineKind.INFUSER); stop(target);
             ApothecaryGameTests.withUsername(owner, () -> target.setOwnerUUID(owner.getUUID()));
             var core = core(h, owner, new BlockPos(18, 2, 16));
@@ -87,7 +87,7 @@ public final class ManaMachineGameTests {
             var receiver = node(h, owner, new BlockPos(23, 2, 12), core, NetworkPlant.RECEIVE, Direction.NORTH, 1000);
             var network = ManaNetworks.get(h.getLevel()).find(core.network);
             ManaNetworks.get(h.getLevel()).tick(core);
-            check(target.mana().getStored() > 0 && total - pool.getCurrentMana() == target.mana().getStored() + network.lastFee,
+            check(target.mana().getStored() > 0 && total - pool.getCurrentMana() == target.mana().getStored() + network.lastFee + charger.mana().getStored(),
                   "Wireless machine endpoint: mana=" + target.mana().getStored() + ", pool=" + pool.getCurrentMana() + ", total=" + total
                   + ", fee=" + network.lastFee + ", source=" + source.status + ", target=" + receiver.status + ", core=" + core.status
                   + ", sourceEndpoint=" + ManaEndpoint.at(source) + ", targetEndpoint=" + ManaEndpoint.at(receiver));

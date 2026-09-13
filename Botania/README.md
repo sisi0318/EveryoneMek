@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.19** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.20** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.19.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.20.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -67,7 +67,7 @@
 | --- | --- |
 | 机械花药台 | 左侧放材料，下方小槽放种子等辅料。每次制作需要一桶水和电能。可以连续放水桶，也可以接流体管道。 |
 | 魔力互通器 | 贴着魔力池摆放，在左侧“连接设置”中选择池所在方向，再选择抽取或供给。需要电能。 |
-| 魔力充能座 | 放入一件魔力石板等物品，选择充入或抽出，设定目标比例。达到目标后会送出物品。需要电能，内部可保存 100 万魔力。 |
+| 魔力充能座 | 放入一件魔力石板等物品，选择充入或抽出，设定目标比例。达到目标后会送出物品。供魔面在侧面配置的“魔力”页选择，无需另选池子方向。需要电能，内部可保存 100 万魔力。 |
 | 魔力灌注室 | 8 个输入槽、8 个输出槽。基础每秒处理最多 8 个物品，魔力逐件计费。催化器可放辅料槽或机器正下方，槽内优先；盆内显示生效催化器的虚影。 |
 | 符文锻造室 | 放入材料和活石等辅料，再供电、供魔。作为催化物的符文会留在槽内。 |
 | 纯净转化室 | 8 个输入槽、8 个输出槽，每轮合计转化最多 8 个；不足 8 个也能工作。原木、石头等可混放，活木／活石基础一轮约 60 秒。水和特殊环境转化仍用白雏菊。 |
@@ -78,7 +78,7 @@
 | 精灵贸易控制器 | 贴着精灵门核心摆放并选好方向。门框、自然水晶和池子照常搭建；开门后加入材料并通电。 |
 | 魔力附魔控制器 | 贴着搭好的魔力附魔台摆放并选好方向。加入装备和附魔书，接通电能和魔力。附魔书不会消耗。 |
 
-互通器、充能座和两个控制器的相邻目标方向，都在左侧“连接设置”中选择。点击侧栏图标展开窗口，选好后可以关闭；方向会保留。
+互通器和两个控制器的相邻目标方向，在左侧“连接设置”中选择。点击侧栏图标展开窗口，选好后可以关闭；方向会保留。
 
 凝矿处理室和异构石转化室也有 8 个输入槽，按原配方的单次消耗和冷却逐件加工。纯净转化室与灌注室先各取一个有用材料，再继续从堆叠补足 8 个；输出放不下整批时暂停。速度升级照常生效。
 
@@ -134,7 +134,7 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.18 已通过 46 项常规服务端测试和 4 项单元检查；Applied Botanics 共存的 47 项测试沿用 alpha.17 结果。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.20 已通过 47 项常规服务端测试和 4 项单元检查；Applied Botanics 共存的 47 项测试沿用 alpha.17 结果。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -142,7 +142,7 @@ Install the versions listed above on both client and server. AE2 and GuideME are
 
 Bionic flowers stand on blocks or cables and use electricity. Connect the Lotus to a spreader with the Wand. The other flowers grow plants, collect or place blocks, make clay, or heat furnaces.
 
-Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the blue liquid icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It can still use the pool selected in an older setup.
+Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the blue liquid icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It uses Mana input faces for charging. Drained mana enters its buffer and can return to an adjacent pool through an output face with auto-eject enabled.
 
 Mana Storage Cells come in 1k, 4k, 16k, 64k and 256k tiers, holding 8,192,000 through 2,097,152,000 mana. Each tier has four times the capacity of the last and idles at 0.5, 1, 1.5, 2 or 2.5 AE/t. Existing cells become 1k cells and keep their mana. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
 
@@ -154,7 +154,7 @@ Use the JEI plus button to fill supported machine recipes; Shift fills more. Wat
 
 Machines can also draw from pools touching their configured Mana input faces, up to 20,000 mana per second in total. AE pattern providers can supply mana alongside ingredients; set the receiving Item face to Input/Output when it must also accept reagents and return products. With AE2 JEI Integration 1.2.1, the JEI plus button includes mana for infusion, rune, terra and brewing patterns. Mana can also be searched and dragged from JEI. Preload reusable catalysts.
 
-Everlasting Mana Pools can supply machines and ME buses without running out. Input settings and transfer limits still apply. The Bridge, Charging Stand and controllers select adjacent targets through the collapsible Connection Settings tab on the left.
+Everlasting Mana Pools can supply machines and ME buses without running out. Input settings and transfer limits still apply. The Bridge and controllers select adjacent targets through the collapsible Connection Settings tab on the left.
 
 The Pure Conversion Chamber and Mana Infusion Chamber now have eight inputs and eight outputs. They take up to eight items per cycle, including smaller or mixed batches. Livingwood and livingrock take about 60 seconds per cycle before upgrades; infusion takes one second and pays each recipe's mana cost. Ore and metamorphic machines have eight input buffers and retain their native per-operation costs and cooldowns.
 
@@ -165,3 +165,5 @@ Optional Applied Botanics support uses the supplied Botania-456-compatible alpha
 Mechanical sparks retain native dye, augments, ink and wand controls. One master per connected color group stores up to eight range and eight throughput upgrades. Each range upgrade adds eight blocks (12–76 total); throughput is 1–9 times the native rate. Empty-hand right-click any connected mechanical spark to open the shared slots. Extra masters disable bonuses until removed. Upgrades stay in the dismantled master item.
 
 The Corporea Orchid uses an ME Storage Bus style screen with 63 filter slots and the full player inventory. Click a filter with a held item or Shift-click an inventory item to copy a sample. Right-click clears a sample. Direction, filtering, matching, autocrafting and pause controls are in the left toolbar; hover the top status line for network and crafting details. Existing nine-slot filters keep their samples.
+
+充能座已移除单独的选池按钮。充能时从魔力输入面取魔；抽出物品魔力时先存入机内，设为输出并开启弹出的一面可以向紧贴的魔力池回充。抽出模式不会再从相邻池吸回魔力，输出受阻时留在机内。

@@ -44,7 +44,7 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
     }
     @Override protected void addGuiElements() {
         super.addGuiElements(); addRenderableWidget(new GuiVerticalPowerBar(this, tile.energy(), 224, 32, 70));
-        if (tile.kind() == ManaMachineKind.BRIDGE || tile.kind() == ManaMachineKind.CHARGER || tile.kind().controller())
+        if (tile.kind() == ManaMachineKind.BRIDGE || tile.kind().controller())
             connectionTab = addRenderableWidget(new GuiPoolConnectionTab(this, menu, () -> connectionTab));
         if (tile.kind().chemical) addRenderableWidget(new GuiChemicalBar(this, GuiChemicalBar.getProvider(tile.mana(), List.of(tile.mana())), 16, 106, 204, 6, true) {
             @Override protected List<Component> getTooltip(mekanism.api.chemical.ChemicalStack stack) {

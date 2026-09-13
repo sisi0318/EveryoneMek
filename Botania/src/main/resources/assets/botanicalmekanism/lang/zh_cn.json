@@ -338,7 +338,7 @@
   "book.botanicalmekanism.mana_charger.1": "拿着火花右键充能座即可安装，再给附近魔力池装上同色火花。也可以从管道或 ME 输出总线供魔。打开侧面配置中的“魔力”，可设置进出的方向。",
   "book.botanicalmekanism.mana_charger.2": "森林法杖切到绑定模式，潜行右击发射器，再潜行右击机器，即可从发射器供魔。魔力脉冲命中的那一面需要设为魔力输入。",
   "book.botanicalmekanism.mana_charger.3": "魔力池紧贴机器时，把相应一面设为魔力输入，即可直接取魔力。多个面合计每秒最多 20,000 魔力，满了会自动停下。",
-  "book.botanicalmekanism.mana_charger.4": "需要选择相邻目标时，打开左侧的“连接设置”，点击目标所在的一面。关闭窗口后仍按所选方向工作。",
+  "book.botanicalmekanism.mana_charger.4": "充能时，将贴着魔力池的一面设为魔力输入，即可直接取魔。抽出物品魔力时，魔力先存进充能座；把相应一面设为输出并开启弹出，可送回紧贴的魔力池。无需另选池子方向。",
   "book.botanicalmekanism.mana_infuser.title": "魔力灌注室",
   "book.botanicalmekanism.mana_infuser.0": "$(item)魔力灌注室$(0)能够给材料注入魔力，用来制作魔力钢、魔力珍珠等物品。它需要电能和魔力。$(p)在辅料槽放入炼金催化器或炼造催化器，还能进行相应的炼金与复制。",
   "book.botanicalmekanism.mana_infuser.1": "八个材料槽每秒合计灌注最多 8 个物品，可以混放不同材料。每件都要支付配方所需的魔力；魔力不足时等待补充。速度升级可以进一步加快加工。",

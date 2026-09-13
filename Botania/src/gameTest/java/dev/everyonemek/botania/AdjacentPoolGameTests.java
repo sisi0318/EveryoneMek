@@ -22,6 +22,40 @@ import static dev.everyonemek.botania.ManaMachineGameTests.*;
 @GameTestHolder(BotanicalMekanism.ID)
 @PrefixGameTestTemplate(false)
 public final class AdjacentPoolGameTests {
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void drainingChargerUsesOutputFacesAndNeverPullsBackPoolMana(GameTestHelper h) {
+        var pos = new BlockPos(20, 4, 20); var owner = player(h, "charger-output-sides");
+        var charger = machine(h, pos, ManaMachineKind.CHARGER); stop(charger); charger.applySetting(0, "1"); mana(charger, 5000);
+        var input = barePool(h, pos.north(), 9000); var output = barePool(h, pos.south(), 500);
+        for (var side : RelativeSide.values()) configure(owner, charger, side, DataType.NONE);
+        var outSide = RelativeSide.fromDirections(charger.getDirection(), Direction.SOUTH);
+        configure(owner, charger, RelativeSide.fromDirections(charger.getDirection(), Direction.NORTH), DataType.INPUT);
+        configure(owner, charger, outSide, DataType.OUTPUT);
+        h.startSequence().thenIdle(3).thenExecute(() -> {
+            check(charger.mana().getStored() == 5000 && input.getCurrentMana() == 9000 && output.getCurrentMana() == 500,
+                  "Disabled ejector transferred, or draining charger pulled input pool mana");
+            var oldMenu = owner.containerMenu; var oldPos = owner.position();
+            try {
+                owner.setPos(charger.getBlockPos().getCenter()); owner.containerMenu = new ManaMachineMenu(98, owner.getInventory(), charger);
+                new mekanism.common.network.to_server.configuration_update.PacketEjectConfiguration(charger.getBlockPos(), TransmissionType.CHEMICAL).handle(context(owner));
+            } finally { owner.containerMenu = oldMenu; owner.setPos(oldPos); }
+        }).thenWaitUntil(() -> check(charger.mana().isEmpty(), "Configured output did not return stored mana to pool"))
+              .thenExecute(() -> {
+                  check(output.getCurrentMana() == 5500 && input.getCurrentMana() == 9000, "Output routing changed the wrong pool or lost mana");
+                  configure(owner, charger, outSide, DataType.NONE); mana(charger, 1000);
+              }).thenIdle(3).thenExecute(() -> {
+                  check(charger.mana().getStored() == 1000 && output.getCurrentMana() == 5500, "Disabled output retained old pool selection");
+                  output.receiveMana(output.getMaxMana()); configure(owner, charger, outSide, DataType.INPUT_OUTPUT);
+              }).thenIdle(3).thenExecute(() -> {
+                  check(charger.mana().getStored() == 1000 && output.getCurrentMana() == output.getMaxMana(), "Full pool consumed buffer or input/output pulled backwards");
+                  output.receiveMana(-500);
+              }).thenWaitUntil(() -> check(charger.mana().getStored() == 500, "Output did not honor the pool's remaining capacity"))
+              .thenExecute(() -> {
+                  check(output.getCurrentMana() == output.getMaxMana() && input.getCurrentMana() == 9000, "Partial output lost mana");
+                  check(ManaTransfer.fillFromAdjacentPools(charger) == 0 && charger.mana().getStored() == 500, "Full output retried with a side effect");
+                  configure(owner, charger, outSide, DataType.NONE);
+              }).thenSucceed();
+    }
     static void configure(ServerPlayer player, ManaMachine machine, RelativeSide side, DataType type) {
         configure(player, machine, TransmissionType.CHEMICAL, side, type);
     }

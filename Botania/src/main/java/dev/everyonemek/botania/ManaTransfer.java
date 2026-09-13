@@ -53,17 +53,17 @@ public final class ManaTransfer {
         pool.receiveMana(Math.min(amount, Math.max(0, pool.getMaxMana() - before)));
         return Math.max(0, pool.getCurrentMana() - before);
     }
-    /** Passive input, like a pipe or spark: all faces share one per-machine, per-world-tick budget. */
+    /** Adjacent pool IO shares one budget per machine and world tick; draining chargers only export. */
     public static int fillFromAdjacentPools(ManaMachine tile) {
-        if (!tile.kind().chemical || !Flowers.live(tile) || tile.getLevel().isClientSide || tile.mana().getNeeded() == 0) return 0;
+        if (!tile.kind().chemical || !Flowers.live(tile) || tile.getLevel().isClientSide) return 0;
+        if (tile.kind() == ManaMachineKind.CHARGER && tile.mode() == 1) return drainToAdjacentPools(tile);
+        if (tile.mana().getNeeded() == 0) return 0;
         int moved = 0;
         var sides = RelativeSide.values();
         int start = (int) Math.floorMod(tile.getLevel().getGameTime(), sides.length);
         for (int offset = 0; offset < sides.length && tile.poolPullRemaining() > 0; offset++) {
             var direction = sides[(start + offset) % sides.length].getDirection(tile.getDirection());
             var pos = tile.getBlockPos().relative(direction);
-            // A legacy draining charger must not pull back the mana it is returning to its selected pool.
-            if (tile.kind() == ManaMachineKind.CHARGER && tile.mode() == 1 && pos.equals(tile.targetPos())) continue;
             var pool = pool(tile.getLevel(), pos);
             if (pool == null || !canTake(pool) || pool.getCurrentMana() <= 0) continue;
             var receiver = tile.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(), tile.getBlockPos(), direction);
@@ -80,10 +80,30 @@ public final class ManaTransfer {
         return moved;
     }
     public static void tick(ManaMachine tile) {
+        if (tile.kind() == ManaMachineKind.CHARGER) { chargerBuffer(tile); return; }
         var pool = pool(tile.getLevel(), tile.targetPos());
-        if (tile.kind() == ManaMachineKind.CHARGER && (tile.mode() == 0 || pool == null)) { chargerBuffer(tile); return; }
         if (pool == null) { tile.status(ManaMachine.NO_POOL); return; }
-        if (tile.kind() == ManaMachineKind.BRIDGE) bridge(tile, pool); else charger(tile, pool);
+        bridge(tile, pool);
+    }
+    private static int drainToAdjacentPools(ManaMachine tile) {
+        var config = tile.getConfig().getConfig(mekanism.common.lib.transmitter.TransmissionType.CHEMICAL);
+        if (tile.mana().isEmpty() || config == null || !config.isEjecting()) return 0;
+        int moved = 0; var sides = RelativeSide.values();
+        int start = (int) Math.floorMod(tile.getLevel().getGameTime(), sides.length);
+        for (int i = 0; i < sides.length && tile.poolPullRemaining() > 0; i++) {
+            var direction = sides[(start + i) % sides.length].getDirection(tile.getDirection());
+            var target = pool(tile.getLevel(), tile.getBlockPos().relative(direction));
+            if (target == null) continue;
+            var source = ManaAccess.at(tile.getLevel(), tile.getBlockPos(), direction);
+            int available = source == null ? 0 : (int) source.extract(tile.poolPullRemaining(), true);
+            int accepted = give(target, available, true);
+            if (accepted <= 0) continue;
+            int taken = (int) source.extract(accepted, false);
+            int delivered = give(target, taken, false);
+            if (delivered < taken) source.refund(taken - delivered);
+            tile.recordPoolPull(delivered); moved += delivered;
+        }
+        return moved;
     }
     private static void bridge(ManaMachine tile, ManaPoolBlockEntity pool) {
         boolean take = tile.mode() == 0;
@@ -101,35 +121,6 @@ public final class ManaTransfer {
             tile.mana().extract(give(pool, (int) amount, false), Action.EXECUTE, AutomationType.INTERNAL);
         }
         pool.setChanged(); tile.markForSave(); tile.status(ManaMachine.WORKING);
-    }
-    private static void charger(ManaMachine tile, ManaPoolBlockEntity pool) {
-        var source = tile.inputs.getFirst().getStack();
-        if (source.isEmpty()) { tile.status(ManaMachine.NO_RECIPE); return; }
-        if (source.getCount() != 1) { tile.status(ManaMachine.ITEM_DENIED); return; }
-        var copy = source.copy(); var item = ManaItem.LOOKUP.find(copy);
-        if (item == null || item.getMaxMana() <= 0 || item.getMana() < 0 || item.getMana() > item.getMaxMana()) { tile.status(ManaMachine.ITEM_DENIED); return; }
-        boolean charge = tile.mode() == 0;
-        int target = (int) ((long) item.getMaxMana() * tile.targetPercent() / 100);
-        if (charge ? item.getMana() >= target : item.getMana() <= target) {
-            var merged = tile.mergeOutputs(List.of(copy));
-            if (merged == null) { tile.status(ManaMachine.OUTPUT_FULL); return; }
-            tile.inputs.getFirst().setStackUnchecked(net.minecraft.world.item.ItemStack.EMPTY); tile.setOutputs(merged); tile.markForSave(); tile.status(ManaMachine.READY); return;
-        }
-        if (tile.mergeOutputs(List.of(copy)) == null) { tile.status(ManaMachine.OUTPUT_FULL); return; }
-        if (charge ? !canTake(pool) || !item.canReceiveManaFromPool(pool)
-              : !canGive(pool) || item.isNoExport() || !item.canDrainManaToPool(pool)) { tile.status(ManaMachine.ITEM_DENIED); return; }
-        int amount = Math.min(RATE, charge ? Math.min(target - item.getMana(), pool.getCurrentMana())
-              : Math.min(item.getMana() - target, space(pool)));
-        if (amount <= 0) { tile.status(charge ? ManaMachine.NO_MANA : ManaMachine.MANA_FULL); return; }
-        int before = item.getMana(); item.addMana(charge ? amount : -amount);
-        int moved = charge ? item.getMana() - before : before - item.getMana();
-        // A rejected or invalid item mutation never touches the original item or pool.
-        if (moved <= 0 || moved > amount) { tile.status(ManaMachine.ITEM_DENIED); return; }
-        if (!tile.spendEnergy(tile.energy().getEnergyPerTick())) { tile.status(ManaMachine.NO_ENERGY); return; }
-        int transferred = charge ? take(pool, moved, false) : give(pool, moved, false);
-        if (transferred != moved) item.addMana(charge ? transferred - moved : moved - transferred);
-        pool.setChanged();
-        tile.inputs.getFirst().setStackUnchecked(copy); tile.markForSave(); tile.status(ManaMachine.WORKING);
     }
     private static void chargerBuffer(ManaMachine tile) {
         var source = tile.inputs.getFirst().getStack();
