@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.23** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.24** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.23.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.24.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -52,7 +52,7 @@
 
 机械火花照常安装在魔力池或储魔机器上，染色、原有火花升级、幻影墨水和森林法杖的用法不变。
 
-普通机械火花为暖白色，机械主火花为蓝紫色，都没有外框。范围升级使用风符文外观，效率升级使用魔力符文外观，带有小火花标记。升级在主火花中只保存一份，多个窗口操作的是同一组物品。
+普通机械火花为暖白色，机械主火花为蓝紫色，都没有外框。三种升级使用金属模块外观，以青色范围、洋红效率和淡紫频道符号区分。升级在主火花中只保存一份，多个窗口操作的是同一组物品。
 
 - 每组相连、同色的机械火花放一个**机械主火花**。空手右击任意已连接的机械火花，即可打开共享升级栏。
 - **范围升级**：每个增加 8 格，每组最多 8 个，范围从 12 格提高到 76 格。
@@ -159,7 +159,7 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.23 已通过 51 项常规服务端测试、38 项未安装 AE2 的服务端测试和 5 项单元检查；Applied Botanics 共存的 52 项测试也已通过。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.23 已通过 51 项常规服务端测试、38 项未安装 AE2 的服务端测试和 5 项单元检查；Applied Botanics 共存的 52 项测试也已通过。alpha.24 仅更新升级图标，验证资源、编译与打包。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -193,7 +193,7 @@ The Corporea Orchid uses an ME Storage Bus style screen with 63 filter slots and
 
 充能座已移除单独的选池按钮。充能时从魔力输入面取魔；抽出物品魔力时先存入机内，设为输出并开启弹出的一面可以向紧贴的魔力池回充。抽出模式不会再从相邻池吸回魔力，输出受阻时留在机内。
 
-Mechanical sparks use the original warm-white flame; masters use Botania's blue-violet master flame, without frames. Range and throughput upgrades use Air and Mana Rune textures with a small spark marker. Entity names distinguish the master. Simultaneous shared-menu clicks and dismantling were checked through the server container-click handler.
+Mechanical sparks use the original warm-white flame; masters use Botania's blue-violet master flame, without frames. Original 16×16 metal modules have manasteel edges and gold contacts, with cyan range, magenta throughput and pale violet channel symbols. Entity names distinguish the master. Simultaneous shared-menu clicks and dismantling were checked through the server container-click handler.
 
 Terminal mana visibility is enabled by default, including a one-time update for existing terminals. Later manual opt-outs are saved. This also covers wireless terminals and preserves other visibility choices. The Corporea Orchid supports continuous filter edits, drag painting/right-drag clearing and reverse cycling with right-click. Display-only inventory statistics are collected on demand, at most once per second while viewed.
 

@@ -1,65 +1,6 @@
 {
   "parent": "minecraft:item/generated",
-  "loader": "neoforge:composite",
   "textures": {
-    "particle": "botania:item/rune_of_mana"
-  },
-  "children": {
-    "rune": {
-      "parent": "botania:item/rune_of_mana"
-    },
-    "badge": {
-      "textures": {
-        "star": "botania:item/spark_star"
-      },
-      "elements": [
-        {
-          "from": [
-            10,
-            10,
-            8.6
-          ],
-          "to": [
-            16,
-            16,
-            8.6
-          ],
-          "faces": {
-            "south": {
-              "texture": "#star",
-              "uv": [
-                0,
-                0,
-                16,
-                16
-              ]
-            }
-          }
-        },
-        {
-          "from": [
-            10,
-            10,
-            7.4
-          ],
-          "to": [
-            16,
-            16,
-            7.4
-          ],
-          "faces": {
-            "north": {
-              "texture": "#star",
-              "uv": [
-                0,
-                0,
-                16,
-                16
-              ]
-            }
-          }
-        }
-      ]
-    }
+    "layer0": "botanicalmekanism:item/spark_efficiency_upgrade"
   }
 }

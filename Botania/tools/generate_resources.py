@@ -289,12 +289,9 @@ for key, cn, english in [
 ]: zh[f'gui.{MOD}.spark.me_status.{key}'], en[f'gui.{MOD}.spark.me_status.{key}'] = cn, english
 for name, native in [('mechanical_spark', 'mana_spark'), ('master_mechanical_spark', 'master_corporea_spark')]:
     write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'botania:item/{native}'})
-for name, native in [('spark_range_upgrade', 'rune_of_air'), ('spark_efficiency_upgrade', 'rune_of_mana'), ('spark_channel_upgrade', 'rune_of_pride')]:
-    badge = [{'from': [10, 10, z], 'to': [16, 16, z], 'faces': {face: {'texture': '#star', 'uv': [0, 0, 16, 16]}}}
-             for face, z in [('south', 8.6), ('north', 7.4)]]
-    write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'loader': 'neoforge:composite',
-          'textures': {'particle': f'botania:item/{native}'}, 'children': {'rune': {'parent': f'botania:item/{native}'},
-          'badge': {'textures': {'star': 'botania:item/spark_star'}, 'elements': badge}}})
+for name in ['spark_range_upgrade', 'spark_efficiency_upgrade', 'spark_channel_upgrade']:
+    write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated',
+          'textures': {'layer0': f'{MOD}:item/{name}'}})
 write(f'data/{MOD}/recipe/mechanical_spark.json', {'type': 'minecraft:crafting_shaped', 'pattern': [' S ', 'CFC', ' S '],
       'key': {'S': {'item': 'botania:manasteel_ingot'}, 'C': {'item': 'mekanism:basic_control_circuit'}, 'F': {'item': 'botania:mana_spark'}}, 'result': {'id': f'{MOD}:mechanical_spark'}})
 shaped('master_mechanical_spark', [' C ', 'GFG', ' T '], {'C': 'mekanism:elite_control_circuit', 'G': 'botania:gaia_spirit', 'F': f'{MOD}:mechanical_spark', 'T': 'botania:terrasteel_ingot'})

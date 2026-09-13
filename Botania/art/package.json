@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "export": "node ../tools/export_textures.cjs",
+    "export:spark-upgrades": "node ../tools/export_spark_upgrades.cjs",
     "preview:models": "node ../tools/preview_models.cjs"
   },
   "devDependencies": {

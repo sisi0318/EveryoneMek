@@ -4,7 +4,7 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.23 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.24 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
@@ -12,6 +12,12 @@
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
 - 客户端游戏验收由用户进行，不运行客户端。alpha.23 验证 51 项常规服务端 GameTest、38 项无 AE2 服务端 GameTest 与 5 项 JUnit；Applied Botanics 共存的 52 项验证也已通过。不代表客户端视觉或完整整合包验收。
+
+## alpha.24 原创升级图标
+
+- 用户要求升级模块自行设计，不能直接用 Botania 符文图标；随后否定独立花叶／枝芽造型，要求能看出 Mek 与 Botania 的模块风格。最终采用金属底板、内凹面板、顶部接点与魔力钢色接边，中心以青色范围、洋红效率和淡紫频道符号区分。普通／主火花仍沿用原火花外观。
+- 内置 ImageGen 原稿与完整提示在 art/source 和 art/spark-upgrades.json。tools/export_spark_upgrades.cjs 最近邻导出真实 16×16 PNG，并生成实际运行图标的放大预览；完整正方形是模块底板本体，没有外部背景，不进行脚本抠图或重绘。generate_resources.py 使用单层物品模型，不再叠加符文和徽章。
+- 此版仅更换素材与模型，检查资源、编译和打包；alpha.23 的逻辑验证记录仍适用于未修改的机制，客户端外观由用户验收。
 
 ## alpha.23 ME 火花频道
 
@@ -37,7 +43,7 @@
 
 - 用户否定机械火花的方框，要求主火花名称正确、两种升级贴合 Botania，同时核对双人同时取升级。MechanicalSparkEntity.getTypeName 按同步的 MASTER 返回实际物品名称，不覆写 getName，以保留自定义命名。注册 ID 和旧实体存档不变。
 - MechanicalSparkRenderer 只覆写 getBaseIcon：普通沿用 mana_spark，主火花引用 master_corporea_spark；原父渲染继续处理光效、染色、墨水和升级图标。物品模型直接引用同样的 Botania 模型，旧钢框／几何代码已移除。这里只复用主多媒体火花外观，不改变机械火花的魔力传输类型。
-- 范围／效率升级模型分别引用 rune_of_air 和 rune_of_mana，加 6×6 的 spark_star 标记，前后两面离开原物品平面以免重叠。模型由 generate_resources.py 生成，没有复制或新绘 PNG。
+- 当时范围／效率升级模型引用 rune_of_air 和 rune_of_mana 并加 spark_star 标记；alpha.24 已按用户要求替换为原创图标。
 - 多个 SparkControllerMenu 指向 master.modules 同一真实容器；客户端容器仅用于同步显示。ServerGamePacketListenerImpl.handleContainerClick 保证服务器主线程处理，客户端预测的 changedSlots/carried 只写远端显示快照，不是库存。补强 clicked 与 quickMoveStack 的当前菜单／stillValid 检查，覆盖直接调用和失效回调。
 - SharedSparkInventoryGameTests 实际调用原 ServerGamePacketListenerImpl.handleContainerClick。NeoForge FakePlayer 原 handler 将此方法覆写为空，因此测试使用原处理器、仅关闭向外发包，finally 恢复原连接和菜单。两份旧状态包在同 tick 先后执行，交换先后顺序、Shift 提取、改色断连、半取后原法杖拆除，再发延迟包，始终核对原 8 个升级总数；这是多人点击协议回归，不是让两个线程同时改 Minecraft 世界。未复现重复取出。
 

@@ -1,0 +1,62 @@
+{
+  "tool": "built-in image_gen",
+  "use_case": "stylized-concept",
+  "references": [
+    {
+      "repository": "mekanism/Mekanism",
+      "version": "1.21.1-10.7.19.85",
+      "paths": [
+        "assets/mekanism/textures/item/upgrade_anchor.png",
+        "assets/mekanism/textures/item/upgrade_speed.png",
+        "assets/mekanism/textures/item/upgrade_energy.png"
+      ],
+      "role": "Metal cartridge shape, recessed work panel and electrical contacts; style reference only."
+    },
+    {
+      "repository": "VazkiiMods/Botania",
+      "commit": "d617ef057edf7a4b4fb6c6ee6045c973a80bfb05",
+      "paths": [
+        "assets/botania/textures/item/manasteel_ingot.png",
+        "assets/botania/textures/item/elementium_ingot.png",
+        "assets/botania/textures/item/spark_augment_dominant.png"
+      ],
+      "role": "Mana-metal colors and coarse magical glyph scale; style reference only."
+    }
+  ],
+  "design_revision": "User rejected the earlier standalone leaf/flower/branch designs. Final direction is a hardware cartridge with manasteel edges and a compact functional glyph.",
+  "export": {
+    "width": 16,
+    "height": 16,
+    "kernel": "nearest",
+    "fit": "contain",
+    "alpha": "preserve; full opaque square is the module plate",
+    "preview": "art/spark-upgrades-preview.png"
+  },
+  "assets": [
+    {
+      "id": "spark_range_upgrade",
+      "prompt": "Create ONE original Minecraft inventory UPGRADE MODULE texture, informed by the attached reference strip. The first three reference icons show the MEKANISM module structure (metal card, recessed dark panel, electrical contacts); the blue and pink ingots and last icon show BOTANIA material colors. Use them only as design references; invent a new module. This is a small hardware cartridge, NOT a flower, plant, jewelry, gemstone cluster, rune tablet or a decorative badge.\n\nCRITICAL OUTPUT: a square, perfectly front-facing, full-bleed face of the module itself. Its flat dark-metal outer plate fills EVERY pixel of the entire square canvas, including all four corners. NO external background, NO margin, NO transparency, NO checkerboard. The image boundaries ARE the square hardware plate boundaries, like a complete square Minecraft item sprite. The entire module is just a flat inventory icon, not a perspective cube or product photograph.\n\nIt must be designed as EXACTLY 16 by 16 large logical square pixel cells, enlarged. Show 16 cells across total. No smaller details, no anti-aliasing, no gradients, no glows, no noise or texture within cells. Very coarse limited-palette pixel art, 10 flat colors maximum. Four dark-gray square corners; a slim desaturated steel rim with tiny cobalt manasteel edge highlights; recessed charcoal central work panel. Along the TOP edge three clearly separate copper-gold contact teeth, each only one logical pixel wide and two tall. About 70 percent of the face is charcoal/steel, with Botania's blue manasteel and saturated mana-colored functional symbol. The frame, socket and contacts are identical across the family. No text, labels, letters, numbers, flowers, leaves or ornamental vines. No surrounding diagram, frame outside the physical module, duplicate thumbnail or alternate view. Main symbol is only 6 by 6 logical pixels, centered in the panel. RANGE module: the central CYAN glyph consists of a tiny center square and two separated angular bracket arcs to left and right, suggesting an expanding field. Geometric and blocky, like a compact Botania spark augment symbol embedded in a Mek upgrade card. Cobalt-blue manasteel socket accents.",
+      "source": "art/source/spark_range_upgrade.png",
+      "output": "src/main/resources/assets/botanicalmekanism/textures/item/spark_range_upgrade.png",
+      "edits": []
+    },
+    {
+      "id": "spark_efficiency_upgrade",
+      "prompt": "Create ONE original Minecraft inventory UPGRADE MODULE texture, informed by the attached reference strip. The first three reference icons show the MEKANISM module structure (metal card, recessed dark panel, electrical contacts); the blue and pink ingots and last icon show BOTANIA material colors. Use them only as design references; invent a new module. This is a small hardware cartridge, NOT a flower, plant, jewelry, gemstone cluster, rune tablet or a decorative badge.\n\nCRITICAL OUTPUT: a square, perfectly front-facing, full-bleed face of the module itself. Its flat dark-metal outer plate fills EVERY pixel of the entire square canvas, including all four corners. NO external background, NO margin, NO transparency, NO checkerboard. The image boundaries ARE the square hardware plate boundaries, like a complete square Minecraft item sprite. The entire module is just a flat inventory icon, not a perspective cube or product photograph.\n\nIt must be designed as EXACTLY 16 by 16 large logical square pixel cells, enlarged. Show 16 cells across total. No smaller details, no anti-aliasing, no gradients, no glows, no noise or texture within cells. Very coarse limited-palette pixel art, 10 flat colors maximum. Four dark-gray square corners; a slim desaturated steel rim with tiny cobalt manasteel edge highlights; recessed charcoal central work panel. Along the TOP edge three clearly separate copper-gold contact teeth, each only one logical pixel wide and two tall. About 70 percent of the face is charcoal/steel, with Botania's blue manasteel and saturated mana-colored functional symbol. The frame, socket and contacts are identical across the family. No text, labels, letters, numbers, flowers, leaves or ornamental vines. No surrounding diagram, frame outside the physical module, duplicate thumbnail or alternate view. Main symbol is only 6 by 6 logical pixels, centered in the panel. THROUGHPUT module: the central MAGENTA glyph consists of two stacked upward chevrons, a simple blocky acceleration symbol. Geometric and bold, like a compact Botania spark augment symbol embedded in a Mek upgrade card. Cobalt-blue manasteel socket accents.",
+      "source": "art/source/spark_efficiency_upgrade.png",
+      "output": "src/main/resources/assets/botanicalmekanism/textures/item/spark_efficiency_upgrade.png",
+      "edits": [
+        "Edit this Minecraft upgrade module face for readability when reduced to exactly 16x16 pixels. Preserve the square full-bleed dark metal plate, blue manasteel edge accents, recessed black panel, top golden contacts, and overall geometry. Change ONLY the center magenta symbol. Replace the two narrow chevrons with ONE very bold, symmetric upward-pointing chevron. It should span about 60% of canvas width and 40% of canvas height, be built from LARGE stair-stepped flat square blocks, and every part of the stroke must be at least 15% of the whole canvas width thick. Keep dark empty space inside the chevron clearly open. There must be NO thin strokes, tiny pixels or gradients. This is a coarse 16x16 Minecraft texture magnified: prioritize ONE simple thick upward chevron that remains obvious at 16 pixels. No background or transparent margin: entire square remains physical opaque module plate. Do not add arrows, embellishments or another miniature view."
+      ]
+    },
+    {
+      "id": "spark_channel_upgrade",
+      "prompt": "Create ONE original Minecraft inventory UPGRADE MODULE texture, informed by the attached reference strip. The first three reference icons show the MEKANISM module structure (metal card, recessed dark panel, electrical contacts); the blue and pink ingots and last icon show BOTANIA material colors. Use them only as design references; invent a new module. This is a small hardware cartridge, NOT a flower, plant, jewelry, gemstone cluster, rune tablet or a decorative badge.\n\nCRITICAL OUTPUT: a square, perfectly front-facing, full-bleed face of the module itself. Its flat dark-metal outer plate fills EVERY pixel of the entire square canvas, including all four corners. NO external background, NO margin, NO transparency, NO checkerboard. The image boundaries ARE the square hardware plate boundaries, like a complete square Minecraft item sprite. The entire module is just a flat inventory icon, not a perspective cube or product photograph.\n\nIt must be designed as EXACTLY 16 by 16 large logical square pixel cells, enlarged. Show 16 cells across total. No smaller details, no anti-aliasing, no gradients, no glows, no noise or texture within cells. Very coarse limited-palette pixel art, 10 flat colors maximum. Four dark-gray square corners; a slim desaturated steel rim with tiny cobalt manasteel edge highlights; recessed charcoal central work panel. Along the TOP edge three clearly separate copper-gold contact teeth, each only one logical pixel wide and two tall. About 70 percent of the face is charcoal/steel, with Botania's blue manasteel and saturated mana-colored functional symbol. The frame, socket and contacts are identical across the family. No text, labels, letters, numbers, flowers, leaves or ornamental vines. No surrounding diagram, frame outside the physical module, duplicate thumbnail or alternate view. Main symbol is only 6 by 6 logical pixels, centered in the panel. ME CHANNEL module: the central PALE VIOLET glyph consists of three tiny square nodes joined by a thick Y-shaped trace, a simple branching connection symbol. Geometric and bold, like a compact Botania spark augment symbol embedded in a Mek upgrade card. Cobalt-blue manasteel socket accents.",
+      "source": "art/source/spark_channel_upgrade.png",
+      "output": "src/main/resources/assets/botanicalmekanism/textures/item/spark_channel_upgrade.png",
+      "edits": [
+        "Edit this Minecraft upgrade module face for readability when reduced to exactly 16x16 pixels. Preserve the square full-bleed dark metal plate, blue manasteel edge accents, recessed black panel, top golden contacts, and overall geometry. Change ONLY the center pale violet symbol. Replace the outlined hollow squares and thin Y with THREE SOLID, FILLED violet block nodes (one top-left, one top-right, one bottom-center) joined by a very thick continuous Y-shaped violet trace. Node blocks have NO holes. The whole glyph should span 60% of canvas width and 55% of height. All connecting strokes are at least 15% of the whole canvas width thick, joining nodes solidly with no breaks. Use only one pale violet and one purple shadow color. Large stair-step pixel blocks, no curves, tiny pixels, subtle texture or gradients. It must remain an obvious connected three-node network at 16x16 actual pixels. No background or transparent margin: entire square remains physical opaque module plate. Do not add embellishments or another miniature view."
+      ]
+    }
+  ]
+}
