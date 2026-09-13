@@ -38,9 +38,7 @@ public record ManaAccess(Level level, BlockPos pos, Direction side, BlockEntity 
     public long extract(long amount, boolean simulate) {
         if (amount <= 0 || !live()) return 0;
         if (original instanceof ManaPoolBlockEntity pool) {
-            if (!ManaTransfer.canTake(pool)) return 0;
-            int taken = (int) Math.min(amount, pool.getCurrentMana());
-            if (!simulate && taken > 0) { pool.receiveMana(-taken); pool.setChanged(); } return taken;
+            return ManaTransfer.take(pool, (int) Math.min(amount, Integer.MAX_VALUE), simulate);
         }
         var handler = handler(); return handler == null ? 0 : handler.extractChemical(new ChemicalStack(ManaContent.MANA, Math.min(amount, ManaMachine.MANA_CAPACITY)),
               simulate ? Action.SIMULATE : Action.EXECUTE).getAmount();
@@ -48,7 +46,7 @@ public record ManaAccess(Level level, BlockPos pos, Direction side, BlockEntity 
     public long refund(long amount) {
         if (amount <= 0 || !live()) return 0;
         if (original instanceof ManaPoolBlockEntity pool) {
-            int accepted = (int) Math.min(amount, pool.getMaxMana() - pool.getCurrentMana()); pool.receiveMana(accepted); pool.setChanged(); return accepted;
+            return ManaTransfer.refund(pool, (int) Math.min(amount, Integer.MAX_VALUE));
         }
         var machine = (ManaMachine) original;
         return amount - machine.mana().insert(new ChemicalStack(ManaContent.MANA, amount), Action.EXECUTE, AutomationType.INTERNAL).getAmount();

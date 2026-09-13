@@ -22,11 +22,11 @@
       "item": "ae2:fluix_pearl"
     },
     "E": {
-      "item": "ae2:cell_component_1k"
+      "item": "ae2:cell_component_4k"
     }
   },
   "result": {
-    "id": "botanicalmekanism:mana_storage_cell",
+    "id": "botanicalmekanism:mana_storage_cell_4k",
     "count": 1
   }
 }

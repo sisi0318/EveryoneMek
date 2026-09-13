@@ -238,17 +238,21 @@ for key, cn, english in [
     ('jei.botanicalmekanism.mana_amount', '魔力：%s', 'Mana: %s'),
     ('jei.botanicalmekanism.choose_vessel', '请选择药剂容器', 'Choose a brew vessel'),
     ('jei.botanicalmekanism.pattern_full', '样板放不下这些材料', 'Too many ingredients for this pattern'),
-    ('item.botanicalmekanism.mana_storage_cell', 'ME 魔力存储盘', 'ME Mana Storage Cell'),
+    ('item.botanicalmekanism.mana_storage_cell', '1k ME 魔力存储盘', '1k ME Mana Storage Cell'),
     ('item.botanicalmekanism.mana_packet', '魔力团', 'Mana Wisp'),
     ('tooltip.botanicalmekanism.mana_cell', '魔力：%s / %s', 'Mana: %s / %s'),
     ('tooltip.botanicalmekanism.mana_packet', '魔力：%s。对魔力池或机器使用以归还。', 'Mana: %s. Use on a pool or machine to return it.'),
 ]: zh[key], en[key] = cn, english
-write(f'data/{MOD}/recipe/mana_storage_cell.json', {
-    'neoforge:conditions': [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}],
-    'type': 'minecraft:crafting_shaped', 'pattern': ['SMS', 'CEC', 'SSS'],
-    'key': {'S': {'item': 'botania:manasteel_ingot'}, 'M': {'item': 'botania:mana_diamond'},
-            'C': {'item': 'ae2:fluix_pearl'}, 'E': {'item': 'ae2:cell_component_4k'}},
-    'result': {'id': f'{MOD}:mana_storage_cell', 'count': 1}})
+from mana_cell_models import TIERS, cell_id
+for tier in TIERS:
+    name = cell_id(tier)
+    zh[f'item.{MOD}.{name}'], en[f'item.{MOD}.{name}'] = f'{tier}k ME 魔力存储盘', f'{tier}k ME Mana Storage Cell'
+    write(f'data/{MOD}/recipe/{name}.json', {
+        'neoforge:conditions': [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}],
+        'type': 'minecraft:crafting_shaped', 'pattern': ['SMS', 'CEC', 'SSS'],
+        'key': {'S': {'item': 'botania:manasteel_ingot'}, 'M': {'item': 'botania:mana_diamond'},
+                'C': {'item': 'ae2:fluix_pearl'}, 'E': {'item': f'ae2:cell_component_{tier}k'}},
+        'result': {'id': f'{MOD}:{name}', 'count': 1}})
 write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:block/mana_water'}})
 from mana_cell_models import generate as generate_mana_cell_models
 generate_mana_cell_models(write)

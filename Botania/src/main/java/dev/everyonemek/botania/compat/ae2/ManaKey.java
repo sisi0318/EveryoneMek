@@ -19,7 +19,7 @@ public final class ManaKey extends AEKey {
         @Override public MapCodec<ManaKey> codec() { return MapCodec.unit(INSTANCE); }
         @Override public AEKey readFromPacket(RegistryFriendlyByteBuf buffer) { return INSTANCE; }
         @Override public int getAmountPerOperation() { return 1000; }
-        @Override public int getAmountPerByte() { return 1000; }
+        @Override public int getAmountPerByte() { return ManaCellTier.MANA_PER_BYTE; }
     };
     @Override public AEKeyType getType() { return TYPE; }
     @Override public AEKey dropSecondary() { return this; }

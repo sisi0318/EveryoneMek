@@ -8,20 +8,22 @@ import net.minecraft.world.item.context.UseOnContext;
 
 /** Uses an addon component, so removing the optional AE2 integration never erases stored mana. */
 public final class ManaStorageItem extends Item {
-    public static final long CELL_CAPACITY = 1_000_000;
-    private final boolean cell;
-    public ManaStorageItem(boolean cell) { super(new Properties().stacksTo(1)); this.cell = cell; }
+    private final ManaCellTier tier;
+    public ManaStorageItem(ManaCellTier tier) { super(new Properties().stacksTo(1)); this.tier = tier; }
+    public static boolean isCell(ItemStack stack) { return stack.getItem() instanceof ManaStorageItem item && item.tier != null; }
+    public static long capacity(ItemStack stack) { return isCell(stack) ? ((ManaStorageItem) stack.getItem()).tier.capacity : 0; }
+    public static double idleDrain(ItemStack stack) { return isCell(stack) ? ((ManaStorageItem) stack.getItem()).tier.idleDrain : 0; }
     public static long stored(ItemStack stack) {
         long amount = Math.max(0, stack.getOrDefault(Content.STORED_MANA.get(), 0L));
-        return stack.is(Content.MANA_CELL.get()) ? Math.min(CELL_CAPACITY, amount) : amount;
+        return isCell(stack) ? Math.min(capacity(stack), amount) : amount;
     }
     public static void store(ItemStack stack, long amount) { stack.set(Content.STORED_MANA.get(), Math.max(0, amount)); }
     public static ItemStack recovery(long amount) { var stack = new ItemStack(Content.MANA_PACKET.get()); store(stack, amount); return stack; }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
-        lines.add(Component.translatable(cell ? "tooltip.botanicalmekanism.mana_cell" : "tooltip.botanicalmekanism.mana_packet", stored(stack), CELL_CAPACITY));
+        lines.add(Component.translatable(tier != null ? "tooltip.botanicalmekanism.mana_cell" : "tooltip.botanicalmekanism.mana_packet", stored(stack), capacity(stack)));
     }
     @Override public InteractionResult useOn(UseOnContext context) {
-        if (cell) return super.useOn(context);
+        if (tier != null) return super.useOn(context);
         var level = context.getLevel(); var pos = context.getClickedPos(); var player = context.getPlayer();
         if (player == null || !mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return InteractionResult.FAIL;
         var access = ManaAccess.at(level, pos, context.getClickedFace()); if (access == null) return InteractionResult.PASS;

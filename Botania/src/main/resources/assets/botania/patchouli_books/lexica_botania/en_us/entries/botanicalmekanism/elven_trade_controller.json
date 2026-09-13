@@ -15,6 +15,10 @@
       "text": "book.botanicalmekanism.elven_trade_controller.1"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.elven_trade_controller.2"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:elven_trade_controller"
     }

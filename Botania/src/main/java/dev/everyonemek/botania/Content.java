@@ -62,8 +62,10 @@ public final class Content {
           () -> DataComponentType.<Boolean>builder().persistent(com.mojang.serialization.Codec.BOOL).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.BOOL).build());
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> STORED_MANA = COMPONENTS.register("stored_mana",
           () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_LONG).build());
-    public static final DeferredItem<ManaStorageItem> MANA_CELL = ITEMS.register("mana_storage_cell", () -> new ManaStorageItem(true));
-    public static final DeferredItem<ManaStorageItem> MANA_PACKET = ITEMS.register("mana_packet", () -> new ManaStorageItem(false));
+    public static final java.util.Map<ManaCellTier, DeferredItem<ManaStorageItem>> MANA_CELLS = new java.util.EnumMap<>(ManaCellTier.class);
+    static { for (var tier : ManaCellTier.values()) MANA_CELLS.put(tier, ITEMS.register(tier.id(), () -> new ManaStorageItem(tier))); }
+    public static final DeferredItem<ManaStorageItem> MANA_CELL = MANA_CELLS.get(ManaCellTier.K1);
+    public static final DeferredItem<ManaStorageItem> MANA_PACKET = ITEMS.register("mana_packet", () -> new ManaStorageItem(null));
     public static final DeferredItem<Item> SPARK_AUGMENT = ITEMS.register("resonance_spark_augment",
           () -> new Item(new Item.Properties().component(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
                 .component(vazkii.botania.common.component.BotaniaDataComponents.AUGMENT_ICON,
@@ -79,7 +81,7 @@ public final class Content {
                   output.accept(LOTUS.get());
                   for (var block : bionics()) output.accept(block.get());
                   output.accept(SPARK_AUGMENT.get());
-                  if (net.neoforged.fml.ModList.get().isLoaded("ae2")) { output.accept(CORPOREA.get()); output.accept(MANA_CELL.get()); }
+                  if (net.neoforged.fml.ModList.get().isLoaded("ae2")) { output.accept(CORPOREA.get()); MANA_CELLS.values().forEach(cell -> output.accept(cell.get())); }
                   output.accept(ApothecaryContent.BLOCK);
                   for (var block : ManaContent.MACHINES.values()) output.accept(block);
               }).build());

@@ -17,6 +17,12 @@ import vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities;
 
 @EventBusSubscriber(modid = BotanicalMekanism.ID, value = Dist.CLIENT)
 public final class ClientEvents {
+    @SubscribeEvent public static void modelLoaders(ModelEvent.RegisterGeometryLoaders event) {
+        event.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "mana_cell"), new ManaCellModelLoader());
+    }
+    @SubscribeEvent public static void itemColors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) {
+        if (net.neoforged.fml.ModList.get().isLoaded("ae2")) dev.everyonemek.botania.compat.ae2.ManaAeClient.colors(event);
+    }
     @SubscribeEvent public static void models(ModelEvent.RegisterAdditional event) {
         if (net.neoforged.fml.ModList.get().isLoaded("ae2")) dev.everyonemek.botania.compat.ae2.ManaAeClient.models(event);
     }

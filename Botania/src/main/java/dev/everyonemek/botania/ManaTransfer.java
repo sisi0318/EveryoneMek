@@ -12,17 +12,33 @@ import vazkii.botania.api.mana.ManaItem;
 import vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity;
 import vazkii.botania.common.block.mana.ManaPoolBlock;
 
-/** Transfers resources between real, bounded stores. No synthetic pool context. */
+/** Transfers resources through the original pools and machine stores. */
 public final class ManaTransfer {
     public static final int RATE = 1000;
     public static ManaPoolBlockEntity pool(Level level, BlockPos position) {
         if (level == null || !level.hasChunkAt(position)) return null;
         var tile = level.getBlockEntity(position);
         return tile != null && !tile.isRemoved() && tile.getClass() == ManaPoolBlockEntity.class
-              && tile.getBlockState().getBlock() instanceof ManaPoolBlock block && !block.isCreative() ? (ManaPoolBlockEntity) tile : null;
+              && tile.getBlockState().getBlock() instanceof ManaPoolBlock ? (ManaPoolBlockEntity) tile : null;
     }
     public static boolean canTake(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canSpare(); }
     public static boolean canGive(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canAccept(); }
+    public static boolean creative(ManaPoolBlockEntity pool) { return pool.getBlockState().getBlock() instanceof ManaPoolBlock block && block.isCreative(); }
+    public static int take(ManaPoolBlockEntity pool, int amount, boolean simulate) {
+        if (amount <= 0 || !canTake(pool) || !Flowers.live(pool)) return 0;
+        int taken = Math.min(amount, Math.max(0, pool.getCurrentMana()));
+        // The Everlasting Pool always reports full. Its supply does not reduce that value.
+        if (simulate || creative(pool)) return taken;
+        int before = pool.getCurrentMana(); pool.receiveMana(-taken);
+        return Math.max(0, before - pool.getCurrentMana());
+    }
+    public static int refund(ManaPoolBlockEntity pool, int amount) {
+        if (amount <= 0 || !Flowers.live(pool)) return 0;
+        if (creative(pool)) return amount;
+        int before = pool.getCurrentMana();
+        pool.receiveMana(Math.min(amount, Math.max(0, pool.getMaxMana() - before)));
+        return Math.max(0, pool.getCurrentMana() - before);
+    }
     /** Passive input, like a pipe or spark: all faces share one per-machine, per-world-tick budget. */
     public static int fillFromAdjacentPools(ManaMachine tile) {
         if (!tile.kind().chemical || !Flowers.live(tile) || tile.getLevel().isClientSide || tile.mana().getNeeded() == 0) return 0;
@@ -41,11 +57,10 @@ public final class ManaTransfer {
             int wanted = Math.min(tile.poolPullRemaining(), pool.getCurrentMana());
             int accepted = wanted - (int) receiver.insertChemical(new ChemicalStack(ManaContent.MANA, wanted), Action.SIMULATE).getAmount();
             if (accepted <= 0) continue;
-            int before = pool.getCurrentMana(); pool.receiveMana(-accepted);
-            int taken = before - pool.getCurrentMana();
+            int taken = take(pool, accepted, false);
             if (taken <= 0) continue;
             int remainder = (int) receiver.insertChemical(new ChemicalStack(ManaContent.MANA, taken), Action.EXECUTE).getAmount();
-            if (remainder > 0) pool.receiveMana(remainder);
+            if (remainder > 0) refund(pool, remainder);
             tile.recordPoolPull(taken - remainder); moved += taken - remainder;
         }
         return moved;
@@ -64,10 +79,9 @@ public final class ManaTransfer {
         if (amount <= 0) { tile.status(ManaMachine.READY); return; }
         if (!tile.spendEnergy(tile.energy().getEnergyPerTick())) { tile.status(ManaMachine.NO_ENERGY); return; }
         if (take) {
-            int before = pool.getCurrentMana(); pool.receiveMana(-(int) amount);
-            int taken = before - pool.getCurrentMana();
+            int taken = take(pool, (int) amount, false);
             var remainder = tile.mana().insert(new ChemicalStack(ManaContent.MANA, taken), Action.EXECUTE, AutomationType.INTERNAL);
-            if (!remainder.isEmpty()) pool.receiveMana((int) remainder.getAmount());
+            if (!remainder.isEmpty()) refund(pool, (int) remainder.getAmount());
             tile.recordPoolPull(taken - (int) remainder.getAmount());
         } else {
             int before = pool.getCurrentMana(); pool.receiveMana((int) amount);

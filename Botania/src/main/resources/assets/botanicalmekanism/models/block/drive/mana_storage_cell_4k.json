@@ -6,7 +6,7 @@
   },
   "children": {
     "base": {
-      "parent": "ae2:block/drive/cells/1k_fluid_cell"
+      "parent": "ae2:block/drive/cells/4k_fluid_cell"
     },
     "mana": {
       "textures": {

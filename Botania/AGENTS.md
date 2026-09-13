@@ -4,32 +4,39 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.13 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.14 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.11 验证带 AE2／JEI 联动的 37 项服务端 GameTest、无 AE2 的 27 项，以及费用和 GUI 契约共 3 项 JUnit，不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.14 验证带 AE2／JEI 联动的 38 项服务端 GameTest 和 3 项 JUnit；无 AE2 的 27 项验证来自 alpha.11。不代表客户端视觉或完整整合包验收。
 
-## alpha.13 魔力存储盘模型
+## alpha.14 原生盘、五档容量和永恒池
 
-- 用户要求改魔力盘模型。`tools/mana_cell_models.py` 从总资源生成器调用，生成切角薄盘物品和独立 `block/drive/mana_storage_cell` 插槽模型。只引用磨制活石、魔力钢和原动态液面；不新增 PNG，不改存储组件、容量和配方。
-- `ManaAeClient.CELL_MODEL` 通过 `StorageCellModels.registerModel` 映射，`ClientEvents` 在可选 AE 条件下转发 `ModelEvent.RegisterAdditional`，用 `ModelResourceLocation.standalone` 注册独立模型，确保贴图与模型进入烘焙。当前 NeoForge 事件不接受裸 ResourceLocation。共用客户端入口不直接引用 AE 类型。
-- AE2 19.2.17 的插槽以 6×2×2 局部模型放入驱动器，ME 箱子也读取同一模型。原状态灯覆盖 x=4..5、y=0..1、z=-0.001；魔力窗口留在 x<4 的区域，不用蓝色静态标记遮掉红绿状态。只复制接口所需尺寸约定，几何为本项目原创。
-- `tools/preview_mana_cell.cjs` 读取实际 JSON、UV 和依赖材质，生成 `art/mana-cell-preview.png`；仅离线首帧／缩略图检查，不声称已验收游戏动画。模型改动做资源、编译和打包检查，不重跑全量服务端。
+- 用户否定自创盘外形，明确以 AE 原盘修改。`mana_cell_models.py` 用 CompositeModel 引用 `ae2:item/fluid_storage_cell_<tier>k` 和原驱动器插槽模型，只加两面液面小标签。AE 材质／模型为 CC BY-NC-SA 3.0，运行时引用，未复制进 JAR；离线预览归属见 art/README。不要恢复 alpha.13 的石质卡片模型。
+- `ManaCellModelLoader` 委托 NeoForge CompositeModel.Loader；AE 缺失时只替换其 base 子模型为 Botania 图标，避免缺失可选父模型。加载器和事件均在客户端。AE 在场时 `ManaAeClient` 注册所有插槽模型，并用原 BasicStorageCell.getColor 根据本盘真实存储状态绘制物品 LED；世界 LED 仍由 AE 绘制，蓝色标签避开 x=4..5、y=0..1。
+- `ManaCellTier` 为不依赖 AE 的共同枚举，1/4/16/64/256 × 1024 × 8000 魔力；容量 8,192,000、32,768,000、131,072,000、524,288,000、2,097,152,000。待机 0.5/1/1.5/2/2.5 AE/t。1k 保留 mana_storage_cell ID；四档追加 _4k 等后缀，Content.MANA_CELL 仍是旧 ID 别名。stored_mana Long 组件不变，所有容器策略按物品档位取得容量，不再只认单个物品。
+- ManaKey.getAmountPerByte 同步 8000（原 AE 流体密度），每次操作仍为 1000，显示与配方仍 1 单位 = 1 魔力。AE 合成存储的 5200 魔力输入现在计 5.2 字节，另加其他材料和树开销；这不是 JVM 堆用量或性能实测。
+- `ManaTransfer.pool` 接受原永恒池，仍检查精确原池类、存活和已加载区块。永恒池 getCurrentMana 始终等于容量，take 不按减少量结算、不改池内数值；SIMULATE 无副作用，refund 返回刚取出的余量。普通池仍按实际差值。ManaAccess、ManaEndpoint 和互通器／六面补魔统一使用该方法；canSpare、满仓与 RATE 限制仍有效。
+- `GuiPoolConnectionTab` 使用原 GuiWindowCreatorTab／GuiWindow，位置 (-26,64)，用于 BRIDGE、CHARGER 和两个 controller。窗口六个方向按钮发送原 action=1 Settings 包，显示服务器确认的 side/revision，关闭后设置保留。主页移除 targetSide 按钮；存档 pool_side、原端口配置和连接行为不改。
+- 现有 ManaAeGameTests 覆盖五档 Long.MAX_VALUE 模拟、满盘、共享句柄、存档、大额提取、256k 筛选，以及真实 ME 总线替换为永恒池后供魔；AdjacentPoolGameTests 新增真实设置包选方向、永恒池自定义 manaCap、共享上限、满罐余量、关闭输入和拆除失效。alpha.14 本地只跑一次带 AE 的 38 项服务端测试，全部通过，不为后续文档／预览重跑。
+
+## alpha.13 魔力存储盘模型（历史）
+
+曾自行设计石质切角薄盘与三段接点。用户在 alpha.14 明确要求沿用 AE 原盘，该几何已替换；预览工具现在检查原盘引用与液面标签。
 
 ## alpha.12 魔力液面图标
 
 - 用户要求魔力以流体图标显示，明确拒绝液滴造型。`client/ManaIcon` 从方块图集读取 `botania:block/mana_water` 的当前动画帧，按完整 16×16 液面绘制；JEI、AE GUI、Mek 配置页共用它。AE 世界监控经 mana_packet 模型显示同一材质，存储盘的窗口也引用此贴图。
 - 原 Botania 贴图为 16×512，32 帧、每帧 2 tick。仅引用运行资源，不复制原 PNG、不增加新位图，也不修改火花物品本身。不要恢复火花、宝石或液滴作为魔力资源标识。
 - 图标改动只做资源、编译和既有单元检查，不为它重跑全量服务端。alpha.11 的逻辑验证结果继续有效；游戏内动画、JEI 拖放和视觉由用户验收。
-- 用户询问 5.2k 魔力的大量自动化开销。核对 AE2 19.2.17：GenericStack／KeyCounter 用数量批量存取；CraftingCpuHelper.extractTemplates 按乘数一次提取，CPU 执行按样板次数计，不按魔力点循环。ManaKey.getAmountPerByte=1000，AE addStackBytes 再乘 8，库存输入的 5200 魔力计约 41.6 个游戏内合成存储字节，另有配方树、次数和其他材料开销。这不是 JVM 内存估值，也不代表做过大规模压测；不要靠更改显示单位假装性能提升。
+- 用户询问 5.2k 魔力的大量自动化开销。核对 AE2 19.2.17：GenericStack／KeyCounter 用数量批量存取；CraftingCpuHelper.extractTemplates 按乘数一次提取，CPU 执行按样板次数计，不按魔力点循环。alpha.12 当时 ManaKey.getAmountPerByte=1000（alpha.14 改为 8000），AE addStackBytes 再乘 8，库存输入的 5200 魔力计约 41.6 个游戏内合成存储字节，另有配方树、次数和其他材料开销。这不是 JVM 内存估值，也不代表做过大规模压测；不要靠更改显示单位假装性能提升。
 
 ## alpha.11 输入面直接取魔力与 JEI 样板
 
-- `ManaTransfer.fillFromAdjacentPools` 在机器 server tick 的加工／红石检查前补充唯一魔力罐，像管道和火花一样允许停机备料。只检查相邻已加载的普通原池，每个世界 tick 轮换六面，按实际方向的 Chemical capability 模拟可收量，再从池扣除、实际插入，剩余退回；遵守 canSpare，不接创造池。
+- `ManaTransfer.fillFromAdjacentPools` 在机器 server tick 的加工／红石检查前补充唯一魔力罐，像管道和火花一样允许停机备料。只检查相邻已加载的原池（alpha.14 增加永恒池），每个世界 tick 轮换六面，按实际方向的 Chemical capability 模拟可收量，再从池扣除、实际插入，剩余退回；遵守 canSpare；永恒池按 alpha.14 的无限供给结算。
 - `ManaMachine.poolPullRemaining/recordPoolPull` 让六面和互通器原抽取路径共享每机器每世界 tick 1000 魔力上限，重复回调不会增加额度。互通器原指定池面仍按原模式处理。充能座充入物品统一用内部罐，不再绕过侧面配置直接抽旧目标池；旧抽出回池线路保留，补料跳过正被回充的旧目标池，防止吸回。
 - `AdjacentPoolGameTests` 验证旋转后的六面、Mek 设置包、INPUT_OUTPUT／OUTPUT／NONE、重复调用和合并带宽、池许可／创造池、满仓余量、拆除和实际灌注加工。先前手动充能测试现在先配置输入面并补充机器罐。
 - AE2 JEI Integration 固定 1.2.1，Curse Maven `curse.maven:ae2-jei-integration-1074338:7727898`，JEI 按其源码声明配套 19.27.0.335。版本、源码 ce16a25 与 SHA 见 ae2-jei-compat.json。compileOnly 接 API，运行依赖随 withAE2 关闭，主模组对其仍是可选依赖。
@@ -47,8 +54,8 @@
 - `ManaSideConfigMixin`／`ManaConfigTabMixin` 只修改本模组魔力机器的 Mek CHEMICAL 配置标题、提示和图标，实际六面仍走 Mek PacketSideData／配置组件（不能只在测试里 setDataType，PacketSideData 还会 sideChanged 刷新能力）；不扩展 TransmissionType 枚举，也不改其他 Mek 机器。客户端 Mixin 放 client 列表，ASM JUnit 核对 Mek 10.7.19.85 字段、调用和父方法。GuiChemicalBar 自定义提示只显示魔力量。
 - 充能座移除六个方位按钮；主界面只留充放模式、目标比例、魔力和状态。互通器／控制器用一个连接方向按钮，库存槽位不变。目标确认值宽 44，避开 (206,86) 的电力物品槽。游戏内视觉仍由用户验收。
 - `ManaKey` 是可选 AE2 中独立的 AEKeyType／唯一 ManaKey，按 AE registry 注册，NBT MapCodec 与数据包均往返同一键；1 单位就是 1 魔力，每次 AE 操作的基数 1000。`ManaAeClient` 注册终端／监控渲染；原生类型选择可选择“魔力”。
-- `Content.MANA_CELL`／`MANA_PACKET` 和 stored_mana Long 组件始终注册，物品类不依赖 AE。自定义 `ManaCell` ICellHandler 只接受魔力，容量 1,000,000、待机 1 AE/t；存档直接使用本模组组件，缺 AE 时不丢失数值。filled cell 不可嵌套进存储元件。KeyCounter 不添加零量条目，避免空盘或拆除接口留下空类型。每次变更立即写组件并通知 host；persist 本身不再通知，避免 ME 箱子的保存回调递归。
-- `ManaAccess` 只访问已加载的普通原池或本模组魔力机器，接口每次检查原 BE 身份、区块和实际侧面能力。原池遵守 canTake／canGive，机器遵守真实 Chemical capability。refund 只用来归还刚从来源取出的余量。
+- `Content.MANA_CELL`／`MANA_PACKET` 和 stored_mana Long 组件始终注册，物品类不依赖 AE。自定义 `ManaCell` ICellHandler 只接受魔力，初版容量 1,000,000、待机 1 AE/t（alpha.14 为五档）；存档直接使用本模组组件，缺 AE 时不丢失数值。filled cell 不可嵌套进存储元件。KeyCounter 不添加零量条目，避免空盘或拆除接口留下空类型。每次变更立即写组件并通知 host；persist 本身不再通知，避免 ME 箱子的保存回调递归。
+- `ManaAccess` 只访问已加载的原池（含永恒池）或本模组魔力机器，接口每次检查原 BE 身份、区块和实际侧面能力。原池遵守 canTake／canGive，机器遵守真实 Chemical capability。refund 只用来归还刚从来源取出的余量。
 - `ManaBusStorage` 注册 AE import/export/external storage strategies。总线策略每次操作重新取得相邻目标，支持先放总线后放机器；存储总线的已缓存视图绑定原 BE，拆除后失效。实际传输使用 AE poweredInsert／poweredExtraction，拒收余量回源，无法回源则掉落带同量魔力的 MANA_PACKET。
 - `ManaContainerStrategy` 让空魔力盘也可作为 AE 筛选样品（amount=0），支持终端装入／归还魔力。按 carried／玩家槽的同一 ItemStack 身份核对上下文，模拟不写入。AE 筛选的普通左击设置物品，右击才发送 EMPTY_ITEM 选择容器内的魔力；说明必须写右击，回归使用原 IOBusMenu.doAction。接口内的魔力拆除时由 ManaKey.addDrops 保存到魔力团，可归还池／机器／ME，不免费生成存储盘。
 - 词典有 25 个条目。新盘合成页用 mod:ae2 条件；盘模型用 JSON 几何和 Botania 活石、魔力珍珠材质，魔力团引用火花贴图，无新增位图。原共鸣花模型与原稿保留。

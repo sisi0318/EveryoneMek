@@ -36,13 +36,26 @@ public final class ManaAeGameTests {
         var stack = new ItemStack(Content.MANA_CELL.get()); var cell = StorageCells.getCellInventory(stack, null);
         check(cell != null, "Mana cell handler missing"); var source = IActionSource.empty(); var key = ManaKey.INSTANCE;
         check(cell.insert(AEItemKey.of(Items.DIAMOND), 1, Actionable.MODULATE, source) == 0, "Mana cell accepted an item");
-        check(cell.insert(key, Long.MAX_VALUE, Actionable.SIMULATE, source) == 1_000_000 && ManaStorageItem.stored(stack) == 0, "Cell simulation mutated storage");
-        check(cell.insert(key, Long.MAX_VALUE, Actionable.MODULATE, source) == 1_000_000, "Cell capacity is not one pool");
+        check(cell.insert(key, Long.MAX_VALUE, Actionable.SIMULATE, source) == 8_192_000 && ManaStorageItem.stored(stack) == 0, "Cell simulation mutated storage");
+        check(cell.insert(key, Long.MAX_VALUE, Actionable.MODULATE, source) == 8_192_000, "1k capacity is wrong");
         check(!cell.canFitInsideCell() && cell.insert(key, 1, Actionable.MODULATE, source) == 0, "Filled cell allowed nesting or overflow");
         var second = StorageCells.getCellInventory(stack, null);
-        check(second.extract(key, 100, Actionable.MODULATE, source) == 100 && cell.getAvailableStacks().get(key) == 999_900, "Cached handles duplicated cell contents");
+        check(second.extract(key, 100, Actionable.MODULATE, source) == 100 && cell.getAvailableStacks().get(key) == 8_191_900, "Cached handles duplicated cell contents");
         var registries = h.getLevel().registryAccess(); var saved = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) stack.saveOptional(registries));
-        check(ManaStorageItem.stored(saved) == 999_900 && StorageCells.getCellInventory(saved, null).getAvailableStacks().get(key) == 999_900, "Cell item save lost mana");
+        check(ManaStorageItem.stored(saved) == 8_191_900 && StorageCells.getCellInventory(saved, null).getAvailableStacks().get(key) == 8_191_900, "Cell item save lost mana");
+        long[] capacities = {8_192_000L, 32_768_000L, 131_072_000L, 524_288_000L, 2_097_152_000L};
+        for (var tier : ManaCellTier.values()) {
+            var disk = new ItemStack(Content.MANA_CELLS.get(tier).get()); var storage = StorageCells.getCellInventory(disk, null);
+            long capacity = capacities[tier.ordinal()];
+            check(h.getLevel().getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("botanicalmekanism:" + tier.id())).isPresent(), "Missing tier recipe");
+            check(storage != null && storage.insert(key, Long.MAX_VALUE, Actionable.SIMULATE, source) == capacity && ManaStorageItem.stored(disk) == 0, "Tier simulation/capacity wrong");
+            check(storage.insert(key, Long.MAX_VALUE, Actionable.MODULATE, source) == capacity && storage.getStatus() == appeng.api.storage.cells.CellState.FULL, "Tier overflow/status wrong");
+            var restored = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) disk.saveOptional(registries));
+            check(ManaStorageItem.stored(restored) == capacity && ManaStorageItem.capacity(restored) == capacity, "Large tier item save truncated mana");
+            check(StorageCells.getCellInventory(restored, null).extract(key, Long.MAX_VALUE, Actionable.MODULATE, source) == capacity, "Large tier extraction lost mana");
+            var emptySample = appeng.api.behaviors.ContainerItemStrategies.getContainedStack(restored);
+            check(emptySample != null && emptySample.what() == key && emptySample.amount() == 0, "Tier could not select mana");
+        }
         check(AEKey.fromTagGeneric(registries, key.toTagGeneric(registries)) == key, "Mana key codec failed");
         var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), registries);
         try { AEKey.writeKey(buffer, key); check(AEKey.readKey(buffer) == key, "Mana key network codec failed"); } finally { buffer.release(); }
@@ -69,6 +82,15 @@ public final class ManaAeGameTests {
             check(storage.insert(ManaKey.INSTANCE, 2000, Actionable.MODULATE, IActionSource.empty()) == 2000 && pool.getCurrentMana() == 11000, "Storage bus could not return mana to pool");
             h.setBlock(pos.north(), Blocks.AIR);
             check(storage.extract(ManaKey.INSTANCE, 1, Actionable.MODULATE, IActionSource.empty()) == 0, "Storage bus retained a removed pool");
+            h.setBlock(pos.north(), vazkii.botania.common.block.BotaniaBlocks.CREATIVE_MANA_POOL);
+        }).thenWaitUntil(() -> {
+            var storage = bus.getGridNode().getGrid().getStorageService().getInventory();
+            check(storage.getAvailableStacks().get(ManaKey.INSTANCE) == 1_000_000, "Storage bus did not recognize replacement everlasting pool");
+        }).thenExecute(() -> {
+            var storage = bus.getGridNode().getGrid().getStorageService().getInventory();
+            check(storage.extract(ManaKey.INSTANCE, 3000, Actionable.SIMULATE, IActionSource.empty()) == 3000, "Everlasting ME simulation failed");
+            check(storage.extract(ManaKey.INSTANCE, 3000, Actionable.MODULATE, IActionSource.empty()) == 3000, "Everlasting ME extraction failed");
+            check(((vazkii.botania.common.block.block_entity.mana.ManaPoolBlockEntity) h.getBlockEntity(pos.north())).getCurrentMana() == 1_000_000, "AE drained the everlasting pool");
         }).thenSucceed();
     }
     @GameTest(template = "empty", timeoutTicks = 1200)
@@ -85,7 +107,7 @@ public final class ManaAeGameTests {
                   : host.addPart(AEParts.EXPORT_BUS.asItem(), side, owner);
             if (part instanceof ExportBusPart exporter) {
                 var menu = new appeng.menu.implementations.IOBusMenu(appeng.menu.implementations.IOBusMenu.EXPORT_TYPE, 94, owner.getInventory(), exporter);
-                var carried = new ItemStack(Content.MANA_CELL.get()); menu.setCarried(carried);
+                var carried = new ItemStack(Content.MANA_CELLS.get(ManaCellTier.K256).get()); menu.setCarried(carried);
                 var filterSlot = menu.slots.stream().filter(slot -> slot instanceof appeng.menu.slot.FakeSlot).findFirst().orElseThrow();
                 menu.doAction(owner, appeng.helpers.InventoryAction.EMPTY_ITEM, filterSlot.index, 0);
                 check(exporter.getConfig().getKey(0) == ManaKey.INSTANCE && carried.getCount() == 1 && ManaStorageItem.stored(carried) == 0,

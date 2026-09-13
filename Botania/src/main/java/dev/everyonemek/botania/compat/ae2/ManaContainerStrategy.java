@@ -13,7 +13,7 @@ final class ManaContainerStrategy implements ContainerItemStrategy<ManaKey, Mana
     record Context(Supplier<ItemStack> current, ItemStack original, Runnable changed) {
         boolean valid() { return current.get() == original && original.getCount() == 1; }
     }
-    private boolean accepts(ItemStack stack) { return stack.getCount() == 1 && (stack.is(Content.MANA_CELL.get()) || stack.is(Content.MANA_PACKET.get())); }
+    private boolean accepts(ItemStack stack) { return stack.getCount() == 1 && (ManaStorageItem.isCell(stack) || stack.is(Content.MANA_PACKET.get())); }
     @Override public GenericStack getContainedStack(ItemStack stack) { return accepts(stack) ? new GenericStack(ManaKey.INSTANCE, ManaStorageItem.stored(stack)) : null; }
     @Override public Context findCarriedContext(Player player, AbstractContainerMenu menu) {
         return accepts(menu.getCarried()) ? new Context(menu::getCarried, menu.getCarried(), menu::broadcastChanges) : null;
@@ -33,8 +33,8 @@ final class ManaContainerStrategy implements ContainerItemStrategy<ManaKey, Mana
         return moved;
     }
     @Override public long insert(Context context, ManaKey key, long amount, Actionable mode) {
-        if (!context.valid() || !context.original.is(Content.MANA_CELL.get()) || amount <= 0) return 0;
-        long moved = Math.min(amount, Math.max(0, ManaStorageItem.CELL_CAPACITY - ManaStorageItem.stored(context.original)));
+        if (!context.valid() || !ManaStorageItem.isCell(context.original) || amount <= 0) return 0;
+        long moved = Math.min(amount, Math.max(0, ManaStorageItem.capacity(context.original) - ManaStorageItem.stored(context.original)));
         if (mode == Actionable.MODULATE && moved > 0) { ManaStorageItem.store(context.original, ManaStorageItem.stored(context.original) + moved); context.changed.run(); }
         return moved;
     }

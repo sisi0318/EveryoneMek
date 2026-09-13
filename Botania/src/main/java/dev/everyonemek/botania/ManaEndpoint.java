@@ -39,7 +39,7 @@ public record ManaEndpoint(BlockEntity tile, Direction face, UUID actor) {
     public int take(int amount) {
         if (amount <= 0) return 0;
         if (tile instanceof ManaPoolBlockEntity pool) {
-            int before = pool.getCurrentMana(); pool.receiveMana(-Math.min(amount, extractable())); pool.setChanged(); return before - pool.getCurrentMana();
+            return ManaTransfer.take(pool, amount, false);
         }
         var handler = handler(); return handler == null ? 0 : (int) handler.extractChemical(new ChemicalStack(ManaContent.MANA, amount), Action.EXECUTE).getAmount();
     }
@@ -52,7 +52,7 @@ public record ManaEndpoint(BlockEntity tile, Direction face, UUID actor) {
     }
     public void refund(int amount) {
         if (amount <= 0) return;
-        if (tile instanceof ManaPoolBlockEntity pool) pool.receiveMana(amount);
+        if (tile instanceof ManaPoolBlockEntity pool) ManaTransfer.refund(pool, amount);
         else ((ManaMachine) tile).mana().insert(new ChemicalStack(ManaContent.MANA, amount), Action.EXECUTE, AutomationType.INTERNAL);
         tile.setChanged();
     }

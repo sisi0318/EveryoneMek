@@ -11,6 +11,10 @@
       "title": "book.botanicalmekanism.mana_bridge.title"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_bridge.1"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_bridge"
     }

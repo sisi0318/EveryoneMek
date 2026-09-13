@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.13** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.14** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.13.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.14.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -42,7 +42,7 @@
 
 打开机器左侧的侧面配置，选择蓝色液面图标的“魔力”页。六面图可以设置输入、输出或关闭。火花从顶部供魔，因此顶部需要设为输入。加压管道和 ME 总线也遵守这里的设置。
 
-魔力池紧贴机器时，把相应一面设为输入，就能直接从池中取魔力。多个输入面合计每秒最多抽取 20,000 魔力，满了会自动停止。关闭输入面即可停止抽取。
+普通池和永恒魔力池都能供魔。魔力池紧贴机器时，把相应一面设为输入，就能直接从池中取魔力。多个输入面合计每秒最多抽取 20,000 魔力，满了会自动停止。关闭输入面即可停止抽取。
 
 为供魔的火花和收魔的火花各装一个共鸣增幅器，传送距离可提高到 32 格。用染料分组；潜行使用森林法杖可拆下升级。更详细的距离规则见 [WIRELESS.md](WIRELESS.md)。
 
@@ -51,7 +51,7 @@
 | 机器 | 用法 |
 | --- | --- |
 | 机械花药台 | 左侧放材料，下方小槽放种子等辅料。每次制作需要一桶水和电能。可以连续放水桶，也可以接流体管道。 |
-| 魔力互通器 | 贴着魔力池摆放，选择池所在方向，再选择抽取或供给。需要电能。 |
+| 魔力互通器 | 贴着魔力池摆放，在左侧“连接设置”中选择池所在方向，再选择抽取或供给。需要电能。 |
 | 魔力充能座 | 放入一件魔力石板等物品，选择充入或抽出，设定目标比例。达到目标后会送出物品。需要电能，内部可保存 100 万魔力。 |
 | 魔力灌注室 | 放入待灌注的材料并供电、供魔。炼金催化器和炼造催化器放在辅料槽。 |
 | 符文锻造室 | 放入材料和活石等辅料，再供电、供魔。作为催化物的符文会留在槽内。 |
@@ -63,15 +63,25 @@
 | 精灵贸易控制器 | 贴着精灵门核心摆放并选好方向。门框、自然水晶和池子照常搭建；开门后加入材料并通电。 |
 | 魔力附魔控制器 | 贴着搭好的魔力附魔台摆放并选好方向。加入装备和附魔书，接通电能和魔力。附魔书不会消耗。 |
 
+互通器、充能座和两个控制器的相邻目标方向，都在左侧“连接设置”中选择。点击侧栏图标展开窗口，选好后可以关闭；方向会保留。
+
 材料通常从前、上、左面送入，辅料从背面送入，右侧取出成品。也可以在侧面配置中调整。机械花药台能制作仿生花，普通花药台不能。
 
 打开机器后，可在 JEI 中点配方旁的加号放入材料。按住 Shift 点击可放入更多。缺料或背包放不下退回的材料时，不会移动物品。随机凝矿不提供指定成品的加号。
 
 ## ME 魔力存储盘
 
-把盘放进 ME 驱动器或 ME 箱子，可以保存 **100 万魔力**，待机消耗 1 AE/t。
+把盘放进 ME 驱动器或 ME 箱子即可存储魔力。五档盘沿用 AE 原版流体盘的外形和档位颜色，带有动态魔力标识。
 
-魔力盘采用活石面板和魔力钢包边，蓝色液面窗口在装入驱动器或箱子后仍可辨认。
+| 档位 | 魔力容量 | 待机消耗 |
+| --- | ---: | ---: |
+| 1k | 8,192,000 | 0.5 AE/t |
+| 4k | 32,768,000 | 1 AE/t |
+| 16k | 131,072,000 | 1.5 AE/t |
+| 64k | 524,288,000 | 2 AE/t |
+| 256k | 2,097,152,000 | 2.5 AE/t |
+
+制作时使用对应档位的 ME 存储组件，配方可在 JEI 和植物魔法词典中查看。**旧魔力盘更新后作为 1k 盘继续使用，已有魔力保留。**
 
 1. 将 ME 输入总线贴在魔力池上，把魔力存入盘中。
 2. 在机器上接 ME 输出总线，拿着一张魔力盘右击总线的筛选格，选择魔力。
@@ -99,7 +109,7 @@ ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。已通过 37 项带 AE2／JEI 联动、27 项无 AE2 服务端测试，以及 3 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.14 已通过 38 项带 AE2／JEI 联动的服务端测试和 3 项单元检查；无 AE2 的 27 项验证来自 alpha.11。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -109,12 +119,14 @@ Bionic flowers stand on blocks or cables and use electricity. Connect the Lotus 
 
 Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the blue liquid icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It can still use the pool selected in an older setup.
 
-A Mana Storage Cell holds 1,000,000 mana in an ME Drive or ME Chest and uses 1 AE/t. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
+Mana Storage Cells come in 1k, 4k, 16k, 64k and 256k tiers, holding 8,192,000 through 2,097,152,000 mana. Each tier has four times the capacity of the last and idles at 0.5, 1, 1.5, 2 or 2.5 AE/t. Existing cells become 1k cells and keep their mana. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
 
-The cell has a livingrock face, a manasteel rim and a blue mana window, also visible when inserted into an ME Drive or Chest.
+The cells use AE's native fluid-cell shapes and tier colors with a small animated mana label, including in ME Drives and Chests. Craft each with its matching ME storage component.
 
 The Corporea Orchid connects item inventories to ME. Place ordinary sparks on the flower and chests, plus a separate master spark. Use samples to filter items. Optional autocrafting orders missing items using ME patterns and a CPU. Request again after crafting, or use a Corporea Interceptor and Retainer to remember and repeat the request.
 
 Use the JEI plus button to fill supported machine recipes; Shift fills more. Water, electricity, mana and required structures are supplied normally.
 
 Machines can also draw from pools touching their configured Mana input faces, up to 20,000 mana per second in total. AE pattern providers can supply mana alongside ingredients; set the receiving Item face to Input/Output when it must also accept reagents and return products. With AE2 JEI Integration 1.2.1, the JEI plus button includes mana for infusion, rune, terra and brewing patterns. Mana can also be searched and dragged from JEI. Preload reusable catalysts.
+
+Everlasting Mana Pools can supply machines and ME buses without running out. Input settings and transfer limits still apply. The Bridge, Charging Stand and controllers select adjacent targets through the collapsible Connection Settings tab on the left.

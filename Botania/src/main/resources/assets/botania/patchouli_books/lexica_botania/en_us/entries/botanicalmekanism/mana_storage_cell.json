@@ -31,12 +31,40 @@
       "text": "book.botanicalmekanism.mana_storage_cell.5"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_storage_cell.6"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mana_storage_cell",
+      "flag": "mod:ae2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_storage_cell_4k",
+      "flag": "mod:ae2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_storage_cell_16k",
+      "flag": "mod:ae2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_storage_cell_64k",
+      "flag": "mod:ae2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_storage_cell_256k",
       "flag": "mod:ae2"
     }
   ],
   "extra_recipe_mappings": {
-    "botanicalmekanism:mana_storage_cell": 0
+    "botanicalmekanism:mana_storage_cell": 0,
+    "botanicalmekanism:mana_storage_cell_4k": 0,
+    "botanicalmekanism:mana_storage_cell_16k": 0,
+    "botanicalmekanism:mana_storage_cell_64k": 0,
+    "botanicalmekanism:mana_storage_cell_256k": 0
   }
 }

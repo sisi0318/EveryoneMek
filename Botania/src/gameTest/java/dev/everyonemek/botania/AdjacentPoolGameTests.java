@@ -85,9 +85,12 @@ public final class AdjacentPoolGameTests {
         var pos = new BlockPos(20, 4, 20); var machine = machine(h, pos, ManaMachineKind.INFUSER); power(machine);
         var pool = barePool(h, pos.north(), 20000);
         h.setBlock(pos.south(), BotaniaBlocks.CREATIVE_MANA_POOL);
+        var everlasting = (ManaPoolBlockEntity) h.getBlockEntity(pos.south());
+        var creativeLocked = everlasting.saveWithoutMetadata(h.getLevel().registryAccess()); creativeLocked.putBoolean("canSpare", false);
+        everlasting.loadWithComponents(creativeLocked, h.getLevel().registryAccess());
         var registry = h.getLevel().registryAccess(); var locked = pool.saveWithoutMetadata(registry); locked.putBoolean("canSpare", false); pool.loadWithComponents(locked, registry);
         h.startSequence().thenIdle(3).thenExecute(() -> {
-            check(machine.mana().isEmpty() && pool.getCurrentMana() == 20000, "Machine took locked or creative mana");
+            check(machine.mana().isEmpty() && pool.getCurrentMana() == 20000, "Machine took mana from a locked pool");
             h.setBlock(pos.south(), Blocks.AIR);
             var unlocked = pool.saveWithoutMetadata(registry); unlocked.putBoolean("canSpare", true); pool.loadWithComponents(unlocked, registry);
             mana(machine, ManaMachine.MANA_CAPACITY - 75);
@@ -104,6 +107,45 @@ public final class AdjacentPoolGameTests {
                   h.setBlock(pos.north(), Blocks.AIR); long stored = machine.mana().getStored();
                   check(ManaTransfer.fillFromAdjacentPools(machine) == 0 && machine.mana().getStored() == stored, "Removed pool still supplied mana");
                   stop(machine);
+              }).thenSucceed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void everlastingPoolFeedsMachinesAndConnectionSettingsUsePackets(GameTestHelper h) {
+        var pos = new BlockPos(20, 4, 20); var owner = player(h, "everlasting-pool");
+        var machine = machine(h, pos, ManaMachineKind.BRIDGE); power(machine);
+        var poolPos = pos.relative(RelativeSide.LEFT.getDirection(machine.getDirection()));
+        h.setBlock(poolPos, BotaniaBlocks.CREATIVE_MANA_POOL);
+        var pool = (ManaPoolBlockEntity) h.getBlockEntity(poolPos);
+        var registries = h.getLevel().registryAccess(); var state = pool.saveWithoutMetadata(registries);
+        state.putInt("manaCap", 2_000_000); pool.loadWithComponents(state, registries);
+        var access = ManaAccess.at(h.getLevel(), pool.getBlockPos(), Direction.EAST);
+        check(access != null && access.stored() == 2_000_000, "Everlasting pool or saved capacity not recognized");
+        check(access.extract(1200, true) == 1200 && pool.getCurrentMana() == 2_000_000, "Creative simulation changed pool");
+        check(access.extract(1200, false) == 1200 && access.refund(1200) == 1200 && pool.getCurrentMana() == 2_000_000, "Creative take/refund failed");
+        var previous = owner.containerMenu; var location = owner.position();
+        try {
+            owner.setPos(machine.getBlockPos().getCenter()); var menu = new ManaMachineMenu(96, owner.getInventory(), machine); owner.containerMenu = menu;
+            FlowerPackets.handleSettings(new FlowerPackets.Settings(96, 1, Integer.toString(RelativeSide.LEFT.ordinal())), context(owner));
+            check(machine.targetPos().equals(pool.getBlockPos()), "Connection window packet did not select the actual target");
+            FlowerPackets.handleSettings(new FlowerPackets.Settings(96, 1, "7"), context(owner));
+            check(machine.targetPos().equals(pool.getBlockPos()), "Invalid connection side changed target");
+        } finally { owner.containerMenu = previous; owner.setPos(location); }
+        h.startSequence().thenWaitUntil(() -> check(machine.mana().getStored() > 0, "Bridge did not take everlasting mana"))
+              .thenExecute(() -> {
+                  check(machine.mana().getStored() <= ManaTransfer.RATE && pool.getCurrentMana() == 2_000_000, "Bridge exceeded bandwidth or drained creative pool");
+                  stop(machine); h.setBlock(pos, Blocks.AIR);
+                  var charger = machine(h, pos, ManaMachineKind.CHARGER); stop(charger);
+                  for (var side : RelativeSide.values()) configure(owner, charger, side, DataType.NONE);
+                  configure(owner, charger, RelativeSide.LEFT, DataType.INPUT);
+                  mana(charger, ManaMachine.MANA_CAPACITY - 25);
+              }).thenIdle(2).thenExecute(() -> {
+                  var charger = (ManaMachine) h.getBlockEntity(pos);
+                  check(charger.mana().getStored() == ManaMachine.MANA_CAPACITY && pool.getCurrentMana() == 2_000_000, "Creative adjacent fill did not respect free space");
+                  configure(owner, charger, RelativeSide.LEFT, DataType.NONE); mana(charger, 0);
+              }).thenIdle(2).thenExecute(() -> {
+                  check(((ManaMachine) h.getBlockEntity(pos)).mana().isEmpty(), "Disabled face kept pulling creative mana");
+                  h.setBlock(poolPos, Blocks.AIR); check(access.extract(1, false) == 0, "Removed creative pool stayed accessible");
               }).thenSucceed();
     }
 }

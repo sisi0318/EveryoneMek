@@ -6,7 +6,7 @@
   },
   "children": {
     "base": {
-      "parent": "ae2:item/fluid_storage_cell_1k"
+      "parent": "ae2:item/fluid_storage_cell_256k"
     },
     "mana": {
       "textures": {

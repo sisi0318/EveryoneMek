@@ -47,12 +47,16 @@ alpha.4–alpha.6 的机械花药台曾使用独立工业机壳图稿 [mechanica
 
 魔力资源图标直接引用 `botania:block/mana_water`，显示完整方形液面。此材质每帧为 16×16，共 32 帧，沿用原版每帧 2 tick 的动画。GUI 从方块图集取当前帧；存储盘窗口与魔力团模型引用相同材质。没有复制第三方 PNG 到运行资源，也没有新增原稿。最初生成的液滴提案未采用。
 
-## alpha.13 魔力存储盘模型
+## alpha.13 魔力存储盘模型（历史）
 
-[mana_cell_models.py](../tools/mana_cell_models.py) 生成切角薄盘和单独的驱动器插槽模型，入口仍为 `tools/generate_resources.py`。盘身采用磨制活石和魔力钢的原材质，保留动态液面窗口，下沿有三段接点。魔力钢包边仅截取原材质的深蓝区域，避免整张金属块纹理缩在窄边上。没有新增或改绘运行位图。
+曾自行设计活石卡片、魔力钢包边和三段接点；alpha.14 按用户要求替换为 AE 原盘。
 
-AE `StorageCellModels` 接入专用插槽模型，ME 驱动器和 ME 箱子共用；窗口与原状态灯分开。材质只引用 Botania，未安装 AE 时物品模型仍能加载。
+## alpha.14 原生 ME 盘
 
-![魔力盘模型离线预览](mana-cell-preview.png)
+[mana_cell_models.py](../tools/mana_cell_models.py) 直接引用 AE2 原版五档流体存储盘和插槽模型，在原模型上叠加小块 `botania:block/mana_water` 动态标识。保留原外轮廓、厚度、显示方式和各档颜色，未复制或修改原 PNG。物品 LED 复用 AE 状态着色，插槽标签避开原状态灯。
 
-运行 `node tools/preview_mana_cell.cjs` 可由实际 JSON、UV 和固定 Botania JAR 重建预览。图中液面为第一帧，底部附 16×16 缩略图的放大检查；不含 AE 独立绘制的状态灯，不是游戏截图。
+[preview_mana_cell.cjs](../tools/preview_mana_cell.cjs) 从固定 AE2 JAR 读取原素材，从运行 JSON 取得标签位置，输出上下对比预览。上排为 AE 原盘，下排为带魔力标签的盘；不含状态灯，液面只显示首帧，不是游戏截图。
+
+![AE 原盘与魔力盘对比](mana-cell-preview.png)
+
+AE 原盘材质与模型属于 Applied Energistics 2 作者，按 [AE2 的素材许可声明](https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/79ee2c704ad62941a426c26b1cb1f76ef5b2ee5a/README.md#license) 使用 CC BY-NC-SA 3.0。此对比预览包含该素材，沿用同一许可；它不属于仓库代码的 MIT 许可。运行资源仅引用依赖中的素材。

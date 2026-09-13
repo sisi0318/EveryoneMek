@@ -135,3 +135,11 @@
 - `GenericEntryStackHelper` 把 JEI INPUT 槽经 converter 转成 GenericStack；`EncodePatternTransferHandler` 交给 AE 的 EncodingHelper。原生 Botania 魔力条不是 INPUT 材料，因此需要补充槽位。
 - AE2 19.2.17 的 PatternProviderTargetCache 用 ExternalStorageStrategy 拼接物品、魔力等存储视图，实际供给由它调用 insert，而不是仅靠导出总线的 push。已有 ManaBusStorage 外部存储注册可接住魔力，实际 CPU 合成已验证。
 - IRecipeCategoryDecorator 没有 setRecipe 扩展口，添加输入槽采用四个客户端 typed-method Mixin；酿造绘制使用公开 decorator，编码锁定当前容器避免自动库存选择造成成本错配。JEI、AE2 与桥接模组缺失时不加载相应功能。
+
+
+## 12. alpha.14 原盘与永恒池
+
+- 固定 AE2 19.2.17 的 AEFluidKeys.getAmountPerByte 返回 8 × AMOUNT_BUCKET（8000），StorageTier 提供五档 bytes 与待机消耗；魔力盘按此密度分级，但只保存一种魔力，不收多类型额外占位。容量和待机由本模组 ManaCellTier 声明。
+- AE2 原素材位于 models/item/fluid_storage_cell_<tier>k.json 与 models/block/drive/cells/<tier>k_fluid_cell.json。JSON 父模型通过 NeoForge CompositeModel 引用，原文件不改、不复制。AE README 对材质和模型声明 CC BY-NC-SA 3.0；预览图片在 art/README 单独注明。
+- 固定 Botania 的 ManaPoolBlockEntity.getCurrentMana 对 isCreative 返回 getMaxMana，读取已保存的 manaCap；receiveMana 后这个公开值仍不会下降。永恒池取魔必须识别该语义，不能以 before-after=0 判定未转移；仍检查 canSpare。普通池继续按差值结算。
+- 当前 Mek GuiWindowCreatorTab 提供窗口关闭、禁用标签和重建监听，GuiPoolConnectionTab 直接继承；设置继续使用本模组原有服务器确认包。没有复制 Mek 的侧栏窗口实现。

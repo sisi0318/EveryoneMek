@@ -3,6 +3,7 @@ package dev.everyonemek.botania.compat.ae2;
 import appeng.api.client.*;
 import appeng.api.stacks.AEItemKey;
 import dev.everyonemek.botania.Content;
+import dev.everyonemek.botania.ManaCellTier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -14,10 +15,14 @@ import net.neoforged.neoforge.client.event.ModelEvent;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public final class ManaAeClient {
-    private static final ResourceLocation CELL_MODEL = ResourceLocation.fromNamespaceAndPath("botanicalmekanism", "block/drive/mana_storage_cell");
+    private static ResourceLocation cellModel(ManaCellTier tier) { return ResourceLocation.fromNamespaceAndPath("botanicalmekanism", "block/drive/" + tier.id()); }
 
     public static void models(ModelEvent.RegisterAdditional event) {
-        event.register(ModelResourceLocation.standalone(CELL_MODEL));
+        for (var tier : ManaCellTier.values()) event.register(ModelResourceLocation.standalone(cellModel(tier)));
+    }
+    public static void colors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) {
+        event.register(appeng.items.storage.BasicStorageCell::getColor, Content.MANA_CELLS.values().stream()
+              .map(net.neoforged.neoforge.registries.DeferredItem::get).toArray(net.minecraft.world.item.Item[]::new));
     }
 
     public static void register() {
@@ -28,7 +33,7 @@ public final class ManaAeClient {
             }
             @Override public Component getDisplayName(ManaKey key) { return key.getDisplayName(); }
         });
-        StorageCellModels.registerModel(Content.MANA_CELL.get(), CELL_MODEL);
+        Content.MANA_CELLS.forEach((tier, cell) -> StorageCellModels.registerModel(cell.get(), cellModel(tier)));
     }
     private ManaAeClient() { }
 }
