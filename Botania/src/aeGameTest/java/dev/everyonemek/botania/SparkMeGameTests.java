@@ -38,6 +38,56 @@ public final class SparkMeGameTests {
         var spark = (MechanicalSparkEntity) attached; spark.setNetwork(color); return spark;
     }
     private static long active(List<InterfaceBlockEntity> devices) { return devices.stream().filter(be -> be.getMainNode().isActive()).count(); }
+    @GameTest(template = "empty", timeoutTicks = 350)
+    public static void directMeDevicesReceiveChannelsAndRespectTheirTopConnection(GameTestHelper h) {
+        var pos = new BlockPos(20, 3, 20);
+        h.setBlock(pos, AEBlocks.CONTROLLER.block()); h.setBlock(pos.below(), AEBlocks.CREATIVE_ENERGY_CELL.block());
+        var controller = (ControllerBlockEntity) h.getBlockEntity(pos);
+        var master = spark(h, pos, true, DyeColor.CYAN);
+        master.modules.setItem(2, new ItemStack(MechanicalSparks.CHANNEL.get()));
+        var positions = List.of(pos.east(8), pos.west(8), pos.south(8), pos.north(8));
+        var blocks = List.of(AEBlocks.DRIVE.block(), AEBlocks.INTERFACE.block(), AEBlocks.PATTERN_PROVIDER.block(), AEBlocks.CRAFTING_STORAGE_4K.block());
+        List<appeng.me.helpers.IGridConnectedBlockEntity> devices = new ArrayList<>();
+        List<MechanicalSparkEntity> sparks = new ArrayList<>();
+        for (int i = 0; i < blocks.size(); i++) {
+            var at = positions.get(i); h.setBlock(at, blocks.get(i));
+            devices.add((appeng.me.helpers.IGridConnectedBlockEntity) h.getBlockEntity(at));
+            // Real early-use placement must win over the drive/interface/provider menus.
+            sparks.add(spark(h, at, false, DyeColor.CYAN));
+        }
+        var drivePos = h.absolutePos(positions.getFirst());
+        var anchor = vazkii.botania.api.mana.spark.ManaSparkAttachable.LOOKUP.find(h.getLevel(), drivePos);
+        var mana = vazkii.botania.api.mana.ManaReceiver.LOOKUP.find(h.getLevel(), drivePos, Direction.UP);
+        check(anchor != null && !anchor.canAttachSpark(new ItemStack(BotaniaItems.MANA_SPARK)), "ME adapter accepted an ordinary mana spark");
+        check(mana != null && mana.isFull() && mana.getCurrentMana() == 0 && !mana.canReceiveManaFromBursts(), "ME device became a mana sink");
+        mana.receiveMana(5000); check(mana.getCurrentMana() == 0, "ME adapter stored mana");
+        var duplicate = new ItemStack(MechanicalSparks.SPARK.get());
+        check(!vazkii.botania.common.item.ManaSparkItem.attachSpark(h.getLevel(), drivePos, duplicate, ItemStack.EMPTY) && duplicate.getCount() == 1,
+              "Occupied ME device consumed a second spark");
+        h.setBlock(pos.above(5), Blocks.CHEST);
+        check(vazkii.botania.api.mana.spark.ManaSparkAttachable.LOOKUP.find(h.getLevel(), h.absolutePos(pos.above(5))) == null, "Ordinary chest acquired an ME anchor");
+        var providerPos = h.absolutePos(positions.get(2));
+        var providerBlock = (appeng.block.crafting.PatternProviderBlock) AEBlocks.PATTERN_PROVIDER.block();
+        h.startSequence().thenWaitUntil(() -> {
+            for (var device : devices) check(device.getMainNode().isActive() && device.getMainNode().getGrid() == controller.getMainNode().getGrid(),
+                  "Direct ME device did not receive a channel: " + device);
+        }).thenExecute(() -> {
+            check(master.meLink().stats().links() == 4, "Direct devices did not use four wireless links");
+            // Native side operation: ALL -> UP output, which closes the top ME connection.
+            providerBlock.setSide(h.getLevel(), providerPos, Direction.DOWN);
+        }).thenWaitUntil(() -> check(!devices.get(2).getMainNode().isActive() && sparks.get(2).meLink().stats().state() == SparkMeLink.NO_ANCHOR,
+              "Spark bypassed the provider's closed top connection"))
+              .thenExecute(() -> {
+                  check(sparks.get(2).isAlive() && devices.getFirst().getMainNode().isActive(), "Closed top dropped the spark or disconnected another device");
+                  providerBlock.setSide(h.getLevel(), providerPos, Direction.DOWN);
+              }).thenWaitUntil(() -> check(devices.get(2).getMainNode().isActive(), "Reopening the top did not restore the device"))
+              .thenExecute(() -> h.setBlock(positions.getFirst(), Blocks.STONE))
+              .thenWaitUntil(() -> check(!sparks.getFirst().isAlive(), "Removed ME device left an attached spark alive"))
+              .thenExecute(() -> {
+                  check(!anchor.canAttachSpark(new ItemStack(MechanicalSparks.SPARK.get())), "Stale ME adapter accepted placement after block replacement");
+                  master.discard(); sparks.forEach(net.minecraft.world.entity.Entity::discard);
+              }).thenSucceed();
+    }
     @GameTest(template = "empty", timeoutTicks = 1400)
     public static void wirelessChannelsScaleTo256AndRecoverAfterRangePowerAndEntityReload(GameTestHelper h) {
         check(h.getLevel().getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.parse("botanicalmekanism:spark_channel_upgrade")).isPresent(), "Channel module recipe missing");

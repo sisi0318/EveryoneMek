@@ -62,11 +62,10 @@ public final class ManaPatternGameTests {
         h.setBlock(pos.east(), AEBlocks.ME_CHEST.block()); ((MEChestBlockEntity) h.getBlockEntity(pos.east())).setCell(itemCell);
         h.setBlock(pos.west(), AEBlocks.ME_CHEST.block()); var manaChest = (MEChestBlockEntity) h.getBlockEntity(pos.west()); manaChest.setCell(manaCell);
         h.setBlock(pos.north(), AEBlocks.CRAFTING_STORAGE_4K.block());
-        SparkMeGameTests.cable(h, pos.above(), true); SparkMeGameTests.cable(h, pos.south(10), true);
-        var master = SparkMeGameTests.spark(h, pos.above(), true, DyeColor.PINK);
+        var master = SparkMeGameTests.spark(h, pos.west(), true, DyeColor.PINK);
         master.modules.setItem(2, new ItemStack(MechanicalSparks.CHANNEL.get()));
-        var receiver = SparkMeGameTests.spark(h, pos.south(10), false, DyeColor.PINK);
         h.setBlock(pos.south(11), AEBlocks.PATTERN_PROVIDER.block()); var provider = (PatternProviderBlockEntity) h.getBlockEntity(pos.south(11));
+        var receiver = SparkMeGameTests.spark(h, pos.south(11), false, DyeColor.PINK);
         provider.getLogic().getPatternInv().setItemDirect(0, PatternDetailsHelper.encodeProcessingPattern(inputs, List.of(GenericStack.fromItemStack(output))));
         var machine = ManaMachineGameTests.machine(h, pos.south(12), ManaMachineKind.RUNIC); ManaMachineGameTests.power(machine);
         for (int i = 0; i < recipe.getCatalysts().size(); i++)

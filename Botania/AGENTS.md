@@ -4,7 +4,7 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.24 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.25 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
@@ -12,6 +12,14 @@
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
 - 客户端游戏验收由用户进行，不运行客户端。alpha.23 验证 51 项常规服务端 GameTest、38 项无 AE2 服务端 GameTest 与 5 项 JUnit；Applied Botanics 共存的 52 项验证也已通过。不代表客户端视觉或完整整合包验收。
+
+## alpha.25 机械火花直接安装 ME 设备
+
+- 用户要求直接在各种 ME 设备／电缆上装火花。AeCompat 的 RegisterCapabilitiesEvent LOWEST 阶段按已注册 IN_WORLD_GRID_NODE_HOST 的方块追加 SparkMeAnchor，取代电缆／控制器白名单；已有原生魔力／火花 provider 在查询链中优先，未注册 ME 接口的方块不增加适配。
+- SparkMeAnchor.supports 按实际 ME host capability 判断，允许客户端和节点初始化阶段安装，不以当前是否有服务器节点判断可安装性；同时检查区块、原 BE 身份与移除状态，失效适配器不能再次使用。只有 MechanicalSparkItem 可安装，原魔力火花不传 ME。
+- SparkMeEndpoint.locate 直接走 GridHelper.getExposedNode 的 UP 面，不取设备内部 main node 绕过外部端口。样板供应器设为向上输出时断开，开放顶部后重新接入；火花保持安装。节点、升级存档、带宽与费用算法未变。
+- SparkMeGameTests 新增真实右击驱动器、接口、供应器和合成存储器的联网检查，以及重复安装、普通火花／箱子拒绝、零魔力适配器、原供应器改向与方块移除。ManaPatternGameTests 改为主火花直接装 ME 箱子、远端火花直接装样板供应器，检查跨火花取料／付魔并完成三批符文。
+- alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端 GameTest，包含上述直连回归和既有 256 频道、普通电缆瓶颈检查。此版没有重复无 AE2 或 Applied Botanics 兼容矩阵，客户端仍由用户验收。
 
 ## alpha.24 原创升级图标
 
@@ -22,7 +30,7 @@
 ## alpha.23 ME 火花频道
 
 - 用户明确授权打磨并实现，要求更多频道：ME 频道模块 1～4 个，32／64／128／256 基础容量。MechanicalSparks.module/moduleLimit 统一三槽类型与上限，第三槽沿用新 slot2 保存；菜单原槽 0、1 和玩家 2～37 不动，频道槽追加 38，玩家坐标 y131/189，界面 176×214。协议提升为 8。
-- SparkMeLink 是无 AE 类型的公共生命周期，AeCompat 才设置 SparkMeEndpoint 工厂与 AE 安装点谓词。只给 AE CableBus、Controller 两种 BE 注册 SparkMeAnchor；它只是安装许可，魔力一直为 0、满仓、拒收脉冲。MechanicalSparkItem.onItemUseFirst 针对这两类方块先走原 ManaSparkItem.useOn，避免 AE 方块右键先吃掉操作；early-use 提前返回不会经过 GameMode 的创造物品回补，所以显式恢复创造玩家主手数量，副手染色仍由原方法复制。池与机器的原逻辑不改。
+- SparkMeLink 是无 AE 类型的公共生命周期，AeCompat 才设置 SparkMeEndpoint 工厂与 AE 安装点谓词。此版只给 AE CableBus、Controller 两种 BE 注册 SparkMeAnchor，alpha.25 已改为按实际 ME 接口适配；它只是安装许可，魔力一直为 0、满仓、拒收脉冲。MechanicalSparkItem.onItemUseFirst 对 ME 安装点先走原 ManaSparkItem.useOn，避免 AE 方块右键先吃掉操作；early-use 提前返回不会经过 GameMode 的创造物品回补，所以显式恢复创造玩家主手数量，副手染色仍由原方法复制。池与机器的原逻辑不改。
 - SparkMeEndpoint 创建非 in-world 的原 IManagedGridNode，并连接挂载方块 UP 面实际暴露的节点。记录实体当 tick 确实运行，停止 ticking 的端点拆掉连接／节点，恢复时重建，不强制加载。AE 节点数据只写实体 me_spark，不进入掉落物品。NONE 后端保留已有 opaque meData；活动实体重载先销毁旧节点。
 - SparkMeNetworks 在 ServerTickEvent.Post LOWEST 整理自己的连接。每 tick 检查端点身份／存活、颜色、范围和供电；稳定拓扑每 20 tick 重建，改变时提前。仅通过挂载 ME 的同组机械火花构树，每组上限 128。已有物理通路跳过新无线边；新边先查两边网中的 ControllerBlockEntity，拒绝合并独立控制器网络，运行中的控制器冲突会切断本模组无线边。
 - SparkMeNodeCapacityMixin 只覆盖 owner 为 SparkMeEndpoint 的节点，ConnectionCapacityMixin 只覆盖 LIMITS 身份表中的本模组连接。AE 的普通节点、线缆及频道模式不改，且原 PathingCalculation 仍分配频道。原控制器节点本身 CANNOT_CARRY，原算法从其边开始算路径；火花直接接控制器形成专属高容量入口，接普通／致密线时仍受该线 8／32 限制。

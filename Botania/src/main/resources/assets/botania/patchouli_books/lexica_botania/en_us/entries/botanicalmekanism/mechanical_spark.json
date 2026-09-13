@@ -19,6 +19,10 @@
       "text": "book.botanicalmekanism.mechanical_spark.2"
     },
     {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mechanical_spark.3"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:mechanical_spark"
     }

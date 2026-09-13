@@ -8,9 +8,16 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import vazkii.botania.api.mana.ManaReceiver;
 import vazkii.botania.api.mana.spark.*;
 
-/** Placement support only. A cable never becomes a source or sink of mana. */
+/** Placement support only. An ME host never becomes a source or sink of mana. */
 record SparkMeAnchor(BlockEntity tile) implements ManaSparkAttachable, ManaReceiver {
-    @Override public boolean canAttachSpark(ItemStack stack) { return !tile.isRemoved() && stack.getItem() instanceof MechanicalSparkItem; }
+    static boolean supports(BlockEntity tile) {
+        if (tile == null || tile.isRemoved() || tile.getLevel() == null) return false;
+        var level = tile.getLevel(); var pos = tile.getBlockPos();
+        return level.hasChunkAt(pos) && level.getBlockEntity(pos) == tile
+              && appeng.api.networking.GridHelper.getNodeHost(level, pos) != null;
+    }
+    static SparkMeAnchor at(BlockEntity tile) { return supports(tile) ? new SparkMeAnchor(tile) : null; }
+    @Override public boolean canAttachSpark(ItemStack stack) { return supports(tile) && stack.getItem() instanceof MechanicalSparkItem; }
     @Override public boolean canHaveAugment(ItemStack stack) { return stack.is(vazkii.botania.common.lib.BotaniaTags.Items.MANA_SPARK_AUGMENTS); }
     @Override public void attachSpark(ManaSpark spark) { }
     @Override public int getAvailableSpaceForMana() { return 0; }

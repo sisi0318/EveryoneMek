@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.24** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.25** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.24.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.25.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -65,9 +65,11 @@
 
 ## 火花无线 ME 连接
 
-1. 把机械主火花装在基地的 ME 电缆或 ME 控制器上。
+1. 把机械主火花直接装在基地的 ME 设备、电缆或控制器上。
 2. 空手右击火花，在“频道”槽放入 ME 频道模块。
-3. 给远端 ME 电缆装机械火花，使用与主火花相同的染色。范围内会自动连接。
+3. 给远端 ME 设备或电缆装机械火花，使用与主火花相同的染色。范围内会自动连接。
+
+可直接安装在 ME 驱动器、接口、样板供应器、合成存储器等设备上，右击时优先放置火花。火花从顶部接入，设备顶部需要允许 ME 电缆连接；样板供应器若向上输出，调整输出方向后即可接入。普通魔力火花不传递 ME 频道。
 
 | 主火花内的频道模块 | 默认配置下的共享容量 |
 | --- | ---: |
@@ -159,7 +161,7 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.23 已通过 51 项常规服务端测试、38 项未安装 AE2 的服务端测试和 5 项单元检查；Applied Botanics 共存的 52 项测试也已通过。alpha.24 仅更新升级图标，验证资源、编译与打包。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端测试，包含机械火花直接安装设备、断连恢复、256 频道及真实远端样板合成。无 AE2、Applied Botanics 共存与单元检查的上次完整验证为 alpha.23；本次未重复该兼容矩阵。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -197,4 +199,4 @@ Mechanical sparks use the original warm-white flame; masters use Botania's blue-
 
 Terminal mana visibility is enabled by default, including a one-time update for existing terminals. Later manual opt-outs are saved. This also covers wireless terminals and preserves other visibility choices. The Corporea Orchid supports continuous filter edits, drag painting/right-drag clearing and reverse cycling with right-click. Display-only inventory statistics are collected on demand, at most once per second while viewed.
 
-Mechanical sparks can form wireless ME links. Put the master on ME cable or directly on a Controller, insert one to four ME Channel Modules, and place matching mechanical sparks on remote cables. Capacity is 32/64/128/256 channels before AE configuration multipliers. Normal cable limits remain; use a Controller-mounted master and multiple remote branches for higher capacity. Range upgrades also cover wireless hops. Links use AE power, stay within loaded ticking chunks of one dimension, and never merge separate controller grids. Native spark controls and mana operation remain available on their original devices.
+Mechanical sparks can form wireless ME links. Place the master directly on an ME device, cable or Controller, insert one to four ME Channel Modules, and attach matching mechanical sparks to remote devices. Drives, interfaces, pattern providers and crafting storage can connect directly. The top face must allow an ME cable connection; ordinary mana sparks do not carry ME channels. Capacity is 32/64/128/256 channels before AE configuration multipliers. Normal cable limits remain; use a Controller-mounted master and multiple remote branches for higher capacity. Range upgrades also cover wireless hops. Links use AE power, stay within loaded ticking chunks of one dimension, and never merge separate controller grids. Native spark controls and mana operation remain available on their original devices.

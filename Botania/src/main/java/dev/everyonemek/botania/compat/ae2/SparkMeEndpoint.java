@@ -2,12 +2,11 @@ package dev.everyonemek.botania.compat.ae2;
 
 import appeng.api.networking.*;
 import appeng.api.networking.pathing.ChannelMode;
-import appeng.core.definitions.AEBlockEntities;
 import dev.everyonemek.botania.*;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 
-/** One AE node per loaded cable-mounted spark; it holds no items, fluids or mana. */
+/** One AE node per loaded ME-mounted spark; it holds no items, fluids or mana. */
 public final class SparkMeEndpoint implements SparkMeLink {
     final MechanicalSparkEntity spark;
     IManagedGridNode node;
@@ -28,8 +27,8 @@ public final class SparkMeEndpoint implements SparkMeLink {
     @Override public Stats stats() { return stats; }
     IGridNode locate() {
         if (removed || lastTick != spark.level().getGameTime() || !spark.live()) return null;
-        var level = spark.level(); var pos = spark.getAttachPos(); var tile = level.getBlockEntity(pos);
-        if (tile == null || tile.getType() != AEBlockEntities.CABLE_BUS.get() && tile.getType() != AEBlockEntities.CONTROLLER.get()) return null;
+        var level = spark.level(); var pos = spark.getAttachPos();
+        // Honor the actual top-side connection, including device orientation and part changes.
         return GridHelper.getExposedNode(level, pos, Direction.UP);
     }
     void attach(IGridNode target) {

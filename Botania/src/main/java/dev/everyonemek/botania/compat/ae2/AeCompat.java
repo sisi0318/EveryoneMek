@@ -10,16 +10,18 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 public final class AeCompat {
     public static void register(IEventBus bus) {
         dev.everyonemek.botania.SparkMeLink.Holder.factory = SparkMeEndpoint::new;
-        dev.everyonemek.botania.SparkMeLink.Holder.anchor = tile -> tile.getType() == appeng.core.definitions.AEBlockEntities.CABLE_BUS.get()
-              || tile.getType() == appeng.core.definitions.AEBlockEntities.CONTROLLER.get();
+        dev.everyonemek.botania.SparkMeLink.Holder.anchor = SparkMeAnchor::supports;
         SparkMeNetworks.register();
-        bus.addListener((RegisterCapabilitiesEvent event) -> {
+        bus.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (RegisterCapabilitiesEvent event) -> {
             var sparkApi = vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities.getBlockApiLookupById(vazkii.botania.api.mana.spark.ManaSparkAttachable.LOOKUP);
             var manaApi = vazkii.botania.api.neoforge.BotaniaNeoForgeCapabilities.getBlockApiLookupById(vazkii.botania.api.mana.ManaReceiver.LOOKUP);
-            event.registerBlockEntity(sparkApi, appeng.core.definitions.AEBlockEntities.CABLE_BUS.get(), (tile, side) -> new SparkMeAnchor(tile));
-            event.registerBlockEntity(sparkApi, appeng.core.definitions.AEBlockEntities.CONTROLLER.get(), (tile, side) -> new SparkMeAnchor(tile));
-            event.registerBlockEntity(manaApi, appeng.core.definitions.AEBlockEntities.CABLE_BUS.get(), (tile, side) -> new SparkMeAnchor(tile));
-            event.registerBlockEntity(manaApi, appeng.core.definitions.AEBlockEntities.CONTROLLER.get(), (tile, side) -> new SparkMeAnchor(tile));
+            // Adapt registered ME hosts, including addons, after their native providers.
+            // Existing Botania receivers remain first in the capability lookup chain.
+            for (var block : net.minecraft.core.registries.BuiltInRegistries.BLOCK) {
+                if (!event.isBlockRegistered(AECapabilities.IN_WORLD_GRID_NODE_HOST, block)) continue;
+                event.registerBlock(sparkApi, (level, pos, state, tile, side) -> SparkMeAnchor.at(tile), block);
+                event.registerBlock(manaApi, (level, pos, state, tile, side) -> SparkMeAnchor.at(tile), block);
+            }
         });
         var types = net.neoforged.neoforge.registries.DeferredRegister.create(appeng.api.stacks.AEKeyType.REGISTRY_KEY, dev.everyonemek.botania.BotanicalMekanism.ID);
         if (!dev.everyonemek.botania.AppliedBotanics.loaded()) { types.register("mana", () -> ManaKey.TYPE); types.register(bus); }

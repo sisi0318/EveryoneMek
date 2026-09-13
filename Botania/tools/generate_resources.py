@@ -280,7 +280,7 @@ for key, cn, english in [
 ]: zh[f'gui.{MOD}.spark.{key}'], en[f'gui.{MOD}.spark.{key}'] = cn, english
 for key, cn, english in [
     (0, '未安装 ME 频道模块', 'Install an ME Channel Module'), (1, '需要 AE2', 'Requires AE2'),
-    (2, '主火花需要 ME 电缆或控制器', 'Place the master on ME cable or a controller'), (3, '需要同色机械主火花', 'Needs a matching master spark'),
+    (2, '顶部未连接 ME 网络', 'No ME connection on the top side'), (3, '需要同色机械主火花', 'Needs a matching master spark'),
     (4, '同一组有多个主火花', 'Multiple masters in this group'), (5, 'ME 网络电力不足', 'Insufficient ME power'),
     (6, 'ME 网络正在连接', 'ME network is connecting'), (7, 'ME 已连接', 'ME connected'),
     (8, '对端有独立控制器，未连接', 'A separate controller prevents connection'), (9, '没有可用的频道路径', 'No channel route in range'),
