@@ -64,6 +64,6 @@ side="CLIENT"
 [[dependencies.botanicalmekanism]]
 modId="appbot"
 type="optional"
-versionRange="[1.6.0-alpha.3,1.7)"
+versionRange="[1.6.0-alpha.3-botania456]"
 ordering="AFTER"
 side="BOTH"
