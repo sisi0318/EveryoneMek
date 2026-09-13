@@ -37,13 +37,16 @@ public final class SparkControllerMenu extends AbstractContainerMenu {
         for (int col = 0; col < 9; col++) addSlot(new Slot(inventory, col, 8 + col * 18, 159));
     }
     public int stat(int index) { return stats.get(index); }
+    @Override public void clicked(int slot, int button, ClickType type, Player player) {
+        if (player.level().isClientSide || player.containerMenu == this && stillValid(player)) super.clicked(slot, button, type, player);
+    }
     @Override public boolean stillValid(Player player) {
         if (player.level().isClientSide) return true;
         return anchor != null && master != null && master.isMaster() && anchor.distanceToSqr(player) <= 64 && anchor.accessible(player) && master.accessible(player)
               && (anchor == master || MechanicalSparkNetworks.network(anchor).master() == master);
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player.containerMenu != this || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         var slot = slots.get(index); if (!slot.hasItem()) return ItemStack.EMPTY;
         var stack = slot.getItem(); var before = stack.copy();
         if (index < 2) { if (!moveItemStackTo(stack, 2, slots.size(), true)) return ItemStack.EMPTY; }

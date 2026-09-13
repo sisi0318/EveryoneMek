@@ -32,6 +32,7 @@ public final class MechanicalSparkEntity extends ManaSparkEntity {
         var pos = getAttachPos(); return live() && IBlockSecurityUtils.INSTANCE.canAccess(player, level(), pos, level().getBlockEntity(pos));
     }
     @Override protected Item getSparkItem() { return isMaster() ? MechanicalSparks.MASTER.get() : MechanicalSparks.SPARK.get(); }
+    @Override protected Component getTypeName() { return Component.translatable(getSparkItem().getDescriptionId()); }
     @Override public void tick() {
         if (!level().isClientSide) {
             MechanicalSparkNetworks.add(this);

@@ -168,3 +168,9 @@
 ## 16. alpha.18 织网花界面参考
 
 核对 AE2 19.2.17 的 `StorageBusScreen`、`screens/storage_bus.json`、`screens/common/player_inventory.json`、`Icon` 和 `IconButton`：原界面宽 176、高 253，筛选从 (8,29) 按 9 列排列，玩家背包距底 84、快捷栏距底 26。运行时引用其面板与图标，本模组保留自有 FlowerMenu 和设置包，不复制 StorageBusMenu 或改变 AE 总线本身。图标仅对应花已有的控制与清空功能。
+
+## 17. alpha.21 火花名称和共享库存
+
+- 核对 Minecraft 1.21.1 当前依赖的 Entity.getName/getTypeName：默认名称由 getTypeName 提供，自定义命名优先。Jade 的 [1.21 ObjectNameProvider](https://github.com/Snownee/Jade/blob/1.21-neoforge/src/main/java/snownee/jade/addon/core/ObjectNameProvider.java) 对普通实体使用 getName，辅助名称也通过 getTypeName；无需引入 Jade 编译依赖。
+- 当前 Minecraft ServerGamePacketListenerImpl.handleContainerClick 先检查线程、菜单 ID 和 stillValid，执行真实 clicked 后才记录客户端预测快照。原 SimpleContainer 为共享库存，没有每窗口独立存储；测试直接走此入口，保留同 tick 与延迟包的实际顺序。
+- 固定 Botania 源码的 BaseSparkRenderer 提供 getBaseIcon 入口，CorporeaSparkRenderer 用 master_corporea_spark 选择原主火花光色；本模组复用该贴图选择方式和原 ManaSparkRenderer，其余动画继续委托父类。

@@ -259,7 +259,7 @@ write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/g
 from mana_cell_models import generate as generate_mana_cell_models
 generate_mana_cell_models(write)
 
-# Mechanical sparks retain the native item sprite and use existing Mek materials.
+# Mechanical sparks and upgrades reference native Botania sprites; no surrounding frame.
 for name, cn, english in [
     ('mechanical_spark', '机械火花', 'Mechanical Spark'), ('master_mechanical_spark', '机械主火花', 'Master Mechanical Spark'),
     ('spark_range_upgrade', '火花范围升级', 'Spark Range Upgrade'), ('spark_efficiency_upgrade', '火花效率升级', 'Spark Throughput Upgrade'),
@@ -271,23 +271,14 @@ for key, cn, english in [
     ('range', '范围：%s 格', 'Range: %s'), ('rate', '传输：×%s', 'Transfer: x%s'), ('members', '火花：%s', 'Sparks: %s'),
     ('no_master', '需要机械主火花', 'Place a master spark'), ('conflict', '请拆下多余的主火花', 'Remove extra masters'), ('connected', '已连接主火花', 'Master connected'),
 ]: zh[f'gui.{MOD}.spark.{key}'], en[f'gui.{MOD}.spark.{key}'] = cn, english
-for name, parent in [('spark_range_upgrade', 'upgrade_anchor'), ('spark_efficiency_upgrade', 'upgrade_speed')]:
-    write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'mekanism:item/{parent}'})
-for name in ['mechanical_spark', 'master_mechanical_spark']:
-    frame = []
-    for x, y, X, Y in [(2, 2, 14, 3), (2, 13, 14, 14), (2, 3, 3, 13), (13, 3, 14, 13)]:
-        frame.append({'from': [x, y, 8.55], 'to': [X, Y, 8.55], 'faces': {'south': {'texture': '#steel', 'uv': [4, 4, 12, 12]}}})
-    if name == 'master_mechanical_spark':
-        frame.append({'from': [6, 14, 8.57], 'to': [10, 15, 8.57], 'faces': {'south': {'texture': '#mana', 'uv': [0, 0, 16, 16]}}})
-    import copy
-    for front in list(frame):
-        back = copy.deepcopy(front)
-        back['from'][2] = back['to'][2] = 16 - front['from'][2]
-        back['faces'] = {'north': back['faces']['south']}
-        frame.append(back)
+for name, native in [('mechanical_spark', 'mana_spark'), ('master_mechanical_spark', 'master_corporea_spark')]:
+    write(f'assets/{MOD}/models/item/{name}.json', {'parent': f'botania:item/{native}'})
+for name, native in [('spark_range_upgrade', 'rune_of_air'), ('spark_efficiency_upgrade', 'rune_of_mana')]:
+    badge = [{'from': [10, 10, z], 'to': [16, 16, z], 'faces': {face: {'texture': '#star', 'uv': [0, 0, 16, 16]}}}
+             for face, z in [('south', 8.6), ('north', 7.4)]]
     write(f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'loader': 'neoforge:composite',
-          'textures': {'particle': 'botania:item/mana_spark'}, 'children': {'spark': {'parent': 'botania:item/mana_spark'},
-          'frame': {'textures': {'steel': 'mekanism:block/block_steel', 'mana': 'botania:block/mana_water'}, 'elements': frame}}})
+          'textures': {'particle': f'botania:item/{native}'}, 'children': {'rune': {'parent': f'botania:item/{native}'},
+          'badge': {'textures': {'star': 'botania:item/spark_star'}, 'elements': badge}}})
 write(f'data/{MOD}/recipe/mechanical_spark.json', {'type': 'minecraft:crafting_shaped', 'pattern': [' S ', 'CFC', ' S '],
       'key': {'S': {'item': 'botania:manasteel_ingot'}, 'C': {'item': 'mekanism:basic_control_circuit'}, 'F': {'item': 'botania:mana_spark'}}, 'result': {'id': f'{MOD}:mechanical_spark'}})
 shaped('master_mechanical_spark', [' C ', 'GFG', ' T '], {'C': 'mekanism:elite_control_circuit', 'G': 'botania:gaia_spirit', 'F': f'{MOD}:mechanical_spark', 'T': 'botania:terrasteel_ingot'})

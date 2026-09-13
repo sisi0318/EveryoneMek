@@ -71,7 +71,7 @@ alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素�
 
 灌注室的催化符号由客户端渲染器调用 Botania 原 PoolOverlayProvider 与 ICON_OVERLAY 图层，显示当前实际生效的内置或底部催化器。这个动态效果不在静态模型预览中，游戏内由用户验收。
 
-## alpha.17 机械火花
+## alpha.17 机械火花（旧外观，alpha.21 已移除边框）
 
 机械火花沿用 Botania 原火花贴图和实体渲染，在外侧加一圈由 `mekanism:block/block_steel` 绘制的细框；机械主火花多一个小标记。物品模型使用 NeoForge CompositeModel 引用原火花子模型，框架前后两面都显示，避开原火花平面以免闪烁。原染色星点、升级轨道和幻影墨水由 Botania 渲染器继续处理。
 
@@ -80,3 +80,9 @@ alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素�
 ## alpha.18 织网花界面
 
 运行时引用 AE2 原 `textures/guis/storagebus.png` 面板及 `textures/guis/states.png` 槽框、设置图标，未复制 PNG 到本模组。筛选为 9×7 格，设置改为左侧工具栏，界面不显示未实现的升级卡槽或优先级按钮。素材归属 AE2 作者，许可同上方 AE 原盘说明（CC BY-NC-SA 3.0）。此改动没有新增位图原稿，游戏内由玩家验收。
+
+## alpha.21 火花与升级
+
+用户要求去掉方框。普通机械火花直接引用 `botania:item/mana_spark`，主火花引用 `botania:item/master_corporea_spark`，物品与实体光效一致；实体只覆写基底贴图，保留 Botania 的动画、染色星点、墨水及升级轨道。无需额外框架或新造徽章。
+
+范围升级以原 `rune_of_air` 为主体，效率升级以 `rune_of_mana` 为主体；右上角用原 `spark_star` 添加小型火花标记，区别于普通符文。所有 PNG 均来自运行时 Botania 依赖，未复制、修改或新增位图，原素材归属 Botania 作者并遵循其许可。`generate_resources.py` 维护物品模型，游戏内外观由玩家验收。

@@ -4,14 +4,22 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.20 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.21 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.20 验证 47 项常规服务端 GameTest 与 4 项 JUnit；Applied Botanics 共存的 47 项验证沿用 alpha.17。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.21 验证 48 项常规服务端 GameTest 与 4 项 JUnit；Applied Botanics 共存的 47 项验证沿用 alpha.17。不代表客户端视觉或完整整合包验收。
+
+## alpha.21 火花身份、材质与共享升级检查
+
+- 用户否定机械火花的方框，要求主火花名称正确、两种升级贴合 Botania，同时核对双人同时取升级。MechanicalSparkEntity.getTypeName 按同步的 MASTER 返回实际物品名称，不覆写 getName，以保留自定义命名。注册 ID 和旧实体存档不变。
+- MechanicalSparkRenderer 只覆写 getBaseIcon：普通沿用 mana_spark，主火花引用 master_corporea_spark；原父渲染继续处理光效、染色、墨水和升级图标。物品模型直接引用同样的 Botania 模型，旧钢框／几何代码已移除。这里只复用主多媒体火花外观，不改变机械火花的魔力传输类型。
+- 范围／效率升级模型分别引用 rune_of_air 和 rune_of_mana，加 6×6 的 spark_star 标记，前后两面离开原物品平面以免重叠。模型由 generate_resources.py 生成，没有复制或新绘 PNG。
+- 多个 SparkControllerMenu 指向 master.modules 同一真实容器；客户端容器仅用于同步显示。ServerGamePacketListenerImpl.handleContainerClick 保证服务器主线程处理，客户端预测的 changedSlots/carried 只写远端显示快照，不是库存。补强 clicked 与 quickMoveStack 的当前菜单／stillValid 检查，覆盖直接调用和失效回调。
+- SharedSparkInventoryGameTests 实际调用原 ServerGamePacketListenerImpl.handleContainerClick。NeoForge FakePlayer 原 handler 将此方法覆写为空，因此测试使用原处理器、仅关闭向外发包，finally 恢复原连接和菜单。两份旧状态包在同 tick 先后执行，交换先后顺序、Shift 提取、改色断连、半取后原法杖拆除，再发延迟包，始终核对原 8 个升级总数；这是多人点击协议回归，不是让两个线程同时改 Minecraft 世界。未复现重复取出。
 
 ## alpha.20 充能座统一六面配置
 
@@ -35,7 +43,7 @@
 - MechanicalSparkNetworks 只索引已加载实体，用分块桶和每 20 tick／失效后的组件查询。每主火花范围 12+8×范围升级（最多 8 个），沿机械节点连通；控制路径不自动搬运魔力，每条实际传输仍受两端距离限制。多个主火花的可达组件重合即全组冲突，禁用共享加成，避免按缩水范围反复分裂与合并。卸载、拆除、改色和升级变更失效，不加载区块。
 - 原 tick 的三个 1000 常量只对 MechanicalSparkEntity 乘 1+效率升级（最多 9 倍）；弥散玩家范围也用网络范围。原颜色、隔离／聚集／扩散／弥散、幻影墨水、森林法杖保留。原弥散 ManaItem 查询继续传 botania:mana_spark，不能传新物品导致原石板拒收。原生角色不会因主火花身份而替换。
 - 主火花拥有唯一 SimpleContainer 两槽，各最多 8；成员菜单直接操作它，不复制库存。SparkControllerMenu 从实体 ID 打开，服务器每次检查菜单、接触点距离、主火花仍连通及原机器安全。客户端即使看不到远端主实体也用同步槽和四项数据绘制。拆卸时把槽保存到 master 物品 CUSTOM_DATA.spark_controller，立即使旧实体失效并清空槽，避免旧菜单与掉落同时可提取。NBT 实体和物品均保存，未知旧内容不丢弃。
-- 界面 176×184，升级槽 (53,32)/(107,32)，背包 y101、快捷栏 y159；简单深底矩形。原 ManaSparkRenderer 绘制原火花和升级轨道，附 Mek 钢框，主火花加小标记；物品 JSON 同样运行时引用原图，不新增位图素材。
+- 界面 176×184，升级槽 (53,32)/(107,32)，背包 y101、快捷栏 y159；简单深底矩形。原 ManaSparkRenderer 绘制原火花和升级轨道，alpha.17 当时附 Mek 钢框，已在 alpha.21 删除，当前外观见顶部；物品 JSON 同样运行时引用原图，不新增位图素材。
 - ManaKeys.current/type 是统一入口：有 Appbot 用其原 mana 类型，无 Appbot 用本模组类型。只注册一个实际 AEKeyType；RegisterEvent.addAlias 在两个历史 ID 间指向当前类型，旧样板／筛选 NBT 无需重做。不要同时注册两个真类型再期待别名覆盖。
 - 共存时只注册本模组 StorageCell handler，不再次注册同类型的 ContainerItemStrategy／总线／渲染器。原策略通过注册到自有盘和魔力团的 ManaItem capability 工作。ManaView 用 Long 保存，原 int API 限幅，魔力团分次取出，归零后消耗空物品；不接受原物品派发来偷偷充盘。
 - AppliedBotanicsManaDensityMixin 将资源存储密度统一为 8000，CellCapacityMixin 把其 1000 字节档换为 1024，五档容量与现有盘一致，已存数量不换算。ManaKeyMixin 将 Appbot 接口拆卸时的魔力转为可回收魔力团。OptionalJeiMixinPlugin 对所有 AppliedBotanics 前缀 Mixin 检查可选依赖。
