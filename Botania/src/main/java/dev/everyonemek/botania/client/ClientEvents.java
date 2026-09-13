@@ -29,6 +29,7 @@ public final class ClientEvents {
     }
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            if (net.neoforged.fml.ModList.get().isLoaded("ae2")) dev.everyonemek.botania.compat.ae2.ManaAeClient.register();
             for (var block : Content.plants())
                 ItemBlockRenderTypes.setRenderLayer(block.get(), RenderType.cutout());
         });

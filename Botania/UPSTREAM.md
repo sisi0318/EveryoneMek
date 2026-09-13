@@ -120,3 +120,11 @@
 - AE2 19.2.17 `ICraftingService.beginCraftingCalculation` 异步返回计划；`submitJob` 返回实际链接，`ICraftingRequester` 保存、重载并提供链接，完成物品通过 `insertCraftedItems` 返回实际接受量。实际合成前同步库存缓存，避免机器计算读到初连网络的空缓存。工作线程只操作 AE 的计算上下文。
 - `StorageHelper.loadCraftingLink` 恢复原 UUID；拆除与区块卸载分开处理。材料由原 CPU 与样板供应器支付，回货进入真实 ME 存储，无花内付费成品副本。
 - JEI 19.22.1.316 的 `IRecipeTransferHandler` 支持只读预检与实际发送阶段；`IRecipeTransferRegistration` 按菜单和原分类注册。加号包不信任客户端材料，服务端重新查配方、实际权限和原槽位。没有复制 JEI 或 AE 的实现代码。
+
+## 10. alpha.10 魔力接入与文案
+
+- 原 ManaItem 的 canReceiveManaFromPool／canDrainManaToPool 参数是 BlockEntity，可转成 ManaPool；充能座使用自身真实 BE 和罐提供该上下文，不实例化原池代理。
+- AE2 19.2.17 的 AEKeyType.REGISTRY_KEY 可通过 NeoForge DeferredRegister 增加魔力类型；StorageCells、ICellHandler、StorageCell、StackImportStrategy／StackExportStrategy／ExternalStorageStrategy 负责原盘和总线接入。ContainerItemStrategy 可提供 amount=0 的类型样品。
+- StorageCell.persist 用来落盘，ISaveProvider.saveChanges 用来通知宿主。MEChest 的宿主保存会再次调用 persist；组件即时写入型自定义盘的 persist 不可再次调用 host.saveChanges。
+- Mek 10.7.19.85 GuiSideConfiguration 的 tile 字段擦除为 TileEntityMekanism，renderForeground 调 MekanismLang.translate(Object[]) 取得配置标题；GuiConfigTypeTab 继承 GuiInsetElement。客户端修改范围限制到本模组魔力机器，ASM 检查这些符号。
+- 文案直接核对固定 JAR 中的 description.mekanism.energy_cube／chemical_tank／enrichment_chamber，及 botania.page.sparks0／sparks1／pool0／corporeaRetainer0-4。采用用途短提示和步骤式词典说明，不复制大段原文。

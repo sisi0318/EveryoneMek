@@ -71,6 +71,7 @@ dependencies {
     if (withAE2) runtimeOnly 'org.appliedenergistics:appliedenergistics2:19.2.17'
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.ow2.asm:asm-tree:9.8'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.named('test', Test) { useJUnitPlatform() }

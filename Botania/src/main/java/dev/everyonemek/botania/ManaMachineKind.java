@@ -2,7 +2,7 @@ package dev.everyonemek.botania;
 
 public enum ManaMachineKind implements mekanism.api.text.IHasTranslationKey {
     BRIDGE("mana_bridge", 0, 0, 0, true),
-    CHARGER("mana_charger", 1, 0, 1, false),
+    CHARGER("mana_charger", 1, 0, 1, true),
     INFUSER("mana_infuser", 1, 1, 6, true),
     RUNIC("runic_forge", 16, 1, 6, true),
     PURE("pure_converter", 1, 0, 6, false),

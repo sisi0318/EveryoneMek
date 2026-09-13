@@ -24,6 +24,7 @@ public final class ManaTransfer {
     public static boolean canGive(ManaPoolBlockEntity pool) { return ((ManaPoolAccess) pool).botanicalmekanism$canAccept(); }
     public static void tick(ManaMachine tile) {
         var pool = pool(tile.getLevel(), tile.targetPos());
+        if (pool == null && tile.kind() == ManaMachineKind.CHARGER) { chargerBuffer(tile); return; }
         if (pool == null) { tile.status(ManaMachine.NO_POOL); return; }
         if (tile.kind() == ManaMachineKind.BRIDGE) bridge(tile, pool); else charger(tile, pool);
     }
@@ -63,13 +64,36 @@ public final class ManaTransfer {
               : !canGive(pool) || item.isNoExport() || !item.canDrainManaToPool(pool)) { tile.status(ManaMachine.ITEM_DENIED); return; }
         int amount = Math.min(RATE, charge ? Math.min(target - item.getMana(), pool.getCurrentMana())
               : Math.min(item.getMana() - target, pool.getMaxMana() - pool.getCurrentMana()));
-        if (amount <= 0) { tile.status(ManaMachine.NO_MANA); return; }
+        if (amount <= 0) { tile.status(charge ? ManaMachine.NO_MANA : ManaMachine.MANA_FULL); return; }
         int before = item.getMana(); item.addMana(charge ? amount : -amount);
         int moved = charge ? item.getMana() - before : before - item.getMana();
         // A rejected or invalid item mutation never touches the original item or pool.
         if (moved <= 0 || moved > amount) { tile.status(ManaMachine.ITEM_DENIED); return; }
         if (!tile.spendEnergy(tile.energy().getEnergyPerTick())) { tile.status(ManaMachine.NO_ENERGY); return; }
         pool.receiveMana(charge ? -moved : moved); pool.setChanged();
+        tile.inputs.getFirst().setStackUnchecked(copy); tile.markForSave(); tile.status(ManaMachine.WORKING);
+    }
+    private static void chargerBuffer(ManaMachine tile) {
+        var source = tile.inputs.getFirst().getStack();
+        if (source.isEmpty()) { tile.status(ManaMachine.NO_RECIPE); return; }
+        if (source.getCount() != 1) { tile.status(ManaMachine.ITEM_DENIED); return; }
+        var copy = source.copy(); var item = ManaItem.LOOKUP.find(copy);
+        if (item == null || item.getMaxMana() <= 0 || item.getMana() < 0 || item.getMana() > item.getMaxMana()) { tile.status(ManaMachine.ITEM_DENIED); return; }
+        boolean charge = tile.mode() == 0; int target = (int) ((long) item.getMaxMana() * tile.targetPercent() / 100);
+        var merged = tile.mergeOutputs(List.of(copy));
+        if (merged == null) { tile.status(ManaMachine.OUTPUT_FULL); return; }
+        if (charge ? item.getMana() >= target : item.getMana() <= target) {
+            tile.inputs.getFirst().setStackUnchecked(net.minecraft.world.item.ItemStack.EMPTY); tile.setOutputs(merged); tile.markForSave(); tile.status(ManaMachine.READY); return;
+        }
+        if (charge ? !item.canReceiveManaFromPool(tile) : item.isNoExport() || !item.canDrainManaToPool(tile)) { tile.status(ManaMachine.ITEM_DENIED); return; }
+        int amount = (int) Math.min(RATE, charge ? Math.min(target - item.getMana(), tile.mana().getStored())
+              : Math.min(item.getMana() - target, tile.mana().getNeeded()));
+        if (amount <= 0) { tile.status(charge ? ManaMachine.NO_MANA : ManaMachine.MANA_FULL); return; }
+        int before = item.getMana(); item.addMana(charge ? amount : -amount);
+        int moved = charge ? item.getMana() - before : before - item.getMana();
+        if (moved <= 0 || moved > amount) { tile.status(ManaMachine.ITEM_DENIED); return; }
+        if (!tile.spendEnergy(tile.energy().getEnergyPerTick())) { tile.status(ManaMachine.NO_ENERGY); return; }
+        tile.receiveMana(charge ? -moved : moved);
         tile.inputs.getFirst().setStackUnchecked(copy); tile.markForSave(); tile.status(ManaMachine.WORKING);
     }
     private ManaTransfer() { }

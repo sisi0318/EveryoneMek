@@ -1,0 +1,17 @@
+{
+  "name": "item.botanicalmekanism.mana_packet",
+  "icon": "botanicalmekanism:mana_packet",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 24,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_packet.0",
+      "item": "botanicalmekanism:mana_packet",
+      "title": "book.botanicalmekanism.mana_packet.title"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_packet": 0
+  }
+}

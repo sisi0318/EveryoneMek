@@ -8,16 +8,16 @@ ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / 'src/main/resources'
 MOD = 'botanicalmekanism'
 PLANTS = {
-    'mana_lotus': ('仿生导能莲', 'Bionic Conduction Lotus', '消耗 FE 产生魔力。使用森林法杖连接魔力发射器。', 'Uses FE to produce mana. Bind to a mana spreader with a Wand of the Forest.'),
-    'bionic_amaranthus': ('仿生翡翠苋', 'Bionic Jaded Amaranthus', '消耗 FE，在合适地面生成神秘花。', 'Uses FE to grow mystical flowers on suitable ground.'),
-    'bionic_clayconia': ('仿生粘土花', 'Bionic Clayconia', '消耗 FE，将周围的沙转为粘土球。', 'Uses FE to turn nearby sand into clay balls.'),
-    'bionic_agricarnation': ('仿生田园康乃馨', 'Bionic Agricarnation', '消耗 FE，加快周围合适植物的生长。', 'Uses FE to accelerate suitable nearby plants.'),
-    'bionic_hopperhock': ('仿生漏斗花', 'Bionic Hopperhock', '消耗 FE，将掉落物送入相邻容器。物品框筛选，潜行使用森林法杖切换模式。', 'Uses FE to collect drops into adjacent inventories. Item frames filter; sneak-use a Wand to change mode.'),
-    'bionic_rannuncarpus': ('仿生手掌花', 'Bionic Rannuncarpus', '消耗 FE，放置掉落方块。以花下两格的方块为地面样板，潜行使用森林法杖切换模式。', 'Uses FE to place dropped blocks. Matches the block two below the flower; sneak-use a Wand to change mode.'),
-    'bionic_exoflame': ('仿生冶炼火', 'Bionic Exoflame', '消耗 FE，给周围可加工的熔炉供热并加速。', 'Uses FE to heat and accelerate nearby working furnaces.'),
-    'corporea_orchid': ('仿生织网花', 'Bionic Corporea Orchid', '连接多媒体火花与 ME 网络。由 ME 供能，占用一个通道。', 'Links Corporea sparks and an ME network. Powered by ME; uses one channel.'),
-    'resonance_flower': ('共鸣花', 'Resonance Flower', '管理同维度魔力无线网络。右键设置网络与成员。', 'Manages a wireless mana network in this dimension. Right-click to configure its name and members.'),
-    'resonance_bud': ('共鸣芽', 'Resonance Bud', '从相邻魔力池供给或接收魔力，也可作为无线中继。', 'Supplies or receives mana from an adjacent pool, or relays a wireless connection.'),
+    'mana_lotus': ('仿生导能莲', 'Bionic Conduction Lotus', '将电能转变为魔力，需要连接魔力发射器。', 'Turns electricity into mana. Requires a connected mana spreader.'),
+    'bionic_amaranthus': ('仿生翡翠苋', 'Bionic Jaded Amaranthus', '用电能在周围培育神秘花。', 'Grows nearby mystical flowers using electricity.'),
+    'bionic_clayconia': ('仿生粘土花', 'Bionic Clayconia', '用电能将附近的沙变成粘土球。', 'Uses electricity to turn nearby sand into clay balls.'),
+    'bionic_agricarnation': ('仿生田园康乃馨', 'Bionic Agricarnation', '用电能促进周围植物生长。', 'Uses electricity to encourage nearby plant growth.'),
+    'bionic_hopperhock': ('仿生漏斗花', 'Bionic Hopperhock', '收集附近的掉落物，放入相邻容器。需要电能。', 'Collects nearby drops into adjacent inventories. Requires electricity.'),
+    'bionic_rannuncarpus': ('仿生手掌花', 'Bionic Rannuncarpus', '拾起并放置附近掉落的方块。需要电能。', 'Picks up and places nearby dropped blocks. Requires electricity.'),
+    'bionic_exoflame': ('仿生冶炼火', 'Bionic Exoflame', '用电能加热附近的熔炉，并加快烧炼。', 'Heats nearby furnaces and speeds up smelting using electricity.'),
+    'corporea_orchid': ('仿生织网花', 'Bionic Corporea Orchid', '让多媒体网络存取 ME 物品，占用一个通道。', 'Connects Corporea inventories to ME. Uses one channel.'),
+    'resonance_flower': ('共鸣花', 'Resonance Flower', '连接共鸣芽，组成魔力网络。', 'Links Resonance Buds into a mana network.'),
+    'resonance_bud': ('共鸣芽', 'Resonance Bud', '通过共鸣花输送魔力。', 'Transfers mana through a Resonance Flower.'),
 }
 
 
@@ -31,8 +31,8 @@ zh, en = {'itemGroup.' + MOD: '植物机械'}, {'itemGroup.' + MOD: 'Botanical M
 for name, (cn, english, description_cn, description_en) in PLANTS.items():
     key = f'block.{MOD}.{name}'
     zh[key], en[key] = cn, english
-    zh[key + '.description'] = description_cn + ' 可安装在普通承托方块或电缆上，无需泥土。'
-    en[key + '.description'] = description_en + ' Mount on solid supports or cables; no soil is required.'
+    zh[key + '.description'] = description_cn
+    en[key + '.description'] = description_en
     native = ('jaded_amaranthus' if name == 'bionic_amaranthus' else name.removeprefix('bionic_')) if name.startswith('bionic_') else None
     model = f'botania:block/{native}' if native else f'{MOD}:block/{name}'
     write(f'assets/{MOD}/blockstates/{name}.json', {'variants': {'': {'model': model}}})
@@ -69,12 +69,12 @@ messages = {
     'detect_failed': ('附近需要唯一的有效魔力池或魔力机器', 'Needs exactly one adjacent supported pool or mana machine'),
     'setting_failed': ('设置未生效，请检查条件或权限', 'Setting rejected; check requirements and access'),
     'apothecary.materials': ('材料', 'Materials'), 'apothecary.products': ('产物', 'Output'),
-    'apothecary.reagent': ('终结材料', 'Reagent'), 'apothecary.water': ('水：%s / %s mB', 'Water: %s / %s mB'),
+    'apothecary.reagent': ('辅料', 'Reagent'), 'apothecary.water': ('水：%s / %s mB', 'Water: %s / %s mB'),
     'apothecary.buckets': ('水桶', 'Buckets'),
     'apothecary.energy_cost': ('每批耗电：%s FE', 'Energy per batch: %s FE'),
     'apothecary.time_water': ('%s tick · 1000 mB 水', '%s ticks · 1000 mB water'),
     'apothecary.jei': ('机械花药台', 'Mechanical Apothecary'),
-    'energy_label': ('储能 · FE', 'Energy · FE'), 'mana_label': ('魔力储备', 'Mana reserve'),
+    'energy_label': ('储能 · FE', 'Energy · FE'), 'mana_label': ('魔力', 'Mana'),
     'quantity': ('%s / %s', '%s / %s'),
     'loading': ('正在读取花的状态…', 'Reading flower state…'),
     'member_hint': ('输入在线玩家名添加成员；再次输入已授权名字可移除。', 'Add an online player by name; enter an authorized name again to remove them.'),
@@ -103,7 +103,7 @@ for i, (cn, english) in enumerate(zip(['下方', '上方', '北侧', '南侧', '
     messages[f'direction.{i}'] = (f'目标：{cn}', f'Target: {english}')
     messages[f'side.{i}'] = (cn, english)
 for i, pair in enumerate([
-    ('正在调合', 'Mixing'), ('放入配方材料', 'Insert recipe ingredients'), ('缺少终结材料', 'Needs reagent'),
+    ('正在调合', 'Mixing'), ('放入配方材料', 'Insert recipe ingredients'), ('缺少辅料', 'Needs reagent'),
     ('需要水', 'Needs water'), ('需要能量', 'Needs energy'), ('产物空间不足', 'Output full'), ('红石已禁止', 'Redstone disabled'),
 ]): messages[f'apothecary.status.{i}'] = pair
 statuses = {
@@ -120,11 +120,11 @@ statuses = {
 for key, pair in statuses.items(): messages['status.' + key] = pair
 for key, (cn, english) in messages.items(): zh[f'gui.{MOD}.{key}'], en[f'gui.{MOD}.{key}'] = cn, english
 zh[f'block.{MOD}.mechanical_apothecary'], en[f'block.{MOD}.mechanical_apothecary'] = '机械花药台', 'Mechanical Apothecary'
-zh[f'description.{MOD}.mechanical_apothecary'] = '消耗水与能量调合原版花和仿生花。背面输入终结材料，右侧输出产物。'
-en[f'description.{MOD}.mechanical_apothecary'] = 'Uses water and energy to craft native and bionic flowers. Reagent enters at the back; products leave on the right.'
+zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材料，制作魔法花。'
+en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin'], 'client': [], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin'], 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -179,8 +179,8 @@ write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'val
 
 # The old network blocks remain registered for saves; new worlds use native sparks.
 zh[f'item.{MOD}.resonance_spark_augment'], en[f'item.{MOD}.resonance_spark_augment'] = '共鸣增幅器', 'Resonance Spark Augment'
-zh[f'tooltip.{MOD}.spark_range'] = '两端安装：火花范围扩展至 %s 格。保留原染色和升级。'
-en[f'tooltip.{MOD}.spark_range'] = 'Install at both ends for %s-block spark range. Keeps native dyes and augments.'
+zh[f'tooltip.{MOD}.spark_range'] = '为相连的火花各装一个，传送距离可提高到 %s 格。'
+en[f'tooltip.{MOD}.spark_range'] = 'Fit one to each connected spark to extend the range to %s blocks.'
 write(f'assets/{MOD}/models/item/resonance_spark_augment.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:item/spark_star'}})
 shaped('resonance_spark_augment', ['EAE', 'DSD', 'EAE'], {'E': 'botania:elementium_ingot', 'A': 'mekanism:alloy_reinforced', 'D': 'botania:dragonstone', 'S': 'botania:mana_spark'})
 write(f'data/{MOD}/recipe/legacy_resonance_recycling.json', {'type': 'minecraft:crafting_shapeless', 'category': 'misc',
@@ -212,12 +212,12 @@ corporea_messages = {
 }
 corporea_messages.update({
     'filter.0': ('筛选：全部', 'Filter: all'), 'filter.1': ('筛选：仅样品', 'Filter: allow'), 'filter.2': ('筛选：排除样品', 'Filter: deny'),
-    'exact': ('匹配完整物品', 'Exact components'), 'item_only': ('仅匹配种类', 'Item type only'),
+    'exact': ('精确匹配', 'Exact match'), 'item_only': ('只看种类', 'Item type'),
     'samples': ('样品', 'Filter'), 'hotbar': ('物品', 'Hotbar'),
-    'sample_help': ('先点快捷栏物品，再点样品格；右键清除。不会消耗物品。筛选对两侧桥接访问生效。', 'Select a hotbar item, then a sample slot. Right-click to clear. Samples consume nothing. Filters apply to both bridge directions.'),
+    'sample_help': ('点击物品，再点击样品格。右击可清除，物品不会被拿走。', 'Click an item, then a sample slot. Right-click to clear. The item stays in your inventory.'),
     'craft.on': ('合成：开', 'Craft: on'), 'craft.off': ('合成：关', 'Craft: off'),
     'crafting': ('合成：%s · %s 项', 'Craft: %s · %s jobs'),
-    'craft_help': ('开启后仅为实际请求的缺口下单。需要 AE 样板与合成 CPU；产物回到 ME，由多媒体装置再次请求，或配合原保持器重试。最多 4 项任务、每项 4096 件。', 'Orders only actual request shortages. Requires AE patterns and a crafting CPU. Results return to ME; request again or retry with a native retainer. Up to 4 jobs, 4096 items each.'),
+    'craft_help': ('缺货时让 ME 自动制作。需要样板和合成 CPU，做好后再取一次货。', 'Asks ME to craft missing items. Requires a pattern and crafting CPU; request the items again when ready.'),
     'craft.status.off': ('关闭', 'Off'), 'craft.status.idle': ('待命', 'Idle'), 'craft.status.calculating': ('计算中', 'Calculating'),
     'craft.status.running': ('进行中', 'Running'), 'craft.status.no_pattern': ('没有可用样板', 'No pattern'),
     'craft.status.ambiguous': ('多个结果，请精确指定物品', 'Ambiguous item'), 'craft.status.missing_materials': ('合成缺料', 'Missing materials'),
@@ -227,11 +227,37 @@ corporea_messages.update({
 for key, cn, english in [
     ('unsupported', '此机器不支持填充该配方', 'This recipe cannot be filled in this machine'),
     ('unavailable', '无法操作此机器', 'This machine is unavailable'),
-    ('missing', '缺少材料、终结材料或容器', 'Missing ingredients, reagent or container'),
+    ('missing', '缺少材料、辅料或容器', 'Missing ingredients, reagent or container'),
     ('full', '背包没有空间收回原材料', 'No inventory space to return existing ingredients'),
 ]:
     zh[f'gui.{MOD}.transfer.{key}'], en[f'gui.{MOD}.transfer.{key}'] = cn, english
 for key, (cn, english) in corporea_messages.items(): zh[f'gui.{MOD}.corporea.{key}'], en[f'gui.{MOD}.corporea.{key}'] = cn, english
+# Portable mana uses addon-owned data, including when AE2 is absent.
+for key, cn, english in [
+    ('gui.botanicalmekanism.mana_type', '魔力', 'Mana'),
+    ('item.botanicalmekanism.mana_storage_cell', 'ME 魔力存储盘', 'ME Mana Storage Cell'),
+    ('item.botanicalmekanism.mana_packet', '魔力团', 'Mana Wisp'),
+    ('tooltip.botanicalmekanism.mana_cell', '魔力：%s / %s', 'Mana: %s / %s'),
+    ('tooltip.botanicalmekanism.mana_packet', '魔力：%s。对魔力池或机器使用以归还。', 'Mana: %s. Use on a pool or machine to return it.'),
+]: zh[key], en[key] = cn, english
+write(f'data/{MOD}/recipe/mana_storage_cell.json', {
+    'neoforge:conditions': [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}],
+    'type': 'minecraft:crafting_shaped', 'pattern': ['SMS', 'CEC', 'SSS'],
+    'key': {'S': {'item': 'botania:manasteel_ingot'}, 'M': {'item': 'botania:mana_diamond'},
+            'C': {'item': 'ae2:fluix_pearl'}, 'E': {'item': 'ae2:cell_component_4k'}},
+    'result': {'id': f'{MOD}:mana_storage_cell', 'count': 1}})
+write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:item/mana_spark'}})
+# A small livingrock case with a mana-pearl inset, using existing Botania textures.
+write(f'assets/{MOD}/models/item/mana_storage_cell.json', {
+    'parent': 'minecraft:block/block', 'textures': {'case': 'botania:block/livingrock', 'core': 'botania:item/mana_pearl', 'particle': 'botania:block/livingrock'},
+    'display': {'gui': {'rotation': [15, -20, 0], 'translation': [0, 0, 0], 'scale': [1, 1, 1]},
+                'ground': {'rotation': [0, 0, 0], 'translation': [0, 2, 0], 'scale': [.5, .5, .5]},
+                'fixed': {'rotation': [0, 0, 0], 'scale': [.8, .8, .8]}},
+    'elements': [{'from': [2, 2, 6], 'to': [14, 14, 10], 'faces': {face: {'texture': '#case'} for face in ['north', 'south', 'east', 'west', 'up', 'down']}},
+                 {'from': [4, 4, 5.98], 'to': [12, 12, 5.98], 'faces': {'north': {'texture': '#core', 'uv': [0, 0, 16, 16]}}},
+                 {'from': [4, 4, 10.02], 'to': [12, 12, 10.02], 'faces': {'south': {'texture': '#core', 'uv': [0, 0, 16, 16]}}}]
+})
+
 from lexicon_resources import generate as generate_lexicon
 generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)
 write(f'assets/{MOD}/lang/zh_cn.json', zh)

@@ -11,10 +11,6 @@
       "title": "book.botanicalmekanism.terra_condenser.title"
     },
     {
-      "type": "patchouli:text",
-      "text": "book.botanicalmekanism.terra_condenser.1"
-    },
-    {
       "type": "patchouli:crafting",
       "recipe": "botanicalmekanism:terra_condenser"
     }

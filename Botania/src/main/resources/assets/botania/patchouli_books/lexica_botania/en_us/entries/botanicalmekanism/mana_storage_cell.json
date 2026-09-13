@@ -1,0 +1,30 @@
+{
+  "name": "item.botanicalmekanism.mana_storage_cell",
+  "icon": "botanicalmekanism:mana_storage_cell",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 23,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_storage_cell.0",
+      "item": "botanicalmekanism:mana_storage_cell",
+      "title": "book.botanicalmekanism.mana_storage_cell.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_storage_cell.1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_storage_cell.2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_storage_cell",
+      "flag": "mod:ae2"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_storage_cell": 0
+  }
+}

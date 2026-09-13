@@ -1,17 +1,17 @@
 """Machine recipes, names, and runtime resources."""
 
 MACHINES = {
-    'mana_bridge': ('魔力互通器', 'Mana Bridge', 'mana_pool', 'manasteel_ingot', '连接相邻原魔力池与魔力管道。选择方向和传输模式。', 'Connects an adjacent native mana pool to chemical tubes. Select the pool face and transfer direction.'),
-    'mana_charger': ('魔力充能座', 'Mana Charging Stand', 'mana_tablet', 'manasteel_ingot', '从相邻原池充放魔力物品，达到目标百分比后输出。', 'Charges or drains a mana item using an adjacent native pool; outputs it at the selected percentage.'),
-    'mana_infuser': ('魔力灌注室', 'Mana Infusion Chamber', 'mana_pool', 'manasteel_ingot', '消耗能量与魔力灌注材料。背面补充炼金或复制催化剂。', 'Uses energy and mana to infuse materials. Insert alchemy or conjuration catalysts at the back.'),
-    'runic_forge': ('符文锻造室', 'Runic Forge', 'runic_altar', 'mana_diamond', '消耗能量、魔力和终结材料制作符文，保留配方催化物。', 'Uses energy, mana and a reagent to craft runes, retaining recipe catalysts.'),
-    'pure_converter': ('纯净转化室', 'Pure Conversion Chamber', 'pure_daisy', 'manasteel_ingot', '消耗能量转化活木、活石等材料。仅支持无需世界条件的固体转化。', 'Uses energy to make livingwood, livingrock and other supported solid conversions without world effects.'),
-    'terra_condenser': ('泰拉凝聚室', 'Terra Condensation Chamber', 'terrestrial_agglomeration_plate', 'terrasteel_ingot', '置于完整泰拉平台中央，消耗能量和原配方魔力凝聚材料。', 'Place at the center of a complete terra platform. Uses energy and the recipe mana cost.'),
-    'botanical_brewery': ('植物酿造室', 'Botanical Brewing Chamber', 'botanical_brewery', 'mana_diamond', '消耗能量和魔力酿造植物药剂。背面补充药剂容器。', 'Uses energy and mana to brew botanical potions. Supply brew containers at the back.'),
-    'ore_processor': ('凝矿处理室', 'Ore Processing Chamber', 'orechid', 'terrasteel_ingot', '消耗能量和魔力随机凝矿。背面装入凝矿兰或炎矿兰；炎矿要求有顶维度。', 'Uses energy and mana for random ores. Insert an Orechid or Orechid Ignem; Ignem needs a ceiling dimension.'),
-    'metamorphic_stone': ('异构石转化室', 'Metamorphic Stone Chamber', 'marimorphosis', 'terrasteel_ingot', '消耗能量和魔力转化异构石，结果受所在生物群系影响。', 'Uses energy and mana to make metamorphic stone, weighted by the local biome.'),
-    'elven_trade_controller': ('精灵贸易控制器', 'Elven Trade Controller', 'elven_gateway_core', 'elementium_ingot', '紧邻已开启的真实精灵门，以能量执行贸易。魔力由门旁原池承担。', 'Place beside an open native elven portal. Uses energy for trades; the portal draws mana from its own pools.'),
-    'mana_enchanter_controller': ('魔力附魔控制器', 'Mana Enchanter Controller', 'mana_pylon', 'elementium_ingot', '紧邻已形成的魔力附魔装置。提供装备、附魔书、能量和魔力，书籍保留。', 'Place beside a formed mana enchanter. Supply equipment, books, energy and mana; books remain.'),
+    'mana_bridge': ('魔力互通器', 'Mana Bridge', 'mana_pool', 'manasteel_ingot', '在魔力池和加压管道之间输送魔力。', 'Transfers mana between pools and pressurized tubes.'),
+    'mana_charger': ('魔力充能座', 'Mana Charging Stand', 'mana_tablet', 'manasteel_ingot', '给魔力石板等物品充魔，也能抽出其中的魔力。', 'Charges mana items or draws out their stored mana.'),
+    'mana_infuser': ('魔力灌注室', 'Mana Infusion Chamber', 'mana_pool', 'manasteel_ingot', '用魔力灌注材料，也能进行炼金和复制。', 'Infuses items with mana, including alchemy and conjuration.'),
+    'runic_forge': ('符文锻造室', 'Runic Forge', 'runic_altar', 'mana_diamond', '自动制作符文，需要电能和魔力。', 'Crafts runes using electricity and mana.'),
+    'pure_converter': ('纯净转化室', 'Pure Conversion Chamber', 'pure_daisy', 'manasteel_ingot', '将原木、石头等材料转变为活木、活石。', 'Turns logs, stone and other materials into livingwood, livingrock and similar blocks.'),
+    'terra_condenser': ('泰拉凝聚室', 'Terra Condensation Chamber', 'terrestrial_agglomeration_plate', 'terrasteel_ingot', '在泰拉凝聚平台上自动制作泰拉钢。', 'Automates terrasteel crafting on a terrestrial agglomeration platform.'),
+    'botanical_brewery': ('植物酿造室', 'Botanical Brewing Chamber', 'botanical_brewery', 'mana_diamond', '消耗电能和魔力，自动酿制精酿。', 'Brews automatically using electricity and mana.'),
+    'ore_processor': ('凝矿处理室', 'Ore Processing Chamber', 'orechid', 'terrasteel_ingot', '用凝矿兰将石头变成矿石。需要电能和魔力。', 'Uses an Orechid to turn stone into ore. Requires electricity and mana.'),
+    'metamorphic_stone': ('异构石转化室', 'Metamorphic Stone Chamber', 'marimorphosis', 'terrasteel_ingot', '用魔力转化异构石，产物随生物群系而异。', 'Makes metamorphic stone with mana. Results vary by biome.'),
+    'elven_trade_controller': ('精灵贸易控制器', 'Elven Trade Controller', 'elven_gateway_core', 'elementium_ingot', '向精灵传送门运送材料，并收取贸易所得。', 'Sends ingredients through an Alfheim Portal and collects the traded goods.'),
+    'mana_enchanter_controller': ('魔力附魔控制器', 'Mana Enchanter Controller', 'mana_pylon', 'elementium_ingot', '为魔力附魔台提供装备、附魔书和魔力。', 'Supplies equipment, enchanted books and mana to a Mana Enchanter.'),
 }
 
 
@@ -39,23 +39,24 @@ def generate(root, write, zh, en):
     zh[f'chemical.{mod}.mana'], en[f'chemical.{mod}.mana'] = '魔力', 'Mana'
     pairs = {
         'materials': ('材料', 'Materials'), 'products': ('产物', 'Output'), 'books': ('附魔书', 'Books'),
-        'extra.mana_infuser': ('催化剂', 'Catalyst'), 'extra.runic_forge': ('终结材料', 'Reagent'),
+        'extra.mana_infuser': ('催化剂', 'Catalyst'), 'extra.runic_forge': ('辅料', 'Reagent'),
         'extra.botanical_brewery': ('容器', 'Vessel'), 'extra.ore_processor': ('花', 'Flower'),
         'bridge_mode.0': ('从池抽取', 'From pool'), 'bridge_mode.1': ('向池供给', 'To pool'),
         'charge_mode.0': ('充入物品', 'Charge item'), 'charge_mode.1': ('抽出物品', 'Drain item'),
-        'target_apply': ('目标 %', 'Target %'), 'mana': ('魔力：%s / %s', 'Mana: %s / %s'),
+        'connected_side': ('连接方向：%s', 'Connection: %s'), 'target_apply': ('设定 %', 'Set %'), 'mana': ('魔力：%s / %s', 'Mana: %s / %s'),
         'choose_recipe': ('选择配方', 'Choose recipe'), 'automatic': ('自动匹配', 'Automatic'), 'close': ('关闭', 'Close'),
         'recipe_selected': ('配方：%s', 'Recipe: %s'), 'recipe_missing': ('配方已不适用，请重新选择', 'Recipe unavailable; choose again'),
         'search_name': ('搜索产物名称', 'Search output names'), 'no_results': ('没有适用配方', 'No supported recipes'),
         'applying': ('正在应用…', 'Applying…'), 'rejected': ('设置未生效', 'Setting rejected'),
     }
     for i, pair in enumerate([
-        ('正在工作', 'Working'), ('放入配方材料', 'Insert recipe materials'), ('缺少终结材料或容器', 'Needs reagent, container or books'),
-        ('需要魔力或目标池空间', 'Needs mana or pool space'), ('需要能量', 'Needs energy'), ('产物空间不足', 'Output full'),
-        ('红石已禁止', 'Redstone disabled'), ('原装置或平台未就绪', 'Native device or platform not ready'), ('目标不是有效魔力池', 'No supported pool at target'),
-        ('物品或魔力池禁止转移', 'Item or pool denies transfer'), ('等待工作', 'Waiting'), ('周围区块未加载', 'Nearby chunks unloaded'),
+        ('正在工作', 'Working'), ('放入配方材料', 'Insert recipe materials'), ('缺少辅料或容器', 'Needs reagent, container or books'),
+        ('魔力不足', 'Not enough mana'), ('需要能量', 'Needs energy'), ('产物空间不足', 'Output full'),
+        ('红石已禁止', 'Redstone disabled'), ('请检查装置或平台', 'Check the structure or platform'), ('所选方向没有魔力池', 'No mana pool on the selected side'),
+        ('物品或魔力池不接受此操作', 'The item or pool cannot perform this operation'), ('等待工作', 'Waiting'), ('周围区块未加载', 'Nearby chunks unloaded'),
         ('装置正在使用或控制器重复', 'Device occupied or duplicate controllers'),
         ('炎矿需要有顶维度', 'Orechid Ignem needs a ceiling dimension'),
+        ('魔力已满', 'Mana storage is full'),
     ]): pairs[f'status.{i}'] = pair
     for key, (cn, english) in pairs.items(): zh[f'gui.{mod}.machine.{key}'], en[f'gui.{mod}.machine.{key}'] = cn, english
     from botanical_models import generate as generate_models

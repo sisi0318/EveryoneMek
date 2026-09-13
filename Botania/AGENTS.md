@@ -4,14 +4,28 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.9 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.10 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度、高级网络和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.9 验证带 AE2 的 30 项服务端 GameTest、无 AE2 的 24 项，以及 1 项费用 JUnit，不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.10 验证带 AE2 的 34 项服务端 GameTest、无 AE2 的 25 项，以及费用和 GUI 契约共 2 项 JUnit，不代表客户端视觉或完整整合包验收。
+
+## alpha.10 火花充能、魔力配置与 AE 魔力
+
+- 用户反馈截图为魔力充能座：alpha.9 的 CHARGER 没有 Chemical 罐，未注册火花接口。alpha.10 为其追加唯一 1,000,000 魔力罐／物品附件，保留全部物品槽索引和旧 mode／targetPercent／poolSide；支持火花与真实管道、AE 总线输入，右侧默认魔力输出。纯净转化和精灵贸易不消耗机器魔力，不增加空火花接口。
+- `ManaMachine` 实现 ManaPool，提供其真实罐和 mode 作为 ManaItem 的 BlockEntity 上下文；不创建假池或影子库存，也不把机器注册到原功能花找池网络。`ManaTransfer.chargerBuffer` 在没有旧指定相邻池时使用内部罐，保留物品 canReceiveManaFromPool／canDrainManaToPool／noExport。旧相邻池充放线路照常工作。满罐与缺魔分开报状态。
+- `ManaSideConfigMixin`／`ManaConfigTabMixin` 只修改本模组魔力机器的 Mek CHEMICAL 配置标题、提示和图标，实际六面仍走 Mek PacketSideData／配置组件（不能只在测试里 setDataType，PacketSideData 还会 sideChanged 刷新能力）；不扩展 TransmissionType 枚举，也不改其他 Mek 机器。客户端 Mixin 放 client 列表，ASM JUnit 核对 Mek 10.7.19.85 字段、调用和父方法。GuiChemicalBar 自定义提示只显示魔力量。
+- 充能座移除六个方位按钮；主界面只留充放模式、目标比例、魔力和状态。互通器／控制器用一个连接方向按钮，库存槽位不变。目标确认值宽 44，避开 (206,86) 的电力物品槽。游戏内视觉仍由用户验收。
+- `ManaKey` 是可选 AE2 中独立的 AEKeyType／唯一 ManaKey，按 AE registry 注册，NBT MapCodec 与数据包均往返同一键；1 单位就是 1 魔力，每次 AE 操作的基数 1000。`ManaAeClient` 注册终端／监控渲染；原生类型选择可选择“魔力”。
+- `Content.MANA_CELL`／`MANA_PACKET` 和 stored_mana Long 组件始终注册，物品类不依赖 AE。自定义 `ManaCell` ICellHandler 只接受魔力，容量 1,000,000、待机 1 AE/t；存档直接使用本模组组件，缺 AE 时不丢失数值。filled cell 不可嵌套进存储元件。KeyCounter 不添加零量条目，避免空盘或拆除接口留下空类型。每次变更立即写组件并通知 host；persist 本身不再通知，避免 ME 箱子的保存回调递归。
+- `ManaAccess` 只访问已加载的普通原池或本模组魔力机器，接口每次检查原 BE 身份、区块和实际侧面能力。原池遵守 canTake／canGive，机器遵守真实 Chemical capability。refund 只用来归还刚从来源取出的余量。
+- `ManaBusStorage` 注册 AE import/export/external storage strategies。总线策略每次操作重新取得相邻目标，支持先放总线后放机器；存储总线的已缓存视图绑定原 BE，拆除后失效。实际传输使用 AE poweredInsert／poweredExtraction，拒收余量回源，无法回源则掉落带同量魔力的 MANA_PACKET。
+- `ManaContainerStrategy` 让空魔力盘也可作为 AE 筛选样品（amount=0），支持终端装入／归还魔力。按 carried／玩家槽的同一 ItemStack 身份核对上下文，模拟不写入。AE 筛选的普通左击设置物品，右击才发送 EMPTY_ITEM 选择容器内的魔力；说明必须写右击，回归使用原 IOBusMenu.doAction。接口内的魔力拆除时由 ManaKey.addDrops 保存到魔力团，可归还池／机器／ME，不免费生成存储盘。
+- 词典有 25 个条目。新盘合成页用 mod:ae2 条件；盘模型用 JSON 几何和 Botania 活石、魔力珍珠材质，魔力团引用火花贴图，无新增位图。原共鸣花模型与原稿保留。
+- 用户要求所有面向玩家的文案参考 Mek／Botania。核对实际 JAR 的 description.mekanism.* 和 botania.page.sparks*／pool*／corporeaRetainer*：提示写用途，词典写摆法和操作，不写“真实装置”“保留原机制”“两种网络不同”等实现说明。用原中文名称“多媒体固定器”“魔法玻璃小瓶”“精灵玻璃烧瓶”。开发细节留在本指引和 UPSTREAM，不重新塞回 tooltip 或书页。
 
 ## alpha.9 筛选、合成和 JEI 填充
 
@@ -94,7 +108,7 @@ processResources 的版本替换属性在配置阶段保存为普通 map；files
 - 灌注使用 matches(完整输入副本)／getRecipeOutput，原催化配方优先，只支持原炼金和复制方块；原 getRecipeOutput 返回什么就输出什么，不自行增加原池没有的容器返还。
 - 纯净／凝矿／异构限已核对原生状态配方类、无 pre/success 函数、产物可安全转成默认状态的固体方块物品。拒绝输入 BLOCK_ENTITY_DATA／BLOCK_STATE，避免丢弃装载库存或自定义状态。纯净一件／原 time，吞吐相当于八个原花位置全工作。泰拉真实 3×3 平台按原标签检查。
 - 随机候选使用原位置权重／产物／成本；炎矿判定 dimensionType.hasCeiling，不能写死维度 ID。进度使用候选最长冷却，至少 1；预留全部候选空间及最大魔力，完整提交时抽一次、扣实际成本并立刻放入真实输出槽，不持有待重抽的已付费隐形结果。工作签名按材料组件多重集，补货和等价槽分配不清进度。
-- `ManaTransfer`／`ManaPoolAccess`：仅真实普通／稀释／华丽原池，核对 canSpare／canAccept，转移按实际差值结算。充能座通过 ManaItem.LOOKUP 在单件副本上处理，再提交到真实物品和真实池；拒绝 noExport／禁止充放或异常差值。不伪造池上下文，不接特殊工具成长。
+- `ManaTransfer`／`ManaPoolAccess`：仅真实普通／稀释／华丽原池，核对 canSpare／canAccept，转移按实际差值结算。充能座通过 ManaItem.LOOKUP 在单件副本上处理，再提交到真实物品和池／机器魔力罐；拒绝 noExport／禁止充放或异常差值。使用真实 BE 上下文，不接特殊工具成长。
 - `ManaEndpoint` 为视图：原池或本模组机器各一份真实资源。每次查询机器实际侧面 Chemical capability，ISecurityUtils 按花所有者 UUID 验证访问；按实际接受量结费，退回源剩余量用内部回滚，不受源输出面不允许输入影响。去重仍按真实资源 BE 位置，原网络存档字段保持不变。
 - `NativeControllers`：紧邻原门／原附魔设备，6 格所需区块全部加载，重复控制器停机。精灵贸易只接标准原生 ElvenTradeRecipe，按 tryAssemble 的全部 outputs 和 matchedInputSlots 处理；真实门户 consumeMana 负责费用及分摊，不从机器再扣魔。原门自行开门、保留 200,000 开门费；控制器最多每 4 tick 一批，原样退回／词典／特殊第三方贸易交给原门。
 - 附魔通过真实 itemToEnchant 与 onUsedByWand 开始，原 commonTick 完成附魔和定价。`EnchanterControlMixin` 为原查书入口附加只读书籍视图（临时 ItemEntity 不加入世界、存档或掉落）；`EnchanterAccess` 访问真实结构校验器，已连接控制器时结构损坏／暂停／重复连接暂停原流程。原火花仍可供魔；机内 Chemical 只按原装置实际接收差值转入。

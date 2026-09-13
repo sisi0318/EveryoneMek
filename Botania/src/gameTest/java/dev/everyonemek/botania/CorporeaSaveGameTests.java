@@ -20,7 +20,10 @@ public final class CorporeaSaveGameTests {
         var sample = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD);
         sample.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Filter sample"));
         flower.filter.samples[0] = sample;
-        var registry = h.getLevel().registryAccess(); var saved = flower.saveWithFullMetadata(registry);
+        var registry = h.getLevel().registryAccess();
+        var cell = new net.minecraft.world.item.ItemStack(Content.MANA_CELL.get()); ManaStorageItem.store(cell, 765432);
+        var savedCell = net.minecraft.world.item.ItemStack.parseOptional(registry, (net.minecraft.nbt.CompoundTag) cell.saveOptional(registry));
+        check(ManaStorageItem.stored(savedCell) == 765432, "Mana cell lost its addon-owned data without AE2"); var saved = flower.saveWithFullMetadata(registry);
         var restored = (CorporeaFlower) BlockEntity.loadStatic(flower.getBlockPos(), flower.getBlockState(), saved, registry);
         check(restored != null && restored.mode == 2 && owner.getUUID().equals(Flowers.owner(restored)) && !Flowers.enabled(restored), "World save lost flower settings or owner");
         check(restored.filter.mode == 1 && restored.autocraft && restored.filter.allows(sample)

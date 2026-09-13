@@ -1,150 +1,103 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.9 可运行原型**：已接入设计稿 P1–P3 主线：导能莲、六种 FE 功能花、原生火花与 Chemical 魔力传输、两种魔力辅助设备和十种加工／控制设备；新增原词典章节与可选 AE2 仿生织网花。跨维度、高级网络与后续候选花仍待独立设计。
+**0.1.0-alpha.10** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
-适配 Minecraft 1.21.1、Java 21、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85。客户端与服务端都需安装本模组及下列依赖，不要同时保留重复的旧 JAR：
+用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
-| 依赖 | 验证版本 |
+## 安装
+
+客户端和服务端都需要本模组，以及以下依赖。同一模组只保留一个版本。
+
+| 模组 | 版本 |
 | --- | --- |
-| Botania | `botania-neoforge-1.21.1-456-SNAPSHOT.jar`，固定提交 d617ef0 的官方 CI 产物 |
+| Mekanism | 1.21.1-10.7.19.85 |
+| Botania | 固定构建 `botania-neoforge-1.21.1-456-SNAPSHOT.jar`，提交 d617ef0 |
 | Patchouli | 1.21.1-92-NEOFORGE |
 | Curios | 9.5.1+1.21.1 |
+| JEI（可选） | 19.22.1.316 |
+| AE2（可选） | 19.2.17，另需 GuideME 21.1.1 |
 
-本模组 JAR 为 `build/libs/BotanicalMekanism-0.1.0-alpha.9.jar`。Botania 来源与校验值见 [upstream-lock.json](upstream-lock.json)和[官方 CI](https://github.com/VazkiiMods/Botania/actions/runs/34246437545)；同名 SNAPSHOT 不保证相同内容，请使用锁定文件。JEI 非必需，已适配 19.22.1.316。机械花药台在工作台合成，七种 FE 花使用机械花药台专用配方；安装 AE2 后还能制作仿生织网花。共鸣增幅器在工作台制作。无需安装 Flux Networks。
+下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-![三种原创花形材质](art/texture-sheet.png)
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.10.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
-- [完整设计方案](DESIGN.md)：资源互通、机器、仿生花、进度与分阶段验收。
-- [火花与旧网络兼容](WIRELESS.md)：原生火花路线与旧共鸣存档维护。
-- [上游核对记录](UPSTREAM.md)：固定源码版本、配方覆盖和实现契约。
-- [多媒体与 ME 互通](CORPOREA.md)：仿生织网花、正确布线、重复入口保护与下一步候选。
-- [开发入口](AGENTS.md)：已确认要求与下一步。
+## 仿生花
 
-仿生导能莲采用原创花形，将 FE 转为原生魔力。放下时会自动寻找附近发射器。手动改绑时，潜行右键空气将森林法杖切到**绑定模式**，再潜行右键导能莲、潜行右键 6 格内的目标发射器；让发射器朝向原魔力池。持杖瞄准花会显示原生魔力 HUD，空手右键打开专属配置界面。没有可用发射器、满缓存、暂停或红石禁止时停产，已支付资源保留。
+仿生花可以放在方块或电缆上，不需要泥土。空手右击可查看电量和暂停工作。
 
-六种仿生功能花保留原模型和原行为：翡翠苋、粘土花、田园康乃馨、漏斗花、手掌花、冶炼火，使用 FE 而不抽取附近池。**全部仿生花无需草地或泥土，可安装在普通承托方块或电缆上。** 仍需根部支撑；移除支撑会正常掉落，FE、魔力和设置随物品保存。当前不接入红线仿制者的远端作用。花本身无需土壤，但翡翠苋生成的普通神秘花仍需可生长地面。
+- **仿生导能莲**：接上电缆，用森林法杖绑定附近的魔力发射器。默认每秒产生 80 魔力，消耗 4,000 FE。
+- **仿生翡翠苋**：在周围培育神秘花，需要留出可种花的地面。
+- **仿生粘土花**：把附近的沙变成粘土球。
+- **仿生田园康乃馨**：促进附近植物生长。
+- **仿生漏斗花**：将附近掉落物收进相邻容器。物品展示框可指定收集的物品。
+- **仿生手掌花**：拾起并放置掉落的方块。花下两格的方块决定可放置的地面。
+- **仿生冶炼火**：用电能加热附近的熔炉，并加快烧炼。
 
-导能莲默认每株 200 FE／tick 产生 4 魔力／tick，最多保存 20,000 FE 和 800 魔力，首版无速度升级。服务端 `botanicalmekanism-server.toml` 可设置 `fePerMana`（默认 50）和 `lotusManaPerTick`（默认 4）。翡翠苋每次生花默认使用相当于 5,000 FE 的工作储备。空手右键花可查看储能并暂停。
+绑定导能莲时，先潜行右击空气，把森林法杖切到绑定模式；再潜行右击花和 6 格内的发射器。
 
-配置界面采用简洁的半透明深灰底。产魔花只显示储能、魔力和状态；旧共鸣设备保留兼容设置页面，新火花沿用染料和法杖操作。悬停花的状态查看绑定信息，悬停储能查看工作要求，列表可搜索和滚轮翻页。模式切换、按钮与回车提交均使用服务端确认值；底部“完成”或 Esc 关闭界面。
+## 火花与魔力配置
 
-**从 alpha.8 更新：**客户端与服务端同时替换 JAR，原存档、库存与设置保留；旧花默认不筛选、不开启自动合成。AE2 是可选依赖，织网花验证版本为 AE2 19.2.17＋GuideME 21.1.1；其他功能无需安装它们。
+**拿着火花右击魔力机器即可安装。** 给附近的魔力池也装上同色火花，机器便能从池中取魔力。充能座现在也可以这样供魔，不必贴着池子摆放。
 
-**从 alpha.1 更新：**客户端和服务端替换本模组 JAR 即可，依赖未变。旧世界中若某朵花无法选中，先空手右键一次补全所有者，再用绑定模式改绑。此次修复防止花在重进世界时丢失所有者、FE 和暂停状态；旧版已经写丢的数据无法推算恢复，物品上的原有储能与设置仍兼容。
+打开机器左侧的侧面配置，选择火花图标的“魔力”页。六面图可以设置输入、输出或关闭。火花从顶部供魔，因此顶部需要设为输入。加压管道和 ME 总线也遵守这里的设置。
 
-## 植物魔法词典
+为供魔的火花和收魔的火花各装一个共鸣增幅器，传送距离可提高到 32 格。用染料分组；潜行使用森林法杖可拆下升级。更详细的距离规则见 [WIRELESS.md](WIRELESS.md)。
 
-原植物魔法词典新增“植物机械”分类，共 23 个条目，介绍全部新增花、设备、增幅器及旧设备兼容。8 张机械花药配方图按实际配方材料生成，其余机器显示工作台配方。支持中文和英文，沿用原书的外观与翻页。
+## 机器
 
-手持原词典右键任意本模组设备，可直接打开对应条目；无需另一本书。加工机的配方按钮也会显示当前锁定产物，锁定配方失效时提示重新选择。
-
-打开机械花药台、灌注室、符文台、纯净转化、泰拉、酿造或精灵贸易控制器后，可点 JEI 原配方的加号填充一批，Shift 加号填充多批。自动区分材料、终结材料、催化物和空容器；旧材料退回背包，空间不足时整次取消。仍需供水、供电、魔力和真实结构；随机矿物配方不提供定向填充。
-
-## 仿生织网花：可选 AE2
-
-将花接入 ME 电缆，在花和物品箱上装普通多媒体火花，另放一个主火花。**ME 终端可存取多媒体网络物品，多媒体漏斗／索引也可从 ME 取料。** 织网花由 ME 供电，占 1 通道、待机 4 AE/t，无需额外 FE 线，默认双向合计 2,048 件/t。
-
-正确布线、防重复统计、方向设置与限制见 [CORPOREA.md](CORPOREA.md)。主火花下方不是库存节点；同一双箱只用一枚普通火花，同一库存不要再用 ME 存储总线接回同一网络。当前互通物品，支持九格样品筛选和可开启的缺货合成。开启后需要 AE 样板与 CPU，成品回到 ME，再由原多媒体装置或保持器重试取货。多个独立多媒体网络可以通过同一 ME 网络互相访问。
-
-花复用完整保留的共鸣花造型，保留非土壤安装、所有者和暂停设置；缺依赖、断电、无通道或重复接入时显示原因。未安装 AE2 时不生成这朵花的合成配方，已有花及其设置继续安全保存。
-
-## 原生火花与共鸣增幅器
-
-现在直接使用 Botania 原火花，不再要求新建共鸣网络、选择核心或管理成员。
-
-1. 在原魔力池和本模组有魔力罐的机器上各安装一枚普通火花。机器自动向附近同色火花请求魔力，和原泰拉／附魔装置一样使用原传输流程。
-2. 使用染料给火花分组，森林法杖查看连接或潜行拆卸。机器顶部的 Chemical 面必须允许输入；关闭顶部输入后，火花停止供给。
-3. 想扩大距离时，在**两端火花**上分别安装共鸣增幅器，范围从原各轴 ±12 格扩展至 **各轴 ±32 格**。只升级一端仍保持原距离。
-4. 池上的原聚集／分散等升级可以与增幅器组合：先装原升级或先装增幅器均可。潜行用森林法杖拆下时，原升级和距离效果一起保存在掉落升级物品中，再装回即可恢复。机器端只接受距离增幅器，原池控制升级继续用于池。
-
-增幅器由火花、源质钢 ×4、龙石 ×2、强化合金 ×2 合成。它只扩展距离，魔力吞吐、染色、原升级角色和费用继续采用 Botania 原规则；不另收旧共鸣网络费用，不增加网络库存或跨维度传输。
-
-**旧共鸣花／芽：**退出新的合成与创造物品栏，但现有设备、旧网络、GUI 与资源保存继续兼容。旧设备可在工作台回收成一个共鸣增幅器；也可以继续保留。共鸣花的注册 ID、模型、贴图与美术原稿完整保留，供后续新用途复用。旧机制的说明与限制见 [兼容记录](WIRELESS.md)。
-
-## 机械花药台
-
-机械花药台可自动制作原版花与本模组的仿生花。用户说的“机械花”指原版花，不是新增的花类别。
-
-- 接入 FE 与水；水罐容量 16,000 mB，每批消耗 1,000 mB。可用导管直接输入流体水，也可将水桶放入专用容器槽，Shift 点击会自动送入该槽；支持连续多桶补水，空桶进入独立输出槽。手持水桶右键补水同样保留。
-- 16 格材料区可堆叠备货；终结材料放独立槽。不要混入其他配方的无关材料。原版配方的终结材料通常为种子，机械专用配方使用指定合金。
-- 默认材料和水桶从前／上／左面输入，终结材料从背面输入，产物和空桶从右侧自动输出；底部物品接口供能量物品。水与能量默认六面输入，可在 Mek 六面设置中调整。
-- 缺水、缺终结材料或产物满时停止加工，不提前扣材料。水罐满或空桶槽满时保留水桶，腾出空间后自动继续导入。世界保存保留工作进度；拆成物品保留库存、水、能量、升级和六面设置，未完成批次重新开始。
-- JEI 中，原版花沿用 Botania 原花药台分类；机械专用配方在“机械花药台”分类查看。机械花药台本身由普通花药台、钢制机壳、4 块魔力钢、2 个基础控制电路和灌注合金制作。
-
-普通花药台继续使用原版配方，**不能制作仿生花**。扩展花使用机械台专用配方；已制作的花和已有网络照常使用。
-
-下面是无升级时的基础配方。每批另需 1 桶水；升级按 Mek 规则改变工时与耗电。
-
-| 产物 | 材料 | 终结材料 | 每批基础耗电／时间 |
-| --- | --- | --- | --- |
-| 导能莲 ×1 | 火红莲、青色花瓣 ×2、白色花瓣 ×2、魔力钢 ×2、魔力钻石、火之符文、风之符文、高级控制电路 | 灌注合金 | 30,000 FE／200 tick |
-| 仿生翡翠苋 ×1 | 翡翠苋、绿色花瓣、黄绿色花瓣、魔力钢 ×2、魔力珍珠、地之符文、基础控制电路 | 灌注合金 | 16,000 FE／160 tick |
-| 原版花 | 沿用原配方 | 沿用原配方 | 5,000 FE／100 tick |
-
-## 新增仿生功能花
-
-五种新花都由对应原花、两种花瓣、魔力钢 ×2、魔力珍珠、符文、基础控制电路和灌注合金在机械花药台制作，每批 1,000 mB 水、16,000 FE、160 tick。具体材料见 JEI。
-
-| 仿生花 | 工作与费用 |
+| 机器 | 用法 |
 | --- | --- |
-| 粘土花 | 每消耗一个沙产生一个粘土球，原消耗 80 魔力，默认相当于 4,000 FE |
-| 田园康乃馨 | 每次有效生长尝试 5 魔力，相当于 250 FE；随机未长大也按原规则收费 |
-| 漏斗花 | 保留物品框筛选与有魔力时的范围；每次成功收集批次 1 魔力，预算耗尽后停机 |
-| 手掌花 | 以花下两格的方块作为地面样板，保留状态匹配模式；每次成功放置 1 魔力，另保留 1 魔力工作门槛 |
-| 冶炼火 | 保留原熔炉供热与加速条件，补燃烧时间消耗 300 魔力；加速本身沿用原储备条件，不另按成品收费 |
+| 机械花药台 | 左侧放材料，下方小槽放种子等辅料。每次制作需要一桶水和电能。可以连续放水桶，也可以接流体管道。 |
+| 魔力互通器 | 贴着魔力池摆放，选择池所在方向，再选择抽取或供给。需要电能。 |
+| 魔力充能座 | 放入一件魔力石板等物品，选择充入或抽出，设定目标比例。达到目标后会送出物品。需要电能，内部可保存 100 万魔力。 |
+| 魔力灌注室 | 放入待灌注的材料并供电、供魔。炼金催化器和炼造催化器放在辅料槽。 |
+| 符文锻造室 | 放入材料和活石等辅料，再供电、供魔。作为催化物的符文会留在槽内。 |
+| 纯净转化室 | 通电后可将原木、石头等材料变成活木、活石。水和特殊环境转化请使用白雏菊。 |
+| 泰拉凝聚室 | 放在 3×3 平台中心上方：中心和四角为活石，其余为青金石块。加入材料并供电、供魔。 |
+| 植物酿造室 | 左侧放材料，辅料槽放魔法玻璃小瓶或精灵玻璃烧瓶。需要电能和魔力。 |
+| 凝矿处理室 | 辅料槽放凝矿兰，投入石头并供电、供魔。使用炎矿兰时，在下界等有顶维度中加工地狱岩。 |
+| 异构石转化室 | 用电能和魔力转化石头，生成的异构石随生物群系而异。 |
+| 精灵贸易控制器 | 贴着精灵门核心摆放并选好方向。门框、自然水晶和池子照常搭建；开门后加入材料并通电。 |
+| 魔力附魔控制器 | 贴着搭好的魔力附魔台摆放并选好方向。加入装备和附魔书，接通电能和魔力。附魔书不会消耗。 |
 
-漏斗花和手掌花用森林法杖潜行右键切换原模式，只有所有者可修改。所有功能花的 FE、已付费魔力储备、暂停和原模式随世界与物品保存；工作区域区块未加载时暂停。
+材料通常从前、上、左面送入，辅料从背面送入，右侧取出成品。也可以在侧面配置中调整。机械花药台能制作仿生花，普通花药台不能。
 
-## 魔力互通与加工设备
+打开机器后，可在 JEI 中点配方旁的加号放入材料。按住 Shift 点击可放入更多。缺料或背包放不下退回的材料时，不会移动物品。随机凝矿不提供指定成品的加号。
 
-推荐先搭建：**导能莲 → 原发射器 → 原池 → 原火花 → 加工机**。需要管线时，通过魔力互通器接加压管道。1 单位 Chemical 魔力等于 1 原生魔力。
+## ME 魔力存储盘
 
-- 魔力互通器：紧邻原池，界面直接选择池所在的相对方向，再选“从池抽取”或“向池供给”；选中的池面不接化学管道。默认最多 1,000 魔力/t，每个发生转移的 tick 消耗基础 50 FE。
-- 魔力充能座：连接相邻真实原池，放入单件可储魔物品，选择充入／抽出与 0–100% 目标。达到目标后进入输出槽；遵守物品和原池的充放魔许可，不支持创造池或特殊工具成长。
-- 加工机：基础储能 200,000 FE，魔力罐 1,000,000。默认前／上／左材料输入、背面额外材料、右侧自动出料；Chemical 与能量默认六面输入，可用 Mek 六面界面调整。速度／能量升级只影响加工时间与机械耗电，配方魔力不打折。
-- 配方按钮提供服务器筛选过的产物图标和名称搜索，可锁定配方或恢复自动匹配。JEI 沿用原加工分类；不提供对未适配世界配方的转移入口。
+把盘放进 ME 驱动器或 ME 箱子，可以保存 **100 万魔力**，待机消耗 1 AE/t。
 
-| 设备 | 条件与加工边界 | 基础工时 |
-| --- | --- | --- |
-| 魔力灌注室 | 普通灌注、炼金、复制；额外槽装原催化方块，匹配催化配方优先，保留动态结果组件 | 100 tick |
-| 符文锻造室 | 16 格材料，额外槽终结材料；按原规则将催化物返还原槽，其余容器进入输出区 | 200 tick |
-| 纯净转化室 | 仅支持无世界函数、可安全表达为物品的原生固体转化；流体与带回调的深板岩转化交给原花 | 原 time，每次一件，基准等效八个原花位置同时工作 |
-| 泰拉凝聚室 | 机器置于原 3×3 平台中央；下层中心和四角满足原底座标签，四边为青金石块标签 | 400 tick |
-| 植物酿造室 | 额外槽放空魔力玻璃瓶、精灵玻璃瓶等实际容器；产物和魔力费用由容器决定 | 200 tick |
-| 凝矿处理室 | 额外槽装凝矿兰或炎矿兰；炎矿要求维度有顶；原料、位置权重、产物和魔力费用来自实际原配方 | 当前候选中最长冷却，至少 1 tick |
-| 异构石转化室 | 保留实际原料、当地生物群系权重和随机产物；不允许选择指定结果 | 当前候选中最长冷却，至少 1 tick |
+1. 将 ME 输入总线贴在魔力池上，把魔力存入盘中。
+2. 在机器上接 ME 输出总线，拿着一张魔力盘右击总线的筛选格，选择魔力。
+3. 将机器连接总线的一面设为“魔力输入”。
 
-所有加工先预留完整产物空间。随机加工还预留候选最大魔力成本，完成时只抽取一次并扣实际选中成本；结果立即进入输出槽，重载不会重抽已完成产物。普通机器世界保存保留进度；拆装保留容器、升级与设置，未完成批次重新开始。泰拉平台损坏只暂停加工。
+ME 存储总线可以直接连接魔力池或机器。终端的“魔力”类别会显示储量。拿着魔力盘在终端中点击魔力，可以装入或归还；Shift 点击可转移更多。
 
-## 真实装置控制器
+拆掉存有魔力的 ME 接口等装置时，会掉落魔力团。对池子或机器使用，可将魔力放回去。存储盘和魔力团拆装、重进世界后仍保留魔力。
 
-**精灵贸易控制器**紧邻真实精灵门核心，界面选核心方向。玩家用森林法杖按原方式开门，保留门框、至少两个自然水晶和其下的原池。门自身支付 200,000 开门魔力；每批贸易通过真实门按原规则分摊 500 魔力，控制器只支付搬运 FE，并接收全部产物。输出满、门未开、结构损坏或池不足时保留材料。一次最多每 4 tick 解析一批；原样退回、词典升级和第三方特殊贸易继续由原门处理。
+## 仿生织网花
 
-**魔力附魔控制器**紧邻已形成的原附魔装置，选择装置方向，放入一件装备和附魔书。控制器把装备交给原装置，书籍留在本机；原装置决定可用附魔、冲突、等级及精确魔力费用。可从 Chemical 管线／原火花供魔，也可继续使用原火花。完成后装备回到输出槽。结构损坏、红石暂停或控制器重复时暂停原流程，修好后恢复。拆下控制器时，处理中装备仍在真实附魔装置，可按原方式取回；不复制到控制器掉落物中。保留附魔装置本身的完整结构，不以独立机内配方替代。
+织网花让 ME 终端存取多媒体箱子，也让多媒体漏斗从 ME 取货。它需要 ME 电力和一个通道。
 
-一个真实装置只允许一个指向它的活动控制器；重复连接停止。两种控制器只访问紧邻目标，周围所需区块未加载时不工作。
+花和箱子上安装普通多媒体火花，主火花另放。空手右击花，可选择传输方向、样品筛选和缺货自动合成。具体摆法和固定器用法见 [CORPOREA.md](CORPOREA.md)。
 
-## 验证与构建
+## 开发与测试
 
-安装 AE2 的 30 项服务端 GameTest、不安装 AE2 的 24 项服务端 GameTest 与费用单元检查覆盖旧功能、五种新增仿生花的注册／储备／模式保存、断供收集、真实加压管道与漏斗补货、互通和充能守恒、无线机器六面接口、符文催化与拆装、酿造容器、泰拉平台、随机提交，以及真实精灵门和附魔装置；新增火花测试检查普通接入、真实染料／法杖、顶部输入、距离边界、双端增幅、保存、拆卸和原升级组合；织网花验证真实 ME 电缆、存储元件和红石多媒体漏斗、双向／跨网络访问、模拟、组件、重复路径与旧句柄失效；另验证样品组件、真实合成 CPU／样板供应器、链接重载，以及 JEI 材料分槽和背包满时的整体回滚。客户端视觉与整合包体验由玩家验收，未自动启动游戏客户端。
+[开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-初次构建需要 Python 3.11+、已登录的 GitHub CLI 和 Java 21。Gradle 自动取得锁定 Botania CI 产物并校验 SHA-256；也可用 `BOTANIA_JAR` 指定已下载的同一文件。上游 CI 附件可能过期，请保留已验证的本地依赖；不能静默换成另一个 SNAPSHOT。
-
-图稿、完整提示词与导出方式见 [art/README.md](art/README.md)。本模组只打包自己的代码与资源，不捆绑上游依赖 JAR。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。已通过 34 项带 AE2、25 项无 AE2 服务端测试，以及 2 项单元检查。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
-This prototype implements the main design: a Conduction Lotus, six bionic functional flowers, native spark range upgrades, a Mana Bridge, a Charging Stand, and ten processing/control devices. Install the locked Botania snapshot, Mekanism, Patchouli and Curios on both client and server.
+Install the versions listed above on both client and server. AE2 and GuideME are optional. The Lexica Botania includes a Botanical Mechanisms category; use it on an addon block to open that entry.
 
-The existing Lexica Botania now has a Botanical Mechanisms category with bilingual descriptions and recipes. Use the Lexica on an addon device to open its entry.
+Bionic flowers stand on blocks or cables and use electricity. Connect the Lotus to a spreader with the Wand. The other flowers grow plants, collect or place blocks, make clay, or heat furnaces.
 
-Mount flowers on solid supports or FE cables; soil is not required. Power the Lotus, switch the Wand of the Forest to Bind Mode by sneak-using it in the air, then sneak-use the Lotus and a spreader within six blocks. Its default rate is 4 mana/t for 200 FE/t. The bionic amaranthus uses FE and retains the original flower-growing behavior. Empty-hand right-click opens a compact gray interface with aligned resource values and essential controls; relay mode hides unused settings. When upgrading an alpha.1 world, first open any ownerless flower once to initialize it. The new version preserves owner, FE and pause state across world saves; data already omitted by the old save cannot be reconstructed.
+Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the spark icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It can still use the pool selected in an older setup.
 
-Attach native Botania sparks to a pool and a mana machine; matching dye colors connect automatically. The machine’s top chemical face must allow input. Install a Resonance Spark Augment at both ends to extend the native 12-block range to 32 blocks per axis. Native pool augments can retain their role together with the range component; the Wand removes the combined augment intact. Transfer rates and mana accounting remain native, with no separate network or membership UI. Old Resonance Flowers/Buds stay compatible but leave new crafting and the creative tab. Their models, textures and source artwork remain preserved for future use.
+A Mana Storage Cell holds 1,000,000 mana in an ME Drive or ME Chest and uses 1 AE/t. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
 
-The Mechanical Apothecary uses FE, water, 16 ingredient slots and a separate reagent slot to craft both native and bionic flowers. Water enters through fluid pipes or a dedicated container slot; repeated buckets return empty containers through their own output slot. Shift-click routes filled buckets correctly, and full tanks or blocked empty-bucket outputs stop without consuming the bucket. Bionic recipes are exclusive to this machine; the native basin cannot craft them. Native recipes keep their original ingredient and reagent requirements, while bionic recipes require corresponding native flowers, petals, runes and technological components. Machine titles are localized, and the twelve machine models now use open livingrock/livingwood apparatus geometry with native materials. The Bridge moves native mana into chemical tubes at 1:1. Infusion, runes, pure conversions, terra, brewing, ores and metamorphic stone use their native recipe rules. Elven trades require an open real portal and pay its pools; enchanting uses a formed real enchanter and retains books. World callbacks, special elven return/lexicon recipes, arbitrary third-party tanks and cross-dimensional networks remain outside this version. Client visual acceptance remains in-game.
+The Corporea Orchid connects item inventories to ME. Place ordinary sparks on the flower and chests, plus a separate master spark. Use samples to filter items. Optional autocrafting orders missing items using ME patterns and a CPU. Request again after crafting, or use a Corporea Interceptor and Retainer to remember and repeat the request.
 
-
-With optional AE2 19.2.17 and GuideME 21.1.1, the Bionic Corporea Orchid connects physical Corporea inventories to ME and lets Corporea devices request ME items. It uses one ME channel and 4 AE/t idle power. Place ordinary Corporea sparks on the flower and stocks, with the master on a separate support. Both directions use real storage, with loop exclusion and duplicate-route protection. Nine sample slots filter both bridge directions by exact components or item type. Optional autocrafting orders actual shortages through AE patterns and a CPU (four jobs, up to 4096 items each); results return to ME for native requestors or retainers to retry. It does not expose fluids. Removing AE2 keeps the common flower block/settings safe; all non-AE features remain available.
-
-JEI plus-button transfer now fills supported apothecary, infusion, runic, pure, terra, brewery and elven recipes from real inventories. Shift-plus fills complete batches. Reagents, catalysts and empty vessels use their proper slots; a full backpack aborts the whole transfer. Water, power, mana and structures are still required.
+Use the JEI plus button to fill supported machine recipes; Shift fills more. Water, electricity, mana and required structures are supplied normally.

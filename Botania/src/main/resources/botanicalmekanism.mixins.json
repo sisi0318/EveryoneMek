@@ -13,7 +13,10 @@
     "SparkRangeMixin",
     "SparkRequestMixin"
   ],
-  "client": [],
+  "client": [
+    "ManaSideConfigMixin",
+    "ManaConfigTabMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

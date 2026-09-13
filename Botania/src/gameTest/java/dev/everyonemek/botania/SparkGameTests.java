@@ -29,6 +29,34 @@ public final class SparkGameTests {
         try { owner.setItemInHand(InteractionHand.MAIN_HAND, item); check(spark.interact(owner, InteractionHand.MAIN_HAND).consumesAction(), "Native spark interaction failed"); }
         finally { owner.setItemInHand(InteractionHand.MAIN_HAND, old); }
     }
+    @GameTest(template = "empty", timeoutTicks = 210)
+    public static void chargerAcceptsPlayerPlacedSparkAndChargesWithoutAdjacentPool(GameTestHelper h) {
+        var pos = new BlockPos(20, 2, 20); var source = pool(h, pos.west(5), 24000);
+        var charger = machine(h, pos, ManaMachineKind.CHARGER); power(charger);
+        charger.applySetting(2, "2"); charger.inputs.getFirst().setStack(new ItemStack(BotaniaItems.MANA_TABLET));
+        var owner = player(h, "charger-spark"); owner.setPos(charger.getBlockPos().getX(), charger.getBlockPos().getY(), charger.getBlockPos().getZ());
+        var hand = new ItemStack(BotaniaItems.MANA_SPARK, 2); owner.setItemInHand(InteractionHand.MAIN_HAND, hand);
+        var hit = new BlockHitResult(charger.getBlockPos().getCenter(), Direction.UP, charger.getBlockPos(), false);
+        check(owner.gameMode.useItemOn(owner, h.getLevel(), hand, InteractionHand.MAIN_HAND, hit).consumesAction(), "Player spark placement was intercepted by charger GUI");
+        check(ManaSparkHelper.getAttachedSpark(h.getLevel(), charger.getBlockPos()) != null && hand.getCount() == 1, "Player placement did not install exactly one spark");
+        var supplying = spark(h, pos.west(5));
+        h.startSequence().thenWaitUntil(() -> check(!charger.outputs.getFirst().isEmpty(), "Spark-fed charger failed: status=" + charger.status()))
+              .thenExecute(() -> {
+                  int charged = vazkii.botania.api.mana.ManaItem.LOOKUP.find(charger.outputs.getFirst().getStack()).getMana();
+                  check(charged == 10000 && charged + source.getCurrentMana() + charger.mana().getStored() == 24000, "Charge created or lost mana");
+                  var tablet = charger.outputs.getFirst().getStack().copy(); charger.outputs.getFirst().setStackUnchecked(ItemStack.EMPTY);
+                  charger.applySetting(0, "1"); charger.inputs.getFirst().setStackUnchecked(tablet);
+              }).thenWaitUntil(() -> check(!charger.outputs.getFirst().isEmpty(), "Charger failed to drain back into its buffer"))
+              .thenExecute(() -> {
+                  check(vazkii.botania.api.mana.ManaItem.LOOKUP.find(charger.outputs.getFirst().getStack()).getMana() == 0
+                        && source.getCurrentMana() + charger.mana().getStored() == 24000, "Drain duplicated mana");
+                  stop(charger); supplying.discard();
+                  var drop = breakAndPick(h, charger.getBlockPos(), charger.getBlockState().getBlock());
+                  ApothecaryGameTests.withUsername(owner, () -> placeItem(owner, charger.getBlockPos(), drop));
+                  var placed = (ManaMachine) h.getLevel().getBlockEntity(charger.getBlockPos());
+                  check(placed != null && placed.mana().getStored() + source.getCurrentMana() == 24000, "Charger drop lost its new mana tank"); stop(placed);
+              }).thenSucceed();
+    }
     @GameTest(template = "empty", timeoutTicks = 150)
     public static void ordinarySparksSupplyMachineAndRespectColorAndTopFace(GameTestHelper h) {
         var pos = new BlockPos(20, 2, 20); var source = pool(h, pos, 12000);

@@ -42,16 +42,17 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
             @Override public void tick() { super.tick(); setMessage(label.get()); active = pendingRevision < 0; }
         });
     }
-    private void sides(int y) {
-        for (int i = 0; i < RelativeSide.values().length; i++) {
-            int side = i;
-            button(16 + i % 3 * 62, y + i / 3 * 20, 60, () -> Component.literal(tile.poolSide() == side ? "• " : "")
-                  .append(Component.translatable(RelativeSide.values()[side].getTranslationKey())), () -> send(1, Integer.toString(side)));
-        }
+    private void targetSide(int y) {
+        button(16, y, 204, () -> text("connected_side", Component.translatable(RelativeSide.values()[tile.poolSide()].getTranslationKey())),
+              () -> send(1, Integer.toString((tile.poolSide() + 1) % 6)));
     }
     @Override protected void addGuiElements() {
         super.addGuiElements(); addRenderableWidget(new GuiVerticalPowerBar(this, tile.energy(), 224, 32, 70));
-        if (tile.kind().chemical) addRenderableWidget(new GuiChemicalBar(this, GuiChemicalBar.getProvider(tile.mana(), List.of(tile.mana())), 16, 106, 204, 6, true));
+        if (tile.kind().chemical) addRenderableWidget(new GuiChemicalBar(this, GuiChemicalBar.getProvider(tile.mana(), List.of(tile.mana())), 16, 106, 204, 6, true) {
+            @Override protected List<Component> getTooltip(mekanism.api.chemical.ChemicalStack stack) {
+                return List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY));
+            }
+        });
         if (tile.kind() == ManaMachineKind.BRIDGE || tile.kind() == ManaMachineKind.CHARGER) {
             boolean bridge = tile.kind() == ManaMachineKind.BRIDGE;
             for (int i = 0; i < 2; i++) {
@@ -59,14 +60,15 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
                 button(16 + i * 102, bridge ? 32 : 56, 98, () -> Component.literal(tile.mode() == mode ? "• " : "")
                       .append(text((bridge ? "bridge_mode." : "charge_mode.") + mode)), () -> send(0, Integer.toString(mode)));
             }
-            sides(bridge ? 56 : 76);
+            if (bridge) targetSide(58);
             if (!bridge) {
-                var target = addRenderableWidget(new GuiTextField(this, 16, 120, 60, 16));
+                var target = addRenderableWidget(new GuiTextField(this, 16, 82, 60, 16));
                 target.setMaxLength(3); target.setText(Integer.toString(tile.targetPercent()));
-                button(82, 120, 64, () -> text("target_apply"), () -> send(2, target.getText()));
-                addRenderableWidget(new GuiInnerScreen(this, 152, 120, 66, 16, () -> List.of(Component.literal(tile.targetPercent() + "%"))));
-            } else addRenderableWidget(new GuiInnerScreen(this, 16, 120, 204, 16, () -> List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY))));
-        } else if (tile.kind().controller()) sides(118);
+                button(82, 82, 64, () -> text("target_apply"), () -> send(2, target.getText()));
+                addRenderableWidget(new GuiInnerScreen(this, 152, 82, 44, 16, () -> List.of(Component.literal(tile.targetPercent() + "%"))));
+            }
+            addRenderableWidget(new GuiInnerScreen(this, 16, 120, 204, 16, () -> List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY))));
+        } else if (tile.kind().controller()) targetSide(120);
         else {
             addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 113, 48));
             if (tile.kind().chemical) addRenderableWidget(new GuiInnerScreen(this, 16, 120, 204, 16, () -> List.of(text("mana", tile.mana().getStored(), ManaMachine.MANA_CAPACITY))));

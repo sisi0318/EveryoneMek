@@ -38,3 +38,7 @@ alpha.4–alpha.6 的机械花药台曾使用独立工业机壳图稿 [mechanica
 ## alpha.8 仿生织网花
 
 `corporea_orchid` 的方块和物品模型引用保留的共鸣花模型，原模型、运行 PNG 与 art/source 原稿不变；只是新增独立的名称与用途。词典使用 Patchouli 原样式和物品图标，机械花药配方模板由实际配方材料生成，不新增位图背景或另一套书籍素材。
+
+## alpha.10 魔力盘
+
+`tools/generate_resources.py` 生成魔力盘的活石薄壳和魔力珍珠嵌面 JSON 模型，魔力团引用 Botania 火花物品贴图。素材仅按运行路径引用，没有复制或重新绘制第三方 PNG；没有新增 ImageGen 原稿。驱动器内沿用 AE 默认存储盘模型。共鸣花、共鸣芽的模型和原稿不变。

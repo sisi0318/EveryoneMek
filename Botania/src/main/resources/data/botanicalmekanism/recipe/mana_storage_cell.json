@@ -1,0 +1,32 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "ae2"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SMS",
+    "CEC",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "botania:manasteel_ingot"
+    },
+    "M": {
+      "item": "botania:mana_diamond"
+    },
+    "C": {
+      "item": "ae2:fluix_pearl"
+    },
+    "E": {
+      "item": "ae2:cell_component_4k"
+    }
+  },
+  "result": {
+    "id": "botanicalmekanism:mana_storage_cell",
+    "count": 1
+  }
+}

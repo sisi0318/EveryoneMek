@@ -27,10 +27,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public final class ManaMachine extends TileEntityConfigurableMachine {
+public final class ManaMachine extends TileEntityConfigurableMachine implements vazkii.botania.api.mana.ManaPool {
     public static final int MANA_CAPACITY = 1_000_000;
     public static final int WORKING = 0, NO_RECIPE = 1, NO_EXTRA = 2, NO_MANA = 3, NO_ENERGY = 4, OUTPUT_FULL = 5,
-          REDSTONE = 6, STRUCTURE = 7, NO_POOL = 8, ITEM_DENIED = 9, READY = 10, UNLOADED = 11, BUSY = 12, NEEDS_CEILING = 13;
+          REDSTONE = 6, STRUCTURE = 7, NO_POOL = 8, ITEM_DENIED = 9, READY = 10, UNLOADED = 11, BUSY = 12, NEEDS_CEILING = 13, MANA_FULL = 14;
     // These containers are constructed during the superclass constructor.
     public List<BasicInventorySlot> inputs, extras;
     public List<OutputInventorySlot> outputs;
@@ -57,10 +57,11 @@ public final class ManaMachine extends TileEntityConfigurableMachine {
         var power = configComponent.setupInputConfig(TransmissionType.ENERGY, energy);
         for (RelativeSide side : RelativeSide.values()) power.setDataType(DataType.INPUT, side);
         if (kind().chemical) {
-            var chemical = kind() == ManaMachineKind.BRIDGE ? configComponent.setupIOConfig(TransmissionType.CHEMICAL, mana, RelativeSide.RIGHT)
+            var chemical = kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER ? configComponent.setupIOConfig(TransmissionType.CHEMICAL, mana, RelativeSide.RIGHT)
                   : configComponent.setupInputConfig(TransmissionType.CHEMICAL, mana);
             for (RelativeSide side : RelativeSide.values()) chemical.setDataType(kind() == ManaMachineKind.BRIDGE ? DataType.OUTPUT : DataType.INPUT, side);
             chemical.setEjecting(kind() == ManaMachineKind.BRIDGE);
+            if (kind() == ManaMachineKind.CHARGER) chemical.setDataType(DataType.OUTPUT, RelativeSide.RIGHT);
         }
         ejectorComponent = new TileComponentEjector(this);
         ejectorComponent.setOutputData(configComponent, TransmissionType.ITEM, TransmissionType.CHEMICAL);
@@ -71,6 +72,19 @@ public final class ManaMachine extends TileEntityConfigurableMachine {
             });
         }
     }
+    // Item charging receives the real block entity as its pool context; this view owns no extra mana.
+    @Override public boolean isOutputtingPower() { return mode == 0; }
+    @Override public int getMaxMana() { return kind().chemical ? MANA_CAPACITY : 0; }
+    @Override public int getCurrentMana() { return (int) mana.getStored(); }
+    @Override public net.minecraft.world.level.Level getManaReceiverLevel() { return level; }
+    @Override public BlockPos getManaReceiverPos() { return worldPosition; }
+    @Override public boolean isFull() { return mana.getNeeded() == 0; }
+    @Override public boolean canReceiveManaFromBursts() { return false; }
+    @Override public void receiveMana(int amount) {
+        if (!Flowers.live(this) || level.isClientSide) return;
+        if (amount > 0) mana.insert(new ChemicalStack(ManaContent.MANA, amount), Action.EXECUTE, AutomationType.INTERNAL);
+        else if (amount < 0) mana.extract(-(long) amount, Action.EXECUTE, AutomationType.INTERNAL);
+    }
     public ManaMachineKind kind() { return ((ManaMachineBlock) getBlockState().getBlock()).kind; }
     @Override protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener) {
         var builder = EnergyContainerHelper.forSideWithConfig(this);
@@ -78,7 +92,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine {
     }
     @Override public IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
         var builder = ChemicalTankHelper.forSideWithConfig(this);
-        mana = kind() == ManaMachineKind.BRIDGE ? BasicChemicalTank.createModern(MANA_CAPACITY, stack -> stack.is(ManaContent.MANA), listener)
+        mana = kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER ? BasicChemicalTank.createModern(MANA_CAPACITY, stack -> stack.is(ManaContent.MANA), listener)
               : BasicChemicalTank.inputModern(kind().chemical ? MANA_CAPACITY : 0, stack -> stack.is(ManaContent.MANA), listener);
         if (kind().chemical) builder.addTank(mana); return builder.build();
     }
