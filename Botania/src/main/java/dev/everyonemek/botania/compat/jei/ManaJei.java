@@ -16,7 +16,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.*;
 import vazkii.botania.api.brew.BrewContainer;
 import vazkii.botania.api.recipe.BotanicalBreweryRecipe;
-import vazkii.botania.common.item.BotaniaItems;
 
 public final class ManaJei {
     public static final Renderer RENDERER = new Renderer();
@@ -72,7 +71,7 @@ public final class ManaJei {
     }
     public static final class Renderer implements IIngredientRenderer<ManaIngredient> {
         @Override public void render(GuiGraphics gui, ManaIngredient value) {
-            gui.renderItem(new ItemStack(BotaniaItems.MANA_SPARK), 0, 0);
+            dev.everyonemek.botania.client.ManaIcon.draw(gui, 0, 0);
             String amount = value.amount() >= 1_000_000 ? String.format(Locale.ROOT, "%.1fM", value.amount() / 1_000_000.0)
                   : value.amount() >= 1000 ? String.format(Locale.ROOT, "%.1fk", value.amount() / 1000.0) : Long.toString(value.amount());
             amount = amount.replace(".0", ""); var font = Minecraft.getInstance().font;

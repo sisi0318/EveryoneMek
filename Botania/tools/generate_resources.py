@@ -249,10 +249,10 @@ write(f'data/{MOD}/recipe/mana_storage_cell.json', {
     'key': {'S': {'item': 'botania:manasteel_ingot'}, 'M': {'item': 'botania:mana_diamond'},
             'C': {'item': 'ae2:fluix_pearl'}, 'E': {'item': 'ae2:cell_component_4k'}},
     'result': {'id': f'{MOD}:mana_storage_cell', 'count': 1}})
-write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:item/mana_spark'}})
-# A small livingrock case with a mana-pearl inset, using existing Botania textures.
+write(f'assets/{MOD}/models/item/mana_packet.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'botania:block/mana_water'}})
+# A small livingrock case with an animated mana window, using existing Botania textures.
 write(f'assets/{MOD}/models/item/mana_storage_cell.json', {
-    'parent': 'minecraft:block/block', 'textures': {'case': 'botania:block/livingrock', 'core': 'botania:item/mana_pearl', 'particle': 'botania:block/livingrock'},
+    'parent': 'minecraft:block/block', 'textures': {'case': 'botania:block/livingrock', 'core': 'botania:block/mana_water', 'particle': 'botania:block/livingrock'},
     'display': {'gui': {'rotation': [15, -20, 0], 'translation': [0, 0, 0], 'scale': [1, 1, 1]},
                 'ground': {'rotation': [0, 0, 0], 'translation': [0, 2, 0], 'scale': [.5, .5, .5]},
                 'fixed': {'rotation': [0, 0, 0], 'scale': [.8, .8, .8]}},

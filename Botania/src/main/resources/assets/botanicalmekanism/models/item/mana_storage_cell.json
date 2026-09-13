@@ -2,7 +2,7 @@
   "parent": "minecraft:block/block",
   "textures": {
     "case": "botania:block/livingrock",
-    "core": "botania:item/mana_pearl",
+    "core": "botania:block/mana_water",
     "particle": "botania:block/livingrock"
   },
   "display": {

@@ -9,7 +9,6 @@ import mekanism.common.lib.transmitter.TransmissionType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,7 +27,7 @@ public abstract class ManaConfigTabMixin extends GuiInsetElement<Void> {
         if (botanicalmekanism$isMana()) typeTooltips.put(type, Tooltip.create(Component.translatable("gui.botanicalmekanism.mana_type")));
     }
     @Override protected void drawBackgroundOverlay(GuiGraphics gui) {
-        if (botanicalmekanism$isMana()) gui.renderItem(new ItemStack(vazkii.botania.common.item.BotaniaItems.MANA_SPARK), getButtonX() + 1, getButtonY() + 1);
+        if (botanicalmekanism$isMana()) dev.everyonemek.botania.client.ManaIcon.draw(gui, getButtonX() + 1, getButtonY() + 1);
         else super.drawBackgroundOverlay(gui);
     }
 }

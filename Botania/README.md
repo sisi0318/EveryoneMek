@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.11** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.12** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.11.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.12.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -40,7 +40,7 @@
 
 **拿着火花右击魔力机器即可安装。** 给附近的魔力池也装上同色火花，机器便能从池中取魔力。充能座现在也可以这样供魔，不必贴着池子摆放。
 
-打开机器左侧的侧面配置，选择火花图标的“魔力”页。六面图可以设置输入、输出或关闭。火花从顶部供魔，因此顶部需要设为输入。加压管道和 ME 总线也遵守这里的设置。
+打开机器左侧的侧面配置，选择蓝色液面图标的“魔力”页。六面图可以设置输入、输出或关闭。火花从顶部供魔，因此顶部需要设为输入。加压管道和 ME 总线也遵守这里的设置。
 
 魔力池紧贴机器时，把相应一面设为输入，就能直接从池中取魔力。多个输入面合计每秒最多抽取 20,000 魔力，满了会自动停止。关闭输入面即可停止抽取。
 
@@ -105,7 +105,7 @@ Install the versions listed above on both client and server. AE2 and GuideME are
 
 Bionic flowers stand on blocks or cables and use electricity. Connect the Lotus to a spreader with the Wand. The other flowers grow plants, collect or place blocks, make clay, or heat furnaces.
 
-Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the spark icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It can still use the pool selected in an older setup.
+Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the blue liquid icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It can still use the pool selected in an older setup.
 
 A Mana Storage Cell holds 1,000,000 mana in an ME Drive or ME Chest and uses 1 AE/t. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
 
