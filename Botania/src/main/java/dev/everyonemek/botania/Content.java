@@ -62,6 +62,7 @@ public final class Content {
           () -> DataComponentType.<Boolean>builder().persistent(com.mojang.serialization.Codec.BOOL).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.BOOL).build());
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> STORED_MANA = COMPONENTS.register("stored_mana",
           () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_LONG).build());
+    // Keep alpha.27's component registered so existing items load with all their data.
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> LEGACY_MANA_CAPACITY = COMPONENTS.register("legacy_mana_capacity",
           () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_LONG).build());
     public static final java.util.Map<ManaCellTier, DeferredItem<ManaStorageItem>> MANA_CELLS = new java.util.EnumMap<>(ManaCellTier.class);

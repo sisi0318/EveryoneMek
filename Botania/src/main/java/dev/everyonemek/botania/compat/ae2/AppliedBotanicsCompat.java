@@ -12,9 +12,7 @@ public final class AppliedBotanicsCompat {
     public static java.util.List<net.minecraft.network.chat.Component> cellTooltip(net.minecraft.world.item.ItemStack stack) {
         if (!(stack.getItem() instanceof appbot.item.cell.IManaCellItem cell)) return java.util.List.of();
         long stored = Math.max(0, stack.getOrDefault(appbot.AppliedBotanicsForge.MANA.get(), 0L));
-        long standard = cell.getTotalBytes() * appbot.ae2.ManaKeyType.TYPE.getAmountPerByte();
-        long capacity = ManaCellCapacity.effective(stack, standard, ManaCellCapacity.legacy(cell.getTotalBytes(), stack.getItem() instanceof appbot.item.ManaCellItem), stored);
-        return ManaStorageItem.cellTooltip(stored, capacity, capacity > standard);
+        return ManaStorageItem.cellTooltip(stored, ManaCellCapacity.maximum(cell.getTotalBytes()));
     }
     public static appeng.api.stacks.AEKey poolKey() { return appbot.ae2.ManaKey.KEY; }
     public static int insert(ManaPoolBlockEntity pool, int amount, boolean simulate) { return ((SafeMana) pool).insert(amount, simulate ? Actionable.SIMULATE : Actionable.MODULATE); }

@@ -24,32 +24,35 @@ import static dev.everyonemek.botania.ManaMachineGameTests.*;
 @PrefixGameTestTemplate(false)
 public final class AppliedBotanicsPoolGameTests {
     @GameTest(template = "empty", timeoutTicks = 40)
-    public static void nativeAppbotCapacitiesAndOverfullCellsRemainSafe(GameTestHelper h) {
+    public static void allAppbotCellTiersExpandAndKeepExistingContents(GameTestHelper h) {
         var source = IActionSource.empty(); var registries = h.getLevel().registryAccess();
         for (var tier : ABItems.Tier.values()) {
             for (var item : java.util.List.of(ABItems.get(tier).get(), ABItems.getPortableCell(tier).get())) {
                 var stack = new ItemStack(item); var type = (appbot.item.cell.IManaCellItem) item;
-                int kb = new int[]{1, 4, 16, 64, 256}[tier.ordinal()]; long capacity = kb * 500_000L;
-                check(type.getTotalBytes() == kb * 1000L && appbot.ae2.ManaKeyType.TYPE.getAmountPerByte() == 500,
-                      "Appbot capacity is still being overridden");
+                int kb = new int[]{1, 4, 16, 64, 256}[tier.ordinal()]; long capacity = kb * 8_192_000L;
+                check(type.getTotalBytes() == kb * 1000L && appbot.ae2.ManaKeyType.TYPE.getAmountPerByte() == 500
+                      && appbot.ae2.ManaKeyType.TYPE.getAmountPerOperation() == 500, "Cell expansion changed the ME resource units");
                 var cell = StorageCells.getCellInventory(stack, null);
-                check(cell.insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == capacity, "Native capacity wrong");
-                long oldAmount = ManaCellCapacity.legacy(kb * 1000L, item instanceof appbot.item.ManaCellItem); stack.set(appbot.AppliedBotanicsForge.MANA, oldAmount);
+                check(cell.insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == capacity && !stack.has(Content.LEGACY_MANA_CAPACITY), "Unmarked new cell was not expanded or simulation changed its data");
+                check(cell.insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.MODULATE, source) == capacity
+                      && cell.getStatus() == appeng.api.storage.cells.CellState.FULL && cell.insert(ManaKey.KEY, 1, Actionable.MODULATE, source) == 0,
+                      "Expanded new cell capacity or full state is wrong");
+                long oldAmount = kb * (item instanceof appbot.item.ManaCellItem ? 1024L : 1000L) * 8000;
+                stack.set(appbot.AppliedBotanicsForge.MANA, oldAmount); stack.set(Content.LEGACY_MANA_CAPACITY, oldAmount);
                 var loaded = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) stack.saveOptional(registries));
                 cell = StorageCells.getCellInventory(loaded, null);
-                check(cell.getAvailableStacks().get(ManaKey.KEY) == oldAmount && cell.getStatus() == appeng.api.storage.cells.CellState.FULL,
+                check(cell.getAvailableStacks().get(ManaKey.KEY) == oldAmount,
                       "Old Appbot cell contents were truncated or hidden");
-                check(cell.insert(ManaKey.KEY, 100, Actionable.SIMULATE, source) == 0 && cell.insert(ManaKey.KEY, 100, Actionable.MODULATE, source) == 0,
-                      "Overfull Appbot insertion returned negative mana");
+                check(cell.insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == capacity - oldAmount, "Old cell did not share the new expanded capacity");
                 check(cell.extract(ManaKey.KEY, -100, Actionable.MODULATE, source) == 0 && cell.getAvailableStacks().get(ManaKey.KEY) == oldAmount,
                       "Negative Appbot extraction created mana");
-                long drain = oldAmount - capacity + 1;
+                long smallerCapacity = kb * 500_000L, drain = oldAmount - smallerCapacity + 1;
                 check(cell.extract(ManaKey.KEY, drain, Actionable.MODULATE, source) == drain && cell.insert(ManaKey.KEY, 10, Actionable.MODULATE, source) == 10,
                       "Drained Appbot cell lost its original capacity");
-                cell.persist(); check(loaded.getOrDefault(appbot.AppliedBotanicsForge.MANA, 0L) == capacity + 9, "Appbot persistence lost mana");
+                cell.persist(); check(loaded.getOrDefault(appbot.AppliedBotanicsForge.MANA, 0L) == smallerCapacity + 9, "Appbot persistence lost mana");
                 var restored = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) loaded.saveOptional(registries));
-                check(StorageCells.getCellInventory(restored, null).insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == oldAmount - capacity - 9,
-                      "Appbot capacity reverted to the standard after saving a drained legacy cell");
+                check(StorageCells.getCellInventory(restored, null).insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == capacity - smallerCapacity - 9
+                      && restored.getOrDefault(Content.LEGACY_MANA_CAPACITY, 0L) == oldAmount, "Old cell reload lost capacity or its saved component");
             }
         }
         // Screenshot regression: 1,040,543 new-density bytes represent roughly 520 million mana.
@@ -63,7 +66,7 @@ public final class AppliedBotanicsPoolGameTests {
         check(view.insert(ManaKey.KEY, 100_000_000, Actionable.SIMULATE, source) == 100_000_000 && ItemStack.isSameItemSameComponents(before, partial),
               "Legacy capacity preview mutated the item or refused available space");
         var tooltip = dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.cellTooltip(partial);
-        check(tooltip.size() == 2 && tooltip.getFirst().getString().contains("520,271,500") && tooltip.getFirst().getString().contains("2,097,152,000"),
+        check(tooltip.size() == 1 && tooltip.getFirst().getString().contains("520,271,500") && tooltip.getFirst().getString().contains("2,097,152,000"),
               "Appbot tooltip does not distinguish mana from bytes");
         check(view.insert(ManaKey.KEY, 100_000_000, Actionable.MODULATE, source) == 100_000_000
               && partial.getOrDefault(appbot.AppliedBotanicsForge.MANA, 0L) == 620_271_500L, "Legacy partial cell could not continue filling");
@@ -73,6 +76,12 @@ public final class AppliedBotanicsPoolGameTests {
         var cell = StorageCells.getCellInventory(voidCell, null);
         check(cell.insert(ManaKey.KEY, 123, Actionable.MODULATE, source) == 123 && cell.getAvailableStacks().get(ManaKey.KEY) == 8_192_000,
               "Void card erased old stored mana instead of only voiding new input");
+        var overfilled = new ItemStack(ABItems.MANA_CELL_1K.get()); overfilled.set(appbot.AppliedBotanicsForge.MANA, 8_192_500L);
+        var overflow = StorageCells.getCellInventory(overfilled, null);
+        check(overflow.insert(ManaKey.KEY, 100, Actionable.MODULATE, source) == 0 && overflow.getAvailableStacks().get(ManaKey.KEY) == 8_192_500,
+              "Existing excess mana was erased by insertion");
+        check(overflow.extract(ManaKey.KEY, 501, Actionable.MODULATE, source) == 501 && overflow.insert(ManaKey.KEY, 10, Actionable.MODULATE, source) == 1,
+              "Overfilled cell did not resume normal operation after extraction");
         h.succeed();
     }
     @GameTest(template = "empty", timeoutTicks = 250)

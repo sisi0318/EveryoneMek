@@ -64,14 +64,14 @@ public final class ManaAeGameTests {
         check(key.getType().getAmountPerByte() == 500 && key.getType().getAmountPerOperation() == 500
               && key.getType().getAmountPerUnit() == 1_000_000 && "pool".equals(key.getType().getUnitSymbol()), "Appbot mana standards differ");
         check(cell.insert(AEItemKey.of(Items.DIAMOND), 1, Actionable.MODULATE, source) == 0, "Mana cell accepted an item");
-        check(cell.insert(key, Long.MAX_VALUE, Actionable.SIMULATE, source) == 500_000 && ManaStorageItem.stored(stack) == 0, "Cell simulation mutated storage");
-        check(cell.insert(key, Long.MAX_VALUE, Actionable.MODULATE, source) == 500_000, "1k capacity is wrong");
+        check(cell.insert(key, Long.MAX_VALUE, Actionable.SIMULATE, source) == 8_192_000 && ManaStorageItem.stored(stack) == 0, "Cell simulation mutated storage");
+        check(cell.insert(key, Long.MAX_VALUE, Actionable.MODULATE, source) == 8_192_000, "1k capacity is wrong");
         check(!cell.canFitInsideCell() && cell.insert(key, 1, Actionable.MODULATE, source) == 0, "Filled cell allowed nesting or overflow");
         var second = StorageCells.getCellInventory(stack, null);
-        check(second.extract(key, 100, Actionable.MODULATE, source) == 100 && cell.getAvailableStacks().get(key) == 499_900, "Cached handles duplicated cell contents");
+        check(second.extract(key, 100, Actionable.MODULATE, source) == 100 && cell.getAvailableStacks().get(key) == 8_191_900, "Cached handles duplicated cell contents");
         var registries = h.getLevel().registryAccess(); var saved = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) stack.saveOptional(registries));
-        check(ManaStorageItem.stored(saved) == 499_900 && StorageCells.getCellInventory(saved, null).getAvailableStacks().get(key) == 499_900, "Cell item save lost mana");
-        long[] capacities = {500_000L, 2_000_000L, 8_000_000L, 32_000_000L, 128_000_000L};
+        check(ManaStorageItem.stored(saved) == 8_191_900 && StorageCells.getCellInventory(saved, null).getAvailableStacks().get(key) == 8_191_900, "Cell item save lost mana");
+        long[] capacities = {8_192_000L, 32_768_000L, 131_072_000L, 524_288_000L, 2_097_152_000L};
         for (var tier : ManaCellTier.values()) {
             var disk = new ItemStack(Content.MANA_CELLS.get(tier).get()); var storage = StorageCells.getCellInventory(disk, null);
             long capacity = capacities[tier.ordinal()];
@@ -89,10 +89,10 @@ public final class ManaAeGameTests {
                   "ME lost the overfull part of an old cell");
             check(oldCell.insert(key, 100, Actionable.SIMULATE, source) == 0 && oldCell.insert(key, 100, Actionable.MODULATE, source) == 0,
                   "Overfull ME cell accepted more mana");
-            long withdrawn = legacyAmount - capacity + 1;
+            long withdrawn = 100;
             check(oldCell.extract(key, withdrawn, Actionable.MODULATE, source) == withdrawn && oldCell.insert(key, 10, Actionable.MODULATE, source) == 10,
                   "Old ME cell lost its original capacity after draining");
-            check(ManaStorageItem.stored(legacy) == capacity + 9 && ManaStorageItem.capacity(legacy) == legacyAmount, "Legacy ME transfer lost mana or capacity");
+            check(ManaStorageItem.stored(legacy) == capacity - 90 && ManaStorageItem.capacity(legacy) == legacyAmount, "Legacy ME transfer lost mana or capacity");
             check(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(ManaStorageItem.preferredCell(tier)).getNamespace()
                   .equals(AppliedBotanics.loaded() ? "appbot" : "botanicalmekanism"), "Wrong preferred cell family");
         }

@@ -245,7 +245,6 @@ for key, cn, english in [
     ('item.botanicalmekanism.mana_storage_cell', '1k ME 魔力存储盘', '1k ME Mana Storage Cell'),
     ('item.botanicalmekanism.mana_packet', '魔力团', 'Mana Wisp'),
     ('tooltip.botanicalmekanism.mana_cell', '魔力：%s / %s', 'Mana: %s / %s'),
-    ('tooltip.botanicalmekanism.mana_cell_legacy', '沿用旧版容量。', 'Retains its previous capacity.'),
     ('tooltip.botanicalmekanism.mana_cell_overfull', '超过容量，取出魔力后可继续存入。', 'Over capacity. Extract mana before adding more.'),
     ('tooltip.botanicalmekanism.mana_packet', '魔力：%s。对魔力池或机器使用以归还。', 'Mana: %s. Use on a pool or machine to return it.'),
 ]: zh[key], en[key] = cn, english
