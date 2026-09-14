@@ -30,6 +30,11 @@ public final class ManaAeClient {
     }
 
     public static void register() {
+        if (dev.everyonemek.botania.AppliedBotanics.loaded()) net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
+              (net.neoforged.neoforge.event.entity.player.ItemTooltipEvent event) -> {
+                  var lines = AppliedBotanicsCompat.cellTooltip(event.getItemStack());
+                  if (!lines.isEmpty()) event.getToolTip().addAll(Math.min(1, event.getToolTip().size()), lines);
+              });
         if (!dev.everyonemek.botania.AppliedBotanics.loaded()) AEKeyRendering.register(ManaKey.TYPE, ManaKey.class, new AEKeyRenderHandler<ManaKey>() {
             @Override public void drawInGui(Minecraft minecraft, GuiGraphics gui, int x, int y, ManaKey key) { dev.everyonemek.botania.client.ManaIcon.draw(gui, x, y); }
             @Override public void drawOnBlockFace(PoseStack pose, MultiBufferSource buffers, ManaKey key, float scale, int light, Level level) {

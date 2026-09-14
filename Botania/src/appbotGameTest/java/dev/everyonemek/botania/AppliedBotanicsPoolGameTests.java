@@ -34,7 +34,7 @@ public final class AppliedBotanicsPoolGameTests {
                       "Appbot capacity is still being overridden");
                 var cell = StorageCells.getCellInventory(stack, null);
                 check(cell.insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == capacity, "Native capacity wrong");
-                long oldAmount = kb * 1024L * 8000; stack.set(appbot.AppliedBotanicsForge.MANA, oldAmount);
+                long oldAmount = ManaCellCapacity.legacy(kb * 1000L, item instanceof appbot.item.ManaCellItem); stack.set(appbot.AppliedBotanicsForge.MANA, oldAmount);
                 var loaded = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) stack.saveOptional(registries));
                 cell = StorageCells.getCellInventory(loaded, null);
                 check(cell.getAvailableStacks().get(ManaKey.KEY) == oldAmount && cell.getStatus() == appeng.api.storage.cells.CellState.FULL,
@@ -44,11 +44,29 @@ public final class AppliedBotanicsPoolGameTests {
                 check(cell.extract(ManaKey.KEY, -100, Actionable.MODULATE, source) == 0 && cell.getAvailableStacks().get(ManaKey.KEY) == oldAmount,
                       "Negative Appbot extraction created mana");
                 long drain = oldAmount - capacity + 1;
-                check(cell.extract(ManaKey.KEY, drain, Actionable.MODULATE, source) == drain && cell.insert(ManaKey.KEY, 10, Actionable.MODULATE, source) == 1,
-                      "Drained Appbot cell failed to recover normal capacity");
-                cell.persist(); check(loaded.getOrDefault(appbot.AppliedBotanicsForge.MANA, 0L) == capacity, "Appbot persistence lost mana");
+                check(cell.extract(ManaKey.KEY, drain, Actionable.MODULATE, source) == drain && cell.insert(ManaKey.KEY, 10, Actionable.MODULATE, source) == 10,
+                      "Drained Appbot cell lost its original capacity");
+                cell.persist(); check(loaded.getOrDefault(appbot.AppliedBotanicsForge.MANA, 0L) == capacity + 9, "Appbot persistence lost mana");
+                var restored = ItemStack.parseOptional(registries, (net.minecraft.nbt.CompoundTag) loaded.saveOptional(registries));
+                check(StorageCells.getCellInventory(restored, null).insert(ManaKey.KEY, Long.MAX_VALUE, Actionable.SIMULATE, source) == oldAmount - capacity - 9,
+                      "Appbot capacity reverted to the standard after saving a drained legacy cell");
             }
         }
+        // Screenshot regression: 1,040,543 new-density bytes represent roughly 520 million mana.
+        var partial = new ItemStack(ABItems.MANA_CELL_256K.get()); partial.set(appbot.AppliedBotanicsForge.MANA, 520_271_500L);
+        var before = partial.copy(); var view = new appbot.item.cell.ManaCellInventory((appbot.item.cell.IManaCellItem) partial.getItem(), partial, null) {
+            long bytes() { return getUsedBytes(); }
+            long total() { return getTotalBytes(); }
+        };
+        check(view.bytes() == 65_034 && view.total() == 262_144 && view.getStatus() != appeng.api.storage.cells.CellState.FULL,
+              "Existing partial 256k Appbot cell was made full by the standard change");
+        check(view.insert(ManaKey.KEY, 100_000_000, Actionable.SIMULATE, source) == 100_000_000 && ItemStack.isSameItemSameComponents(before, partial),
+              "Legacy capacity preview mutated the item or refused available space");
+        var tooltip = dev.everyonemek.botania.compat.ae2.AppliedBotanicsCompat.cellTooltip(partial);
+        check(tooltip.size() == 2 && tooltip.getFirst().getString().contains("520,271,500") && tooltip.getFirst().getString().contains("2,097,152,000"),
+              "Appbot tooltip does not distinguish mana from bytes");
+        check(view.insert(ManaKey.KEY, 100_000_000, Actionable.MODULATE, source) == 100_000_000
+              && partial.getOrDefault(appbot.AppliedBotanicsForge.MANA, 0L) == 620_271_500L, "Legacy partial cell could not continue filling");
         var voidCell = new ItemStack(ABItems.MANA_CELL_1K.get());
         ((appbot.item.cell.IManaCellItem) voidCell.getItem()).getUpgrades(voidCell).setItemDirect(0, new ItemStack(AEItems.VOID_CARD.asItem()));
         voidCell.set(appbot.AppliedBotanicsForge.MANA, 8_192_000L);

@@ -15,13 +15,23 @@ public final class ManaStorageItem extends Item {
               net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("appbot", "mana_cell_" + tier.kilobytes + "k")) : Content.MANA_CELLS.get(tier).get();
     }
     public static boolean isCell(ItemStack stack) { return stack.getItem() instanceof ManaStorageItem item && item.tier != null; }
-    public static long capacity(ItemStack stack) { return isCell(stack) ? ((ManaStorageItem) stack.getItem()).tier.capacity : 0; }
+    public static long capacity(ItemStack stack) {
+        if (!isCell(stack)) return 0;
+        var tier = ((ManaStorageItem) stack.getItem()).tier;
+        return ManaCellCapacity.effective(stack, tier.capacity, ManaCellCapacity.legacy(tier.kilobytes * 1000L, true), stored(stack));
+    }
     public static double idleDrain(ItemStack stack) { return isCell(stack) ? ((ManaStorageItem) stack.getItem()).tier.idleDrain : 0; }
     public static long stored(ItemStack stack) {
         // A capacity reduction must never hide or erase mana from an existing cell.
         return Math.max(0, stack.getOrDefault(Content.STORED_MANA.get(), 0L));
     }
-    public static void store(ItemStack stack, long amount) { stack.set(Content.STORED_MANA.get(), Math.max(0, amount)); }
+    public static void store(ItemStack stack, long amount) {
+        if (isCell(stack)) {
+            var tier = ((ManaStorageItem) stack.getItem()).tier;
+            ManaCellCapacity.remember(stack, tier.capacity, ManaCellCapacity.legacy(tier.kilobytes * 1000L, true), stored(stack));
+        }
+        stack.set(Content.STORED_MANA.get(), Math.max(0, amount));
+    }
     public static ItemStack recovery(long amount) { var stack = new ItemStack(Content.MANA_PACKET.get()); store(stack, amount); return stack; }
     public record ManaView(ItemStack stack) implements vazkii.botania.api.mana.ManaItem {
         @Override public int getMana() { return (int) Math.min(Integer.MAX_VALUE, stored(stack)); }
@@ -40,8 +50,16 @@ public final class ManaStorageItem extends Item {
         @Override public boolean isNoExport() { return false; }
     }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
-        lines.add(Component.translatable(tier != null ? "tooltip.botanicalmekanism.mana_cell" : "tooltip.botanicalmekanism.mana_packet", stored(stack), capacity(stack)));
-        if (tier != null && stored(stack) > capacity(stack)) lines.add(Component.translatable("tooltip.botanicalmekanism.mana_cell_overfull"));
+        if (tier == null) lines.add(Component.translatable("tooltip.botanicalmekanism.mana_packet", stored(stack)));
+        else lines.addAll(cellTooltip(stored(stack), capacity(stack), capacity(stack) > tier.capacity));
+    }
+    public static List<Component> cellTooltip(long stored, long capacity, boolean legacy) {
+        var lines = new java.util.ArrayList<Component>();
+        lines.add(Component.translatable("tooltip.botanicalmekanism.mana_cell",
+              String.format(java.util.Locale.ROOT, "%,d", stored), String.format(java.util.Locale.ROOT, "%,d", capacity)));
+        if (legacy) lines.add(Component.translatable("tooltip.botanicalmekanism.mana_cell_legacy"));
+        if (stored > capacity) lines.add(Component.translatable("tooltip.botanicalmekanism.mana_cell_overfull"));
+        return lines;
     }
     @Override public InteractionResult useOn(UseOnContext context) {
         if (tier != null) return super.useOn(context);

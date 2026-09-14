@@ -4,22 +4,31 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.26 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.27 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.26 已通过 55 项 Appbot 共存、53 项仅 AE2、39 项无 AE2 服务端 GameTest；覆盖标准统一、旧盘存量迁移和既有火花／加工回归。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.27 已通过 55 项 Appbot 共存、53 项仅 AE2、39 项无 AE2 服务端 GameTest；覆盖旧盘容量与存量兼容、截图占用回归和既有火花／加工回归。不代表客户端视觉或完整整合包验收。
+
+## alpha.27 旧盘容量迁移修正
+
+- 用户截图是 Appbot 原生 256k 盘：a25 的 59,812／262,144 与 a26 的 1,040,543／256,000 都是字节。此前本模组全局扩容了 Appbot，a26 撤销覆盖导致旧盘占用跳高并满仓；不能只解释为玩家看错单位。新盘仍按原标准，已超出新容量的可识别旧盘恢复旧容量与字节密度。
+- ManaCellCapacity 只在存量超过标准或物品带匹配的 legacy_mana_capacity Long 组件时采用历史容量；不修改物品定义或全局 ManaKeyType。没有标记且存量低于新上限的盘无法证明创建版本，不把这些盘一律扩容。兼容组件只接受该档的确切旧值，真实存取前记录，SIMULATE 与 tooltip 查询不写组件。
+- 旧本模组盘与 Appbot 普通盘为每 k=1024、每字节 8000；Appbot 便携盘的旧每 k 仍是 1000，必须分别保留。AppliedBotanicsCellOverflowMixin 按其持有的 ItemStack 修 getMaxMana／getTotalBytes／getUsedBytes，并在实际插入、提取前保存容量；取到标准以下再重载仍保持旧上限。原始 appbot:mana 数量不缩放，完整提取能力不变。
+- ManaStorageItem.capacity/store 共用兼容规则，store 在降低旧数量前记容量。ManaView、ME handler、NBT 与能力读写取得同一有效容量。超过连旧上限都容不下的异常存量仍保留、拒收并可提取，不截断。
+- ManaAeClient 在客户端设置阶段注册 NeoForge ItemTooltipEvent，仅对 Appbot IManaCellItem 添加魔力存量／有效容量和旧容量标记；使用公共提示事件，无新客户端 Mixin，不改原字节提示。独立盘使用同一文本格式。helper 不接收或移动资源。
+- 现有回归补上 520,271,500 魔力的实际截图量：旧 256k 返回 65,034／262,144 字节，仍可存 100,000,000 魔力；覆盖模拟不改组件、实际存取、低于标准后保存／重载、普通／便携五档与销毁卡。
 
 ## alpha.26 以 Applied Botanics 为魔力标准
 
-- 用户明确要求按 Appbot 制定魔力标准，并确认容量也跟随原值。ManaCellTier 改为每 k=1000 字节、每字节 500 魔力，五档 500,000／2,000,000／8,000,000／32,000,000／128,000,000；删除 AppliedBotanicsManaDensityMixin 和 AppliedBotanicsCellCapacityMixin，不能再改上游密度／容量。
+- 用户明确要求按 Appbot 制定魔力标准，并确认容量也跟随原值。新盘 ManaCellTier 为每 k=1000 字节、每字节 500 魔力，五档 500,000／2,000,000／8,000,000／32,000,000／128,000,000；删除 AppliedBotanicsManaDensityMixin 和 AppliedBotanicsCellCapacityMixin，不能再全局修改上游密度／物品容量。旧盘兼容已在 alpha.27 单独处理。
 - 无 Appbot 的 ManaKey 也使用每操作 500、每池 1,000,000、单位 pool、资源 ID botania:mana；AE 类型的旧注册 ID 与双向别名保留，序列化数量仍是原始整数魔力。GenericSlotCapacities 为原稀释池 10,000。盘状态区分 EMPTY／NOT_EMPTY／TYPES_FULL／FULL，与 Appbot 半满阈值相同；待机耗电不变。
 - 有 Appbot 时，preferredCell 返回原生盘，创造栏、JEI 与词典以它为入口；本模组五档制作配方仅在有 AE2 且无 Appbot 时加载。旧盘注册 ID、数据组件和 StorageCell handler 保留。Appbot 的销毁卡、拆解、便携盘继续用上游实现；无 Appbot 的盘只提供基本存储，不声称复制这些附加功能。
-- ManaStorageItem.stored 不再把已有存量裁到容量；ManaView 的正数插入只加剩余空间，超量盘 getMaxMana 临时返回至少当前存量，避免 Appbot 容器策略产生负数接收。所有读取、提取与 NBT 保存保留实际 Long 数量，取到上限以下后恢复插入。
-- AppliedBotanicsCellOverflowMixin 只修容量下调的边界：原普通／便携盘超量时返回 FULL、禁止负数或超量插入，仍能提取完整存量；原销毁卡接受新输入但不动已有数量。不会重写 Appbot 的盘容量或复制库存。共同 ManaKeyMixin 的可回收拆卸魔力仍保留。
+- ManaStorageItem.stored 不再把已有存量裁到容量；所有读取、提取与 NBT 保存保留实际 Long 数量。本版当时只让超量旧盘提取，alpha.27 已改为保留可识别旧盘容量。
+- AppliedBotanicsCellOverflowMixin 本版仅防负数插入并允许提取，alpha.27 进一步按物品保存旧容量。原销毁卡接受新输入但不动已有数量；共同 ManaKeyMixin 的可回收拆卸魔力仍保留。
 - 独立 ManaContainerStrategy 改为通过 ManaItem capability 支持石板等容器，保留实际物品引用／数量检查与模拟语义；本模组旧盘和魔力团继续直接用 Long 组件存取。原音效沿用对应池／黑莲事件。
 - 词典按 Patchouli 92 已核对的 flag 语法 `&mod:ae2,!mod:appbot` 与 `mod:appbot` 分为互斥入口。Appbot 条目使用纹理 icon，避免未安装时在条目构造中解析不存在的物品；额外物品映射仅在有 Appbot 的条目中包含原生盘。
 - ManaStorageGameTests 覆盖不依赖 AE 的旧五档满盘重载、拒收与提取；ManaAeGameTests 验证两套环境的标准、条件配方、旧满盘存取及石板容器；AppliedBotanicsPoolGameTests 验证原生普通／便携五档容量、旧数据与销毁卡边界。

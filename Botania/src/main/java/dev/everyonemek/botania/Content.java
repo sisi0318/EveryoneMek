@@ -62,6 +62,8 @@ public final class Content {
           () -> DataComponentType.<Boolean>builder().persistent(com.mojang.serialization.Codec.BOOL).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.BOOL).build());
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> STORED_MANA = COMPONENTS.register("stored_mana",
           () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_LONG).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> LEGACY_MANA_CAPACITY = COMPONENTS.register("legacy_mana_capacity",
+          () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_LONG).build());
     public static final java.util.Map<ManaCellTier, DeferredItem<ManaStorageItem>> MANA_CELLS = new java.util.EnumMap<>(ManaCellTier.class);
     static { for (var tier : ManaCellTier.values()) MANA_CELLS.put(tier, ITEMS.register(tier.id(), () -> new ManaStorageItem(tier))); }
     public static final DeferredItem<ManaStorageItem> MANA_CELL = MANA_CELLS.get(ManaCellTier.K1);

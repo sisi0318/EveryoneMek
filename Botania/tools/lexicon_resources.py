@@ -65,7 +65,7 @@ HELP['mana_storage_cell'].extend([
 ])
 
 
-HELP['mana_storage_cell'].append(('安装 Applied Botanics 时，使用它的原生魔力盘；旧盘仍能存取。旧盘若超过新容量，已有魔力全部保留，取到容量以下后可继续存入。', 'With Applied Botanics installed, use its native mana cells. Existing cells still work. Overfilled old cells retain all their mana; extract below their capacity before adding more.'))
+HELP['mana_storage_cell'].append(('安装 Applied Botanics 时，使用它的原生魔力盘；旧盘仍能存取。已超过新容量的旧盘沿用原容量，可继续存取。悬停提示会显示实际魔力与容量。', 'With Applied Botanics installed, use its native mana cells. Existing cells still work. Old cells already filled past the new limit retain their previous capacity and can keep accepting mana. Tooltips show actual mana and capacity.'))
 SPARK_ITEMS = ('mechanical_spark', 'master_mechanical_spark', 'spark_range_upgrade', 'spark_efficiency_upgrade', 'spark_channel_upgrade')
 HELP.update({
     'mechanical_spark': [

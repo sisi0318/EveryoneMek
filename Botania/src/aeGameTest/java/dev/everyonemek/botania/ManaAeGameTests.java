@@ -90,9 +90,9 @@ public final class ManaAeGameTests {
             check(oldCell.insert(key, 100, Actionable.SIMULATE, source) == 0 && oldCell.insert(key, 100, Actionable.MODULATE, source) == 0,
                   "Overfull ME cell accepted more mana");
             long withdrawn = legacyAmount - capacity + 1;
-            check(oldCell.extract(key, withdrawn, Actionable.MODULATE, source) == withdrawn && oldCell.insert(key, 10, Actionable.MODULATE, source) == 1,
-                  "Overfull ME cell failed to recover normal capacity after draining");
-            check(ManaStorageItem.stored(legacy) == capacity, "Legacy ME transfer lost or duplicated mana");
+            check(oldCell.extract(key, withdrawn, Actionable.MODULATE, source) == withdrawn && oldCell.insert(key, 10, Actionable.MODULATE, source) == 10,
+                  "Old ME cell lost its original capacity after draining");
+            check(ManaStorageItem.stored(legacy) == capacity + 9 && ManaStorageItem.capacity(legacy) == legacyAmount, "Legacy ME transfer lost mana or capacity");
             check(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(ManaStorageItem.preferredCell(tier)).getNamespace()
                   .equals(AppliedBotanics.loaded() ? "appbot" : "botanicalmekanism"), "Wrong preferred cell family");
         }
