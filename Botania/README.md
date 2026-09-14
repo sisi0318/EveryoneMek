@@ -139,6 +139,8 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 
 可选安装测试包中的 `appbot-1.6.0-alpha.3-botania456.jar`。它适配本项目使用的 Botania 快照，不要与原 Appbot JAR 同时安装。
 
+若启动时提示 Appbot 版本不符，用上述适配包替换官方 `appbot-1.6.0-alpha.3.jar`。官方包使用旧版 Botania 接口，给文件改名不能解决。
+
 把福鲁伊克斯魔力池接入有电、有通道的 ME 网络，使用现有的 **1k～256k 魔力盘**即可。本模组机器可以从紧贴的输入面取魔，互通器也能向池中供魔；资源直接进出该池连接的 ME 库存。池子离线时停止转移。
 
 终端只有一种魔力，已有的 Applied Botanics 魔力盘也能混用，同档容量一致。旧盘内的魔力和旧样板会继续使用，无需另做一套盘。福鲁池本身不再通过存储总线重复接入同一个网络。
@@ -161,7 +163,7 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端测试，包含机械火花直接安装设备、断连恢复、256 频道及真实远端样板合成。无 AE2、Applied Botanics 共存与单元检查的上次完整验证为 alpha.23；本次未重复该兼容矩阵。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端测试，以及 53 项使用适配版 Applied Botanics 的共存测试，包含机械火花直接安装设备、断连恢复、256 频道及真实远端样板合成。无 AE2 与单元检查的上次完整验证为 alpha.23；本次未重复。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -188,6 +190,8 @@ The Pure Conversion Chamber and Mana Infusion Chamber now have eight inputs and 
 An infuser also reads its floor catalyst when its internal catalyst slot is empty. The active catalyst appears as the native pool overlay. Bind a spreader to a machine with the Wand of the Forest; bursts follow the receiving face's Mana input setting. Hover the single mana bar for amounts.
 
 Optional Applied Botanics support uses the supplied Botania-456-compatible alpha.3 JAR. Its Fluix Mana Pool uses the same ME mana as these cells and machines. Existing cells and patterns keep working, with matching capacities for each tier. No separate set of cells is needed. Do not install both the original and compatibility Appbot JARs.
+
+If startup reports an Appbot version mismatch, replace the official alpha.3 JAR with the compatibility build. The official build references older Botania APIs; renaming the file does not fix it.
 
 Mechanical sparks retain native dye, augments, ink and wand controls. One master per connected color group stores up to eight range and eight throughput upgrades. Each range upgrade adds eight blocks (12–76 total); throughput is 1–9 times the native rate. Empty-hand right-click any connected mechanical spark to open the shared slots. Extra masters disable bonuses until removed. Upgrades stay in the dismantled master item.
 

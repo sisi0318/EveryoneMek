@@ -19,7 +19,7 @@
 - SparkMeAnchor.supports 按实际 ME host capability 判断，允许客户端和节点初始化阶段安装，不以当前是否有服务器节点判断可安装性；同时检查区块、原 BE 身份与移除状态，失效适配器不能再次使用。只有 MechanicalSparkItem 可安装，原魔力火花不传 ME。
 - SparkMeEndpoint.locate 直接走 GridHelper.getExposedNode 的 UP 面，不取设备内部 main node 绕过外部端口。样板供应器设为向上输出时断开，开放顶部后重新接入；火花保持安装。节点、升级存档、带宽与费用算法未变。
 - SparkMeGameTests 新增真实右击驱动器、接口、供应器和合成存储器的联网检查，以及重复安装、普通火花／箱子拒绝、零魔力适配器、原供应器改向与方块移除。ManaPatternGameTests 改为主火花直接装 ME 箱子、远端火花直接装样板供应器，检查跨火花取料／付魔并完成三批符文。
-- alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端 GameTest，包含上述直连回归和既有 256 频道、普通电缆瓶颈检查。此版没有重复无 AE2 或 Applied Botanics 兼容矩阵，客户端仍由用户验收。
+- alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端 GameTest；随后针对用户的 Appbot 启动报告补验适配包共存的 53 项，均通过，包含上述直连回归和既有 256 频道、普通电缆瓶颈检查。此版没有重复无 AE2 验证，客户端仍由用户验收。
 
 ## alpha.24 原创升级图标
 
@@ -100,6 +100,7 @@
 ## alpha.16 可选 Applied Botanics
 
 - 官方 1.6.0-alpha.3 对应 1.21.1／AE2 19.2.17，源码 1020173，SHA 和重定位清单见 appbot-compat.json。tools/prepare_appbot.py 验证原 JAR，再重定位两处旧 Botania API 类名、两个音效字段名及 life_essence→gaia_spirit 配方 ID，生成带 botania456 后缀的适配 JAR。字节码指令与贴图不重绘，保留原许可证并嵌入来源元数据；不要把适配包伪称原始官方 JAR。
+- 2026-09-14 启动报告中的 alpha.25 加载失败是装了官方 Appbot alpha.3，触发已声明的适配版本检查。核对官方 JAR 的 SHA 与锁文件一致；其 5 个 class 引用旧 BotaniaForgeCapabilities、6 个 class 引用旧 SparkAttachable，固定 Botania 456 均已改名。应替换为适配 Appbot，不靠改文件名、删依赖检查或放宽版本范围解决。适配包 SHA 为 774f9dbe3ef9a79f3fbdf1b88d38969517f3a85ce7f07344372a268ae1df6599；与 alpha.25 的 53 项共存 GameTest 已通过。
 - 编译期可选 API 由 prepareAppbot 生成，不打入本模组 JAR。运行只在 -PwithAppbot=true 且 withAE2=true 时加依赖与 appbotGameTest 源集，默认不加载。共同类 AppliedBotanics 只判断模组及确切 FluixPoolBlockEntity 类名，实际 SafeMana 适配隔离在 compat/ae2。
 - ManaTransfer 给福鲁池使用 SafeMana.insert/extract 的实际返回量和 SIMULATE，不用 getMaxMana-getCurrentMana 的饱和快照估算可收量。接口每次检查存活、区块、节点与能量；普通池和永恒池原规则保留。
 - alpha.16 曾将两类 ME 魔力分开；alpha.17 已统一，当前契约见上方。AppliedBotanicsStorageMixin 只排除 FluixPoolBlockEntity，禁止网络池再次挂载自身库存；机器的 SafeMana 视图由 Appbot 原策略接入。
