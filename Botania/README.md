@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.25** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.26** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.25.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.26.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 仿生花
 
@@ -115,23 +115,27 @@
 
 ## ME 魔力存储盘
 
-把盘放进 ME 驱动器或 ME 箱子即可存储魔力。五档盘沿用 AE 原版流体盘的外形和档位颜色，带有动态魔力标识。
+把盘放进 ME 驱动器或 ME 箱子即可存储魔力。安装 Applied Botanics 时优先使用它的原生盘；未安装时提供同数值标准的扩展盘，沿用 ME 流体盘外形和档位颜色。
 
 | 档位 | 魔力容量 | 待机消耗 |
 | --- | ---: | ---: |
-| 1k | 8,192,000 | 0.5 AE/t |
-| 4k | 32,768,000 | 1 AE/t |
-| 16k | 131,072,000 | 1.5 AE/t |
-| 64k | 524,288,000 | 2 AE/t |
-| 256k | 2,097,152,000 | 2.5 AE/t |
+| 1k | 500,000 | 0.5 AE/t |
+| 4k | 2,000,000 | 1 AE/t |
+| 16k | 8,000,000 | 1.5 AE/t |
+| 64k | 32,000,000 | 2 AE/t |
+| 256k | 128,000,000 | 2.5 AE/t |
 
-制作时使用对应档位的 ME 存储组件，配方可在 JEI 和植物魔法词典中查看。**旧魔力盘更新后作为 1k 盘继续使用，已有魔力保留。**
+制作时使用对应档位的 ME 存储组件，配方可在 JEI 和植物魔法词典中查看。终端按“池”显示，1 池等于 1,000,000 魔力；配方费用和机器内的魔力数值不变。
+
+**旧盘的档位与全部魔力保留。** 超过新容量时只接受提取，取到容量以下后恢复存入；装有 Appbot 销毁卡的盘仍会销毁新输入的多余魔力。不会自动清空、换盘或修改已有样板。
 
 1. 将 ME 输入总线贴在魔力池上，把魔力存入盘中。
 2. 在机器上接 ME 输出总线，拿着一张魔力盘右击总线的筛选格，选择魔力。
 3. 将机器连接总线的一面设为“魔力输入”。
 
 ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力，旧终端会自动补开一次；之后手动关闭仍会保留。只有存入魔力后才会出现存量条目。拿着魔力盘在终端中点击魔力，可以装入或归还；Shift 点击可转移更多。
+
+魔力石板等原生魔力容器也能在终端中存取。按 Appbot 标准，每次基础物流操作为 500 魔力，ME 接口与供应器的通用魔力槽容量为 10,000；升级后的总线速度继续由 AE2 计算。
 
 拆掉存有魔力的 ME 接口等装置时，会掉落魔力团。对池子或机器使用，可将魔力放回去。存储盘和魔力团拆装、重进世界后仍保留魔力。
 
@@ -144,6 +148,8 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 把福鲁伊克斯魔力池接入有电、有通道的 ME 网络，使用现有的 **1k～256k 魔力盘**即可。本模组机器可以从紧贴的输入面取魔，互通器也能向池中供魔；资源直接进出该池连接的 ME 库存。池子离线时停止转移。
 
 终端只有一种魔力，已有的 Applied Botanics 魔力盘也能混用，同档容量一致。旧盘内的魔力和旧样板会继续使用，无需另做一套盘。福鲁池本身不再通过存储总线重复接入同一个网络。
+
+安装 Appbot 后，创造栏、JEI 和词典优先显示它的原生盘与配方；扩展盘只保留旧物品兼容，不再新增制作入口。Appbot 的销毁卡、空盘拆解和便携盘功能照常使用。未安装 Appbot 时，扩展盘提供基本存储功能，容量、单位、基础传输量和待机消耗使用相同标准。
 
 ## 样板供应器与 JEI
 
@@ -163,7 +169,7 @@ ME 存储总线可以直接连接魔力池或机器。终端默认显示魔力�
 
 [开发入口](AGENTS.md) · [更新记录](CHANGELOG.md) · [设计记录](DESIGN.md) · [上游版本与接口](UPSTREAM.md)
 
-本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.25 已通过 52 项安装 AE2、未安装 Applied Botanics 的服务端测试，以及 53 项使用适配版 Applied Botanics 的共存测试，包含机械火花直接安装设备、断连恢复、256 频道及真实远端样板合成。无 AE2 与单元检查的上次完整验证为 alpha.23；本次未重复。客户端游戏内验收由玩家进行，不自动启动客户端。
+本模组使用独立的 Gradle Wrapper 和 `.gradle-home`。首次构建需要 Python 3.11+、Java 21，以及取得固定 Botania 构建所需的 GitHub CLI。alpha.26 已通过 55 项 Applied Botanics 共存、53 项仅 AE2、39 项无 AE2 的服务端测试，覆盖旧盘容量迁移、魔力存取、火花频道与真实样板合成。客户端游戏内验收由玩家进行，不自动启动客户端。
 
 ## English quick start
 
@@ -173,7 +179,7 @@ Bionic flowers stand on blocks or cables and use electricity. Connect the Lotus 
 
 Right-click a mana machine with a spark and fit a matching spark to a nearby pool. In side configuration, select the blue liquid icon for Mana; the top face must allow input. The Charging Stand now has its own mana buffer and accepts sparks, pipes and ME buses. It uses Mana input faces for charging. Drained mana enters its buffer and can return to an adjacent pool through an output face with auto-eject enabled.
 
-Mana Storage Cells come in 1k, 4k, 16k, 64k and 256k tiers, holding 8,192,000 through 2,097,152,000 mana. Each tier has four times the capacity of the last and idles at 0.5, 1, 1.5, 2 or 2.5 AE/t. Existing cells become 1k cells and keep their mana. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
+Mana Storage Cells come in 1k, 4k, 16k, 64k and 256k tiers, holding 500,000 through 128,000,000 mana, matching Applied Botanics. Each tier has four times the capacity of the last and idles at 0.5, 1, 1.5, 2 or 2.5 AE/t. Existing cells keep their tiers and all stored mana. Overfilled cells accept no more until drained below capacity. A pool means 1,000,000 mana; base operations move 500 mana and generic ME slots hold 10,000. An Import Bus drains a pool into ME. An Export Bus supplies a machine; right-click its filter with a Mana Cell to select mana. Set the machine face to Mana input. Storage Buses expose mana in pools and machines directly. The terminal can fill or empty a held Mana Cell. Broken interfaces release their mana as recoverable Mana Wisps.
 
 The cells use AE's native fluid-cell shapes and tier colors with a small animated mana label, including in ME Drives and Chests. Craft each with its matching ME storage component.
 
@@ -204,3 +210,5 @@ Mechanical sparks use the original warm-white flame; masters use Botania's blue-
 Terminal mana visibility is enabled by default, including a one-time update for existing terminals. Later manual opt-outs are saved. This also covers wireless terminals and preserves other visibility choices. The Corporea Orchid supports continuous filter edits, drag painting/right-drag clearing and reverse cycling with right-click. Display-only inventory statistics are collected on demand, at most once per second while viewed.
 
 Mechanical sparks can form wireless ME links. Place the master directly on an ME device, cable or Controller, insert one to four ME Channel Modules, and attach matching mechanical sparks to remote devices. Drives, interfaces, pattern providers and crafting storage can connect directly. The top face must allow an ME cable connection; ordinary mana sparks do not carry ME channels. Capacity is 32/64/128/256 channels before AE configuration multipliers. Normal cable limits remain; use a Controller-mounted master and multiple remote branches for higher capacity. Range upgrades also cover wireless hops. Links use AE power, stay within loaded ticking chunks of one dimension, and never merge separate controller grids. Native spark controls and mana operation remain available on their original devices.
+
+With Applied Botanics installed, its native cell recipes and items are the default in the creative tab, JEI and Lexica Botania. Existing addon cells remain usable. Without Appbot, addon cells provide basic storage at the same capacities, units and idle power costs. Native void cards, disassembly and portable cells remain Appbot features.

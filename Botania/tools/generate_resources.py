@@ -126,7 +126,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsManaDensityMixin', 'AppliedBotanicsCellCapacityMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin', 'SparkMeNodeCapacityMixin', 'SparkMeConnectionCapacityMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsCellOverflowMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin', 'SparkMeNodeCapacityMixin', 'SparkMeConnectionCapacityMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -245,6 +245,7 @@ for key, cn, english in [
     ('item.botanicalmekanism.mana_storage_cell', '1k ME 魔力存储盘', '1k ME Mana Storage Cell'),
     ('item.botanicalmekanism.mana_packet', '魔力团', 'Mana Wisp'),
     ('tooltip.botanicalmekanism.mana_cell', '魔力：%s / %s', 'Mana: %s / %s'),
+    ('tooltip.botanicalmekanism.mana_cell_overfull', '超过容量，取出魔力后可继续存入。', 'Over capacity. Extract mana before adding more.'),
     ('tooltip.botanicalmekanism.mana_packet', '魔力：%s。对魔力池或机器使用以归还。', 'Mana: %s. Use on a pool or machine to return it.'),
 ]: zh[key], en[key] = cn, english
 from mana_cell_models import TIERS, cell_id
@@ -252,7 +253,7 @@ for tier in TIERS:
     name = cell_id(tier)
     zh[f'item.{MOD}.{name}'], en[f'item.{MOD}.{name}'] = f'{tier}k ME 魔力存储盘', f'{tier}k ME Mana Storage Cell'
     write(f'data/{MOD}/recipe/{name}.json', {
-        'neoforge:conditions': [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}],
+        'neoforge:conditions': [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}, {'type': 'neoforge:not', 'value': {'type': 'neoforge:mod_loaded', 'modid': 'appbot'}}],
         'type': 'minecraft:crafting_shaped', 'pattern': ['SMS', 'CEC', 'SSS'],
         'key': {'S': {'item': 'botania:manasteel_ingot'}, 'M': {'item': 'botania:mana_diamond'},
                 'C': {'item': 'ae2:fluix_pearl'}, 'E': {'item': f'ae2:cell_component_{tier}k'}},

@@ -31,7 +31,7 @@ HELP = {
     'corporea_orchid': [('把花接到有电的 ME 电缆上，需要 1 个通道，每 tick 消耗 4 AE。花上装普通多媒体火花，箱子上也装火花，再另放一个主火花。', 'Connect the flower to a powered ME cable. It uses one channel and 4 AE per tick. Attach ordinary Corporea sparks to the flower and chests, then add a separate master spark.'), ('ME 终端可以存取这些箱子里的物品，多媒体漏斗也能从 ME 取货。空手右键花，可查看连接状态并选择允许的方向。', 'The ME terminal can access these chests, and Corporea funnels can request items from ME. Right-click the flower with an empty hand to check its connection and choose which direction to allow.'), ('一组多媒体火花只放一朵织网花。双箱只装一枚火花；已经这样接入的箱子，不要再接同一网络的 ME 存储总线。', 'Use one Orchid per Corporea network and one spark per double chest. Do not also connect those chests to the same ME network through a storage bus.'), ('织网花每 tick 最多转移 2,048 件物品。断电、缺少通道或没有主火花时会停止，在界面中可查看原因。魔力池接入 ME 请使用输入、输出总线和魔力存储盘。', 'The Orchid moves up to 2,048 items per tick. It stops without power, a channel or a master spark; the screen shows the reason. For mana pools, use ME import/export buses and a Mana Storage Cell.')],
     'resonance_flower': [('$(item)共鸣花$(0)能够连接附近的共鸣芽，组成魔力网络。空手右击可以设置网络名称和成员。$(p)也可以在合成台中将它回收为共鸣增幅器。', 'The $(item)Resonance Flower$(0) links nearby Resonance Buds into a mana network. Right-click with an empty hand to set its name and members.$(p)It can also be recycled into a Resonance Augment in a crafting grid.')],
     'resonance_bud': [('$(item)共鸣芽$(0)会通过共鸣花输送魔力。将它贴着魔力池放下，右击选择网络和传输方向。$(p)设为中继时，可以延伸网络的距离。', 'The $(item)Resonance Bud$(0) transfers mana through a Resonance Flower. Place it beside a pool, then right-click to select a network and direction.$(p)Relay mode extends the network range.')],
-    'mana_storage_cell': [('魔力盘有 1k、4k、16k、64k 和 256k 五档。放入 ME 驱动器或 ME 箱子后，即可在终端中存取魔力。1k 可存 8,192,000 魔力，每升一档容量变为四倍。', 'Mana cells come in 1k, 4k, 16k, 64k and 256k sizes. Put one in an ME Drive or Chest to store mana. A 1k cell holds 8,192,000 mana; each larger tier holds four times as much.'), ('将 ME 输入总线贴在魔力池上，可以把魔力存进盘里。机器上接 ME 输出总线，拿着魔力盘右击筛选格，就能选择魔力。机器相应一面要设为魔力输入。', 'Place an ME Import Bus against a mana pool to fill the cell. Attach an Export Bus to a machine and right-click its filter with a Mana Cell to select mana. Set that machine face to Mana input.'), ('存储总线可让终端直接使用池中或机器中的魔力。拿着魔力盘，在终端魔力图标上点击可装入或归还魔力；Shift 点击可多取一些。', 'A Storage Bus lets the terminal use mana directly from a pool or machine. Use a held Mana Cell on the terminal mana entry to transfer mana; Shift-click transfers more.')],
+    'mana_storage_cell': [('魔力盘有 1k、4k、16k、64k 和 256k 五档。放入 ME 驱动器或 ME 箱子后，即可在终端中存取魔力。容量沿用 Applied Botanics：1k 可存 500,000 魔力，每升一档容量变为四倍。终端中 1 池等于 1,000,000 魔力。', 'Mana cells come in 1k, 4k, 16k, 64k and 256k sizes. Put one in an ME Drive or Chest to store mana. Applied Botanics capacities apply: a 1k cell holds 500,000 mana; each larger tier holds four times as much. One pool in the terminal means 1,000,000 mana.'), ('将 ME 输入总线贴在魔力池上，可以把魔力存进盘里。机器上接 ME 输出总线，拿着魔力盘右击筛选格，就能选择魔力。机器相应一面要设为魔力输入。', 'Place an ME Import Bus against a mana pool to fill the cell. Attach an Export Bus to a machine and right-click its filter with a Mana Cell to select mana. Set that machine face to Mana input.'), ('存储总线可让终端直接使用池中或机器中的魔力。拿着魔力盘，在终端魔力图标上点击可装入或归还魔力；Shift 点击可多取一些。', 'A Storage Bus lets the terminal use mana directly from a pool or machine. Use a held Mana Cell on the terminal mana entry to transfer mana; Shift-click transfers more.')],
     'mana_packet': [('拆除存有魔力的 ME 接口等装置时，散出的魔力会聚成魔力团。对魔力池或机器使用，可以把魔力放回去；也可以交回 ME 终端。', 'Breaking an ME Interface or similar block that holds mana releases a Mana Wisp. Use it on a mana pool or machine to return the mana, or deposit it through an ME terminal.')],
 }
 
@@ -65,6 +65,7 @@ HELP['mana_storage_cell'].extend([
 ])
 
 
+HELP['mana_storage_cell'].append(('安装 Applied Botanics 时，使用它的原生魔力盘；旧盘仍能存取。旧盘若超过新容量，已有魔力全部保留，取到容量以下后可继续存入。', 'With Applied Botanics installed, use its native mana cells. Existing cells still work. Overfilled old cells retain all their mana; extract below their capacity before adding more.'))
 SPARK_ITEMS = ('mechanical_spark', 'master_mechanical_spark', 'spark_range_upgrade', 'spark_efficiency_upgrade', 'spark_channel_upgrade')
 HELP.update({
     'mechanical_spark': [
@@ -134,12 +135,22 @@ def generate(root, write, zh, en, plants, recipes):
         elif name == 'mana_storage_cell':
             from mana_cell_models import TIERS, cell_id
             for tier in TIERS:
-                pages.append({'type': 'patchouli:crafting', 'recipe': f'{MOD}:{cell_id(tier)}', 'flag': 'mod:ae2'})
+                pages.append({'type': 'patchouli:crafting', 'recipe': f'{MOD}:{cell_id(tier)}', 'flag': '!mod:appbot'})
+                pages.append({'type': 'patchouli:crafting', 'recipe': f'appbot:mana_cell_{tier}k', 'flag': 'mod:appbot'})
         elif name in MACHINES or name in ('mechanical_apothecary', 'resonance_spark_augment', *SPARK_ITEMS):
             pages.append({'type': 'patchouli:crafting', 'recipe': item, **({'flag': 'mod:ae2'} if name == 'spark_channel_upgrade' else {})})
         if name == 'mana_bridge':
             zh[f'{key}.appbot'] = '安装 Applied Botanics 后，可以将互通器连接福鲁伊克斯魔力池。池子要接上有电、有通道的 ME 网络，网络中放入魔力盘即可。现有五档魔力盘都能使用，无需另做一套。'
             en[f'{key}.appbot'] = 'With Applied Botanics, place the bridge beside a Fluix Mana Pool. Connect the pool to a powered ME network with a channel and a mana cell. All five existing cell tiers work; no separate set is needed.'
             pages.append({'type': 'patchouli:text', 'text': f'{key}.appbot', 'flag': 'mod:appbot'})
-        write(f'{BASE}/entries/botanicalmekanism/{name}.json', {'name': title, 'icon': item, 'category': 'botania:botanicalmekanism',
-              'sortnum': index, 'pages': pages, 'extra_recipe_mappings': {f'{MOD}:{cell_id(t)}': 0 for t in TIERS} if name == 'mana_storage_cell' else {item: 0}})
+        entry = {'name': title, 'icon': item, 'category': 'botania:botanicalmekanism', 'sortnum': index, 'pages': pages,
+                 'extra_recipe_mappings': {f'{MOD}:{cell_id(t)}': 0 for t in TIERS} if name == 'mana_storage_cell' else {item: 0}}
+        if name == 'mana_storage_cell':
+            entry['flag'] = '&mod:ae2,!mod:appbot'
+            entry['pages'] = [p for p in pages if p.get('flag') != 'mod:appbot']
+            # Texture icons are lazy; disabled entries must not resolve an absent mod's item.
+            native = {**entry, 'icon': 'appbot:textures/item/mana_cell_1k.png', 'flag': 'mod:appbot',
+                      'pages': [{**p, **({'item': 'appbot:mana_cell_1k'} if p.get('type') == 'patchouli:spotlight' else {})} for p in pages if p.get('flag') != '!mod:appbot'],
+                      'extra_recipe_mappings': {**entry['extra_recipe_mappings'], **{f'appbot:mana_cell_{t}k': 0 for t in TIERS}}}
+            write(f'{BASE}/entries/botanicalmekanism/appbot_mana_storage_cell.json', native)
+        write(f'{BASE}/entries/botanicalmekanism/{name}.json', entry)

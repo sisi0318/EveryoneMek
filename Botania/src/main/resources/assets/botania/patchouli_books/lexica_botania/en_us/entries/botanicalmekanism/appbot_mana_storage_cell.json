@@ -1,13 +1,13 @@
 {
   "name": "item.botanicalmekanism.mana_storage_cell",
-  "icon": "botanicalmekanism:mana_storage_cell",
+  "icon": "appbot:textures/item/mana_cell_1k.png",
   "category": "botania:botanicalmekanism",
   "sortnum": 23,
   "pages": [
     {
       "type": "patchouli:spotlight",
       "text": "book.botanicalmekanism.mana_storage_cell.0",
-      "item": "botanicalmekanism:mana_storage_cell",
+      "item": "appbot:mana_cell_1k",
       "title": "book.botanicalmekanism.mana_storage_cell.title"
     },
     {
@@ -44,28 +44,28 @@
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "botanicalmekanism:mana_storage_cell",
-      "flag": "!mod:appbot"
+      "recipe": "appbot:mana_cell_1k",
+      "flag": "mod:appbot"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "botanicalmekanism:mana_storage_cell_4k",
-      "flag": "!mod:appbot"
+      "recipe": "appbot:mana_cell_4k",
+      "flag": "mod:appbot"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "botanicalmekanism:mana_storage_cell_16k",
-      "flag": "!mod:appbot"
+      "recipe": "appbot:mana_cell_16k",
+      "flag": "mod:appbot"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "botanicalmekanism:mana_storage_cell_64k",
-      "flag": "!mod:appbot"
+      "recipe": "appbot:mana_cell_64k",
+      "flag": "mod:appbot"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "botanicalmekanism:mana_storage_cell_256k",
-      "flag": "!mod:appbot"
+      "recipe": "appbot:mana_cell_256k",
+      "flag": "mod:appbot"
     }
   ],
   "extra_recipe_mappings": {
@@ -73,7 +73,12 @@
     "botanicalmekanism:mana_storage_cell_4k": 0,
     "botanicalmekanism:mana_storage_cell_16k": 0,
     "botanicalmekanism:mana_storage_cell_64k": 0,
-    "botanicalmekanism:mana_storage_cell_256k": 0
+    "botanicalmekanism:mana_storage_cell_256k": 0,
+    "appbot:mana_cell_1k": 0,
+    "appbot:mana_cell_4k": 0,
+    "appbot:mana_cell_16k": 0,
+    "appbot:mana_cell_64k": 0,
+    "appbot:mana_cell_256k": 0
   },
-  "flag": "&mod:ae2,!mod:appbot"
+  "flag": "mod:appbot"
 }

@@ -36,7 +36,7 @@ public final class AeCompat {
             appeng.api.storage.StorageCells.addCellHandler(ManaCell.HANDLER);
             // Appbot's native strategies already cover pools and our SafeMana machine adapter.
             if (dev.everyonemek.botania.AppliedBotanics.loaded()) return;
-            appeng.api.behaviors.GenericSlotCapacities.register(ManaKey.TYPE, 100_000L);
+            appeng.api.behaviors.GenericSlotCapacities.register(ManaKey.TYPE, dev.everyonemek.botania.ManaCellTier.SLOT_CAPACITY);
             appeng.api.behaviors.ContainerItemStrategy.register(ManaKey.TYPE, ManaKey.class, new ManaContainerStrategy());
             appeng.api.behaviors.StackImportStrategy.register(ManaKey.TYPE, ManaBusStorage::at);
             appeng.api.behaviors.StackExportStrategy.register(ManaKey.TYPE, ManaBusStorage::at);

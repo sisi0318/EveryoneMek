@@ -84,7 +84,7 @@ public final class Content {
                   output.accept(MechanicalSparks.SPARK.get()); output.accept(MechanicalSparks.MASTER.get());
                     output.accept(MechanicalSparks.RANGE.get()); output.accept(MechanicalSparks.EFFICIENCY.get());
                     if (net.neoforged.fml.ModList.get().isLoaded("ae2")) output.accept(MechanicalSparks.CHANNEL.get());
-                  if (net.neoforged.fml.ModList.get().isLoaded("ae2")) { output.accept(CORPOREA.get()); MANA_CELLS.values().forEach(cell -> output.accept(cell.get())); }
+                  if (net.neoforged.fml.ModList.get().isLoaded("ae2")) { output.accept(CORPOREA.get()); for (var tier : ManaCellTier.values()) output.accept(ManaStorageItem.preferredCell(tier)); }
                   output.accept(ApothecaryContent.BLOCK);
                   for (var block : ManaContent.MACHINES.values()) output.accept(block);
               }).build());

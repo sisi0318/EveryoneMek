@@ -27,7 +27,10 @@ public record ManaCell(ItemStack stack, ISaveProvider host) implements StorageCe
         return moved;
     }
     @Override public void getAvailableStacks(KeyCounter out) { if (HANDLER.isCell(stack) && ManaStorageItem.stored(stack) > 0) out.add(ManaKeys.current(), ManaStorageItem.stored(stack)); }
-    @Override public CellState getStatus() { long amount = ManaStorageItem.stored(stack); return amount == 0 ? CellState.EMPTY : amount >= ManaStorageItem.capacity(stack) ? CellState.FULL : CellState.TYPES_FULL; }
+    @Override public CellState getStatus() {
+        long amount = ManaStorageItem.stored(stack), capacity = ManaStorageItem.capacity(stack);
+        return amount == 0 ? CellState.EMPTY : amount >= capacity ? CellState.FULL : amount > capacity / 2 ? CellState.TYPES_FULL : CellState.NOT_EMPTY;
+    }
     @Override public double getIdleDrain() { return ManaStorageItem.idleDrain(stack); }
     @Override public boolean canFitInsideCell() { return ManaStorageItem.stored(stack) == 0; }
     private void changed() { if (host != null) host.saveChanges(); }

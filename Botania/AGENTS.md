@@ -4,14 +4,25 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.25 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.26 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
 - 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.23 验证 51 项常规服务端 GameTest、38 项无 AE2 服务端 GameTest 与 5 项 JUnit；Applied Botanics 共存的 52 项验证也已通过。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.26 已通过 55 项 Appbot 共存、53 项仅 AE2、39 项无 AE2 服务端 GameTest；覆盖标准统一、旧盘存量迁移和既有火花／加工回归。不代表客户端视觉或完整整合包验收。
+
+## alpha.26 以 Applied Botanics 为魔力标准
+
+- 用户明确要求按 Appbot 制定魔力标准，并确认容量也跟随原值。ManaCellTier 改为每 k=1000 字节、每字节 500 魔力，五档 500,000／2,000,000／8,000,000／32,000,000／128,000,000；删除 AppliedBotanicsManaDensityMixin 和 AppliedBotanicsCellCapacityMixin，不能再改上游密度／容量。
+- 无 Appbot 的 ManaKey 也使用每操作 500、每池 1,000,000、单位 pool、资源 ID botania:mana；AE 类型的旧注册 ID 与双向别名保留，序列化数量仍是原始整数魔力。GenericSlotCapacities 为原稀释池 10,000。盘状态区分 EMPTY／NOT_EMPTY／TYPES_FULL／FULL，与 Appbot 半满阈值相同；待机耗电不变。
+- 有 Appbot 时，preferredCell 返回原生盘，创造栏、JEI 与词典以它为入口；本模组五档制作配方仅在有 AE2 且无 Appbot 时加载。旧盘注册 ID、数据组件和 StorageCell handler 保留。Appbot 的销毁卡、拆解、便携盘继续用上游实现；无 Appbot 的盘只提供基本存储，不声称复制这些附加功能。
+- ManaStorageItem.stored 不再把已有存量裁到容量；ManaView 的正数插入只加剩余空间，超量盘 getMaxMana 临时返回至少当前存量，避免 Appbot 容器策略产生负数接收。所有读取、提取与 NBT 保存保留实际 Long 数量，取到上限以下后恢复插入。
+- AppliedBotanicsCellOverflowMixin 只修容量下调的边界：原普通／便携盘超量时返回 FULL、禁止负数或超量插入，仍能提取完整存量；原销毁卡接受新输入但不动已有数量。不会重写 Appbot 的盘容量或复制库存。共同 ManaKeyMixin 的可回收拆卸魔力仍保留。
+- 独立 ManaContainerStrategy 改为通过 ManaItem capability 支持石板等容器，保留实际物品引用／数量检查与模拟语义；本模组旧盘和魔力团继续直接用 Long 组件存取。原音效沿用对应池／黑莲事件。
+- 词典按 Patchouli 92 已核对的 flag 语法 `&mod:ae2,!mod:appbot` 与 `mod:appbot` 分为互斥入口。Appbot 条目使用纹理 icon，避免未安装时在条目构造中解析不存在的物品；额外物品映射仅在有 Appbot 的条目中包含原生盘。
+- ManaStorageGameTests 覆盖不依赖 AE 的旧五档满盘重载、拒收与提取；ManaAeGameTests 验证两套环境的标准、条件配方、旧满盘存取及石板容器；AppliedBotanicsPoolGameTests 验证原生普通／便携五档容量、旧数据与销毁卡边界。
 
 ## alpha.25 机械火花直接安装 ME 设备
 
@@ -80,7 +91,7 @@
 - 界面 176×184，升级槽 (53,32)/(107,32)，背包 y101、快捷栏 y159；简单深底矩形。原 ManaSparkRenderer 绘制原火花和升级轨道，alpha.17 当时附 Mek 钢框，已在 alpha.21 删除，当前外观见顶部；物品 JSON 同样运行时引用原图，不新增位图素材。
 - ManaKeys.current/type 是统一入口：有 Appbot 用其原 mana 类型，无 Appbot 用本模组类型。只注册一个实际 AEKeyType；RegisterEvent.addAlias 在两个历史 ID 间指向当前类型，旧样板／筛选 NBT 无需重做。不要同时注册两个真类型再期待别名覆盖。
 - 共存时只注册本模组 StorageCell handler，不再次注册同类型的 ContainerItemStrategy／总线／渲染器。原策略通过注册到自有盘和魔力团的 ManaItem capability 工作。ManaView 用 Long 保存，原 int API 限幅，魔力团分次取出，归零后消耗空物品；不接受原物品派发来偷偷充盘。
-- AppliedBotanicsManaDensityMixin 将资源存储密度统一为 8000，CellCapacityMixin 把其 1000 字节档换为 1024，五档容量与现有盘一致，已存数量不换算。ManaKeyMixin 将 Appbot 接口拆卸时的魔力转为可回收魔力团。OptionalJeiMixinPlugin 对所有 AppliedBotanics 前缀 Mixin 检查可选依赖。
+- 当时通过两个 Mixin 把 Appbot 密度调成 8000、每 k 调成 1024；alpha.26 已删除这两处覆盖，改按 Appbot 原标准并保留旧盘完整存量。ManaKeyMixin 将 Appbot 接口拆卸时的魔力转为可回收魔力团。OptionalJeiMixinPlugin 对所有 AppliedBotanics 前缀 Mixin 检查可选依赖。
 - 协议提升为 6，客户端与服务端一起更新。MechanicalSparkGameTests 覆盖真实手持与发射器放置、共享升级与角色传输、改色／冲突／拆除降级、菜单物品上限、原法杖拆装、墨水、实体保存。NeoForge FakePlayer.openMenu 本身为空，菜单测试用覆写捕获实际 MenuProvider 和额外实体 ID，不用普通假玩家断言界面打开。
 - ManaAeGameTests 同时验证历史 key ID 解码到唯一当前类型；原真实 AE 总线及样板 CPU 测试按 ManaKeys.current 运行。AppliedBotanicsPoolGameTests 使用本模组现有盘供给福鲁池，并验证 Appbot 同档盘容量、真实存取守恒及存储总线不递归。
 
@@ -116,8 +127,8 @@
 
 - 用户否定自创盘外形，明确以 AE 原盘修改。`mana_cell_models.py` 用 CompositeModel 引用 `ae2:item/fluid_storage_cell_<tier>k` 和原驱动器插槽模型，只加两面液面小标签。AE 材质／模型为 CC BY-NC-SA 3.0，运行时引用，未复制进 JAR；离线预览归属见 art/README。不要恢复 alpha.13 的石质卡片模型。
 - `ManaCellModelLoader` 委托 NeoForge CompositeModel.Loader；AE 缺失时只替换其 base 子模型为 Botania 图标，避免缺失可选父模型。加载器和事件均在客户端。AE 在场时 `ManaAeClient` 注册所有插槽模型，并用原 BasicStorageCell.getColor 根据本盘真实存储状态绘制物品 LED（alpha.15 补上 ARGB 不透明转换）；世界 LED 仍由 AE 绘制，蓝色标签避开 x=4..5、y=0..1。
-- `ManaCellTier` 为不依赖 AE 的共同枚举，1/4/16/64/256 × 1024 × 8000 魔力；容量 8,192,000、32,768,000、131,072,000、524,288,000、2,097,152,000。待机 0.5/1/1.5/2/2.5 AE/t。1k 保留 mana_storage_cell ID；四档追加 _4k 等后缀，Content.MANA_CELL 仍是旧 ID 别名。stored_mana Long 组件不变，所有容器策略按物品档位取得容量，不再只认单个物品。
-- ManaKey.getAmountPerByte 同步 8000（原 AE 流体密度），每次操作仍为 1000，显示与配方仍 1 单位 = 1 魔力。AE 合成存储的 5200 魔力输入现在计 5.2 字节，另加其他材料和树开销；这不是 JVM 堆用量或性能实测。
+- `ManaCellTier` 为不依赖 AE 的共同枚举；本阶段曾为 1/4/16/64/256 × 1024 × 8000 魔力，alpha.26 已改为原 Appbot 标准。待机仍为 0.5/1/1.5/2/2.5 AE/t。1k 保留 mana_storage_cell ID；四档追加 _4k 等后缀，Content.MANA_CELL 仍是旧 ID 别名。stored_mana Long 组件不变，所有容器策略按物品档位取得容量。
+- 本阶段曾使用每字节 8000、每次操作 1000；alpha.26 均改为 500。显示单位使用 pool，实际配方数量仍为原始魔力，不能改显示单位时缩放已保存资源或样板成本。
 - `ManaTransfer.pool` 接受原永恒池，仍检查精确原池类、存活和已加载区块。永恒池 getCurrentMana 始终等于容量，take 不按减少量结算、不改池内数值；SIMULATE 无副作用，refund 返回刚取出的余量。普通池仍按实际差值。ManaAccess、ManaEndpoint 和互通器／六面补魔统一使用该方法；canSpare、满仓与 RATE 限制仍有效。
 - `GuiPoolConnectionTab` 使用原 GuiWindowCreatorTab／GuiWindow，位置 (-26,64)，当时用于 BRIDGE、CHARGER 和两个 controller；alpha.20 起移除 CHARGER 的此入口。窗口六个方向按钮发送原 action=1 Settings 包，显示服务器确认的 side/revision，关闭后设置保留。主页移除 targetSide 按钮；存档 pool_side、原端口配置和连接行为不改。
 - 现有 ManaAeGameTests 覆盖五档 Long.MAX_VALUE 模拟、满盘、共享句柄、存档、大额提取、256k 筛选，以及真实 ME 总线替换为永恒池后供魔；AdjacentPoolGameTests 新增真实设置包选方向、永恒池自定义 manaCap、共享上限、满罐余量、关闭输入和拆除失效。alpha.14 本地只跑一次带 AE 的 38 项服务端测试，全部通过，不为后续文档／预览重跑。

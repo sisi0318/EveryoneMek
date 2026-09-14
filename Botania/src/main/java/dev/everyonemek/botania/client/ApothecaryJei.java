@@ -25,6 +25,10 @@ import vazkii.botania.client.integration.jei.PetalApothecaryRecipeCategory;
 public final class ApothecaryJei implements IModPlugin {
     private static final RecipeType<MechanicalFlowerRecipe> TYPE = RecipeType.create(BotanicalMekanism.ID, "mechanical_apothecary", MechanicalFlowerRecipe.class);
     @Override public ResourceLocation getPluginUid() { return ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "apothecary_jei"); }
+    @Override public void onRuntimeAvailable(mezz.jei.api.runtime.IJeiRuntime runtime) {
+        if (AppliedBotanics.loaded()) runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK,
+              Content.MANA_CELLS.values().stream().map(cell -> new ItemStack(cell.get())).toList());
+    }
     @Override public void registerIngredients(IModIngredientRegistration registration) { dev.everyonemek.botania.compat.jei.ManaJei.register(registration); }
     @Override public void registerAdvanced(IAdvancedRegistration registration) { dev.everyonemek.botania.compat.jei.ManaJei.decorateBrew(registration); }
     @Override public void registerCategories(IRecipeCategoryRegistration registration) { registration.addRecipeCategories(new Category(registration.getJeiHelpers().getGuiHelper())); }
