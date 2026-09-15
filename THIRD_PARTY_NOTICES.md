@@ -2,6 +2,8 @@
 
 EveryoneMek's original code is available under the [MIT License](LICENSE).
 
+Overload Core keeps Mekanism, Mekanism Generators and Curios as separate dependencies. Its audited default recipe definitions come from Mekanism 10.7.19.85; the MIT notice is retained in its JAR. Its pendant sprite is original built-in ImageGen artwork, with source and prompts in `OverloadCore/art/`. See `OverloadCore/THIRD_PARTY_NOTICES.md` for module-specific notices.
+
 - [Nature's Aura](https://github.com/Ellpeck/NaturesAura/blob/main/LICENSE): MIT, copyright (c) 2021 Ellpeck.
 - [Mekanism](https://github.com/mekanism/Mekanism/blob/1.21.x/LICENSE): MIT, copyright (c) 2017–2025 Aidan C. Brady.
 - [Ars Nouveau](https://github.com/baileyholl/Ars-Nouveau/blob/main/license.txt): LGPL-3.0 code; its assets are all rights reserved unless stated otherwise by the author.

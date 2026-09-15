@@ -9,6 +9,7 @@
 - [Nature's Mekanism](NaturesAura/README.md)：自然灵气供给、仪式加工、装瓶、环境调控、生物生产与矿物凝聚室。
 - [Ars Mekanism](Ars-Nouveau/README.md)：魔源供给与转换、灌注与附魔、萃取与粉碎、魔符抄写、药水加工，以及德格米、风转草和仪式火盆自动化。
 - [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻造室与炽炉控制器，机内锻造、四类资源插件、逐级升级，以及炽炉嵌入、电热和端口物流。
+- [Overload Core](OverloadCore/README.md)：科技核心挂坠、Mek 作业诅咒与受控增产、发电／物流限制和随身机具收益。
 - [Botanical Mekanism](Botania/README.md)：仿生花、原生词典与火花、Chemical 魔力加工，以及可选 AE2／多媒体物品互通和原装置控制器。
 
 开发接手与新增模组先读 [AGENTS.md](AGENTS.md)，其中提供通用规则、启动清单和各模组开发入口。
@@ -17,7 +18,7 @@ Botania 的完整主线、适配边界与后续候选见 [完整规划](Botania/
 
 开发资料：
 
-- [Overload Core：过载短路核心设计](OverloadCore/DESIGN.md)：面向 Mek 科技包的诅咒饰品，当前为设计阶段，尚无可安装版本。
+- [Overload Core：过载短路核心设计](OverloadCore/DESIGN.md)：面向 Mek 科技包的诅咒饰品设计与实现范围。
 - [NaturesAura 适配与机器设计](docs/NATURES_AURA_DESIGN.md)
 - [Ars Nouveau 机器设计提案](Ars-Nouveau/DESIGN.md)
 - [Forbidden & Arcanus 赫菲斯托斯锻台与炽炉自动化方案](Forbidden-Arcanus/DESIGN.md)

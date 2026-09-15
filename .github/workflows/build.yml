@@ -18,6 +18,7 @@ on:
           - Ars-Nouveau
           - Forbidden-Arcanus
           - Botania
+          - OverloadCore
 
 permissions:
   contents: read
@@ -92,6 +93,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash ./gradlew --no-daemon --console=plain --max-workers=2 -PwithAE2=false -PgameTestDirectory=gametest-without-ae2 runGameTestServer
+
+      - name: Verify Overload Core without optional Generators
+        if: matrix.mod.directory == 'OverloadCore'
+        run: bash ./gradlew --no-daemon --console=plain --max-workers=2 -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer
 
       - name: Upload mod JAR
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

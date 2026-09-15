@@ -10,6 +10,13 @@ from zipfile import ZipFile
 
 # Add new projects here and to build.yml/release.yml's module choices.
 MODULES = {
+    "OverloadCore": {
+        "directory": "OverloadCore",
+        "name": "Overload Core",
+        "archive": "OverloadCore",
+        "mod_id": "overloadcore",
+        "java": "21",
+    },
     "NaturesAura": {
         "directory": "NaturesAura",
         "name": "Nature's Mekanism",
