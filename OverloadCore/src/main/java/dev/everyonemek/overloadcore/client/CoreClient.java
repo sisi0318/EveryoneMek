@@ -53,8 +53,19 @@ public final class CoreClient {
     @SubscribeEvent public static void tooltip(RenderTooltipEvent.GatherComponents event) {
         var stack = event.getItemStack();
         var mc = Minecraft.getInstance();
-        if (!stack.is(CoreContent.CORE) || !Screen.hasShiftDown() || !mc.isWindowActive()) return;
+        if (!stack.is(CoreContent.CORE) || !mc.isWindowActive()) return;
         var lines = event.getTooltipElements();
+        long now = Util.getMillis();
+        int maxWidth = Math.min(360, Math.max(12, event.getScreenWidth() - 24));
+        if (event.getMaxWidth() > 0) maxWidth = Math.min(maxWidth, event.getMaxWidth());
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).left().filter(line -> tooltipKey(line, "lore")).isPresent()) {
+                var lore = ((Component) lines.get(i).left().orElseThrow()).copy().withStyle(ChatFormatting.WHITE);
+                lines.set(i, Either.right(new ProgressiveCoreTooltip(java.util.List.of(lore), TooltipReveal.WRITE_MS, maxWidth, now)));
+                break;
+            }
+        }
+        if (!Screen.hasShiftDown()) return;
         int hint = -1;
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).left().filter(line -> tooltipKey(line, "details_hint")).isPresent()) { hint = i; break; }
@@ -79,10 +90,8 @@ public final class CoreClient {
         }
         Slot slot = mc.screen instanceof AbstractContainerScreen<?> container ? container.getSlotUnderMouse() : null;
         if (slot != null && !ItemStack.isSameItemSameComponents(slot.getItem(), stack)) slot = null;
-        long elapsed = REVEAL.sample(mc.screen, new HoverTarget(slot, stack.getItem(), stack.getComponentsPatch()), Util.getMillis());
-        int maxWidth = Math.min(360, Math.max(8, event.getScreenWidth() - 24));
-        if (event.getMaxWidth() > 0) maxWidth = Math.min(maxWidth, event.getMaxWidth());
-        lines.set(hint, Either.right(new ProgressiveCoreTooltip(details, elapsed, maxWidth)));
+        long elapsed = REVEAL.sample(mc.screen, new HoverTarget(slot, stack.getItem(), stack.getComponentsPatch()), now);
+        lines.set(hint, Either.right(new ProgressiveCoreTooltip(details, elapsed, maxWidth, now)));
         // The first curse already states the removal rule; keep other mods' tooltip lines intact.
         lines.removeIf(line -> line.left().filter(text -> tooltipKey(text, "warning")).isPresent());
     }

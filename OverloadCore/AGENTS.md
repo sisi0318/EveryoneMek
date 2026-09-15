@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.4，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.4.jar`。
+- 0.1.0-alpha.5，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.5.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -27,7 +27,8 @@
 - `Workplace` / `MetalLoad`：原生伤害、遮挡、警示与冷却；活动/真实热源判定。金属标签可改，原版 CONTAINER 内容递归最多 4 层、1024 个非空项，超限保守计重，不查询远端存储。
 - `CoreItem` / `client/CoreClient.tooltip`：用户要求悬停挂坠按住 Shift，说明随时间逐行出现。基础提示保留在物品类；扩展列表通过 Dist.CLIENT 的 RenderTooltipEvent.GatherComponents 插入，使用 RegisterClientTooltipComponentFactoriesEvent 注册自定义内容，只替换本模组的提示键，保留 Curios 与其他模组添加的行。不另开说明窗口。
 - `client/TooltipReveal`：每行间隔 160ms，当前行 140ms 内打字显示；按真实悬停帧和单调时钟计时。松开 Shift、离开挂坠、切换界面/栏位或失去窗口焦点均重置。不在 ItemTooltipEvent 的预先查询/缓存中开始计时，不用全局时间取模让读完的文字反复消失。
-- `client/ProgressiveCoreTooltip`：原生 ClientTooltipComponent 渲染和字体，先测量完整宽度，按可用宽度换行；按 FormattedCharSequence 处理代码点和样式，不用 UTF-16 substring 截断中文/补充字符。仅当前行的写入边缘短暂提亮并带光标，其余行稳定。字体效果参考作者 huige233 的 DreamJournalClientTooltipComponent，独立实现，无原模组依赖；保留代码注释及 THIRD_PARTY_NOTICES 中的作者署名。
+- `client/ProgressiveCoreTooltip`：原生 ClientTooltipComponent 渲染和字体，先测量完整宽度，按可用宽度换行；按 FormattedCharSequence 处理代码点和样式，不用 UTF-16 substring 截断中文/补充字符。当前行的写入边缘短暂提亮并带光标，已显示内容不循环消失。文字先加斜体再测量，并为色散预留水平和垂直边距。
+- `client/ChromaticTooltipText`：按用户截图加入 huige233 的 DreamJournalClientTooltipComponent.styleGlitchRGB 所示红蓝色散风格。风味行使用亮色主字，展开说明保留红/绿主字；两者均有持续红蓝叠影和轻微抖动，间歇加强残影。必须给 FormattedCharSequence 的 Style 强制设置叠影颜色，只改 drawInBatch 的颜色会被原红/绿样式覆盖。独立实现、无原模组依赖；保留两个渲染类注释和 THIRD_PARTY_NOTICES 中的作者 huige233 署名。
 - `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K（含潜行 K）切换最多 8 台设备位置提示。info 命令在聊天栏报告状态，旧 Request 消息仍接受但不再打开窗口。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
 
 ## 目标版本已核实的 API 经验
@@ -49,6 +50,7 @@
 - alpha.2 的 Shift 物品提示变更通过 `classes jar`、中英文资源完整性与 JAR 检查；确认原说明窗口类已移除、公共物品类不引用客户端类。未因这次显示改动重复运行全套 GameTest，实际提示位置由用户验收。
 - alpha.3 的空槽图标通过 `classes jar` 和依赖资源检查：Curios 图标为真正 16×16 透明纹理，已由其 slot 图集加载；除图标引用外，槽位定义、玩家槽位映射与游戏数据和 alpha.2 一致。没有因纯资源修改重跑 GameTest。
 - alpha.4：`classes test --tests '*TooltipRevealTest'` 通过，3/3。仅改客户端展示，未重复 GameTest；使用 NeoForge 21.1.241 的公开 GatherComponents / RenderFrame / tooltip factory API，没有新增 Mixin。
+- alpha.5：红蓝色散渲染通过 `classes jar` 和打包检查；逐行计时类与游戏数据和 alpha.4 一致，两个渲染类保留 huige233 署名。本次没有运行客户端或重复 GameTest，截图匹配程度需玩家验收。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。
