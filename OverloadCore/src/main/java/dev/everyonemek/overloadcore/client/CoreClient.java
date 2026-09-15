@@ -109,9 +109,10 @@ public final class CoreClient {
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event) {
         var mc = Minecraft.getInstance(); var data = CorePackets.clientState;
-        if (mc.player == null || mc.options.hideGui || !data.getBoolean("bound")) return;
-        var gui = event.getGuiGraphics(); int x = 8, y = gui.guiHeight() - 56;
-        gui.drawString(mc.font, CoreContent.text("hud", data.getInt("load"), data.getInt("heat")), x, y, data.getBoolean("heavy") ? 0xFFFF7777 : 0xFFDBDEE7);
+        if (mc.player == null || mc.screen != null || mc.options.hideGui || !mc.player.isAlive()
+              || mc.player.isSpectator() || !data.getBoolean("bound")) return;
+        var gui = event.getGuiGraphics();
+        CoreHud.render(gui, mc.font, data);
         if (diagnostics) {
             int line = 0;
             for (var value : data.getList("devices", Tag.TAG_COMPOUND)) {
