@@ -8,7 +8,7 @@
   "overloadcore.warning": "装备后无法主动卸下，死亡仍保留。",
   "overloadcore.effects": "%s 格内，影响自有及授权的 Mek 设备。",
   "overloadcore.equip_hint": "手持挂坠，长按右键两秒佩戴。",
-  "overloadcore.details_hint": "按住 Shift 查看诅咒与收益。",
+  "overloadcore.details_hint": "按住 Shift 逐行查看诅咒与收益。",
   "overloadcore.hold_bind": "继续按住右键两秒，将永久装备过载短路核心。",
   "overloadcore.no_slot": "需要一个空的核心饰品槽。",
   "overloadcore.bound": "已绑定佩戴者。",

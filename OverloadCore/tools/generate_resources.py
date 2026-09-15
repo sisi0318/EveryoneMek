@@ -60,7 +60,7 @@ def generate(mek_jar):
         'overloadcore.warning': ('装备后无法主动卸下，死亡仍保留。', 'Cannot be removed in survival. Kept on death.'),
         'overloadcore.effects': ('%s 格内，影响自有及授权的 Mek 设备。', 'Affects owned/shared Mek devices within %s blocks.'),
         'overloadcore.equip_hint': ('手持挂坠，长按右键两秒佩戴。', 'Hold the pendant in your hand and use it for two seconds to equip.'),
-        'overloadcore.details_hint': ('按住 Shift 查看诅咒与收益。', 'Hold Shift to view curses and benefits.'),
+        'overloadcore.details_hint': ('按住 Shift 逐行查看诅咒与收益。', 'Hold Shift to reveal curses and benefits line by line.'),
         'overloadcore.hold_bind': ('继续按住右键两秒，将永久装备过载短路核心。', 'Keep holding use for two seconds to permanently equip the core.'),
         'overloadcore.no_slot': ('需要一个空的核心饰品槽。', 'An empty Core accessory slot is required.'),
         'overloadcore.bound': ('已绑定佩戴者。', 'Bound to its wearer.'),

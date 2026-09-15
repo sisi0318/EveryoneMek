@@ -1,46 +1,63 @@
 package dev.everyonemek.overloadcore.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.datafixers.util.Either;
 import dev.everyonemek.overloadcore.*;
 import java.util.ArrayList;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.*;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.*;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = OverloadCore.ID, value = Dist.CLIENT)
 public final class CoreClient {
     private static final KeyMapping KEY = new KeyMapping("key.overloadcore.status", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "key.categories.overloadcore");
     private static boolean diagnostics;
+    private static final TooltipReveal REVEAL = new TooltipReveal();
+    private record HoverTarget(Slot slot, Item item, DataComponentPatch components) { }
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             top.theillusivec4.curios.api.client.CuriosRendererRegistry.register(CoreContent.CORE.get(), PendantRenderer::new);
         });
     }
     @SubscribeEvent public static void keys(RegisterKeyMappingsEvent event) { event.register(KEY); }
+    @SubscribeEvent public static void tooltipFactory(RegisterClientTooltipComponentFactoriesEvent event) {
+        event.register(ProgressiveCoreTooltip.class, tooltip -> tooltip);
+    }
+    @SubscribeEvent public static void beforeFrame(RenderFrameEvent.Pre event) {
+        REVEAL.beginFrame(Screen.hasShiftDown() && Minecraft.getInstance().isWindowActive());
+    }
+    @SubscribeEvent public static void afterFrame(RenderFrameEvent.Post event) { REVEAL.endFrame(); }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance(); if (mc.player == null) { CorePackets.clientState = new CompoundTag(); return; }
         if (CorePackets.clientState.getBoolean("bound") && CorePackets.clientState.getBoolean("heavy")) mc.player.setSprinting(false);
         while (KEY.consumeClick()) diagnostics = !diagnostics;
     }
-    @SubscribeEvent public static void tooltip(ItemTooltipEvent event) {
+    @SubscribeEvent public static void tooltip(RenderTooltipEvent.GatherComponents event) {
         var stack = event.getItemStack();
-        if (!stack.is(CoreContent.CORE) || !Screen.hasShiftDown()) return;
-        var lines = event.getToolTip();
+        var mc = Minecraft.getInstance();
+        if (!stack.is(CoreContent.CORE) || !Screen.hasShiftDown() || !mc.isWindowActive()) return;
+        var lines = event.getTooltipElements();
         int hint = -1;
         for (int i = 0; i < lines.size(); i++) {
-            if (tooltipKey(lines.get(i), "details_hint")) { hint = i; break; }
+            if (lines.get(i).left().filter(line -> tooltipKey(line, "details_hint")).isPresent()) { hint = i; break; }
         }
         if (hint < 0) return;
 
@@ -55,18 +72,23 @@ public final class CoreClient {
             details.add(line.withStyle(ChatFormatting.GREEN));
         }
         var identity = stack.get(CoreContent.DATA.get());
-        var player = event.getEntity();
+        var player = mc.player;
         if (player != null && identity != null && identity.hasUUID("owner")
               && identity.getUUID("owner").equals(player.getUUID()) && CorePackets.clientState.getBoolean("bound")) {
             details.add(CoreContent.text("stored", CorePackets.clientState.getLong("energy")).withStyle(ChatFormatting.AQUA));
         }
-        lines.remove(hint);
-        lines.addAll(hint, details);
+        Slot slot = mc.screen instanceof AbstractContainerScreen<?> container ? container.getSlotUnderMouse() : null;
+        if (slot != null && !ItemStack.isSameItemSameComponents(slot.getItem(), stack)) slot = null;
+        long elapsed = REVEAL.sample(mc.screen, new HoverTarget(slot, stack.getItem(), stack.getComponentsPatch()), Util.getMillis());
+        int maxWidth = Math.min(360, Math.max(8, event.getScreenWidth() - 24));
+        if (event.getMaxWidth() > 0) maxWidth = Math.min(maxWidth, event.getMaxWidth());
+        lines.set(hint, Either.right(new ProgressiveCoreTooltip(details, elapsed, maxWidth)));
         // The first curse already states the removal rule; keep other mods' tooltip lines intact.
-        lines.removeIf(line -> tooltipKey(line, "warning"));
+        lines.removeIf(line -> line.left().filter(text -> tooltipKey(text, "warning")).isPresent());
     }
-    private static boolean tooltipKey(Component line, String key) {
-        return line.getContents() instanceof TranslatableContents content && content.getKey().equals("overloadcore." + key);
+    private static boolean tooltipKey(FormattedText line, String key) {
+        return line instanceof Component component && component.getContents() instanceof TranslatableContents content
+              && content.getKey().equals("overloadcore." + key);
     }
     public static boolean affected(double x, double y, double z) {
         if (!CorePackets.clientState.getBoolean("bound")) return false;
@@ -90,5 +112,7 @@ public final class CoreClient {
             }
         }
     }
-    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { CorePackets.clientState = new CompoundTag(); diagnostics = false; }
+    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) {
+        CorePackets.clientState = new CompoundTag(); diagnostics = false; REVEAL.reset();
+    }
 }
