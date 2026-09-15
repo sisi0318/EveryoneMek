@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.1，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.1.jar`。
+- 0.1.0-alpha.2，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.2.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -24,7 +24,8 @@
 - `GenerationHooks` / `Generator*Mixin`：在风、日照、生物、燃气、热、汽轮机、聚变的真实产电 insert 处折半，保存奇数余量；不减储能容量、旧电量、热量或蒸汽。模拟调用不改变余量。委托原调用，保留其他 WrapOperation 的链路。
 - `TransportHooks` / 网络及 Target Mixin：仅在原生分配中限制已授权端点，按实际接收量扣每 tick 预算；管道拉取限额与物品移动节奏另作窄范围适配。不缩容、不截物资、不让路径长度形成指数惩罚。热网、量子、AE/QIO 与其他模组不在当前范围。
 - `Workplace` / `MetalLoad`：原生伤害、遮挡、警示与冷却；活动/真实热源判定。金属标签可改，原版 CONTAINER 内容递归最多 4 层、1024 个非空项，超限保守计重，不查询远端存储。
-- `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K 打开三页说明，潜行 K 切换最多 8 台设备位置提示。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
+- `CoreItem` / `client/CoreClient.tooltip`：用户明确要求悬停挂坠按住 Shift，直接在原物品提示中逐行展示诅咒和收益，不使用独立说明窗口。基础提示保留在物品类，Shift 检测和扩展列表通过 Dist.CLIENT 的 ItemTooltipEvent 完成，避免公共物品类加载客户端 Screen。只替换本模组的提示键，保留 Curios 与其他模组添加的行。
+- `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K（含潜行 K）切换最多 8 台设备位置提示。info 命令在聊天栏报告状态，旧 Request 消息仍接受但不再打开窗口。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
 
 ## 目标版本已核实的 API 经验
 
@@ -42,6 +43,7 @@
 - 图稿在 `art/source/`，完整最终提示词在 `art/prompt-v2.txt`，来源为内置 ImageGen。`tools/export_art.cjs` 仅裁去透明外沿、保持比例最近邻导出真正 16×16 PNG，不重画或抠背景。运行物品模型同时由 Curios 挂坠渲染使用。
 - `build` 编译运行代码并检查 GameTest 源集；**不会执行 GameTest**。当前没有单独 JUnit 用例，不能把 NO-SOURCE 当单测通过。
 - 2026-09-15：`build runGameTestServer` 成功，**14/14**；不安装 Generators 的独立目录启动成功，**12/12**。覆盖真实两秒绑定、Clone、所有权/共享、并行工厂、产物空间与迟入范围、实际管道搬运、金属负载、机具充能、热/消声，以及生物发电和完整汽轮机结构。无需每次资源/文档修改重复全套。
+- alpha.2 的 Shift 物品提示变更通过 `classes jar`、中英文资源完整性与 JAR 检查；确认原说明窗口类已移除、公共物品类不引用客户端类。未因这次显示改动重复运行全套 GameTest，实际提示位置由用户验收。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

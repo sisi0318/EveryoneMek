@@ -1,6 +1,7 @@
 package dev.everyonemek.overloadcore;
 
 import java.util.List;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.LivingEntity;
@@ -53,9 +54,11 @@ public final class CoreItem extends Item implements ICurioItem {
         return ICurio.DropRule.ALWAYS_KEEP;
     }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> text, TooltipFlag flag) {
-        text.add(CoreContent.text("lore")); text.add(CoreContent.text("warning")); text.add(CoreContent.text("effects", CoreConfig.RANGE.get()));
-        text.add(CoreContent.text("benefits")); text.add(CoreContent.text("details_hint"));
+        text.add(CoreContent.text("lore").withStyle(ChatFormatting.GRAY));
+        text.add(CoreContent.text("warning").withStyle(ChatFormatting.RED));
+        text.add(CoreContent.text("equip_hint").withStyle(ChatFormatting.GRAY));
+        text.add(CoreContent.text("details_hint").withStyle(ChatFormatting.DARK_GRAY));
         var data = stack.get(CoreContent.DATA.get());
-        if (data != null && data.hasUUID("owner")) text.add(CoreContent.text("bound"));
+        if (data != null && data.hasUUID("owner")) text.add(CoreContent.text("bound").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

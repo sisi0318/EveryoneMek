@@ -1,7 +1,6 @@
 package dev.everyonemek.overloadcore;
 
 import java.util.*;
-import java.util.function.Consumer;
 import mekanism.common.util.UnitDisplayUtils.EnergyUnit;
 import net.minecraft.nbt.*;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -14,7 +13,6 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public final class CorePackets {
     public static CompoundTag clientState = new CompoundTag();
-    public static Consumer<CompoundTag> onClient = state -> { };
     public record Status(CompoundTag data) implements CustomPacketPayload {
         public static final Type<Status> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "status"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Status> CODEC = StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, Status::data, Status::new);
@@ -27,7 +25,7 @@ public final class CorePackets {
     }
     public static void register(RegisterPayloadHandlersEvent event) {
         var registrar = event.registrar("1");
-        registrar.playToClient(Status.TYPE, Status.CODEC, (packet, context) -> context.enqueueWork(() -> { clientState = packet.data.copy(); onClient.accept(clientState); }));
+        registrar.playToClient(Status.TYPE, Status.CODEC, (packet, context) -> context.enqueueWork(() -> clientState = packet.data.copy()));
         registrar.playToServer(Request.TYPE, Request.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player) || packet.action != 0) return;
             var data = CoreBinding.data(player); long tick = player.level().getGameTime();
@@ -35,9 +33,9 @@ public final class CorePackets {
             data.putLong("last_request", tick); CoreBinding.save(player, data); sendStatus(player, true);
         }));
     }
-    public static void sendStatus(ServerPlayer player, boolean open) {
+    public static void sendStatus(ServerPlayer player, boolean report) {
         var tag = new CompoundTag(); var data = CoreBinding.data(player);
-        tag.putBoolean("bound", CoreBinding.bound(player)); tag.putBoolean("open", open);
+        tag.putBoolean("bound", CoreBinding.bound(player));
         tag.putBoolean("heavy", data.getBoolean("heavy")); tag.putInt("load", data.getInt("load")); tag.putInt("heat", data.getInt("heat")); tag.putInt("noise", data.getInt("noise"));
         tag.putLong("energy", (long) EnergyUnit.FORGE_ENERGY.convertTo(Math.max(0, data.getLong("energy"))));
         var devices = new ListTag(); var seen = new HashSet<net.minecraft.core.BlockPos>();
@@ -59,6 +57,10 @@ public final class CorePackets {
             devices.add(entry);
         }
         tag.put("devices", devices); PacketDistributor.sendToPlayer(player, new Status(tag));
+        if (report) {
+            player.displayClientMessage(CoreContent.text("stored", tag.getLong("energy")), false);
+            player.displayClientMessage(CoreContent.text("hud", tag.getInt("load"), tag.getInt("heat")), false);
+        }
     }
     private CorePackets() { }
 }

@@ -2,20 +2,21 @@ package dev.everyonemek.overloadcore.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.everyonemek.overloadcore.*;
+import java.util.ArrayList;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.*;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.*;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = OverloadCore.ID, value = Dist.CLIENT)
@@ -24,7 +25,6 @@ public final class CoreClient {
     private static boolean diagnostics;
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            CorePackets.onClient = data -> { if (data.getBoolean("open")) Minecraft.getInstance().setScreen(new CoreScreen()); };
             top.theillusivec4.curios.api.client.CuriosRendererRegistry.register(CoreContent.CORE.get(), PendantRenderer::new);
         });
     }
@@ -32,10 +32,41 @@ public final class CoreClient {
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance(); if (mc.player == null) { CorePackets.clientState = new CompoundTag(); return; }
         if (CorePackets.clientState.getBoolean("bound") && CorePackets.clientState.getBoolean("heavy")) mc.player.setSprinting(false);
-        while (KEY.consumeClick()) {
-            if (Screen.hasShiftDown()) diagnostics = !diagnostics;
-            else PacketDistributor.sendToServer(new CorePackets.Request(0));
+        while (KEY.consumeClick()) diagnostics = !diagnostics;
+    }
+    @SubscribeEvent public static void tooltip(ItemTooltipEvent event) {
+        var stack = event.getItemStack();
+        if (!stack.is(CoreContent.CORE) || !Screen.hasShiftDown()) return;
+        var lines = event.getToolTip();
+        int hint = -1;
+        for (int i = 0; i < lines.size(); i++) {
+            if (tooltipKey(lines.get(i), "details_hint")) { hint = i; break; }
         }
+        if (hint < 0) return;
+
+        var details = new ArrayList<Component>();
+        details.add(CoreContent.text("effects", CoreConfig.RANGE.get()).withStyle(ChatFormatting.GRAY));
+        for (int i = 0; i < 8; i++) {
+            var line = i == 6 ? CoreContent.text("curse." + i, CoreConfig.METAL_LIMIT.get()) : CoreContent.text("curse." + i);
+            details.add(line.withStyle(ChatFormatting.RED));
+        }
+        for (int i = 0; i < 4; i++) {
+            var line = i == 3 ? CoreContent.text("gift." + i, KEY.getTranslatedKeyMessage()) : CoreContent.text("gift." + i);
+            details.add(line.withStyle(ChatFormatting.GREEN));
+        }
+        var identity = stack.get(CoreContent.DATA.get());
+        var player = event.getEntity();
+        if (player != null && identity != null && identity.hasUUID("owner")
+              && identity.getUUID("owner").equals(player.getUUID()) && CorePackets.clientState.getBoolean("bound")) {
+            details.add(CoreContent.text("stored", CorePackets.clientState.getLong("energy")).withStyle(ChatFormatting.AQUA));
+        }
+        lines.remove(hint);
+        lines.addAll(hint, details);
+        // The first curse already states the removal rule; keep other mods' tooltip lines intact.
+        lines.removeIf(line -> tooltipKey(line, "warning"));
+    }
+    private static boolean tooltipKey(Component line, String key) {
+        return line.getContents() instanceof TranslatableContents content && content.getKey().equals("overloadcore." + key);
     }
     public static boolean affected(double x, double y, double z) {
         if (!CorePackets.clientState.getBoolean("bound")) return false;
@@ -60,28 +91,4 @@ public final class CoreClient {
         }
     }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { CorePackets.clientState = new CompoundTag(); diagnostics = false; }
-    private static final class CoreScreen extends Screen {
-        private int page;
-        CoreScreen() { super(Component.translatable("item.overloadcore.overloaded_short_circuit_core")); }
-        @Override protected void init() {
-            int x=(width-300)/2, y=(height-228)/2;
-            addRenderableWidget(Button.builder(CoreContent.text("page"), b -> { page=(page+1)%3; b.setMessage(CoreContent.text("page").append(" "+(page+1)+"/3")); }).bounds(x+16,y+202,128,20).build());
-            addRenderableWidget(Button.builder(CoreContent.text("close"), b -> onClose()).bounds(x+156,y+202,128,20).build());
-        }
-        @Override public boolean isPauseScreen() { return false; }
-        @Override public void render(GuiGraphics gui, int mx, int my, float partial) {
-            int x=(width-300)/2, y=(height-228)/2; var data=CorePackets.clientState;
-            gui.fill(x-1,y-1,x+301,y+229,0xFF647180); gui.fill(x,y,x+300,y+228,0xEF171E28);
-            gui.drawCenteredString(font,title,width/2,y+12,0xFFE6E9EF);
-            gui.drawString(font,CoreContent.text(data.getBoolean("bound")?"bound":"warning"),x+16,y+32,0xFFFF99AD);
-            gui.drawString(font,CoreContent.text("stored",data.getLong("energy")),x+16,y+47,0xFF88D6DC);
-            gui.drawString(font,CoreContent.text("hud",data.getInt("load"),data.getInt("heat")),x+16,y+62,0xFFD9DFE7);
-            if (page<2) for(int i=0;i<4;i++) gui.drawWordWrap(font,CoreContent.text("curse."+(page*4+i)),x+16,y+83+i*24,268,0xFFCFD4DE);
-            else {
-                for(int i=0;i<4;i++) gui.drawWordWrap(font,CoreContent.text("gift."+i),x+16,y+83+i*24,268,0xFFACDCC7);
-                gui.drawWordWrap(font,CoreContent.text("sharing_hint"),x+16,y+178,268,0xFFBAC3D3);
-            }
-            super.render(gui,mx,my,partial);
-        }
-    }
 }
