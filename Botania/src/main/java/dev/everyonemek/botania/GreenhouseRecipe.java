@@ -16,16 +16,16 @@ import vazkii.botania.api.recipe.ProcessingRecipeInput;
 /** Fixed datapack recipes and native formula recipes use the same machine executor. */
 public record GreenhouseRecipe(Ingredient flower, String formula, List<Ingredient> materials,
       FluidStack fluid, int mana, int ticks, int cooldown) implements Recipe<ProcessingRecipeInput> {
-    public static final List<String> FORMULAS = List.of("fixed", "endoflame", "gourmaryllis", "spectrolus", "thermalily",
-          "kekimurus", "munchdew", "entropinnyum", "rafflowsia");
     public GreenhouseRecipe {
         materials = List.copyOf(materials); fluid = fluid.copy();
-        if (!FORMULAS.contains(formula) || materials.size() > 16 || mana < 0 || mana > ManaMachine.MANA_CAPACITY
+        if ((!GreenhouseRules.isFixed(formula) && GreenhouseRules.get(formula) == null) || materials.size() > 16 || mana < 0 || mana > ManaMachine.MANA_CAPACITY
               || ticks < 1 || ticks > 2_000_000 || cooldown < 0 || cooldown > 2_000_000
               || fluid.getAmount() > GreenhouseWork.FLUID_CAPACITY
-              || formula.equals("fixed") && (mana == 0 || materials.isEmpty() && fluid.isEmpty()))
+              || GreenhouseRules.isFixed(formula) && (mana == 0 || materials.isEmpty() && fluid.isEmpty()))
             throw new IllegalArgumentException("Invalid mana greenhouse recipe");
     }
+    public boolean fixed() { return GreenhouseRules.isFixed(formula); }
+    public GreenhouseFlowerRule rule() { return GreenhouseRules.get(formula); }
     @Override public boolean matches(ProcessingRecipeInput input, Level level) { return false; }
     @Override public ItemStack assemble(ProcessingRecipeInput input, HolderLookup.Provider registries) { return ItemStack.EMPTY; }
     @Override public ItemStack getResultItem(HolderLookup.Provider registries) { return ItemStack.EMPTY; }
@@ -45,12 +45,12 @@ public record GreenhouseRecipe(Ingredient flower, String formula, List<Ingredien
         ).apply(i, GreenhouseRecipe::new));
         private static final StreamCodec<RegistryFriendlyByteBuf, GreenhouseRecipe> STREAM = new StreamCodec<>() {
             @Override public GreenhouseRecipe decode(RegistryFriendlyByteBuf buf) {
-                return new GreenhouseRecipe(Ingredient.CONTENTS_STREAM_CODEC.decode(buf), buf.readUtf(32),
+                return new GreenhouseRecipe(Ingredient.CONTENTS_STREAM_CODEC.decode(buf), buf.readUtf(GreenhouseRules.MAX_ID_LENGTH),
                       Ingredient.CONTENTS_STREAM_CODEC.apply(net.minecraft.network.codec.ByteBufCodecs.list(16)).decode(buf), FluidStack.OPTIONAL_STREAM_CODEC.decode(buf),
                       buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
             }
             @Override public void encode(RegistryFriendlyByteBuf buf, GreenhouseRecipe r) {
-                Ingredient.CONTENTS_STREAM_CODEC.encode(buf, r.flower); buf.writeUtf(r.formula, 32);
+                Ingredient.CONTENTS_STREAM_CODEC.encode(buf, r.flower); buf.writeUtf(r.formula, GreenhouseRules.MAX_ID_LENGTH);
                 Ingredient.CONTENTS_STREAM_CODEC.apply(net.minecraft.network.codec.ByteBufCodecs.list(16)).encode(buf, r.materials);
                 FluidStack.OPTIONAL_STREAM_CODEC.encode(buf, r.fluid); buf.writeVarInt(r.mana); buf.writeVarInt(r.ticks); buf.writeVarInt(r.cooldown);
             }

@@ -20,7 +20,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
-import vazkii.botania.common.component.BotaniaDataComponents;
 
 @JeiPlugin
 public final class GreenhouseJei implements IModPlugin {
@@ -34,27 +33,26 @@ public final class GreenhouseJei implements IModPlugin {
         var displays = new ArrayList<Display>();
         for (var holder : GreenhouseWork.recipes(level)) {
             var r = holder.value();
-            if (r.formula().equals("fixed")) { displays.add(new Display(r, r.materials(), r.fluid(), r.mana(), r.ticks(), r.cooldown())); continue; }
+            if (r.fixed()) { displays.add(new Display(r, r.materials(), r.fluid(), r.mana(), r.ticks(), r.cooldown())); continue; }
             var flowers = r.flower().getItems(); if (flowers.length == 0) continue;
             var flower = flowers[0].copyWithCount(1);
-            if (r.formula().equals("thermalily")) {
+            var rule = r.rule();
+            if (rule.fluidAmount() > 0) {
                 for (var fluid : BuiltInRegistries.FLUID) {
                     if (!fluid.isSource(fluid.defaultFluidState())) continue;
-                    var stack = new FluidStack(fluid, 1000);
-                    var result = GreenhouseNative.resolve(r.formula(), flower, ItemStack.EMPTY, stack, level);
-                    if (result != null) displays.add(new Display(r, List.of(), stack, result.mana(), result.ticks(), result.cooldown()));
+                    var stack = new FluidStack(fluid, rule.fluidAmount());
+                    if (!rule.acceptsFluid(stack)) continue;
+                    var result = rule.resolve(flower.copy(), ItemStack.EMPTY, stack, level);
+                    if (GreenhouseWork.validResult(result, flower)) displays.add(new Display(r, List.of(), stack, result.mana(), result.ticks(), result.cooldown()));
                 }
                 continue;
             }
             for (var item : BuiltInRegistries.ITEM) {
-                var input = new ItemStack(item); if (!GreenhouseNative.accepts(r.formula(), input)) continue;
-                if (r.formula().equals("spectrolus")) {
-                    var color = vazkii.botania.common.helper.ColorHelper.supportedColors()
-                          .filter(c -> input.is(vazkii.botania.common.helper.ColorHelper.WOOL_MAP.apply(c).asItem())).findFirst().orElse(null);
-                    if (color == null) continue; flower.set(BotaniaDataComponents.NEXT_COLOR, color);
-                }
-                var result = GreenhouseNative.resolve(r.formula(), flower, input, FluidStack.EMPTY, level);
-                if (result != null) displays.add(new Display(r, List.of(Ingredient.of(input)), FluidStack.EMPTY, result.mana(), result.ticks(), result.cooldown()));
+                var input = new ItemStack(item); if (!rule.acceptsItem(input)) continue;
+                var preview = rule.previewFlower(flower.copy(), input.copy(), level);
+                if (preview == null || preview.isEmpty()) continue;
+                var result = rule.resolve(preview, input, FluidStack.EMPTY, level);
+                if (GreenhouseWork.validResult(result, flower)) displays.add(new Display(r, List.of(Ingredient.of(input)), FluidStack.EMPTY, result.mana(), result.ticks(), result.cooldown()));
             }
         }
         registration.addRecipes(TYPE, displays);
@@ -73,7 +71,7 @@ public final class GreenhouseJei implements IModPlugin {
             for (int i = 0; i < d.inputs.size(); i++) b.addSlot(RecipeIngredientRole.INPUT, 1 + i % 4 * 18, 25 + i / 4 * 18).setBackground(slot, -1, -1).addIngredients(d.inputs.get(i));
             if (!d.fluid.isEmpty()) b.addSlot(RecipeIngredientRole.INPUT, 80, 25).setBackground(slot, -1, -1).addFluidStack(d.fluid.getFluid(), d.fluid.getAmount());
             // History-dependent yields are visible but must not become fixed AE pattern outputs.
-            var role = d.recipe.formula().equals("gourmaryllis") || d.recipe.formula().equals("rafflowsia")
+            var role = !d.recipe.fixed() && d.recipe.rule().variableOutput()
                   ? RecipeIngredientRole.RENDER_ONLY : RecipeIngredientRole.OUTPUT;
             b.addSlot(role, 134, 25).setBackground(slot, -1, -1).addIngredient(ManaIngredient.TYPE, new ManaIngredient(d.mana));
         }
@@ -82,9 +80,8 @@ public final class GreenhouseJei implements IModPlugin {
             gui.drawString(font, text("flower"), 23, 5, 0x444444, false);
             gui.drawString(font, "→", 110, 28, 0x666666, false);
             gui.drawString(font, text("ticks", d.ticks), 0, 98, 0x444444, false);
-            String formula = d.recipe.formula();
-            if (formula.equals("gourmaryllis") || formula.equals("rafflowsia")) gui.drawString(font, text("variety"), 0, 109, 0x444444, false);
-            else if (formula.equals("spectrolus") || formula.equals("munchdew")) gui.drawString(font, text(formula), 0, 109, 0x444444, false);
+            var note = d.recipe.fixed() ? Component.empty() : d.recipe.rule().recipeNote();
+            if (!note.getString().isEmpty()) gui.drawString(font, note, 0, 109, 0x444444, false);
             else if (d.cooldown > 0) gui.drawString(font, text("cooldown", d.cooldown), 0, 109, 0x444444, false);
         }
     }

@@ -6,7 +6,7 @@
 
 Botania 456 的产能花没有统一配方表。各花在自己的 BlockEntity 中判断物品、流体、世界条件和产量；不能只枚举物品注册表就推出任意花的需求。
 
-温室采用两层结构：`GreenhouseNative` 将已核对的原生规则转换成一次加工计划，`GreenhouseWork` 执行材料、流体、工时、冷却和魔力结算。机器不运行隐藏花、不扫描附近掉落物，也不模拟羊、爆炸或其他世界事件。
+alpha.30 借鉴 ExtraMachinery 的注册式组织方式：`GreenhouseRules` 按 ID 查找 `GreenhouseFlowerRule`，内置八种规则由 `BuiltinGreenhouseRules` 提供；`GreenhouseWork` 统一执行材料、流体、工时、冷却和魔力结算。原有运行规则与数值保留，`GreenhouseNative` 继续提供旧的辅助调用入口。机器不运行隐藏花、不扫描附近掉落物，也不模拟羊、爆炸或其他世界事件。
 
 | 公式 ID | 原生读取与转换 |
 | --- | --- |
@@ -48,9 +48,41 @@ JEI 的食物与食花配方显示首次使用的产量，并标出搭配条件�
 - `mana`：固定配方需 1～1,000,000，必须能一次放入机内罐。
 - `ticks`：加工时间，默认 1，范围 1～2,000,000。工作消耗基础 50 FE/t，支持能量升级，无速度升级。
 - `cooldown`：完成后暂停供料的时间，默认 0，最大 2,000,000 tick。冷却不耗电，红石暂停也暂停倒计时。
-- `formula`：默认 `fixed`。写上表的原生公式 ID 时，材料、产量、时间和条件由适配器计算；不要同时填写固定参数并期待其覆盖原规则。调整特定材料可另写固定配方，覆盖默认配方文件或删除不需要的公式配方。
+- `formula`：默认 `fixed`。写上表的原生短名或完整的 `botanicalmekanism:<短名>` 均可；其他扩展使用各自命名空间的已注册规则 ID。材料、产量、时间和条件由规则计算；不要同时填写固定参数并期待其覆盖原规则。调整特定材料可另写固定配方，覆盖默认配方文件或删除不需要的公式配方。
 
 固定配方至少需要一种实际消耗的物品或流体。物品的合成返还物进入返还槽；空间不足时不会开始扣料。配方按资源 ID 排序匹配，第一个可执行配方优先。数据包重载后，旧计划会重新核对配方对象和工作签名。
+
+## 注册额外的花规则
+
+固定物品／流体配方仍直接用 JSON。需要动态收益或花状态时，扩展模组可以在客户端和服务端的 `FMLCommonSetupEvent.enqueueWork` 中调用：
+
+```java
+GreenhouseRules.register(
+    ResourceLocation.fromNamespaceAndPath("myaddon", "custom_flower"),
+    new MyFlowerRule()
+);
+```
+
+然后在温室 JSON 配方中声明花与规则：
+
+```json
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "flower": {"item": "myaddon:custom_flower"},
+  "formula": "myaddon:custom_flower"
+}
+```
+
+实现 `GreenhouseFlowerRule` 时，主要提供原料判断和一次加工结果：
+
+- 物品型实现 `acceptsItem` 与 `resolve`，每次消耗一件。流体型实现 `acceptsFluid`、固定的 `fluidAmount` 与 `resolve`；设定量为 1～16,000 mB。多种物品或物品与流体混用继续使用固定数据包配方。
+- `resolve` 返回 `GreenhouseNative.Result(mana, ticks, cooldown, nextFlower, preference)`。`preference` 越高越优先，原来的食物搭配正通过这个字段选料；相同分数按材料槽顺序选择。
+- `prepare` 可初始化花状态；`onBlocked` 处理断料或魔力不足以容纳下一份产量的情况。参数是副本，返回值必须保留花的物品类型和数量。空结果、换物品或非法数量不会写回。
+- 所有规则对象为共享对象，单朵花的历史应放进返回花的组件中。`resolve` 必须是确定性的，不得修改世界、调用者库存或在对象字段中累积进食记录；执行器会缓存计划，成功完成后才保存 `nextFlower`。
+- `statusInfo` 提供花的状态提示，`recipeNote` 提供 JEI 简短说明，`previewFlower` 可为展示提供对应的花状态。`variableOutput=true` 时，魔力只进入 JEI 展示槽，不作为固定 AE 样板输出。
+- 同一个规则 ID 不允许被再次覆盖，`fixed` 为保留 ID。规则须先于配方加载注册，且客户端与服务端都安装对应扩展。原有短名继续映射到本模组命名空间，网络同步支持最长 256 字符的规则 ID。
+
+内置的食物历史、羊毛颜色、熔岩标签、冷却参数和产量计算没有改成 ExtraMachinery 的固定收益／统一 20 tick 周期。借鉴的是统一接口和注册方式。八种花仍然运行上表的原有规则。
 
 ## 存储、物流与计算
 
@@ -63,8 +95,10 @@ JEI 的食物与食花配方显示首次使用的产量，并标出搭配条件�
 
 ## 开发入口
 
-- `GreenhouseRecipe.java`：JSON／网络序列化；`GreenhouseNative.java`：版本适配和纯收益计算。
+- `GreenhouseRecipe.java`：JSON／网络序列化；`GreenhouseRules.java`／`GreenhouseFlowerRule.java`：注册与扩展契约。
+- `BuiltinGreenhouseRules.java`：八种原生规则、状态和展示信息；`GreenhouseNative.java`：原辅助调用入口。
 - `GreenhouseWork.java`、`ManaMachine.greenhouseTick`：匹配、缓存、进度及原子结算。
 - `tools/greenhouse_resources.py`：默认公式配方；`client/GreenhouseJei.java`：配方展开与展示。
 - `tools/botanical_models.py`、`client/GreenhouseFlowerRenderer.java`：原材质框架和实际装入花的原模型。
 - `GreenhouseGameTests.java`：资源计量、原公式、固定数据包配方、供料、满仓／红石、状态保存、火花与侧面权限。
+- `GreenhouseRuleGameTests.java`：测试扩展在初始化时注册自定义流体规则，通过真实数据配方、网络序列化、流体口、状态回调和通用执行器完成加工；测试资源不进入正式 JAR。

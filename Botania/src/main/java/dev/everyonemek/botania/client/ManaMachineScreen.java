@@ -86,8 +86,7 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
             var flower = tile.extras.getFirst().getStack();
             int cooldown = GreenhouseWork.cooldown(flower);
             if (cooldown > 0) gui.drawString(font, text("cooldown", (cooldown + 19) / 20), 16, 147, titleTextColor(), false);
-            else if (GreenhouseWork.recipes(tile.getLevel()).stream().anyMatch(r -> r.value().flower().test(flower) && r.value().formula().equals("spectrolus")))
-                gui.drawString(font, text("next_wool", GreenhouseNative.expectedWool(flower, tile.getLevel()).getHoverName()), 16, 147, titleTextColor(), false);
+            else gui.drawString(font, GreenhouseWork.flowerInfo(tile), 16, 147, titleTextColor(), false);
         }
     }
 }

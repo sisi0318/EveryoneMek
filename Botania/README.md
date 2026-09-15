@@ -1,6 +1,6 @@
 # Botanical Mekanism
 
-**0.1.0-alpha.29** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.30** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 用电能驱动的仿生花，以及协助调合、灌注和输送魔力的机器。配方和用法可以在植物魔法词典的“植物机械”分类中查看。手持词典右击机器或花，可直接打开它的条目。
 
@@ -20,7 +20,7 @@
 
 下载本模组后，替换旧的 BotanicalMekanism JAR。原有物品、魔力和设置会保留。没有 AE2 也能使用花和加工机器；织网花和 ME 魔力存储盘需要 AE2。
 
-本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.29.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
+本地构建产物：`build/libs/BotanicalMekanism-0.1.0-alpha.30.jar`。Botania 的下载来源及校验值见 [upstream-lock.json](upstream-lock.json)。
 
 ## 魔力温室
 
@@ -43,7 +43,7 @@
 
 材料在完成时扣除。魔力放不下、返还物没空间或断电时停止加工；红石可暂停。冷却、食物历史、羊毛顺序随花保存，拆装温室保留库存、流体、魔力和未完成进度。能量升级可省电，温室不接受速度升级，产魔节奏按花的规则运行。
 
-数据包扩展格式与原生适配边界见 [GREENHOUSE.md](GREENHOUSE.md)，痛点调研见 [PAIN_POINTS.md](PAIN_POINTS.md)。
+数据包格式、规则注册接口与原生适配边界见 [GREENHOUSE.md](GREENHOUSE.md)，痛点调研见 [PAIN_POINTS.md](PAIN_POINTS.md)。
 
 ## 仿生花
 

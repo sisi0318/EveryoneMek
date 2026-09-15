@@ -184,3 +184,11 @@
 核对当前 AE2 19.2.17 的 IManagedGridNode、GridHelper.createConnection、GridNode、GridConnection、PathingCalculation、MEP2PTunnelPart 和 IEnergyService。GridNode 默认容量为 8／32 ×频道倍率，控制器节点为 CANNOT_CARRY 且从连接开始分配。只给自建虚拟节点及连接扩大容量，由原路径算法计算实际频道；普通电缆节点不修改。
 
 参考 ME P2P 在 tick 末创建／销毁自有连接、等待网络状态变化的生命周期；没有复制原 P2P 类或实现第二套库存。CableBus 方块会先接管右键，机械火花针对 AE 安装点需在 onItemUseFirst 调原 Botania 放置路径。原 SparkAttachable 验证、生成实体和副手染色均保留。
+
+## ExtraMachinery 温室规则（alpha.30 参考）
+
+2026-09-15 核对其 master 与本地参考源码同为 `b1092e75c9e94637b19b6490968e4b16a65f9659`，对应 Minecraft 1.20.1。
+
+- [GenFlowers](https://github.com/lentel27/ExtraMachinery/blob/b1092e75c9e94637b19b6490968e4b16a65f9659/src/main/java/net/lmor/botanicalextramachinery/blocks/flowersGreenhouse/GenFlowers.java) 以物品到处理器的 Map 登记规则，提供 availableFuel／getPerMana；[EventListener](https://github.com/lentel27/ExtraMachinery/blob/b1092e75c9e94637b19b6490968e4b16a65f9659/src/main/java/net/lmor/botanicalextramachinery/events/EventListener.java) 在数据同步事件手工登记八种花及可选 MythicBotany 花，并非读取 Botania 的产能配方表。
+- [BlockEntityGreenhouse](https://github.com/lentel27/ExtraMachinery/blob/b1092e75c9e94637b19b6490968e4b16a65f9659/src/main/java/net/lmor/botanicalextramachinery/blocks/tiles/BlockEntityGreenhouse.java) 默认统一间隔 20 tick，按花和原料数量批量结算。火红莲以燃烧值为基础收益，彼方兰固定 1.8 倍，部分花从它自己的配置取得定值；这些是其简化后的规则。
+- 用户明确保留我们的运行模式，因此仅借鉴统一规则注册和调用结构。alpha.30 用 GreenhouseFlowerRule／GreenhouseRules 接入原有状态式规则，未复制对方代码、贴图或简化收益，也未修改原 Botania JAR。

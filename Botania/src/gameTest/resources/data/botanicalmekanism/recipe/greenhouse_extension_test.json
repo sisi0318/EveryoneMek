@@ -1,0 +1,5 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "flower": {"item": "botania:hydroangeas"},
+  "formula": "botanicalmekanism_test:long_named_registered_water_rule"
+}

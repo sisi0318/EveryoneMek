@@ -220,7 +220,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         GreenhouseWork.prepareFlower(this);
         if (GreenhouseWork.cool(this)) { resetWork(); return; }
         var plan = GreenhouseWork.find(this);
-        if (plan == null) { resetWork(); GreenhouseWork.stopLeafRun(this); status = extras.getFirst().isEmpty() ? NO_FLOWER : NO_RECIPE; return; }
+        if (plan == null) { resetWork(); GreenhouseWork.onBlocked(this); status = extras.getFirst().isEmpty() ? NO_FLOWER : NO_RECIPE; return; }
         long cost = energy.getEnergyPerTick();
         if (plan != greenhousePlan || cost != greenhouseEnergyCost) {
             var current = plan.signature(this); current.putLong("energy_per_tick", cost);
@@ -229,7 +229,7 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         }
         var products = mergeOutputs(plan.remainders(this));
         if (products == null) { status = OUTPUT_FULL; return; }
-        if (mana.getNeeded() < plan.mana()) { GreenhouseWork.stopLeafRun(this); status = MANA_FULL; return; }
+        if (mana.getNeeded() < plan.mana()) { GreenhouseWork.onBlocked(this); status = MANA_FULL; return; }
         if (!spendEnergy(cost)) { status = NO_ENERGY; return; }
         status = WORKING; setActive(true);
         if (++progress >= duration) { plan.commit(this, products); resetWork(); }

@@ -32,16 +32,17 @@ public final class GreenhouseWork {
     public static boolean accepts(Level level, ItemStack stack, boolean flower) {
         if (stack.isEmpty()) return false;
         if (level == null) return true;
-        return recipes(level).stream().anyMatch(r -> flower ? r.value().flower().test(stack) : r.value().formula().equals("fixed")
-              ? r.value().materials().stream().anyMatch(i -> i.test(stack)) : GreenhouseNative.accepts(r.value().formula(), stack));
+        return recipes(level).stream().anyMatch(r -> flower ? r.value().flower().test(stack) : r.value().fixed()
+              ? r.value().materials().stream().anyMatch(i -> i.test(stack)) : r.value().rule().acceptsItem(stack));
     }
     public static boolean acceptsFluid(ManaMachine tile, FluidStack stack) {
         var level = tile.getLevel();
         if (stack.isEmpty()) return false;
         if (level == null) return true;
         var flower = tile.extras == null || tile.extras.isEmpty() ? ItemStack.EMPTY : tile.extras.getFirst().getStack();
-        return recipes(level).stream().filter(r -> flower.isEmpty() || r.value().flower().test(flower)).anyMatch(r -> r.value().formula().equals("thermalily") ? stack.is(GreenhouseNative.thermalily().botanicalmekanism$fluid())
-              : !r.value().fluid().isEmpty() && FluidStack.isSameFluidSameComponents(r.value().fluid(), stack));
+        return recipes(level).stream().filter(r -> flower.isEmpty() || r.value().flower().test(flower)).anyMatch(r -> r.value().fixed()
+              ? !r.value().fluid().isEmpty() && FluidStack.isSameFluidSameComponents(r.value().fluid(), stack)
+              : r.value().rule().fluidAmount() > 0 && r.value().rule().acceptsFluid(stack));
     }
     private static CompoundTag data(ItemStack flower) { return flower.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getCompound(DATA); }
     private static void data(ItemStack flower, CompoundTag data) {
@@ -59,21 +60,36 @@ public final class GreenhouseWork {
         var next = flower.copy(); cooldown(next, remaining - 1); tile.extras.getFirst().setStackUnchecked(next);
         tile.status(ManaMachine.COOLING); return true;
     }
-    public static void prepareFlower(ManaMachine tile) {
-        var flower = tile.extras.getFirst().getStack();
-        if (flower.isEmpty() || flower.has(BotaniaDataComponents.COLOR_SEQUENCE)) return;
-        if (recipes(tile.getLevel()).stream().noneMatch(r -> r.value().formula().equals("spectrolus") && r.value().flower().test(flower))) return;
-        var next = flower.copy(); var colors = GreenhouseNative.colors(flower, tile.getLevel());
-        next.set(BotaniaDataComponents.COLOR_SEQUENCE, List.copyOf(colors));
-        if (!next.has(BotaniaDataComponents.NEXT_COLOR)) next.set(BotaniaDataComponents.NEXT_COLOR, colors.getFirst());
-        tile.extras.getFirst().setStackUnchecked(next);
+    public static boolean leafRunning(ItemStack flower) { return data(flower).getBoolean("leaf_run"); }
+    public static void prepareFlower(ManaMachine tile) { updateFlower(tile, false); }
+    public static void onBlocked(ManaMachine tile) { updateFlower(tile, true); }
+    /** Kept for callers of the alpha.29 API. */
+    public static void stopLeafRun(ManaMachine tile) { onBlocked(tile); }
+    private static void updateFlower(ManaMachine tile, boolean blocked) {
+        var slot = tile.extras.getFirst(); if (slot.isEmpty()) return;
+        for (var holder : recipes(tile.getLevel())) {
+            var recipe = holder.value(); var flower = slot.getStack();
+            if (recipe.fixed() || !recipe.flower().test(flower)) continue;
+            var next = blocked ? recipe.rule().onBlocked(flower.copy(), tile.getLevel()) : recipe.rule().prepare(flower.copy(), tile.getLevel());
+            if (sameFlower(flower, next) && !ItemStack.matches(flower, next)) slot.setStackUnchecked(next.copy());
+        }
     }
-    public static void stopLeafRun(ManaMachine tile) {
+    public static net.minecraft.network.chat.Component flowerInfo(ManaMachine tile) {
         var flower = tile.extras.getFirst().getStack();
-        if (!data(flower).getBoolean("leaf_run")) return;
-        var next = flower.copy(); setLeafRun(next, false);
-        cooldown(next, dev.everyonemek.botania.mixin.CultivatedMunchdewAccess.botanicalmekanism$cooldown());
-        tile.extras.getFirst().setStackUnchecked(next);
+        for (var holder : recipes(tile.getLevel())) {
+            var recipe = holder.value(); if (recipe.fixed() || !recipe.flower().test(flower)) continue;
+            var info = recipe.rule().statusInfo(flower.copy(), tile.getLevel());
+            if (!info.getString().isEmpty()) return info;
+        }
+        return net.minecraft.network.chat.Component.empty();
+    }
+    private static boolean sameFlower(ItemStack before, ItemStack after) {
+        return after != null && !after.isEmpty() && after.getCount() == before.getCount() && before.is(after.getItem());
+    }
+    public static boolean validResult(GreenhouseNative.Result result, ItemStack flower) {
+        return result != null && result.mana() > 0 && result.mana() <= ManaMachine.MANA_CAPACITY
+              && result.ticks() >= 1 && result.ticks() <= 2_000_000 && result.cooldown() >= 0 && result.cooldown() <= 2_000_000
+              && sameFlower(flower, result.flower());
     }
     public record Plan(ResourceLocation id, int[] consume, FluidStack fluid, int mana, int ticks, int cooldown,
           ItemStack flower, int preference) {
@@ -134,21 +150,23 @@ public final class GreenhouseWork {
         var candidates = new ArrayList<>(recipes(tile.getLevel())); candidates.sort(Comparator.comparing(r -> r.id().toString()));
         for (var holder : candidates) {
             var recipe = holder.value(); if (!recipe.flower().test(flower)) continue;
-            if (recipe.formula().equals("fixed")) {
+            if (recipe.fixed()) {
                 int[] consumed = assign(recipe.materials(), inputs); if (consumed == null || !hasFluid(tile, recipe.fluid())) continue;
                 return new Plan(holder.id(), consumed, recipe.fluid(), recipe.mana(), recipe.ticks(), recipe.cooldown(), flower.copyWithCount(1), 0);
             }
-            if (recipe.formula().equals("thermalily")) {
+            var rule = recipe.rule();
+            if (rule.fluidAmount() > 0) {
                 var tank = tile.greenhouseFluid().getFluid();
-                if (tank.getAmount() < 1000) continue;
-                var result = GreenhouseNative.resolve(recipe.formula(), flower, ItemStack.EMPTY, tank, tile.getLevel());
-                if (result != null) return plan(holder.id(), new int[inputs.size()], tank.copyWithAmount(1000), result);
+                if (tank.getAmount() < rule.fluidAmount() || !rule.acceptsFluid(tank)) continue;
+                var result = rule.resolve(flower.copy(), ItemStack.EMPTY, tank.copy(), tile.getLevel());
+                if (validResult(result, flower)) return plan(holder.id(), new int[inputs.size()], tank.copyWithAmount(rule.fluidAmount()), result);
                 continue;
             }
             Plan best = null;
             for (int i = 0; i < inputs.size(); i++) {
-                var result = GreenhouseNative.resolve(recipe.formula(), flower, inputs.get(i), FluidStack.EMPTY, tile.getLevel());
-                if (result != null && result.mana() > 0 && result.mana() <= ManaMachine.MANA_CAPACITY && (best == null || result.preference() > best.preference)) {
+                if (!rule.acceptsItem(inputs.get(i))) continue;
+                var result = rule.resolve(flower.copy(), inputs.get(i).copy(), FluidStack.EMPTY, tile.getLevel());
+                if (validResult(result, flower) && (best == null || result.preference() > best.preference)) {
                     var consumed = new int[inputs.size()]; consumed[i] = 1; best = plan(holder.id(), consumed, FluidStack.EMPTY, result);
                 }
             }
