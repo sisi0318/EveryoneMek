@@ -2,7 +2,7 @@
   "size": 1,
   "operation": "SET",
   "order": 30,
-  "icon": "curios:slot/empty_curio_slot",
+  "icon": "curios:slot/empty_necklace_slot",
   "add_cosmetic": false,
   "drop_rule": "ALWAYS_KEEP"
 }

@@ -4,11 +4,12 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.2，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.2.jar`。
+- 0.1.0-alpha.3，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.3.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
 - 主物品 `overloaded_short_circuit_core` 是科技挂坠，专用 Curios 槽 ID 为 `overload_core`，显示为“核心”。不要注册通用 `core` 槽，也不要将饰品改成可放置机器。
+- 用户要求空栏位能辨认出吊坠。alpha.3 将槽图标接到 Curios 原生 `curios:slot/empty_necklace_slot`，沿用其灰色轮廓与方块图集注册；不复用通用空槽图标、不改槽 ID。生成的自定义候选缺少真实透明通道，未采用。
 - 用户确认：同维度 32 格范围，只影响自己或明确共享设备。保留生存不可主动卸下与死亡绑定；创造模式和管理员允许解除。
 
 ## 实现入口与数据契约
@@ -44,6 +45,7 @@
 - `build` 编译运行代码并检查 GameTest 源集；**不会执行 GameTest**。当前没有单独 JUnit 用例，不能把 NO-SOURCE 当单测通过。
 - 2026-09-15：`build runGameTestServer` 成功，**14/14**；不安装 Generators 的独立目录启动成功，**12/12**。覆盖真实两秒绑定、Clone、所有权/共享、并行工厂、产物空间与迟入范围、实际管道搬运、金属负载、机具充能、热/消声，以及生物发电和完整汽轮机结构。无需每次资源/文档修改重复全套。
 - alpha.2 的 Shift 物品提示变更通过 `classes jar`、中英文资源完整性与 JAR 检查；确认原说明窗口类已移除、公共物品类不引用客户端类。未因这次显示改动重复运行全套 GameTest，实际提示位置由用户验收。
+- alpha.3 的空槽图标通过 `classes jar` 和依赖资源检查：Curios 图标为真正 16×16 透明纹理，已由其 slot 图集加载；除图标引用外，槽位定义、玩家槽位映射与游戏数据和 alpha.2 一致。没有因纯资源修改重跑 GameTest。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

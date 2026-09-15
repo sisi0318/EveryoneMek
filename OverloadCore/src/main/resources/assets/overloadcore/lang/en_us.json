@@ -7,7 +7,7 @@
   "overloadcore.lore": "Rated power is only a suggestion.",
   "overloadcore.warning": "Cannot be removed in survival. Kept on death.",
   "overloadcore.effects": "Affects owned/shared Mek devices within %s blocks.",
-  "overloadcore.equip_hint": "Hold use for two seconds to wear permanently.",
+  "overloadcore.equip_hint": "Hold the pendant in your hand and use it for two seconds to equip.",
   "overloadcore.details_hint": "Hold Shift to view curses and benefits.",
   "overloadcore.hold_bind": "Keep holding use for two seconds to permanently equip the core.",
   "overloadcore.no_slot": "An empty Core accessory slot is required.",
