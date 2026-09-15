@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "ESE",
+    "ANA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "N": {
+      "item": "mekanism:ingot_steel"
+    }
+  },
+  "result": {
+    "id": "overloadcore:overloaded_short_circuit_core"
+  }
+}

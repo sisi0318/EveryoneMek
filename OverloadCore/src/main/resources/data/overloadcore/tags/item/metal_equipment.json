@@ -1,0 +1,149 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:iron_helmet",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_chestplate",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_leggings",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_boots",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_helmet",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_chestplate",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_leggings",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_boots",
+      "required": false
+    },
+    {
+      "id": "minecraft:chainmail_helmet",
+      "required": false
+    },
+    {
+      "id": "minecraft:chainmail_chestplate",
+      "required": false
+    },
+    {
+      "id": "minecraft:chainmail_leggings",
+      "required": false
+    },
+    {
+      "id": "minecraft:chainmail_boots",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_helmet",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_chestplate",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_leggings",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_boots",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_sword",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_axe",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_shovel",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_hoe",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_sword",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_axe",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_shovel",
+      "required": false
+    },
+    {
+      "id": "minecraft:golden_hoe",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_sword",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_pickaxe",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_axe",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_shovel",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_hoe",
+      "required": false
+    },
+    {
+      "id": "mekanism:mekasuit_helmet",
+      "required": false
+    },
+    {
+      "id": "mekanism:mekasuit_bodyarmor",
+      "required": false
+    },
+    {
+      "id": "mekanism:mekasuit_pants",
+      "required": false
+    },
+    {
+      "id": "mekanism:mekasuit_boots",
+      "required": false
+    },
+    {
+      "id": "mekanism:meka_tool",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "required": true,
+  "package": "dev.everyonemek.overloadcore.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "dev.everyonemek.overloadcore.mixin.OptionalMixinPlugin",
+  "mixins": [
+    "CachedRecipeAccess",
+    "MachineEnergyOwner",
+    "RecipeMonitorMixin",
+    "CachedEnergyMixin",
+    "RecipeOutputMixin",
+    "MachineTickMixin",
+    "TransmitterTickMixin",
+    "ManualEnergyMixin",
+    "MachineDataMixin",
+    "PlayerSprintMixin",
+    "GeneratorMixin",
+    "GeneratorHeatMixin",
+    "GeneratorTurbineMixin",
+    "GeneratorFusionMixin",
+    "NetworkAccess",
+    "EnergyNetworkMixin",
+    "FluidNetworkMixin",
+    "ChemicalNetworkMixin",
+    "EnergyTargetMixin",
+    "FluidTargetMixin",
+    "ChemicalTargetMixin",
+    "ItemTransportMixin",
+    "FluidPullMixin",
+    "LongPullMixin"
+  ],
+  "client": [
+    "MachineSoundMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

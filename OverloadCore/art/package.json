@@ -1,0 +1,1 @@
+{"private":true,"scripts":{"export":"node ../tools/export_art.cjs"},"dependencies":{"sharp":"^0.34.0"}}

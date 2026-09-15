@@ -1,0 +1,61 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:nuggets/iron",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/gold",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/copper",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/osmium",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/tin",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/lead",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/steel",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/bronze",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/netherite",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/aluminum",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/silver",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/nickel",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/zinc",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets/uranium",
+      "required": false
+    }
+  ]
+}

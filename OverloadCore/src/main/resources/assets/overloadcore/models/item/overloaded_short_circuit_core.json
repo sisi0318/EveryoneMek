@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "overloadcore:item/overloaded_short_circuit_core"
+  }
+}

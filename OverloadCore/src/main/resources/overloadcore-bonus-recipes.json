@@ -1,0 +1,1000 @@
+{
+  "mekanism:control_circuit/basic": {
+    "type": "mekanism:metallurgic_infusing",
+    "chemical_input": {
+      "amount": 20,
+      "tag": "mekanism:redstone"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ingots/osmium"
+    },
+    "output": {
+      "count": 1,
+      "id": "mekanism:basic_control_circuit"
+    },
+    "per_tick_usage": false
+  },
+  "mekanism:metallurgic_infusing/alloy/infused": {
+    "type": "mekanism:metallurgic_infusing",
+    "chemical_input": {
+      "amount": 10,
+      "tag": "mekanism:redstone"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ingots/copper"
+    },
+    "output": {
+      "count": 1,
+      "id": "mekanism:alloy_infused"
+    },
+    "per_tick_usage": false
+  },
+  "mekanism:processing/copper/clump/from_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/copper"
+    },
+    "output": {
+      "count": 3,
+      "id": "mekanism:clump_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/clump/from_raw_block": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_copper"
+    },
+    "output": {
+      "count": 18,
+      "id": "mekanism:clump_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/clump/from_raw_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:raw_materials/copper"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:clump_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/dust/from_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:ores/copper"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:dust_copper"
+    }
+  },
+  "mekanism:processing/copper/dust/from_raw_block": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_copper"
+    },
+    "output": {
+      "count": 12,
+      "id": "mekanism:dust_copper"
+    }
+  },
+  "mekanism:processing/copper/dust/from_raw_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 3,
+      "tag": "c:raw_materials/copper"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:dust_copper"
+    }
+  },
+  "mekanism:processing/copper/shard/from_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/copper"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:shard_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/shard/from_raw_block": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_copper"
+    },
+    "output": {
+      "count": 24,
+      "id": "mekanism:shard_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/shard/from_raw_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/copper"
+    },
+    "output": {
+      "count": 8,
+      "id": "mekanism:shard_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/slurry/dirty/from_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/copper"
+    },
+    "output": {
+      "amount": 1000,
+      "id": "mekanism:dirty_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/copper/slurry/dirty/from_raw_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/copper"
+    },
+    "output": {
+      "amount": 2000,
+      "id": "mekanism:dirty_copper"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/clump/from_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/gold"
+    },
+    "output": {
+      "count": 3,
+      "id": "mekanism:clump_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/clump/from_raw_block": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_gold"
+    },
+    "output": {
+      "count": 18,
+      "id": "mekanism:clump_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/clump/from_raw_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:raw_materials/gold"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:clump_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/dust/from_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:ores/gold"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:dust_gold"
+    }
+  },
+  "mekanism:processing/gold/dust/from_raw_block": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_gold"
+    },
+    "output": {
+      "count": 12,
+      "id": "mekanism:dust_gold"
+    }
+  },
+  "mekanism:processing/gold/dust/from_raw_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 3,
+      "tag": "c:raw_materials/gold"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:dust_gold"
+    }
+  },
+  "mekanism:processing/gold/shard/from_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/gold"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:shard_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/shard/from_raw_block": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_gold"
+    },
+    "output": {
+      "count": 24,
+      "id": "mekanism:shard_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/shard/from_raw_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/gold"
+    },
+    "output": {
+      "count": 8,
+      "id": "mekanism:shard_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/slurry/dirty/from_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/gold"
+    },
+    "output": {
+      "amount": 1000,
+      "id": "mekanism:dirty_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/gold/slurry/dirty/from_raw_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/gold"
+    },
+    "output": {
+      "amount": 2000,
+      "id": "mekanism:dirty_gold"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/clump/from_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/iron"
+    },
+    "output": {
+      "count": 3,
+      "id": "mekanism:clump_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/clump/from_raw_block": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_iron"
+    },
+    "output": {
+      "count": 18,
+      "id": "mekanism:clump_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/clump/from_raw_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:raw_materials/iron"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:clump_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/dust/from_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:ores/iron"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:dust_iron"
+    }
+  },
+  "mekanism:processing/iron/dust/from_raw_block": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_iron"
+    },
+    "output": {
+      "count": 12,
+      "id": "mekanism:dust_iron"
+    }
+  },
+  "mekanism:processing/iron/dust/from_raw_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 3,
+      "tag": "c:raw_materials/iron"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:dust_iron"
+    }
+  },
+  "mekanism:processing/iron/shard/from_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/iron"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:shard_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/shard/from_raw_block": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_iron"
+    },
+    "output": {
+      "count": 24,
+      "id": "mekanism:shard_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/shard/from_raw_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/iron"
+    },
+    "output": {
+      "count": 8,
+      "id": "mekanism:shard_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/slurry/dirty/from_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/iron"
+    },
+    "output": {
+      "amount": 1000,
+      "id": "mekanism:dirty_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/iron/slurry/dirty/from_raw_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/iron"
+    },
+    "output": {
+      "amount": 2000,
+      "id": "mekanism:dirty_iron"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/clump/from_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/lead"
+    },
+    "output": {
+      "count": 3,
+      "id": "mekanism:clump_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/clump/from_raw_block": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_lead"
+    },
+    "output": {
+      "count": 18,
+      "id": "mekanism:clump_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/clump/from_raw_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:raw_materials/lead"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:clump_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/dust/from_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:ores/lead"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:dust_lead"
+    }
+  },
+  "mekanism:processing/lead/dust/from_raw_block": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_lead"
+    },
+    "output": {
+      "count": 12,
+      "id": "mekanism:dust_lead"
+    }
+  },
+  "mekanism:processing/lead/dust/from_raw_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 3,
+      "tag": "c:raw_materials/lead"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:dust_lead"
+    }
+  },
+  "mekanism:processing/lead/shard/from_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/lead"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:shard_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/shard/from_raw_block": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_lead"
+    },
+    "output": {
+      "count": 24,
+      "id": "mekanism:shard_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/shard/from_raw_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/lead"
+    },
+    "output": {
+      "count": 8,
+      "id": "mekanism:shard_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/slurry/dirty/from_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/lead"
+    },
+    "output": {
+      "amount": 1000,
+      "id": "mekanism:dirty_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/lead/slurry/dirty/from_raw_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/lead"
+    },
+    "output": {
+      "amount": 2000,
+      "id": "mekanism:dirty_lead"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/clump/from_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/osmium"
+    },
+    "output": {
+      "count": 3,
+      "id": "mekanism:clump_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/clump/from_raw_block": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_osmium"
+    },
+    "output": {
+      "count": 18,
+      "id": "mekanism:clump_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/clump/from_raw_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:raw_materials/osmium"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:clump_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/dust/from_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:ores/osmium"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:dust_osmium"
+    }
+  },
+  "mekanism:processing/osmium/dust/from_raw_block": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_osmium"
+    },
+    "output": {
+      "count": 12,
+      "id": "mekanism:dust_osmium"
+    }
+  },
+  "mekanism:processing/osmium/dust/from_raw_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 3,
+      "tag": "c:raw_materials/osmium"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:dust_osmium"
+    }
+  },
+  "mekanism:processing/osmium/shard/from_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/osmium"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:shard_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/shard/from_raw_block": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_osmium"
+    },
+    "output": {
+      "count": 24,
+      "id": "mekanism:shard_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/shard/from_raw_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/osmium"
+    },
+    "output": {
+      "count": 8,
+      "id": "mekanism:shard_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/slurry/dirty/from_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/osmium"
+    },
+    "output": {
+      "amount": 1000,
+      "id": "mekanism:dirty_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/osmium/slurry/dirty/from_raw_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/osmium"
+    },
+    "output": {
+      "amount": 2000,
+      "id": "mekanism:dirty_osmium"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/clump/from_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/tin"
+    },
+    "output": {
+      "count": 3,
+      "id": "mekanism:clump_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/clump/from_raw_block": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_tin"
+    },
+    "output": {
+      "count": 18,
+      "id": "mekanism:clump_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/clump/from_raw_ore": {
+    "type": "mekanism:purifying",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:oxygen"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:raw_materials/tin"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:clump_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/dust/from_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:ores/tin"
+    },
+    "output": {
+      "count": 2,
+      "id": "mekanism:dust_tin"
+    }
+  },
+  "mekanism:processing/tin/dust/from_raw_block": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_tin"
+    },
+    "output": {
+      "count": 12,
+      "id": "mekanism:dust_tin"
+    }
+  },
+  "mekanism:processing/tin/dust/from_raw_ore": {
+    "type": "mekanism:enriching",
+    "input": {
+      "count": 3,
+      "tag": "c:raw_materials/tin"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:dust_tin"
+    }
+  },
+  "mekanism:processing/tin/shard/from_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/tin"
+    },
+    "output": {
+      "count": 4,
+      "id": "mekanism:shard_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/shard/from_raw_block": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 2,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:storage_blocks/raw_tin"
+    },
+    "output": {
+      "count": 24,
+      "id": "mekanism:shard_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/shard/from_raw_ore": {
+    "type": "mekanism:injecting",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:hydrogen_chloride"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/tin"
+    },
+    "output": {
+      "count": 8,
+      "id": "mekanism:shard_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/slurry/dirty/from_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 1,
+      "tag": "c:ores/tin"
+    },
+    "output": {
+      "amount": 1000,
+      "id": "mekanism:dirty_tin"
+    },
+    "per_tick_usage": true
+  },
+  "mekanism:processing/tin/slurry/dirty/from_raw_ore": {
+    "type": "mekanism:dissolution",
+    "chemical_input": {
+      "amount": 1,
+      "chemical": "mekanism:sulfuric_acid"
+    },
+    "item_input": {
+      "count": 3,
+      "tag": "c:raw_materials/tin"
+    },
+    "output": {
+      "amount": 2000,
+      "id": "mekanism:dirty_tin"
+    },
+    "per_tick_usage": true
+  }
+}

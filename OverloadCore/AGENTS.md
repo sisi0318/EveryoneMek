@@ -1,32 +1,47 @@
 # OverloadCore 接手入口
 
-先遵循根目录 [AGENTS.md](../AGENTS.md)，再读本目录 README、DESIGN 和 CHANGELOG。
+先遵循根目录 [AGENTS.md](../AGENTS.md)，再读本目录 README 和 CHANGELOG。DESIGN 保存设计取舍；当前行为以 README 和实现为准。
 
-## 当前阶段
+## 当前版本与依赖
 
-- 当前只有设计稿，尚未建立 Java 工程、注册物品或生成 JAR。用户本轮要求“设计新 mod”，不要将设计描述成已实现功能。
-- 模组工作名 Overload Core，目录 OverloadCore，拟命名空间 overloadcore；主饰品名称固定为“过载短路核心”。与 Botania 子项目独立，不把诅咒混入 Botanical Mekanism。
-- 用户认可的范围：随佩戴者移动的同维度 32 格半径，只作用于自己或明确共享的设备。其他数值是可调设计初值。
-- 参考七咒之戒的自愿装备、不可主动卸下、代价与收益共存。用户明确不能主动卸下，不自行增加生存解除配方或用死亡解除。
-- 基线拟沿用仓库 Minecraft 1.21.1／NeoForge 21.1.241／Java 21／Mekanism 10.7.19.85／Curios 9.5.1。Generators 为可选集成；实现前单独取得目标发布 JAR，不能把网页源码当二进制契约。
+- 0.1.0-alpha.1，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.1.jar`。
+- Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
+- Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
+- 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
+- 主物品 `overloaded_short_circuit_core` 是科技挂坠，专用 Curios 槽 ID 为 `overload_core`，显示为“核心”。不要注册通用 `core` 槽，也不要将饰品改成可放置机器。
+- 用户确认：同维度 32 格范围，只影响自己或明确共享设备。保留生存不可主动卸下与死亡绑定；创造模式和管理员允许解除。
 
-## 关键约束
+## 实现入口与数据契约
 
-- 每次效果判定都检查实际佩戴、存活、同维度、距离、归属和明确授权。Mek Public 安全模式不等于同意被别人诅咒；共享网络也不自动共享整个网络的诅咒。
-- 收益与惩罚使用同一个作用域判定。多人不叠加机器倍率，不复制增产或回收电能。机器范围外的固有运输路径不能被整网改写。
-- 工作耗电倍率作用于实际工作消耗；发电倍率作用于新生成的电量，不修改储能、输出上限或热量。裂变反应堆本身产热，发电损失应在汽轮机端，不能把热、蒸汽和最终电量连续减半。
-- 管网不缩容量、不截断已有物资；端点流量或传输进度只打一次折，不能每节管道乘 0.5。共享大管网必须保留非目标端点的原行为，不能简单改全局 tier 或 network 常量。
-- 产品增益采用明确审核的配方与输出白名单。不要修改全局配方结果、任意容器插入或玩家取出物品事件来实现翻倍。矿物链入口仅加成一次，下游中间工序不重复加成；易循环、可拆解和能量／核燃料产物默认不增产。
-- 已付加工与额外产物的保存、工厂并行、多个佩戴者、出入范围和数据包重载必须明确处理。实际扣能、材料、产物和回收电量守恒；所有模拟调用无副作用。
-- 消声升级、能量升级及原装备防护继续有效。反胃画面尊重客户端视觉设置；实际经济惩罚由服务端决定，不靠强制提高用户音量维持难度。
-- 热损伤、漏电只伤害佩戴者，不以诅咒主动引爆机器、放射性废物或创造辐射源。反应堆冷却管路减速的实际风险必须在原型中验证并明确提示。
-- 客户端游戏内验收由用户进行，不启动 runClient。当前纯文档阶段只校验文档与 diff，不提升模组版本或跑已有模组构建。
+- `CoreItem`：真实持续使用 40 tick 后绑定；拖入、捡起、快捷使用不自动装备。Curios `ALWAYS_KEEP` 保留死亡饰品。
+- `CoreBinding`：玩家 `overloadcore_binding` 是绑定实例、回收电量和体热的唯一权威记录；物品 `core_data` 仅保存 owner/instance。恢复与去重不能生成第二份电量。Clone、登录、换维度分别处理。回收缓冲内部用 Mek 原生 J，向随身 MekaTool/MekaSuit 原生能量 handler 转移；FE 仅用于配置和显示。
+- `DeviceScope`：BE 的 `overloadcore_machine` 保存放置者、逐设备共享名单、加工元数据；原生 owner capability 优先。Public 安全不等于诅咒授权。多方块必须归属一致且已知，或由管理员登记当前结构 ID。重叠佩戴者仅选最近一人，同距按 UUID 排序。
+- `CoreEvents` / `MachineDataMixin`：原机器掉落继续由 Mek 保存，本模组仅追加 `machine_data` 并在重新放置时恢复。客户端请求不能任意改设备归属。`share/unshare` 要求实际所有者；`claim/clear` 要求管理员权限。
+- `DeviceTracker`：机器与管道分开维护已加载区块索引；区块/维度卸载清理。附近查询不扫描整维度或强制加载区块。大结构按外表面测距，热/漏电按实际结构去重。
+- `RecipeHooks` / `RecipeMonitorMixin` / `CachedEnergyMixin`：在 `RecipeCacheLookupMonitor.updateAndProcess` 的真实加工调用中建立上下文，按缓存索引区分工厂产线。工作费率翻倍，实际扣费后回收额外部分的 25%。出入范围、原进度、输出空间均参与结算；不中途加入后追领整批增产。
+- `BonusRecipes` / `RecipeOutputMixin`：68 条固定版本默认配方；用原 serializer 编解码后的完整定义比较，再同时改变输出空间预检和实际提交量。不要改全局配方对象或任意槽位插入。矿物入口只奖励一次，溶解粗矿块的双份产物超过原罐容量，因此排除。
+- `ManualEnergyMixin`：非缓存机器只在本机服务器 tick 中、对自有 MachineEnergyContainer 的 INTERNAL 工作提取加费。电阻加热器额外电耗是损耗，不能增加有用热或更改玩家保存的功率。
+- `GenerationHooks` / `Generator*Mixin`：在风、日照、生物、燃气、热、汽轮机、聚变的真实产电 insert 处折半，保存奇数余量；不减储能容量、旧电量、热量或蒸汽。模拟调用不改变余量。委托原调用，保留其他 WrapOperation 的链路。
+- `TransportHooks` / 网络及 Target Mixin：仅在原生分配中限制已授权端点，按实际接收量扣每 tick 预算；管道拉取限额与物品移动节奏另作窄范围适配。不缩容、不截物资、不让路径长度形成指数惩罚。热网、量子、AE/QIO 与其他模组不在当前范围。
+- `Workplace` / `MetalLoad`：原生伤害、遮挡、警示与冷却；活动/真实热源判定。金属标签可改，原版 CONTAINER 内容递归最多 4 层、1024 个非空项，超限保守计重，不查询远端存储。
+- `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K 打开三页说明，潜行 K 切换最多 8 台设备位置提示。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
 
-## 转入实现时
+## 目标版本已核实的 API 经验
 
-1. 先实现绑定、作用域及归属，再做真实工作耗能和受控增产；不要先给所有 FE handler 注入全局倍率。
-2. 独立建立 Gradle Wrapper、构建、运行依赖、.gradle-home、命名空间和测试源集。Curios、Mek、Generators 均按目标 JAR 核对。
-3. 建立固定源版本的设备／配方适配清单，区分已支持与未支持；对其他科技模组走明确适配，不能宣称通用 FE 能力足以识别发电行为。
-4. 首个可构建原型交付前，按根指引同步 prepare_release.py、build.yml、release.yml 和根 README 的发布入口。设计目录不提前登记成可构建项目。
+- Mek 传输器继承 `CapabilityTileEntity`，不是 `TileEntityMekanism`；其静态 `tickServer` 返回 void。只挂机器基类会漏掉管道归属、索引和搬运。
+- `Upgrade.MUFFLING.getMax()` 在 10.7.19.85 为 **1**，不能沿用旧版“装四个”的计算。
+- 聚变结构最小角可能是空气。结构锚点从真实 `locations` 中稳定选取，不能直接用 `getMinPos()` 当 BE。
+- `BlockEntity.DataComponentInput` 是 protected；附件恢复使用公开 `applyComponentsFromItemStack` 并限制到支持的 Mek BE，不因接入传输器改成全局库存迁移。
+- 直接用 GameTest `setBlock` 不会应用 Mek 方块物品默认侧面配置。测试须明确设置能源输入与弹出，并调用 `invalidateCapabilitiesFull()` 刷新已缓存 capability。能源立方出口用 `RelativeSide.fromDirections` 计算，不能把世界北面直接当相对前面。
+- 默认 GameTest mock 玩家会向未协商 Curios 通道的 EmbeddedChannel 同步而失败。测试通过 FakePlayerFactory、SURVIVAL、`level.addNewPlayer` 与每 tick `doTick` 驱动真实使用/玩家事件，不把假通道错误当成运行兼容问题。
+- 不在任意 FE capability 全局注入倍率。原生能量以 J 计量，处理 SIMULATE 与 EXTERNAL/MANUAL/INTERNAL 的差别。
 
-完整规则、平衡、实现范围与验证清单见 [DESIGN.md](DESIGN.md)。
+## 资源与验证
+
+- JSON 由 `tools/generate_resources.py` 维护；生成时传 `--mek-jar` 指向固定版本 Mek JAR。提交资源，不把临时参考源码或依赖 JAR 打包。
+- 图稿在 `art/source/`，完整最终提示词在 `art/prompt-v2.txt`，来源为内置 ImageGen。`tools/export_art.cjs` 仅裁去透明外沿、保持比例最近邻导出真正 16×16 PNG，不重画或抠背景。运行物品模型同时由 Curios 挂坠渲染使用。
+- `build` 编译运行代码并检查 GameTest 源集；**不会执行 GameTest**。当前没有单独 JUnit 用例，不能把 NO-SOURCE 当单测通过。
+- 2026-09-15：`build runGameTestServer` 成功，**14/14**；不安装 Generators 的独立目录启动成功，**12/12**。覆盖真实两秒绑定、Clone、所有权/共享、并行工厂、产物空间与迟入范围、实际管道搬运、金属负载、机具充能、热/消声，以及生物发电和完整汽轮机结构。无需每次资源/文档修改重复全套。
+- 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
+- **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
+- 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

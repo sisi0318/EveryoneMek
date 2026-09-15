@@ -1,0 +1,60 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.146'
+}
+group = 'dev.everyonemek'
+version = mod_version
+base { archivesName = 'OverloadCore' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+def withGenerators = providers.gradleProperty('withGenerators').map { it.toBoolean() }.getOrElse(true)
+sourceSets {
+    gameTest { compileClasspath += sourceSets.main.output; runtimeClasspath += sourceSets.main.output }
+    generatorGameTest { compileClasspath += sourceSets.main.output + sourceSets.gameTest.output; runtimeClasspath += sourceSets.main.output + sourceSets.gameTest.output }
+}
+configurations {
+    gameTestImplementation.extendsFrom implementation
+    gameTestCompileOnly.extendsFrom compileOnly
+    gameTestRuntimeOnly.extendsFrom runtimeOnly
+    generatorGameTestImplementation.extendsFrom gameTestImplementation
+    generatorGameTestCompileOnly.extendsFrom compileOnly
+    generatorGameTestRuntimeOnly.extendsFrom runtimeOnly
+}
+repositories {
+    maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
+    maven { url = 'https://maven.theillusivec4.top/'; content { includeGroup 'top.theillusivec4.curios' } }
+    mavenCentral()
+}
+neoForge {
+    version = project.neo_version
+    addModdingDependenciesTo sourceSets.gameTest
+    addModdingDependenciesTo sourceSets.generatorGameTest
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = layout.buildDirectory.dir(providers.gradleProperty('gameTestDirectory').orElse('gametest'))
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'overloadcore'
+        }
+    }
+    mods { overloadcore { sourceSet sourceSets.main; sourceSet sourceSets.gameTest; if (withGenerators) sourceSet sourceSets.generatorGameTest } }
+}
+dependencies {
+    implementation "mekanism:Mekanism:${mekanism_version}"
+    compileOnly "mekanism:Mekanism:${mekanism_version}:generators"
+    if (withGenerators) runtimeOnly "mekanism:Mekanism:${mekanism_version}:generators"
+    implementation 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.ow2.asm:asm-tree:9.8'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+tasks.named('test', Test) { useJUnitPlatform() }
+tasks.named('check') { dependsOn 'compileGameTestJava'; if (withGenerators) dependsOn 'compileGeneratorGameTestJava' }
+tasks.named('jar', Jar) { from('LICENSE') }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def resourceProperties = [version: project.version.toString()]
+tasks.named('processResources', ProcessResources) {
+    inputs.properties(resourceProperties)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(resourceProperties) }
+}

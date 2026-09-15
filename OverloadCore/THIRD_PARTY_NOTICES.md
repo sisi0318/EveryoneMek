@@ -1,0 +1,10 @@
+# Third-party notices
+
+Original Overload Core code and generated artwork are distributed under the repository MIT license.
+
+- Mekanism and Mekanism Generators are separate MIT-licensed runtime dependencies, copyright (c) 2017–2025 Aidan C. Brady. The audited default recipe definitions in `overloadcore-bonus-recipes.json` are derived from Mekanism 10.7.19.85 recipe data. The full MIT notice is included at `META-INF/licenses/Mekanism.txt` in the addon JAR.
+- Curios is a separate LGPL-3.0 runtime dependency. The addon calls its public accessory APIs and references its existing empty-slot icon at runtime; it does not bundle Curios code or artwork.
+- The pendant art is original built-in ImageGen output. Final prompt and mechanical export details are in `art/README.md` and `art/prompt-v2.txt`.
+- The Gradle Wrapper retains the upstream Apache-2.0 notices in its scripts and JAR.
+
+No upstream mod JAR, game world, decompiled source tree or large source image is bundled with the mod.
