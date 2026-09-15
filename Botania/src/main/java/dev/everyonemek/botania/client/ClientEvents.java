@@ -20,6 +20,7 @@ public final class ClientEvents {
     @SubscribeEvent public static void renderers(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(dev.everyonemek.botania.MechanicalSparks.ENTITY.get(), MechanicalSparkRenderer::new);
         event.registerBlockEntityRenderer(dev.everyonemek.botania.ManaContent.MACHINE_TILES.get(dev.everyonemek.botania.ManaMachineKind.INFUSER).get(), InfusionCatalystRenderer::new);
+        event.registerBlockEntityRenderer(dev.everyonemek.botania.ManaContent.MACHINE_TILES.get(dev.everyonemek.botania.ManaMachineKind.GREENHOUSE).get(), GreenhouseFlowerRenderer::new);
     }
     @SubscribeEvent public static void modelLoaders(ModelEvent.RegisterGeometryLoaders event) {
         event.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(BotanicalMekanism.ID, "mana_cell"), new ManaCellModelLoader());

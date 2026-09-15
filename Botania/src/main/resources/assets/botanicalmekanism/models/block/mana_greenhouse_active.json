@@ -1,0 +1,6 @@
+{
+  "parent": "botanicalmekanism:block/mana_greenhouse",
+  "textures": {
+    "indicator": "botania:block/mana_diamond_block"
+  }
+}

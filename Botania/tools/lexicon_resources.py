@@ -90,7 +90,16 @@ HELP['spark_channel_upgrade'] = [
 ]
 HELP['mana_storage_cell'].append(('安装 Applied Botanics 后，这些魔力盘也能供给福鲁伊克斯魔力池。已有 Applied Botanics 魔力盘可以一起使用，终端中共用一个魔力条目，旧样板无需重做。', 'With Applied Botanics installed, these cells also supply Fluix Mana Pools. Existing Applied Botanics mana cells work alongside them. The terminal has one mana entry, and old patterns keep working.'))
 
+HELP['mana_greenhouse'] = [
+    ('把产能花放进花槽，接上电源，再供应它需要的材料。温室会逐次供料，花不会被消耗，产生的魔力存进机内。$(p)支持的花、原料和产量可在 JEI 查看。',
+     'Place a generating flower in the flower slot, then supply power and ingredients. The flower stays in its slot and mana collects inside.$(p)Check JEI for supported flowers, ingredients and yields.'),
+    ('炽玫瑰需要流体熔岩，可用装桶槽、手持桶右击或导管供液。冷却时不消耗熔岩。$(p)用加压管道或 ME 总线取出魔力。紧贴魔力池时，将相应面设为魔力输出并开启弹出，也能直接供魔。',
+     'Supply Thermalily with lava buckets or fluid pipes. It takes no lava while cooling.$(p)Extract mana with tubes or ME buses. To feed an adjacent pool, enable Mana output on that face and turn on auto-eject.'),
+    ('彼方兰与噬草花优先选较久没吃过的材料。重复喂同一种，产量仍会递减。斑斓花只吃当前需要的羊毛颜色。咀叶花断料或魔力放不下时会休息。$(p)魔力满仓、返还槽已满或断电时，未完成的材料会留在原位。拆装后也保留冷却与加工进度。',
+     'Gourmaryllis and Rafflowsia prefer variety; repeated meals still yield less. Spectrolus follows its colour order. Munchdew rests when out of leaves or mana space.$(p)Blocked or unpowered work leaves ingredients untouched. Dismantling preserves progress and cooldown.')]
+
 SHORT_TITLES = {
+    'mana_greenhouse': 'Mana Greenhouse',
     'mechanical_spark': 'Mechanical Spark', 'master_mechanical_spark': 'Master Spark', 'spark_channel_upgrade': 'ME Channels',
     'spark_range_upgrade': 'Spark Range', 'spark_efficiency_upgrade': 'Spark Efficiency',
     'mana_lotus': 'Conduction Lotus', 'bionic_amaranthus': 'Jaded Amaranthus', 'bionic_clayconia': 'Clayconia',

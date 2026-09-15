@@ -16,6 +16,11 @@ public final class ManaMachineBlock extends BlockTile<ManaMachine, Machine<ManaM
           net.minecraft.world.level.block.state.BlockState state, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos,
           net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
         if (LexiconGuide.open(player, stack, this)) return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide);
+        if (kind == ManaMachineKind.GREENHOUSE && net.neoforged.neoforge.fluids.FluidUtil.getFluidHandler(stack).isPresent()) {
+            if (!mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return net.minecraft.world.ItemInteractionResult.FAIL;
+            if (level.isClientSide || net.neoforged.neoforge.fluids.FluidUtil.interactWithFluidHandler(player, hand, level, pos, hit.getDirection()))
+                return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide);
+        }
         if (stack.is(vazkii.botania.common.item.BotaniaItems.WAND_OF_THE_FOREST)) {
             if (!mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(player, level, pos, level.getBlockEntity(pos))) return net.minecraft.world.ItemInteractionResult.FAIL;
             var binding = vazkii.botania.common.item.WandOfTheForestItem.getBindingAttempt(stack);

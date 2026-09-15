@@ -37,8 +37,10 @@ public final class ManaContent {
         for (var kind : ManaMachineKind.values()) {
             Machine<ManaMachine> type = Machine.MachineBuilder.<ManaMachine>createMachine(() -> MACHINE_TILES.get(kind), () -> kind.getTranslationKey())
                   .withGui(() -> MENU).withEnergyConfig(() -> EnergyUnit.FORGE_ENERGY.convertFrom(50L), () -> EnergyUnit.FORGE_ENERGY.convertFrom(200000L))
-                  .withSupportedUpgrades(Upgrade.SPEED, Upgrade.ENERGY)
-                  .with(AttributeSideConfig.create(TransmissionType.ITEM, TransmissionType.CHEMICAL, TransmissionType.ENERGY)).build();
+                  .withSupportedUpgrades(kind == ManaMachineKind.GREENHOUSE ? new Upgrade[]{Upgrade.ENERGY} : new Upgrade[]{Upgrade.SPEED, Upgrade.ENERGY})
+                  .with(AttributeSideConfig.create(kind == ManaMachineKind.GREENHOUSE
+                        ? new TransmissionType[]{TransmissionType.ITEM, TransmissionType.CHEMICAL, TransmissionType.FLUID, TransmissionType.ENERGY}
+                        : new TransmissionType[]{TransmissionType.ITEM, TransmissionType.CHEMICAL, TransmissionType.ENERGY})).build();
             var block = BLOCKS.registerDetails(kind.id, () -> new ManaMachineBlock(kind, type));
             block.forItemHolder(holder -> {
                 holder.addAttachmentOnlyContainers(ContainerType.ITEM, () -> {
@@ -50,10 +52,14 @@ public final class ManaContent {
                     }
                     if (kind.inputs + kind.extras > 0) slots.addInput(kind.inputs + kind.extras);
                     if (kind.outputs > 0) slots.addOutput(kind.outputs);
-                    return slots.addEnergy().build();
+                    slots.addEnergy();
+                    if (kind == ManaMachineKind.GREENHOUSE) slots.addFluidFillSlot(0);
+                    return slots.build();
                 });
                 if (kind.chemical) holder.addAttachmentOnlyContainers(ContainerType.CHEMICAL, () -> ChemicalTanksBuilder.builder()
                       .addBasic(ManaMachine.MANA_CAPACITY, stack -> stack.is(MANA)).build());
+                if (kind == ManaMachineKind.GREENHOUSE) holder.addAttachmentOnlyContainers(ContainerType.FLUID,
+                      () -> mekanism.common.attachments.containers.fluid.FluidTanksBuilder.builder().addBasic(GreenhouseWork.FLUID_CAPACITY, stack -> true).build());
             });
             MACHINES.put(kind, block);
             MACHINE_TILES.put(kind, TILES.mekBuilder(block, ManaMachine::new)

@@ -1,0 +1,12 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "formula": "endoflame",
+  "flower": [
+    {
+      "item": "botania:endoflame"
+    },
+    {
+      "item": "botania:floating_endoflame"
+    }
+  ]
+}

@@ -17,7 +17,14 @@ public final class AppliedBotanicsCompat {
     public static appeng.api.stacks.AEKey poolKey() { return appbot.ae2.ManaKey.KEY; }
     public static int insert(ManaPoolBlockEntity pool, int amount, boolean simulate) { return ((SafeMana) pool).insert(amount, simulate ? Actionable.SIMULATE : Actionable.MODULATE); }
     public static int extract(ManaPoolBlockEntity pool, int amount, boolean simulate) { return ((SafeMana) pool).extract(amount, simulate ? Actionable.SIMULATE : Actionable.MODULATE); }
-    public static ManaReceiver receiver(ManaMachine machine, Direction side) { return new MachinePort(machine, side == null ? Direction.UP : side); }
+    public static ManaReceiver receiver(ManaMachine machine, Direction side) {
+        return machine.kind() == ManaMachineKind.GREENHOUSE ? new GreenhousePort(machine, side) : new MachinePort(machine, side == null ? Direction.UP : side);
+    }
+    public static final class GreenhousePort extends GreenhouseSparkPort implements SafeMana {
+        public GreenhousePort(ManaMachine machine, Direction side) { super(machine, side); }
+        @Override public int insert(int amount, Actionable action) { var access = access(); return access == null ? 0 : (int) access.insert(amount, action == Actionable.SIMULATE); }
+        @Override public int extract(int amount, Actionable action) { var access = access(); return access == null ? 0 : (int) access.extract(amount, action == Actionable.SIMULATE); }
+    }
     public record MachinePort(ManaMachine machine, Direction side) implements ManaReceiver, SafeMana {
         private MachineSparkPort port() { return new MachineSparkPort(machine, side); }
         @Override public Level getManaReceiverLevel() { return machine.getLevel(); }

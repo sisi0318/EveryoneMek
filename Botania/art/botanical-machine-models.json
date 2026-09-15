@@ -1,5 +1,5 @@
 {
-  "version": "alpha.16",
+  "version": "alpha.29",
   "method": "Original cuboids with covered faces removed; native Botania material references. Collision stays on the original solids.",
   "palette": {
     "stone": "botania:block/polished_livingrock",
@@ -15,7 +15,8 @@
     "daisy": "botania:block/pure_daisy",
     "orechid": "botania:block/orechid",
     "morph_flower": "botania:block/marimorphosis",
-    "rock": "minecraft:block/stone"
+    "rock": "minecraft:block/stone",
+    "glass": "minecraft:block/glass"
   },
   "models": {
     "mechanical_apothecary": {
@@ -64,6 +65,10 @@
     },
     "mana_enchanter_controller": {
       "elements": 118,
+      "solid_elements": 17
+    },
+    "mana_greenhouse": {
+      "elements": 96,
       "solid_elements": 17
     }
   }

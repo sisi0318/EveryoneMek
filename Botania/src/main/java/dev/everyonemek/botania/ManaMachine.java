@@ -30,13 +30,15 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class ManaMachine extends TileEntityConfigurableMachine implements vazkii.botania.api.mana.ManaPool {
     public static final int MANA_CAPACITY = 1_000_000;
     public static final int WORKING = 0, NO_RECIPE = 1, NO_EXTRA = 2, NO_MANA = 3, NO_ENERGY = 4, OUTPUT_FULL = 5,
-          REDSTONE = 6, STRUCTURE = 7, NO_POOL = 8, ITEM_DENIED = 9, READY = 10, UNLOADED = 11, BUSY = 12, NEEDS_CEILING = 13, MANA_FULL = 14;
+          REDSTONE = 6, STRUCTURE = 7, NO_POOL = 8, ITEM_DENIED = 9, READY = 10, UNLOADED = 11, BUSY = 12, NEEDS_CEILING = 13, MANA_FULL = 14, COOLING = 15, NO_FLOWER = 16;
     // These containers are constructed during the superclass constructor.
     public List<BasicInventorySlot> inputs, extras;
     public List<OutputInventorySlot> outputs;
     private EnergyInventorySlot energySlot;
     private MachineEnergyContainer<ManaMachine> energy;
     private IChemicalTank mana;
+    private mekanism.api.fluid.IExtendedFluidTank greenhouseFluid;
+    public FluidInventorySlot greenhouseFluidInput;
     private int progress, duration = 1, status = NO_RECIPE;
     private CompoundTag signature;
     private int mode, poolSide, targetPercent = 100;
@@ -45,16 +47,22 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     private long poolPullTick = Long.MIN_VALUE;
     private int poolPulled;
     private int catalystVisualState = -1;
+    private int greenhouseVisualState;
+    GreenhouseWork.Cache greenhouseCache;
+    private GreenhouseWork.Plan greenhousePlan;
+    private long greenhouseEnergyCost;
     // Controller bookkeeping holds identifiers only; native devices own their in-flight resources.
     CompoundTag controller = new CompoundTag();
 
     public ManaMachine(BlockPos pos, BlockState state) {
         super(ManaContent.MACHINES.get(((ManaMachineBlock) state.getBlock()).kind), pos, state);
-        var item = configComponent.setupItemIOConfig(new ArrayList<IInventorySlot>(inputs), new ArrayList<IInventorySlot>(outputs), energySlot, false);
+        var inputSlots = new ArrayList<IInventorySlot>(inputs);
+        if (kind() == ManaMachineKind.GREENHOUSE) inputSlots.addFirst(greenhouseFluidInput);
+        var item = configComponent.setupItemIOConfig(inputSlots, new ArrayList<IInventorySlot>(outputs), energySlot, false);
         for (RelativeSide side : RelativeSide.values()) item.setDataType(DataType.INPUT, side);
         if (!extras.isEmpty()) {
             item.addSlotInfo(DataType.EXTRA, new InventorySlotInfo(true, false, new ArrayList<IInventorySlot>(extras)));
-            var combined = new ArrayList<IInventorySlot>(extras); combined.addAll(inputs); combined.addAll(outputs);
+            var combined = new ArrayList<IInventorySlot>(extras); combined.addAll(inputSlots); combined.addAll(outputs);
             item.addSlotInfo(DataType.INPUT_OUTPUT, new InventorySlotInfo(true, true, combined));
             item.setDataType(DataType.EXTRA, RelativeSide.BACK);
         }
@@ -62,11 +70,15 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         var power = configComponent.setupInputConfig(TransmissionType.ENERGY, energy);
         for (RelativeSide side : RelativeSide.values()) power.setDataType(DataType.INPUT, side);
         if (kind().chemical) {
-            var chemical = kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER ? configComponent.setupIOConfig(TransmissionType.CHEMICAL, mana, RelativeSide.RIGHT)
+            var chemical = kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER || kind() == ManaMachineKind.GREENHOUSE ? configComponent.setupIOConfig(TransmissionType.CHEMICAL, mana, RelativeSide.RIGHT)
                   : configComponent.setupInputConfig(TransmissionType.CHEMICAL, mana);
-            for (RelativeSide side : RelativeSide.values()) chemical.setDataType(kind() == ManaMachineKind.BRIDGE ? DataType.OUTPUT : DataType.INPUT, side);
-            chemical.setEjecting(kind() == ManaMachineKind.BRIDGE);
+            for (RelativeSide side : RelativeSide.values()) chemical.setDataType(kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.GREENHOUSE ? DataType.OUTPUT : DataType.INPUT, side);
+            chemical.setEjecting(kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.GREENHOUSE);
             if (kind() == ManaMachineKind.CHARGER) chemical.setDataType(DataType.OUTPUT, RelativeSide.RIGHT);
+        }
+        if (kind() == ManaMachineKind.GREENHOUSE) {
+            var fluid = configComponent.setupInputConfig(TransmissionType.FLUID, greenhouseFluid);
+            for (RelativeSide side : RelativeSide.values()) fluid.setDataType(DataType.INPUT, side);
         }
         ejectorComponent = new TileComponentEjector(this);
         ejectorComponent.setOutputData(configComponent, TransmissionType.ITEM, TransmissionType.CHEMICAL);
@@ -107,10 +119,17 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     }
     @Override public IChemicalTankHolder getInitialChemicalTanks(IContentsListener listener) {
         var builder = ChemicalTankHelper.forSideWithConfig(this);
-        mana = kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER ? BasicChemicalTank.createModern(MANA_CAPACITY, stack -> stack.is(ManaContent.MANA), listener)
+        mana = kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER || kind() == ManaMachineKind.GREENHOUSE ? BasicChemicalTank.createModern(MANA_CAPACITY, stack -> stack.is(ManaContent.MANA), listener)
               : BasicChemicalTank.inputModern(kind().chemical ? MANA_CAPACITY : 0, stack -> stack.is(ManaContent.MANA), listener);
         if (kind().chemical) builder.addTank(mana); return builder.build();
     }
+    @Override public mekanism.common.capabilities.holder.fluid.IFluidTankHolder getInitialFluidTanks(IContentsListener listener) {
+        var builder = mekanism.common.capabilities.holder.fluid.FluidTankHelper.forSideWithConfig(this);
+        if (kind() == ManaMachineKind.GREENHOUSE) builder.addTank(greenhouseFluid = mekanism.common.capabilities.fluid.BasicFluidTank.input(
+              GreenhouseWork.FLUID_CAPACITY, stack -> GreenhouseWork.acceptsFluid(this, stack), listener));
+        return builder.build();
+    }
+    public mekanism.api.fluid.IExtendedFluidTank greenhouseFluid() { return greenhouseFluid; }
     @Override protected IInventorySlotHolder getInitialInventory(IContentsListener listener) {
         var builder = InventorySlotHelper.forSideWithConfig(this);
         inputs = new ArrayList<>(); extras = new ArrayList<>(); outputs = new ArrayList<>();
@@ -124,12 +143,16 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
             var slot = BasicInventorySlot.at((stack, automation) -> automation != AutomationType.EXTERNAL, (stack, automation) -> true,
                   stack -> ManaWork.accepts(kind(), getLevel(), stack, true), listener,
                   kind().extras == 1 ? 106 : 16 + i % 4 * 18, kind().extras == 1 ? 86 : 32 + i / 4 * 18);
+            if (kind() == ManaMachineKind.GREENHOUSE) slot = new BasicInventorySlot(1,
+                  (stack, automation) -> automation != AutomationType.EXTERNAL, (stack, automation) -> true,
+                  stack -> GreenhouseWork.accepts(getLevel(), stack, true), listener, 106, 86) { };
             extras.add(slot); builder.addSlot(slot);
         }
         for (int i = 0; i < kind().originalOutputs(); i++) {
             var slot = OutputInventorySlot.at(listener, 152 + i % 3 * 18, 32 + i / 3 * 18); outputs.add(slot); builder.addSlot(slot);
         }
         builder.addSlot(energySlot = EnergyInventorySlot.fillOrConvert(energy, this::getLevel, listener, 206, 86));
+        if (kind() == ManaMachineKind.GREENHOUSE) builder.addSlot(greenhouseFluidInput = FluidInventorySlot.fill(greenhouseFluid, listener, 152, 86));
         if (kind().expandedInputs()) {
             // Append new slots after the old input, reagent, outputs and power slot.
             for (int i = 1; i < kind().inputs; i++) {
@@ -161,6 +184,14 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         }
         SparkExpansion.supplyMachine(this);
         ManaTransfer.fillFromAdjacentPools(this);
+        if (kind() == ManaMachineKind.GREENHOUSE) {
+            var flower = extras.getFirst().getStack();
+            int visual = flower.getItem() instanceof net.minecraft.world.item.BlockItem blockItem ? net.minecraft.world.level.block.Block.getId(blockItem.getBlock().defaultBlockState()) : 0;
+            if (visual != greenhouseVisualState) { greenhouseVisualState = visual; sendUpdatePacket(); }
+            greenhouseFluidInput.fillTank(outputs.getFirst());
+            if (!canFunction()) { status = REDSTONE; return update; }
+            greenhouseTick(); return update;
+        }
         if (!canFunction()) { status = REDSTONE; return update; }
         if (kind() == ManaMachineKind.BRIDGE || kind() == ManaMachineKind.CHARGER) { ManaTransfer.tick(this); return update; }
         if (kind().controller()) { NativeControllers.tick(this); return update; }
@@ -184,7 +215,26 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
         if (++progress >= duration) { plan.commit(this); resetWork(); }
         markForSave(); return update;
     }
-    private void resetWork() { if (progress != 0 || signature != null) markForSave(); progress = 0; signature = null; }
+    private void resetWork() { if (progress != 0 || signature != null) markForSave(); progress = 0; signature = null; greenhousePlan = null; }
+    private void greenhouseTick() {
+        GreenhouseWork.prepareFlower(this);
+        if (GreenhouseWork.cool(this)) { resetWork(); return; }
+        var plan = GreenhouseWork.find(this);
+        if (plan == null) { resetWork(); GreenhouseWork.stopLeafRun(this); status = extras.getFirst().isEmpty() ? NO_FLOWER : NO_RECIPE; return; }
+        long cost = energy.getEnergyPerTick();
+        if (plan != greenhousePlan || cost != greenhouseEnergyCost) {
+            var current = plan.signature(this); current.putLong("energy_per_tick", cost);
+            if (!current.equals(signature) || duration != plan.ticks()) { resetWork(); signature = current; duration = plan.ticks(); }
+            greenhousePlan = plan; greenhouseEnergyCost = cost;
+        }
+        var products = mergeOutputs(plan.remainders(this));
+        if (products == null) { status = OUTPUT_FULL; return; }
+        if (mana.getNeeded() < plan.mana()) { GreenhouseWork.stopLeafRun(this); status = MANA_FULL; return; }
+        if (!spendEnergy(cost)) { status = NO_ENERGY; return; }
+        status = WORKING; setActive(true);
+        if (++progress >= duration) { plan.commit(this, products); resetWork(); }
+        markForSave();
+    }
     public boolean spendEnergy(long amount) {
         if (energy.extract(amount, Action.SIMULATE, AutomationType.INTERNAL) != amount) return false;
         energy.extract(amount, Action.EXECUTE, AutomationType.INTERNAL); return true;
@@ -257,13 +307,24 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     }
     private CompoundTag settings() {
         var tag = new CompoundTag(); tag.putInt("mode", mode); tag.putInt("pool_side", poolSide); tag.putInt("target", targetPercent);
-        tag.putString("recipe", recipeLock); tag.put("controller", controller.copy()); return tag;
+        tag.putString("recipe", recipeLock); tag.put("controller", controller.copy());
+        if (kind() == ManaMachineKind.GREENHOUSE) {
+            tag.putInt("greenhouse_progress", progress); tag.putInt("greenhouse_duration", duration);
+            if (signature != null) tag.put("greenhouse_work", signature.copy());
+        }
+        return tag;
     }
     private void readSettings(CompoundTag tag) {
         mode = Math.clamp(tag.getInt("mode"), 0, 1); poolSide = Math.clamp(tag.getInt("pool_side"), 0, RelativeSide.values().length - 1);
         targetPercent = tag.contains("target") ? Math.clamp(tag.getInt("target"), 0, 100) : 100;
         String id = tag.getString("recipe"); recipeLock = id.length() <= 256 && ResourceLocation.tryParse(id) != null ? id : "";
         controller = tag.getCompound("controller").copy(); reservePoolSide();
+        if (kind() == ManaMachineKind.GREENHOUSE) {
+            duration = Math.clamp(tag.getInt("greenhouse_duration"), 1, 2_000_000);
+            progress = Math.clamp(tag.getInt("greenhouse_progress"), 0, duration - 1);
+            signature = tag.contains("greenhouse_work") ? tag.getCompound("greenhouse_work").copy() : null;
+            greenhousePlan = null; greenhouseCache = null;
+        }
     }
     @Override protected void collectImplicitComponents(DataComponentMap.Builder builder) { super.collectImplicitComponents(builder); builder.set(ManaContent.SETTINGS, settings()); }
     @Override protected void applyImplicitComponents(BlockEntity.DataComponentInput input) {
@@ -289,10 +350,13 @@ public final class ManaMachine extends TileEntityConfigurableMachine implements 
     @Override public CompoundTag getReducedUpdateTag(HolderLookup.Provider provider) {
         var tag = super.getReducedUpdateTag(provider);
         if (kind() == ManaMachineKind.INFUSER) tag.putInt("infusion_catalyst", net.minecraft.world.level.block.Block.getId(infusionCatalyst()));
+        if (kind() == ManaMachineKind.GREENHOUSE) tag.putInt("greenhouse_flower", greenhouseVisualState);
         return tag;
     }
     @Override public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
         super.handleUpdateTag(tag, provider);
         if (tag.contains("infusion_catalyst")) catalystVisualState = tag.getInt("infusion_catalyst");
+        if (tag.contains("greenhouse_flower")) greenhouseVisualState = tag.getInt("greenhouse_flower");
     }
+    public BlockState greenhouseVisual() { return net.minecraft.world.level.block.Block.stateById(greenhouseVisualState); }
 }

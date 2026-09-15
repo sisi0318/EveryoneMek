@@ -1,0 +1,12 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "formula": "rafflowsia",
+  "flower": [
+    {
+      "item": "botania:rafflowsia"
+    },
+    {
+      "item": "botania:floating_rafflowsia"
+    }
+  ]
+}

@@ -4,14 +4,26 @@
 
 ## 当前阶段与用户要求
 
-- 当前为 **0.1.0-alpha.28 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
+- 当前为 **0.1.0-alpha.29 可运行原型**，包 `dev.everyonemek.botania`、模组 ID `botanicalmekanism`、产物 `BotanicalMekanism-<版本>.jar`。已增加配方驱动的魔力温室，并实现设计 P1–P3 主线：导能莲、六种仿生功能花、两种辅助设备及十种加工／控制设备，接入原生火花与 Chemical 魔网；旧共鸣网络兼容保留。跨维度和后续候选花不在本版。使用说明以 README 为准。
 - 用户指定上游为 `VazkiiMods/Botania` 的 `1.21.1-porting` 分支；2026-09-12 研究固定在 `d617ef057edf7a4b4fb6c6ee6045c973a80bfb05`。这不是正式发布依赖，开始实现时先取得对应构建并核对 JAR。
-- 用户明确取消 Mek 机器产魔力，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
+- 用户明确取消直接用 FE 产魔力的 Mek 发生器，改由一个专用仿生花种接 FE 产魔力；当前暂名“仿生导能莲”。走原产能花 → 发射器 → 池，再由互通器转移至 Mek 管网；不保留机器发生器或花的第二套 Chemical 输出。
 - 专用产能花需保持花冠、茎、叶的花形，允许原创科技细节；已有六种仿生功能花继续保留各自原模型与贴图。两项要求分别适用，不把专用花画成机箱，也不替原功能花重做机械外壳。
 - 用户要求全部仿生花无需草地／泥土。采用通用承托和安装空间检查，支持石、玻璃、机壳及根部接触的 FE 电缆／供电部件；不能从原 FlowerBlock 继承回土壤限制。作用目标的原条件仍保留，普通 Botania 花的规则不改。
 - 导能莲首版建议 50 FE／魔力、4 魔力／游戏 tick、满速 200 FE／tick，无 Mek 速度／能量升级；这是平衡初稿，需原型实测。六种仿生功能花已接入，后续候选仍按 DESIGN 评审。
 - 用户认可上一版方向后要求设计魔力无线网络。当前实现同维度、可中继基地网络；32 格链路、带宽与费用以 Balance 与 README 的实现为准。
-- 客户端游戏验收由用户进行，不运行客户端。alpha.28 已通过 55 项 Appbot 共存、53 项仅 AE2 服务端 GameTest，覆盖全部盘扩容、旧组件保存和存取守恒。无 AE2 的 39 项验证沿用 alpha.27，本次未重复。不代表客户端视觉或完整整合包验收。
+- 客户端游戏验收由用户进行，不运行客户端。alpha.29 最终通过 63 项 Appbot 共存服务端 GameTest，包含加工中拆装与原花重种冷却回归；此前仅 AE2 的 61 项和原单元检查也通过。无 AE2 的 39 项验证沿用 alpha.27，本次未重复。不代表客户端视觉或完整整合包验收。
+
+## alpha.29 配方驱动的魔力温室
+
+- 用户先要求优化原生产能花供料，随后改为将花放入机器，最终明确要求把原料与产量转换成配方。当前为 GREENHOUSE 追加枚举值，注册 ID mana_greenhouse；这允许原生材料产魔，不恢复已经取消的 FE 机器发生器。FE 只支付操作成本。
+- GreenhouseRecipe 提供固定数据包配方与八种原生 formula；生成入口 tools/greenhouse_resources.py，适配入口 GreenhouseNative。原生生成花没有统一配方表，不能声称任意附属花会自动生成配方。版本差异、字面量规则及归一化见 GREENHOUSE.md。
+- 默认八种及浮空花：火红莲、彼方兰、斑斓花、炽玫瑰、贪食花、咀叶花、热爆花、噬草花。Gourmaryllis／Rafflowsia 只在临时对象调用纯食物／食花历史函数，不 tick 原花；Spectrolus 颜色读取世界种子和原组件；Thermalily 读取构造字段。七个 Cultivated* Accessor／Invoker 限定这些字段和纯函数。
+- 一花槽／16 材料／1 返还／1 能量／1 流体容器槽，顺序 0～15／16／17／18／19；新机器无需旧槽迁移。构造槽位与机内储罐仍在父构造期间初始化。流体容器填充早于工作，侧面按当前花适用配方接收，16,000 mB，掉落附件同时保存 fluids/items/chemicals/settings。
+- 材料和流体仅在整次加工完成时扣除；返还物及整份魔力需预留空间。固定配方禁止无材料无流体产魔。工作签名包括花组件、实际消耗材料、流体、收益、时间、冷却、后续状态及能耗。计划缓存核对物品和流体快照以及当前 RecipeHolder.value 身份，重载替换会失效；不按魔力点循环。
+- 历史使用原 LAST_FOODS／LAST_FLOWERS／STREAK_LENGTH／LAST_REPEATS／NEXT_COLOR／COLOR_SEQUENCE；冷却只用原 COOLDOWN 组件，避免重种后仍被第二份旧值覆盖；咀叶花连续运行标记用花 CustomData 的 botanicalmekanism_greenhouse 子键。机器掉落 machine_settings 保存未完成进度／签名；无虚拟库存、花实体、掉落物或爆炸。
+- 无速度升级，支持能量升级。Mek 六面和 Chemical 默认输出，原火花接到温室独有的 GreenhouseSparkPort（ManaPool 来源），提取数量按真实面模拟，关闭面为 0；其他机器接收端不改。Appbot 仅在可选 GreenhousePort 继承该视图并实现 SafeMana。
+- 温室 GUI 沿用单魔力条、Mek 侧栏、16 材料格；显示羊毛下一颜色与剩余冷却。新增 GreenhouseJei 原料／魔力／工时展示，变化收益明确标记首次产量，不承诺食物配方是固定 AE 产量。活石／活木／玻璃使用运行资源引用，实际花通过 GreenhouseFlowerRenderer 显示原模型，无新位图。
+- 协议提升为 9。最终 Appbot 共存 63 项 GameTest 通过，共 8 项温室回归，包含原花重种后沿用实际剩余冷却。此前仅 AE2 61 项和已有单元检查通过。游戏客户端仍由用户验收。
 
 ## alpha.28 全部魔力盘扩容
 

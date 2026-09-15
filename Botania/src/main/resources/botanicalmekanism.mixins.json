@@ -3,6 +3,13 @@
   "package": "dev.everyonemek.botania.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "CultivatedEndoflameAccess",
+    "CultivatedFluidFlowerAccess",
+    "CultivatedGourmaryllisAccess",
+    "CultivatedSpectrolusAccess",
+    "CultivatedRafflowsiaAccess",
+    "CultivatedMunchdewAccess",
+    "CultivatedFlowerInterval",
     "FunctionalFlowerPowerMixin",
     "AmaranthusWorkMixin",
     "BionicWandMixin",

@@ -1,6 +1,7 @@
 """Machine recipes, names, and runtime resources."""
 
 MACHINES = {
+    'mana_greenhouse': ('魔力温室', 'Mana Greenhouse', 'open_crate', 'manasteel_ingot', '放入产能花和材料，收集花产生的魔力。需要电能。', 'Houses a generating flower and supplies its ingredients to collect mana. Requires electricity.'),
     'mana_bridge': ('魔力互通器', 'Mana Bridge', 'mana_pool', 'manasteel_ingot', '在魔力池和加压管道之间输送魔力。', 'Transfers mana between pools and pressurized tubes.'),
     'mana_charger': ('魔力充能座', 'Mana Charging Stand', 'mana_tablet', 'manasteel_ingot', '给魔力石板等物品充魔，也能抽出其中的魔力。', 'Charges mana items or draws out their stored mana.'),
     'mana_infuser': ('魔力灌注室', 'Mana Infusion Chamber', 'mana_pool', 'manasteel_ingot', '用魔力灌注材料，也能进行炼金和复制。', 'Infuses items with mana, including alchemy and conjuration.'),
@@ -26,6 +27,7 @@ def generate(root, write, zh, en):
             for face, rotation in [('north', 0), ('east', 90), ('south', 180), ('west', 270)] for active in [False, True]}})
         components = [f'mekanism:{key}' for key in ['ejector', 'owner', 'redstone_control', 'security', 'side_config', 'upgrades', 'energy', 'items', 'chemicals']]
         components.append(f'{mod}:machine_settings')
+        if name == 'mana_greenhouse': components.append('mekanism:fluids')
         write(f'data/{mod}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{
             'type': 'minecraft:item', 'name': f'{mod}:{name}', 'functions': [{'function': 'minecraft:copy_name', 'source': 'block_entity'},
             {'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': components}]}]}]})
@@ -38,6 +40,8 @@ def generate(root, write, zh, en):
     write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': pickaxes})
     zh[f'chemical.{mod}.mana'], en[f'chemical.{mod}.mana'] = '魔力', 'Mana'
     pairs = {
+        'extra.mana_greenhouse': ('花', 'Flower'), 'containers': ('返还物', 'Returns'), 'fluid_container': ('流体桶', 'Bucket'),
+        'cooldown': ('冷却剩余：%s 秒', 'Cooldown: %s s'), 'next_wool': ('需要：%s', 'Needs: %s'),
         'materials': ('材料', 'Materials'), 'products': ('产物', 'Output'), 'books': ('附魔书', 'Books'),
         'extra.mana_infuser': ('催化剂', 'Catalyst'), 'extra.runic_forge': ('辅料', 'Reagent'),
         'extra.botanical_brewery': ('容器', 'Vessel'), 'extra.ore_processor': ('花', 'Flower'),
@@ -57,7 +61,7 @@ def generate(root, write, zh, en):
         ('物品或魔力池不接受此操作', 'The item or pool cannot perform this operation'), ('等待工作', 'Waiting'), ('周围区块未加载', 'Nearby chunks unloaded'),
         ('装置正在使用或控制器重复', 'Device occupied or duplicate controllers'),
         ('炎矿需要有顶维度', 'Orechid Ignem needs a ceiling dimension'),
-        ('魔力已满', 'Mana storage is full'),
+        ('魔力已满', 'Mana storage is full'), ('花正在冷却', 'Flower cooling down'), ('放入产能花', 'Insert a generating flower'),
     ]): pairs[f'status.{i}'] = pair
     for key, (cn, english) in pairs.items(): zh[f'gui.{mod}.machine.{key}'], en[f'gui.{mod}.machine.{key}'] = cn, english
     from botanical_models import generate as generate_models

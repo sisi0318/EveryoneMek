@@ -49,6 +49,6 @@ const escape = s => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   }
   const title = Buffer.from('<svg width="1120" height="50"><text x="560" y="29" text-anchor="middle" font-size="20" font-family="Microsoft YaHei,sans-serif" fill="#dfe7dd">植物机械 · 装置模型预览</text><text x="560" y="46" text-anchor="middle" font-size="11" font-family="Microsoft YaHei,sans-serif" fill="#9faa9e">由运行模型与原版材质渲染 · 工作态 · 非游戏截图</text></svg>');
   panels.push({input:title,left:0,top:0});
-  await sharp({create:{width:1120,height:740,channels:4,background:'#27382f'}}).composite(panels).png().toFile(path.join(root, 'art/botanical-machines-preview.png'));
-  process.stdout.write('Rendered twelve apparatus models from runtime geometry and native materials.\n');
+  await sharp({create:{width:1120,height:50+Math.ceil(names.length/4)*230,channels:4,background:'#27382f'}}).composite(panels).png().toFile(path.join(root, 'art/botanical-machines-preview.png'));
+  process.stdout.write(`Rendered ${names.length} apparatus models from runtime geometry and native materials.\n`);
 })().catch(error => {process.stderr.write(error.stack+'\n');process.exitCode=1;});

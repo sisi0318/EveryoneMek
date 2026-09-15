@@ -1,0 +1,29 @@
+{
+  "name": "block.botanicalmekanism.mana_greenhouse",
+  "icon": "botanicalmekanism:mana_greenhouse",
+  "category": "botania:botanicalmekanism",
+  "sortnum": 30,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "text": "book.botanicalmekanism.mana_greenhouse.0",
+      "item": "botanicalmekanism:mana_greenhouse",
+      "title": "book.botanicalmekanism.mana_greenhouse.title"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_greenhouse.1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "book.botanicalmekanism.mana_greenhouse.2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "botanicalmekanism:mana_greenhouse"
+    }
+  ],
+  "extra_recipe_mappings": {
+    "botanicalmekanism:mana_greenhouse": 0
+  }
+}

@@ -11,7 +11,8 @@ public enum ManaMachineKind implements mekanism.api.text.IHasTranslationKey {
     ORE("ore_processor", 8, 1, 6, true),
     METAMORPHIC("metamorphic_stone", 8, 0, 6, true),
     ELVEN("elven_trade_controller", 16, 0, 8, false),
-    ENCHANTER("mana_enchanter_controller", 1, 16, 1, true);
+    ENCHANTER("mana_enchanter_controller", 1, 16, 1, true),
+    GREENHOUSE("mana_greenhouse", 16, 1, 1, true);
 
     public final String id;
     public final int inputs, extras, outputs;

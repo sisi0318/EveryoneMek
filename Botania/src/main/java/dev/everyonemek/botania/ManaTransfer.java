@@ -56,7 +56,7 @@ public final class ManaTransfer {
     /** Adjacent pool IO shares one budget per machine and world tick; draining chargers only export. */
     public static int fillFromAdjacentPools(ManaMachine tile) {
         if (!tile.kind().chemical || !Flowers.live(tile) || tile.getLevel().isClientSide) return 0;
-        if (tile.kind() == ManaMachineKind.CHARGER && tile.mode() == 1) return drainToAdjacentPools(tile);
+        if (tile.kind() == ManaMachineKind.GREENHOUSE || tile.kind() == ManaMachineKind.CHARGER && tile.mode() == 1) return drainToAdjacentPools(tile);
         if (tile.mana().getNeeded() == 0) return 0;
         int moved = 0;
         var sides = RelativeSide.values();

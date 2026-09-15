@@ -66,8 +66,10 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
             }
         } else if (!tile.kind().controller()) {
             addRenderableWidget(new GuiProgress(tile::progress, ProgressType.SMALL_RIGHT, this, 113, 48));
-            if (!tile.kind().random()) button(16, 142, 204, this::recipeLabel, () -> addWindow(new GuiManaRecipeSelector(this, menu)));
+            if (!tile.kind().random() && tile.kind() != ManaMachineKind.GREENHOUSE) button(16, 142, 204, this::recipeLabel, () -> addWindow(new GuiManaRecipeSelector(this, menu)));
         }
+        if (tile.kind() == ManaMachineKind.GREENHOUSE)
+            addRenderableWidget(new GuiFluidBar(this, GuiFluidBar.getProvider(tile.greenhouseFluid(), List.of(tile.greenhouseFluid())), 184, 32, 12, 70, false));
         addRenderableWidget(new GuiInnerScreen(this, 16, 122, 204, 16, () -> List.of(
               pendingRevision >= 0 ? text("applying") : !menu.state.getBoolean("accepted") && menu.state.contains("revision") ? text("rejected") : text("status." + tile.status()))));
     }
@@ -77,7 +79,15 @@ public final class ManaMachineScreen extends GuiConfigurableTile<ManaMachine, Ma
     @Override protected void drawForegroundText(GuiGraphics gui, int mx, int my) {
         super.drawForegroundText(gui, mx, my); renderTitleText(gui);
         if (tile.kind().inputs > 0) gui.drawString(font, text(tile.kind() == ManaMachineKind.ENCHANTER ? "books" : "materials"), 16, 21, titleTextColor(), false);
-        if (tile.kind().outputs > 0) gui.drawString(font, text("products"), 152, 21, titleTextColor(), false);
+        if (tile.kind().outputs > 0) gui.drawString(font, text(tile.kind() == ManaMachineKind.GREENHOUSE ? "containers" : "products"), 152, 21, titleTextColor(), false);
         if (tile.kind().extras == 1) gui.drawString(font, text("extra." + tile.kind().id), 98, 74, titleTextColor(), false);
+        if (tile.kind() == ManaMachineKind.GREENHOUSE) {
+            gui.drawString(font, text("fluid_container"), 144, 74, titleTextColor(), false);
+            var flower = tile.extras.getFirst().getStack();
+            int cooldown = GreenhouseWork.cooldown(flower);
+            if (cooldown > 0) gui.drawString(font, text("cooldown", (cooldown + 19) / 20), 16, 147, titleTextColor(), false);
+            else if (GreenhouseWork.recipes(tile.getLevel()).stream().anyMatch(r -> r.value().flower().test(flower) && r.value().formula().equals("spectrolus")))
+                gui.drawString(font, text("next_wool", GreenhouseNative.expectedWool(flower, tile.getLevel()).getHoverName()), 16, 147, titleTextColor(), false);
+        }
     }
 }

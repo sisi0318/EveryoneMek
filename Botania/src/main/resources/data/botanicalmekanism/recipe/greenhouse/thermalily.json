@@ -1,0 +1,12 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "formula": "thermalily",
+  "flower": [
+    {
+      "item": "botania:thermalily"
+    },
+    {
+      "item": "botania:floating_thermalily"
+    }
+  ]
+}

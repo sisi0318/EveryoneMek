@@ -1,0 +1,9 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "flower": {"item": "botania:pure_daisy"},
+  "ingredients": [{"item": "minecraft:milk_bucket"}, {"item": "minecraft:wheat"}],
+  "fluid": {"id": "minecraft:water", "amount": 250},
+  "mana": 1234,
+  "ticks": 20,
+  "cooldown": 30
+}

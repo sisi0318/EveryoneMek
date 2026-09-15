@@ -90,6 +90,7 @@ public final class ManaWork {
               .sorted(Comparator.comparing(Tag::toString)).forEach(list::add); return list;
     }
     public static boolean accepts(ManaMachineKind kind, Level level, ItemStack stack, boolean extra) {
+        if (kind == ManaMachineKind.GREENHOUSE) return GreenhouseWork.accepts(level, stack, extra);
         if (extra) return switch (kind) {
             case INFUSER -> catalystState(stack) != null;
             case BREWERY -> stack.getItem() instanceof BrewContainer;

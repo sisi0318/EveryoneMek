@@ -102,3 +102,9 @@ alpha.15 修复物品颜色回调漏掉 alpha 导致盘身透明的问题，素�
 ![三种升级的运行贴图预览](spark-upgrades-preview.png)
 
 预览上排放大实际 16×16 PNG，下排按原尺寸显示；这是资源预览，不是客户端截图。普通与主火花仍引用 Botania 原火花外观。
+
+## alpha.29 魔力温室
+
+活石底座、活木细柱、魔力钢顶框与玻璃罩由 `tools/botanical_models.py` 生成。只引用原 Botania 和 Minecraft 材质，未新增或重绘 PNG。模型仍经过外表面裁切与共面检查，碰撞体由同一实体几何生成。
+
+装入的花由 `GreenhouseFlowerRenderer` 缩放显示其原方块模型，保留普通／浮空花外形。`botanical-machines-preview.png` 现包含十三种设备；温室的离线模型预览为空罩，实际花由游戏渲染器按槽内物品显示。该预览不是客户端验收。

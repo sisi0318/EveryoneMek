@@ -1,0 +1,12 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "formula": "gourmaryllis",
+  "flower": [
+    {
+      "item": "botania:gourmaryllis"
+    },
+    {
+      "item": "botania:floating_gourmaryllis"
+    }
+  ]
+}

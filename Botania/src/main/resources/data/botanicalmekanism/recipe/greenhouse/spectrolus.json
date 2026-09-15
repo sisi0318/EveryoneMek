@@ -1,0 +1,12 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "formula": "spectrolus",
+  "flower": [
+    {
+      "item": "botania:spectrolus"
+    },
+    {
+      "item": "botania:floating_spectrolus"
+    }
+  ]
+}

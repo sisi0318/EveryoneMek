@@ -1,0 +1,12 @@
+{
+  "type": "botanicalmekanism:mana_greenhouse",
+  "formula": "munchdew",
+  "flower": [
+    {
+      "item": "botania:munchdew"
+    },
+    {
+      "item": "botania:floating_munchdew"
+    }
+  ]
+}

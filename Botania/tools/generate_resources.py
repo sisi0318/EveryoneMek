@@ -126,7 +126,7 @@ zh[f'description.{MOD}.mechanical_apothecary'] = '自动调合花瓣和其他材
 en[f'description.{MOD}.mechanical_apothecary'] = 'Automatically combines petals and other ingredients into magical flowers.'
 write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Botanical Mekanism'}})
 write('botanicalmekanism.mixins.json', {'required': True, 'package': 'dev.everyonemek.botania.mixin', 'compatibilityLevel': 'JAVA_21',
-      'mixins': ['FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsCellOverflowMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin', 'SparkMeNodeCapacityMixin', 'SparkMeConnectionCapacityMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
+      'mixins': ['CultivatedEndoflameAccess', 'CultivatedFluidFlowerAccess', 'CultivatedGourmaryllisAccess', 'CultivatedSpectrolusAccess', 'CultivatedRafflowsiaAccess', 'CultivatedMunchdewAccess', 'CultivatedFlowerInterval', 'FunctionalFlowerPowerMixin', 'AmaranthusWorkMixin', 'BionicWandMixin', 'ManaPoolAccess', 'EnchanterAccess', 'EnchanterControlMixin', 'SparkTransfersAccess', 'SparkRangeMixin', 'SparkRequestMixin', 'AppliedBotanicsStorageMixin', 'AppliedBotanicsManaKeyMixin', 'AppliedBotanicsCellOverflowMixin', 'MechanicalSparkPlacementMixin', 'MechanicalSparkMixin', 'ManaTerminalDefaultsMixin', 'ManaWirelessDefaultsMixin', 'SparkMeNodeCapacityMixin', 'SparkMeConnectionCapacityMixin'], 'plugin': 'dev.everyonemek.botania.mixin.OptionalJeiMixinPlugin', 'client': ['ManaSideConfigMixin', 'ManaConfigTabMixin', 'ManaInfusionJeiMixin', 'RunicJeiMixin', 'TerraJeiMixin', 'BrewJeiMixin'], 'injectors': {'defaultRequire': 1}})
 
 
 def shaped(name, pattern, keys):
@@ -302,6 +302,9 @@ shaped('spark_channel_upgrade', ['EPE', 'ACA', 'EGE'], {'E': 'botania:elementium
 channel_recipe = json.loads((RES / f'data/{MOD}/recipe/spark_channel_upgrade.json').read_text(encoding='utf-8'))
 channel_recipe['neoforge:conditions'] = [{'type': 'neoforge:mod_loaded', 'modid': 'ae2'}]
 write(f'data/{MOD}/recipe/spark_channel_upgrade.json', channel_recipe)
+
+from greenhouse_resources import generate as generate_greenhouse
+generate_greenhouse(write, zh, en)
 
 from lexicon_resources import generate as generate_lexicon
 generate_lexicon(ROOT, write, zh, en, PLANTS, recipes)
