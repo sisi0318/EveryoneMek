@@ -17,6 +17,7 @@ Botania 的完整主线、适配边界与后续候选见 [完整规划](Botania/
 
 开发资料：
 
+- [Overload Core：过载短路核心设计](OverloadCore/DESIGN.md)：面向 Mek 科技包的诅咒饰品，当前为设计阶段，尚无可安装版本。
 - [NaturesAura 适配与机器设计](docs/NATURES_AURA_DESIGN.md)
 - [Ars Nouveau 机器设计提案](Ars-Nouveau/DESIGN.md)
 - [Forbidden & Arcanus 赫菲斯托斯锻台与炽炉自动化方案](Forbidden-Arcanus/DESIGN.md)
