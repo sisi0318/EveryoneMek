@@ -12,7 +12,12 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import org.joml.Matrix4f;
 
-/** Native tooltip content: stable completed lines and a brief bright writing edge on the newest line. */
+/**
+ * Native tooltip content: stable completed lines and a brief bright writing edge on the newest line.
+ * 字体渲染效果参考作者：huige233。
+ * 参考来源：com.huige233.autism_and_insomnia.client.DreamJournalClientTooltipComponent
+ * 中的打字机与扫描提亮效果；本类按 Overload Core 的逐行提示需求独立实现。
+ */
 public final class ProgressiveCoreTooltip implements TooltipComponent, ClientTooltipComponent {
     private record Row(FormattedCharSequence text, int line, int offset, int glyphs) { }
     private final List<Component> lines;

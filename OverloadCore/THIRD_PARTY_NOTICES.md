@@ -6,6 +6,6 @@ Original Overload Core code and generated artwork are distributed under the repo
 - Curios is a separate LGPL-3.0 runtime dependency. The addon calls its public accessory APIs and references its existing empty-slot icon at runtime; it does not bundle Curios code or artwork.
 - The pendant art is original built-in ImageGen output. Final prompt and mechanical export details are in `art/README.md` and `art/prompt-v2.txt`.
 - The Gradle Wrapper retains the upstream Apache-2.0 notices in its scripts and JAR.
-- The progressive tooltip is independently implemented using Minecraft/NeoForge's tooltip APIs. Its brief typewriter and scan-highlight appearance was informed by the user-supplied DreamJournalClientTooltipComponent example; that source file is not redistributed and its mod is not a dependency.
+- The progressive tooltip is independently implemented using Minecraft/NeoForge's tooltip APIs. Its brief typewriter and scan-highlight appearance references **huige233**'s `com.huige233.autism_and_insomnia.client.DreamJournalClientTooltipComponent`, supplied by the user; that source file is not redistributed and its mod is not a dependency.
 
 No upstream mod JAR, game world, decompiled source tree or large source image is bundled with the mod.

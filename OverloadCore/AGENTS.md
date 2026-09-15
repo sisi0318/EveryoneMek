@@ -27,7 +27,7 @@
 - `Workplace` / `MetalLoad`：原生伤害、遮挡、警示与冷却；活动/真实热源判定。金属标签可改，原版 CONTAINER 内容递归最多 4 层、1024 个非空项，超限保守计重，不查询远端存储。
 - `CoreItem` / `client/CoreClient.tooltip`：用户要求悬停挂坠按住 Shift，说明随时间逐行出现。基础提示保留在物品类；扩展列表通过 Dist.CLIENT 的 RenderTooltipEvent.GatherComponents 插入，使用 RegisterClientTooltipComponentFactoriesEvent 注册自定义内容，只替换本模组的提示键，保留 Curios 与其他模组添加的行。不另开说明窗口。
 - `client/TooltipReveal`：每行间隔 160ms，当前行 140ms 内打字显示；按真实悬停帧和单调时钟计时。松开 Shift、离开挂坠、切换界面/栏位或失去窗口焦点均重置。不在 ItemTooltipEvent 的预先查询/缓存中开始计时，不用全局时间取模让读完的文字反复消失。
-- `client/ProgressiveCoreTooltip`：原生 ClientTooltipComponent 渲染和字体，先测量完整宽度，按可用宽度换行；按 FormattedCharSequence 处理代码点和样式，不用 UTF-16 substring 截断中文/补充字符。仅当前行的写入边缘短暂提亮并带光标，其余行稳定。仅为字体效果参考用户提供的 DreamJournalClientTooltipComponent，独立实现，无原模组依赖。
+- `client/ProgressiveCoreTooltip`：原生 ClientTooltipComponent 渲染和字体，先测量完整宽度，按可用宽度换行；按 FormattedCharSequence 处理代码点和样式，不用 UTF-16 substring 截断中文/补充字符。仅当前行的写入边缘短暂提亮并带光标，其余行稳定。字体效果参考作者 huige233 的 DreamJournalClientTooltipComponent，独立实现，无原模组依赖；保留代码注释及 THIRD_PARTY_NOTICES 中的作者署名。
 - `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K（含潜行 K）切换最多 8 台设备位置提示。info 命令在聊天栏报告状态，旧 Request 消息仍接受但不再打开窗口。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
 
 ## 目标版本已核实的 API 经验
