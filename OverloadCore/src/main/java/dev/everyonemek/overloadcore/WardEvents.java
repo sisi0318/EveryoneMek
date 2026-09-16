@@ -13,9 +13,20 @@ public final class WardEvents {
         if (event.getEntity() instanceof ServerPlayer player && ThunderWard.rescue(player)) event.setCanceled(true);
     }
     @SubscribeEvent public static void tick(PlayerTickEvent.Pre event) {
-        if (event.getEntity() instanceof ServerPlayer player) ThunderWard.beforeTick(player);
+        if (event.getEntity() instanceof ServerPlayer player) {
+            WardCustody.ensure(player);
+            ThunderWard.beforeTick(player);
+        }
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) ThunderWard.forget(player);
+    }
+    @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) WardCustody.ensure(player);
+    }
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void itemJoin(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide && event.getEntity() instanceof net.minecraft.world.entity.item.ItemEntity item
+              && WardCustody.rejectDrop(item)) event.setCanceled(true);
     }
 }

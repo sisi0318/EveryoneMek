@@ -83,6 +83,7 @@ public final class CoreClient {
             details.add(CoreContent.text("ward.rescue").withStyle(ChatFormatting.GREEN));
             details.add(CoreContent.text("ward.unfunded").withStyle(ChatFormatting.RED));
             details.add(CoreContent.text("ward.removable").withStyle(ChatFormatting.GRAY));
+            details.add(CoreContent.text("ward.custody").withStyle(ChatFormatting.GRAY));
         } else {
             details.add(CoreContent.text("effects", CoreConfig.RANGE.get()).withStyle(ChatFormatting.GRAY));
             for (int i = 0; i < 8; i++) {

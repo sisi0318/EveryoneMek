@@ -17,6 +17,9 @@ public final class CoreContent {
           () -> DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> MACHINE = COMPONENTS.register("machine_data",
           () -> DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.UUID>> WARD_SEAL = COMPONENTS.register("ward_seal",
+          () -> DataComponentType.<java.util.UUID>builder().persistent(net.minecraft.core.UUIDUtil.CODEC)
+                .networkSynchronized(net.minecraft.core.UUIDUtil.STREAM_CODEC).build());
     public static final DeferredItem<CoreItem> CORE = ITEMS.register("overloaded_short_circuit_core",
           () -> new CoreItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC)));
     public static final DeferredItem<ThunderWardItem> WARD = ITEMS.register("thunder_ward",

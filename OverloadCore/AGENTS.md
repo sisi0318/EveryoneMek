@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.8，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.8.jar`。
+- 0.1.0-alpha.9，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.9.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -36,6 +36,12 @@
 
 ## 逆命雷印
 
+- `WardLedger` / `WardCustody`：alpha.9 佩戴后在主世界 SavedData 保存 UUID 标识及完整物品快照，不依赖玩家 NBT。旧无标识实物自动登记；正常摘下才解除，退出/重生保留，Curios ALWAYS_KEEP。不是永久绑定，不得改成生存无法摘取。
+- `WardMenuTransactionMixin` 只包裹 ServerGamePacketListenerImpl 中原版校验后的 clicked 调用。必须确认物品真正到达鼠标、背包或主动掉落实体才解除记录；背包满/失败移动继续保护。不能将任意 onUnequip 或 canUnequip 查询视为玩家授权。支持 PICKUP/QUICK_MOVE/SWAP/THROW。
+- `WardSlotMutationMixin` 只作用于 DynamicStackHandler 提供的护命槽；`WardStackMutationMixin` 仅保护已登记的真实 ItemStack 对象。修复重建与明确点击事务有范围内放行，SIMULATE 不能登记或解除。Curios inventoryTick 传入 slot=-1，不得用该索引访问玩家背包。
+- 戴上时保存完整组件；独立快照不能与实际物品共享可变 CompoundTag。原始写入、NBT 覆盖、无效/丢失槽位在 tick 和保命判定前修复，修复后检查实际装备，不用虚构 equipped 返回值。其他槽位和意外替换物品应保留。
+- `ward_seal` 是仅限在戴状态的标识。主动摘取只释放一件，旧副本一直不可装备；普通背包、掉落入口清理游离副本。保护记录不要存临时世界路径或靠客户端维护，不强制加载外部箱子查重。具体跨文件保存和同 JVM 边界见 DEATH_PROTECTION。
+- 修复中的无标识雷印可能就是被剥掉标识的原件，不得将它当作无关物品退回背包再恢复一件。正常换戴通过点击事务先结算旧记录，再登记新物品；其他被塞入的物品仍应保留。
 - `ThunderWardItem` / `ThunderWard` / `WardEvents`：检查实际有效 Curios 栏位，仅主线程上仍被世界双索引追踪的服务端玩家触发。alpha.8 在 ServerPlayer.die 的方法体之前尝试付费抵抗，死亡事件保留兜底；原版图腾已经在此之前检查，但其他模组死亡事件监听器的优先级可能因此改变。成功付款保留 1 点真实生命，不额外添加无敌时间或护盾。
 - 临时抵抗状态使用 MapMaker weakKeys 的弱对象身份键，不能改成按 Entity.equals 的 WeakHashMap：原版重生会把旧实体 ID 分配给新玩家，Entity.equals 恰好按 ID 比较，会误继承上一条生命的已结算状态。
 - `WardHealthMixin` / `WardPlayerMixin` / `WardRemoveMixin` / `WardSetRemovedMixin`：保护直接清血、生命/死亡状态读取、异常最大生命、tickDeath、在线 NBT 和玩家移除；普通 hurt 中的真实扣血仍等待图腾/死亡判定。坏状态读取可触发实际付费恢复，禁止免费篡改返回值伪装不死。新的 hurt 无论同 tick 与否都重开判定，同 tick 的收尾链防重复计费；观察性失败当 tick 缓存，显式致死调用仍重新核对。
@@ -75,6 +81,7 @@
 - alpha.6：魂契文案和双条 HUD 通过 `classes jar`、中英文占位符及打包检查；公共游戏逻辑类、数据和字体效果类与 alpha.5 一致。未重复 GameTest，状态面板的游戏内位置与风格由用户验收。
 - alpha.7：`build runGameTestServer` 通过，**21/21 服务端用例、3/3 单元用例**。新增 7 项真实玩家测试：真实槽位装备、和核心同戴的分摊/无冷却/库存守恒、不足与未授权电量、无限伤害串联、直接清血/死亡/移除、图腾优先及正常换维度、矩阵多端口与元件实存一致、重生复用实体 ID 时不继承旧生命状态。不把此结果描述为已验证任意第三方 Unsafe 实现。
 - alpha.8：**30/30 服务端用例、3/3 单元用例**通过。直接遍历测试环境 DAMAGE_TYPE 注册表，逐项验证 55 种伤害及原生 kill；同时验证同步/批量生命写入、在线 NBT、原始字段与死亡时钟、伪造移除标记、包装回调、真实世界索引/tick 列表、临时容器放行、最大生命有/无快照修复、正式重生/退出和持久结算标记。没有启动客户端，也不将注册表测试外推成任意其他模组实现的绝对兼容。
+- alpha.9：**34/34 服务端用例、3/3 单元用例**通过，保留 55 种伤害验证。新增真实菜单数据包的普通点击/Shift/数字键/主动丢弃与满背包失败、数量/组件直接和绕过 setter 的篡改、去标识恢复不复制、缺失/停用槽、独立记录读回恢复、游离副本及真实缺电死亡重生。测试正式 respawn 后须按原版 handleClientCommand 赋值 connection.player，再发菜单包，不能把连接仍指向旧玩家的夹具错误当作功能缺陷。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

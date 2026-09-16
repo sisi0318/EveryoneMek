@@ -18,13 +18,14 @@ def generate(mek_jar):
           'mixins': ['WardLivingAccess', 'WardHealthMixin', 'WardPlayerMixin', 'WardRemoveMixin', 'WardSetRemovedMixin',
                      'WardEntityAccess', 'WardSyncedHealthMixin', 'WardLifecycleMixin', 'WardServerLevelAccess', 'WardManagerAccess',
                      'WardLevelCallbackMixin', 'WardManagerRemovalMixin', 'WardLookupRemovalMixin', 'WardTickListMixin', 'WardTrackingEndMixin',
+                     'WardSlotAccess', 'WardSlotMutationMixin', 'WardStackMutationMixin', 'WardMenuTransactionMixin',
                      'CachedRecipeAccess', 'MachineEnergyOwner', 'RecipeMonitorMixin', 'CachedEnergyMixin', 'RecipeOutputMixin',
                      'MachineTickMixin', 'TransmitterTickMixin', 'ManualEnergyMixin', 'MachineDataMixin', 'PlayerSprintMixin', 'GeneratorMixin',
                      'GeneratorHeatMixin', 'GeneratorTurbineMixin', 'GeneratorFusionMixin', 'NetworkAccess', 'EnergyNetworkMixin',
                      'FluidNetworkMixin', 'ChemicalNetworkMixin', 'EnergyTargetMixin', 'FluidTargetMixin', 'ChemicalTargetMixin', 'ItemTransportMixin', 'FluidPullMixin', 'LongPullMixin'],
           'client': ['MachineSoundMixin'], 'injectors': {'defaultRequire': 1}})
     write(f'data/{MOD}/curios/slots/overload_core.json', {'size': 1, 'operation': 'SET', 'order': 30, 'icon': 'curios:slot/empty_necklace_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
-    write(f'data/{MOD}/curios/slots/overload_ward.json', {'size': 1, 'operation': 'SET', 'order': 31, 'icon': 'curios:slot/empty_bracelet_slot', 'add_cosmetic': False})
+    write(f'data/{MOD}/curios/slots/overload_ward.json', {'size': 1, 'operation': 'SET', 'order': 31, 'icon': 'curios:slot/empty_bracelet_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
     write(f'data/{MOD}/curios/entities/player.json', {'entities': ['minecraft:player'], 'slots': ['overload_core', 'overload_ward']})
     write('data/curios/tags/item/overload_ward.json', {'replace': False, 'values': [f'{MOD}:thunder_ward']})
     write(f'assets/{MOD}/models/item/thunder_ward.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{MOD}:item/thunder_ward'}})
@@ -74,6 +75,7 @@ def generate(mek_jar):
         'overloadcore.ward.rescue': ('命尽之刻，留存半颗心，再拒死门。', 'At the final blow, keep half a heart and defy death.'),
         'overloadcore.ward.unfunded': ('雷息不足，契印不应；不凭空赊取性命。', 'Without enough power, the seal grants no reprieve.'),
         'overloadcore.ward.removable': ('可自由摘取，可与过载短路核心同佩。', 'Freely removable; can be worn alongside the Overloaded Core.'),
+        'overloadcore.ward.custody': ('雷印护形 · 佩戴时抗强夺、抗篡改，死后随身。', 'Seal of Return · Resists forced removal and alteration while worn; kept through death.'),
         'overloadcore.ward.saved': ('逆命雷印 · 万机供雷，此命不绝。', 'Thunder Ward: the engines pay. Your thread holds.'),
         'curios.identifier.overload_core': ('核心', 'Core'),
         'key.categories.overloadcore': ('过载核心', 'Overload Core'), 'key.overloadcore.status': ('切换设备位置提示', 'Toggle Device Diagnostics'),

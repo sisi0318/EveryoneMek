@@ -23,10 +23,10 @@ import top.theillusivec4.curios.api.*;
 @GameTestHolder(OverloadCore.ID)
 @PrefixGameTestTemplate(false)
 public final class ThunderWardGameTests {
-    private record Fixture(ServerPlayer player, List<Packet<?>> packets) { }
+    record Fixture(ServerPlayer player, List<Packet<?>> packets) { }
     private static void check(boolean condition, String message) { CoreGameTests.check(condition, message); }
     private static long price() { return EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.WARD_COST_FE.get().longValue()); }
-    private static Fixture player(GameTestHelper h, BlockPos pos) {
+    static Fixture player(GameTestHelper h, BlockPos pos) {
         return player(h, pos, null);
     }
     private static Fixture player(GameTestHelper h, BlockPos pos, Integer reusedId) {
@@ -63,7 +63,11 @@ public final class ThunderWardGameTests {
         check(cube.getEnergyContainer().getEnergy() == amount, "Fixture cube capacity too small");
         return cube;
     }
-    private static void close(Fixture f) {
+    static void close(Fixture f) {
+        // Test teardown discards the artificial player's durable record, not a production removal bypass.
+        WardCustody.forget(f.player);
+        WardLedger.get(f.player).worn.remove(f.player.getUUID());
+        WardLedger.get(f.player).setDirty();
         CuriosApi.getCuriosInventory(f.player).flatMap(h -> h.getStacksHandler(ThunderWardItem.SLOT))
               .ifPresent(h -> h.getStacks().setStackInSlot(0, ItemStack.EMPTY));
         ThunderWard.forget(f.player);
@@ -393,7 +397,7 @@ public final class ThunderWardGameTests {
             check(p.getHealth()==0&&!p.isAlive(),"Unfunded raw health was made immortal");
             check(power.getEnergyContainer().getEnergy()==price()/2,"Failed probes partially drained power");
             p.setHealth(20);
-            CuriosApi.getCuriosInventory(p).orElseThrow().getStacksHandler(ThunderWardItem.SLOT).orElseThrow().getStacks().setStackInSlot(0,ItemStack.EMPTY);
+            WardCustodyGameTests.click(p, net.minecraft.world.inventory.ClickType.PICKUP, 0);
             power.getEnergyContainer().setEnergy(price()*2);
             ((dev.everyonemek.overloadcore.mixin.WardEntityAccess)p).overload$levelCallback().onRemove(Entity.RemovalReason.DISCARDED);
             check(!ThunderWard.tracked(p)&&power.getEnergyContainer().getEnergy()==price()*2,"A removed accessory kept protecting its former wearer");

@@ -9,7 +9,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import top.theillusivec4.curios.api.CuriosApi;
 
 /** One debit per fatal call chain; a fresh hurt call always opens a fresh incident, even in the same tick. */
 public final class ThunderWard {
@@ -51,9 +50,7 @@ public final class ThunderWard {
     }
 
     public static boolean equipped(ServerPlayer player) {
-        return CuriosApi.getCuriosInventory(player).flatMap(h -> h.getStacksHandler(ThunderWardItem.SLOT)).map(h ->
-              h.getStacks().getSlots() > 0 && !h.getActiveStates().isEmpty() && h.getActiveStates().get(0)
-                    && h.getStacks().getStackInSlot(0).is(CoreContent.WARD)).orElse(false);
+        return WardCustody.ensure(player);
     }
     public static void beginDamage(ServerPlayer player) {
         var state = state(player);
