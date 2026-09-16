@@ -61,7 +61,7 @@ public final class CoreEvents {
                     .executes(c -> { CoreBinding.clear(EntityArgument.getPlayer(c, "player")); return 1; })))
               .then(Commands.literal("claim").requires(s -> s.hasPermission(2)).executes(c -> {
                   var player = c.getSource().getPlayerOrException(); var tile = target(player);
-                  if (tile == null || !DeviceScope.supported(tile)) return 0;
+                  if (tile == null || !DeviceScope.supported(tile) && DeviceScope.powerDevice(tile) == null) return 0;
                   DeviceScope.claim(tile, player.getUUID()); return 1;
               }));
         for (boolean allow : new boolean[]{true, false}) command.then(Commands.literal(allow ? "share" : "unshare")

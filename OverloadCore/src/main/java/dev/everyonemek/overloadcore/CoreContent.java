@@ -19,9 +19,11 @@ public final class CoreContent {
           () -> DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
     public static final DeferredItem<CoreItem> CORE = ITEMS.register("overloaded_short_circuit_core",
           () -> new CoreItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC)));
+    public static final DeferredItem<ThunderWardItem> WARD = ITEMS.register("thunder_ward",
+          () -> new ThunderWardItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC)));
     static {
         TABS.register("core", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.overloadcore"))
-              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> output.accept(CORE)).build());
+              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); }).build());
     }
     public static net.minecraft.network.chat.MutableComponent text(String key, Object... args) { return Component.translatable("overloadcore." + key, args); }
     public static void register(IEventBus bus) { ITEMS.register(bus); COMPONENTS.register(bus); TABS.register(bus); }

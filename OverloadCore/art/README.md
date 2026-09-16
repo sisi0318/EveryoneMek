@@ -15,4 +15,12 @@
 
 此图是资源预览，不代表已进行游戏内视觉验收。
 
+## 逆命雷印
+
+- 原创图稿通过内置 ImageGen 生成，原稿为 [source/thunder_ward.png](source/thunder_ward.png)，完整提示词见 [thunder-ward-prompt.txt](thunder-ward-prompt.txt)。
+- 银灰科技腕环、青色电路与紫色触点；源文件含真正透明通道。沿用 `tools/export_art.cjs` 透明外沿裁切与最近邻缩放，输出 16×16 的 `textures/item/thunder_ward.png`。
+- Curios 佩戴外观跟随右前臂，与胸前过载挂坠分开，避免两件饰品重叠。触发动画使用自己的物品图标。
+
+![逆命雷印实际 16×16 贴图放大](ward-preview.png)
+
 空饰品栏位从 alpha.3 起直接引用 Curios 9.5.1 的 `curios:slot/empty_necklace_slot` 灰色吊坠图标，通过 Curios 自己的图集加载，不复制其材质。两个 ImageGen 自定义候选未输出真实透明通道，因此未用于游戏资源；不把棋盘格当作透明背景，也不改动挂坠物品本身的材质。

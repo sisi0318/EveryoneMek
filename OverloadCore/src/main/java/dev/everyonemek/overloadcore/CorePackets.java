@@ -13,6 +13,12 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public final class CorePackets {
     public static CompoundTag clientState = new CompoundTag();
+    public static Runnable onWardPulse = () -> { };
+    public record WardPulse() implements CustomPacketPayload {
+        public static final Type<WardPulse> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "ward_pulse"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, WardPulse> CODEC = StreamCodec.unit(new WardPulse());
+        @Override public Type<WardPulse> type() { return TYPE; }
+    }
     public record Status(CompoundTag data) implements CustomPacketPayload {
         public static final Type<Status> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "status"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Status> CODEC = StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, Status::data, Status::new);
@@ -25,6 +31,7 @@ public final class CorePackets {
     }
     public static void register(RegisterPayloadHandlersEvent event) {
         var registrar = event.registrar("1");
+        registrar.playToClient(WardPulse.TYPE, WardPulse.CODEC, (packet, context) -> context.enqueueWork(onWardPulse));
         registrar.playToClient(Status.TYPE, Status.CODEC, (packet, context) -> context.enqueueWork(() -> clientState = packet.data.copy()));
         registrar.playToServer(Request.TYPE, Request.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player) || packet.action != 0) return;
@@ -33,6 +40,7 @@ public final class CorePackets {
             data.putLong("last_request", tick); CoreBinding.save(player, data); sendStatus(player, true);
         }));
     }
+    public static void wardPulse(ServerPlayer player) { PacketDistributor.sendToPlayer(player, new WardPulse()); }
     public static void sendStatus(ServerPlayer player, boolean report) {
         var tag = new CompoundTag(); var data = CoreBinding.data(player);
         tag.putBoolean("bound", CoreBinding.bound(player));

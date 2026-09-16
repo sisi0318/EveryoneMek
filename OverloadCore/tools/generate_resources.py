@@ -15,13 +15,21 @@ def generate(mek_jar):
     write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Overload Core'}})
     write(f'{MOD}.mixins.json', {'required': True, 'package': 'dev.everyonemek.overloadcore.mixin', 'compatibilityLevel': 'JAVA_21',
           'plugin': 'dev.everyonemek.overloadcore.mixin.OptionalMixinPlugin',
-          'mixins': ['CachedRecipeAccess', 'MachineEnergyOwner', 'RecipeMonitorMixin', 'CachedEnergyMixin', 'RecipeOutputMixin',
+          'mixins': ['WardLivingAccess', 'WardHealthMixin', 'WardPlayerMixin', 'WardRemoveMixin', 'WardSetRemovedMixin',
+                     'CachedRecipeAccess', 'MachineEnergyOwner', 'RecipeMonitorMixin', 'CachedEnergyMixin', 'RecipeOutputMixin',
                      'MachineTickMixin', 'TransmitterTickMixin', 'ManualEnergyMixin', 'MachineDataMixin', 'PlayerSprintMixin', 'GeneratorMixin',
                      'GeneratorHeatMixin', 'GeneratorTurbineMixin', 'GeneratorFusionMixin', 'NetworkAccess', 'EnergyNetworkMixin',
                      'FluidNetworkMixin', 'ChemicalNetworkMixin', 'EnergyTargetMixin', 'FluidTargetMixin', 'ChemicalTargetMixin', 'ItemTransportMixin', 'FluidPullMixin', 'LongPullMixin'],
           'client': ['MachineSoundMixin'], 'injectors': {'defaultRequire': 1}})
     write(f'data/{MOD}/curios/slots/overload_core.json', {'size': 1, 'operation': 'SET', 'order': 30, 'icon': 'curios:slot/empty_necklace_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
-    write(f'data/{MOD}/curios/entities/player.json', {'entities': ['minecraft:player'], 'slots': ['overload_core']})
+    write(f'data/{MOD}/curios/slots/overload_ward.json', {'size': 1, 'operation': 'SET', 'order': 31, 'icon': 'curios:slot/empty_bracelet_slot', 'add_cosmetic': False})
+    write(f'data/{MOD}/curios/entities/player.json', {'entities': ['minecraft:player'], 'slots': ['overload_core', 'overload_ward']})
+    write('data/curios/tags/item/overload_ward.json', {'replace': False, 'values': [f'{MOD}:thunder_ward']})
+    write(f'assets/{MOD}/models/item/thunder_ward.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{MOD}:item/thunder_ward'}})
+    write(f'data/{MOD}/recipe/thunder_ward.json', {'type': 'minecraft:crafting_shaped', 'pattern': ['ACA', 'ESE', 'ADA'],
+          'key': {k: {'item': v} for k, v in {'A': 'mekanism:alloy_atomic', 'C': 'mekanism:ultimate_control_circuit',
+                    'E': 'mekanism:energy_tablet', 'S': 'minecraft:nether_star', 'D': 'minecraft:echo_shard'}.items()},
+          'result': {'id': f'{MOD}:thunder_ward'}})
     write('data/curios/tags/item/overload_core.json', {'replace': False, 'values': [f'{MOD}:overloaded_short_circuit_core']})
     write(f'assets/{MOD}/models/item/overloaded_short_circuit_core.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{MOD}:item/overloaded_short_circuit_core'}})
     write(f'data/{MOD}/recipe/overloaded_short_circuit_core.json', {'type': 'minecraft:crafting_shaped', 'pattern': ['ACA', 'ESE', 'ANA'],
@@ -54,6 +62,17 @@ def generate(mek_jar):
     pairs = {
         'itemGroup.overloadcore': ('过载核心', 'Overload Core'),
         'item.overloadcore.overloaded_short_circuit_core': ('过载短路核心', 'Overloaded Short-Circuit Core'),
+        'item.overloadcore.thunder_ward': ('逆命雷印', 'Thunder Ward'),
+        'curios.identifier.overload_ward': ('护命', 'Ward'),
+        'overloadcore.ward.lore': ('借万机一瞬之雷，驳回此身既定之死。', 'Borrow the thunder of a thousand engines. Deny the appointed end.'),
+        'overloadcore.ward.equip': ('右键佩戴，或放入护命饰品槽。', 'Use to equip, or place in the Ward accessory slot.'),
+        'overloadcore.ward.details_hint': ('按住 Shift，窥见逆命之价。', 'Hold Shift to reveal the price of defiance.'),
+        'overloadcore.ward.scope': ('雷域 %s 格 · 抽取自有及获授机枢的储能。', 'Thunder domain: %s blocks. Draws from owned or entrusted machines.'),
+        'overloadcore.ward.price': ('每次逆命共耗 %s FE，诸机分担，不设冷却。', 'Each reprieve costs %s FE, shared by nearby machines. No cooldown.'),
+        'overloadcore.ward.rescue': ('命尽之刻，留存半颗心，再拒死门。', 'At the final blow, keep half a heart and defy death.'),
+        'overloadcore.ward.unfunded': ('雷息不足，契印不应；不凭空赊取性命。', 'Without enough power, the seal grants no reprieve.'),
+        'overloadcore.ward.removable': ('可自由摘取，可与过载短路核心同佩。', 'Freely removable; can be worn alongside the Overloaded Core.'),
+        'overloadcore.ward.saved': ('逆命雷印 · 万机供雷，此命不绝。', 'Thunder Ward: the engines pay. Your thread holds.'),
         'curios.identifier.overload_core': ('核心', 'Core'),
         'key.categories.overloadcore': ('过载核心', 'Overload Core'), 'key.overloadcore.status': ('切换设备位置提示', 'Toggle Device Diagnostics'),
         'overloadcore.lore': ('以此残躯，续接神明断裂的回路。', 'Let this mortal frame mend the circuit of a broken god.'),

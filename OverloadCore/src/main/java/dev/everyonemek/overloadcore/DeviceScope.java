@@ -61,13 +61,23 @@ public final class DeviceScope {
         MULTIS.put(multi, new MultiSnapshot(level.getGameTime(), multi.inventoryID, device)); return device;
     }
     public static boolean allowed(Device device, ServerPlayer player) {
-        if (device == null || device.owner == null || !CoreBinding.active(player) || player.level() != device.anchor.getLevel()) return false;
+        return CoreBinding.active(player) && permitted(device, player);
+    }
+    /** Consent and distance without requiring a cursed core or a currently positive health value. */
+    public static boolean permitted(Device device, ServerPlayer player) {
+        if (device == null || device.owner == null || player.isRemoved() || player.isSpectator()
+              || player.level() != device.anchor.getLevel() || !live(device.anchor)) return false;
         if (!device.owner.equals(player.getUUID())) {
             var shares = data(device.anchor).getList("shares", Tag.TAG_INT_ARRAY);
             if (shares.stream().limit(64).noneMatch(t -> t instanceof IntArrayTag a && a.getAsIntArray().length == 4 && NbtUtils.loadUUID(t).equals(player.getUUID()))) return false;
         }
         var p = player.position(); double x = Math.clamp(p.x, device.bounds.minX, device.bounds.maxX), y = Math.clamp(p.y, device.bounds.minY, device.bounds.maxY), z = Math.clamp(p.z, device.bounds.minZ, device.bounds.maxZ);
         double range = CoreConfig.RANGE.get(); return player.distanceToSqr(x, y, z) <= range * range;
+    }
+    public static Device powerDevice(BlockEntity tile) {
+        if (!(tile instanceof TileEntityMekanism) || !live(tile)) return null;
+        if (tile instanceof TileEntityMultiblock<?> multi && multi.getMultiblock().isFormed()) return device(multi.getMultiblock());
+        return new Device(tile, new AABB(tile.getBlockPos()), owner(tile));
     }
     public static ServerPlayer bearer(BlockEntity tile) { return bearer(device(tile)); }
     public static ServerPlayer bearer(MultiblockData multi) { return bearer(device(multi)); }
@@ -94,7 +104,8 @@ public final class DeviceScope {
         var tile = level.getBlockEntity(pos); return tile != null && owner.equals(owner(tile));
     }
     public static boolean share(ServerPlayer owner, BlockEntity tile, UUID target, boolean allow) {
-        var device = device(tile); if (device == null || !owner.getUUID().equals(device.owner)) return false;
+        var device = device(tile); if (device == null) device = powerDevice(tile);
+        if (device == null || !owner.getUUID().equals(device.owner)) return false;
         var data = data(device.anchor); var shares = data.getList("shares", Tag.TAG_INT_ARRAY);
         shares.removeIf(t -> !(t instanceof IntArrayTag a) || a.getAsIntArray().length != 4 || NbtUtils.loadUUID(t).equals(target)); if (allow && shares.size() < 64) shares.add(NbtUtils.createUUID(target));
         data.put("shares", shares); save(device.anchor, data); return true;

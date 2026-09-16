@@ -3,6 +3,7 @@
     "minecraft:player"
   ],
   "slots": [
-    "overload_core"
+    "overload_core",
+    "overload_ward"
   ]
 }

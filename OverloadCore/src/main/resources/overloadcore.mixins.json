@@ -4,6 +4,11 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "dev.everyonemek.overloadcore.mixin.OptionalMixinPlugin",
   "mixins": [
+    "WardLivingAccess",
+    "WardHealthMixin",
+    "WardPlayerMixin",
+    "WardRemoveMixin",
+    "WardSetRemovedMixin",
     "CachedRecipeAccess",
     "MachineEnergyOwner",
     "RecipeMonitorMixin",

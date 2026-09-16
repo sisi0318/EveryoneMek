@@ -1,0 +1,7 @@
+{
+  "size": 1,
+  "operation": "SET",
+  "order": 31,
+  "icon": "curios:slot/empty_bracelet_slot",
+  "add_cosmetic": false
+}

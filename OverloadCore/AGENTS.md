@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.6，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.6.jar`。
+- 0.1.0-alpha.7，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.7.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -12,6 +12,7 @@
 - 用户要求空栏位能辨认出吊坠。alpha.3 将槽图标接到 Curios 原生 `curios:slot/empty_necklace_slot`，沿用其灰色轮廓与方块图集注册；不复用通用空槽图标、不改槽 ID。生成的自定义候选缺少真实透明通道，未采用。
 - 用户确认：同维度 32 格范围，只影响自己或明确共享设备。保留生存不可主动卸下与死亡绑定；创造模式和管理员允许解除。
 - 用户指定本模组物品说明采用中二、玄幻科技风，围绕魂契、机枢和雷霆，不能退回纯硬性条款。保留关键量值与条件；缺槽、权限、加工故障等操作反馈仍写清可采取的动作。具体机制在 README 解释，不因文案增加实际能力。
+- 新饰品“逆命雷印” `thunder_ward` 使用独立 `overload_ward`（护命）槽，可右键或拖入正常佩戴、自由摘下，不继承过载核心永久绑定。用户明确指定 **100,000 FE／次、无冷却**，不要改回最初建议的百万 FE／30 秒。采用同维度 32 格自有/明确授权供能。
 
 ## 实现入口与数据契约
 
@@ -33,6 +34,17 @@
 - `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K（含潜行 K）切换最多 8 台设备位置提示。info 命令在聊天栏报告状态，旧 Request 消息仍接受但不再打开窗口。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
 - `client/CoreHud`：半透明双条 HUD；磁枷为 load／服务器 metalLimit，劫热为 heat 百分比。禁跑颜色读取服务器 heavy 标记以尊重恢复滞后，不能只按当前数值重新判定；填充限于 0～1 但数值保留超过阈值的实际负荷。只在存活、非旁观、关闭菜单且非 F1 时绘制，使用正常稳定文字，避免常驻读数抖动。
 
+## 逆命雷印
+
+- `ThunderWardItem` / `ThunderWard` / `WardEvents`：检查实际有效 Curios 栏位；仅服务器玩家触发。普通致死使用未取消的 LOWEST LivingDeathEvent，给原版图腾优先机会；成功付款保留 1 点真实生命，不额外添加无敌时间或护盾。
+- 临时抵抗状态使用 MapMaker weakKeys 的弱对象身份键，不能改成按 Entity.equals 的 WeakHashMap：原版重生会把旧实体 ID 分配给新玩家，Entity.equals 恰好按 ID 比较，会误继承上一条生命的已结算状态。
+- `WardHealthMixin` / `WardPlayerMixin` / `WardRemoveMixin` / `WardSetRemovedMixin` / `WardLivingAccess`：补充直接清血和移除入口；getHealth 只在已付费的当前致死链内兜底非正/非有限值。新的 hurt 无论同 tick 与否都开启下一次付费判定；同 tick 的 die/清血/discard 收尾链防重复计费。完整死亡方法到 TAIL 后记为已结算，不允许库存掉落后再恢复玩家。
+- 不拦截换维度、正常卸载和退出；不在每 tick 无条件强改最大生命或把所有实体设为无敌。截图未提供实现的 Unsafe/抹除工具不能宣称全部兼容，具体顺序和边界维护在 [DEATH_PROTECTION.md](DEATH_PROTECTION.md)。
+- `WardPower`：只在付费时查已加载区块的 BE；Mek 机器及采用同类原生容器的扩展机器可参加。`DeviceScope.permitted/powerDevice` 复用归属与授权，不要求先绑定过载核心；原 `allowed` 仍保留旧核心激活条件。
+- BasicEnergyContainer 直接扣真实储能，避免受机器 I/O 面限制、机器工作耗能翻倍和回收影响。矩阵 setEnergy 会抛异常，必须使用 MatrixEnergyContainer 原生模拟/提取队列及供能余量；排除独立感应元件，矩阵多端口按容器对象去重。其他未知储能类型不强行改写；传输器共享网络不纳入。
+- 按可用储能比例分摊；费用粒度允许时每个非空容器先分到 1 J。BigInteger 处理比例和总量，先预检全部快照与金额，再扣费；不足不部分扣款。Mek FE/J 换算是唯一费用单位入口。
+- `WardRenderer` 将雷印放在右前臂，避免与胸前核心重叠；`CorePackets.WardPulse` 在本人客户端播放自己的物品图标。原生电火花仅取有限个供能节点做视觉反馈，不限制实际供能数量。
+
 ## 目标版本已核实的 API 经验
 
 - Mek 传输器继承 `CapabilityTileEntity`，不是 `TileEntityMekanism`；其静态 `tickServer` 返回 void。只挂机器基类会漏掉管道归属、索引和搬运。
@@ -41,6 +53,7 @@
 - `BlockEntity.DataComponentInput` 是 protected；附件恢复使用公开 `applyComponentsFromItemStack` 并限制到支持的 Mek BE，不因接入传输器改成全局库存迁移。
 - 直接用 GameTest `setBlock` 不会应用 Mek 方块物品默认侧面配置。测试须明确设置能源输入与弹出，并调用 `invalidateCapabilitiesFull()` 刷新已缓存 capability。能源立方出口用 `RelativeSide.fromDirections` 计算，不能把世界北面直接当相对前面。
 - 默认 GameTest mock 玩家会向未协商 Curios 通道的 EmbeddedChannel 同步而失败。测试通过 FakePlayerFactory、SURVIVAL、`level.addNewPlayer` 与每 tick `doTick` 驱动真实使用/玩家事件，不把假通道错误当成运行兼容问题。
+- **死亡测试不能使用 FakePlayer**：该类 isInvulnerableTo 恒 true，die 为空。ThunderWardGameTests 使用真正的 ServerPlayer 和只记录/吞掉网络输出的连接；等待原生 60 tick 出生保护结束，验证实际伤害、死亡包、图腾与移除路径。
 - 不在任意 FE capability 全局注入倍率。原生能量以 J 计量，处理 SIMULATE 与 EXTERNAL/MANUAL/INTERNAL 的差别。
 
 ## 资源与验证
@@ -54,6 +67,7 @@
 - alpha.4：`classes test --tests '*TooltipRevealTest'` 通过，3/3。仅改客户端展示，未重复 GameTest；使用 NeoForge 21.1.241 的公开 GatherComponents / RenderFrame / tooltip factory API，没有新增 Mixin。
 - alpha.5：红蓝色散渲染通过 `classes jar` 和打包检查；逐行计时类与游戏数据和 alpha.4 一致，两个渲染类保留 huige233 署名。本次没有运行客户端或重复 GameTest，截图匹配程度需玩家验收。
 - alpha.6：魂契文案和双条 HUD 通过 `classes jar`、中英文占位符及打包检查；公共游戏逻辑类、数据和字体效果类与 alpha.5 一致。未重复 GameTest，状态面板的游戏内位置与风格由用户验收。
+- alpha.7：`build runGameTestServer` 通过，**21/21 服务端用例、3/3 单元用例**。新增 7 项真实玩家测试：真实槽位装备、和核心同戴的分摊/无冷却/库存守恒、不足与未授权电量、无限伤害串联、直接清血/死亡/移除、图腾优先及正常换维度、矩阵多端口与元件实存一致、重生复用实体 ID 时不继承旧生命状态。不把此结果描述为已验证任意第三方 Unsafe 实现。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

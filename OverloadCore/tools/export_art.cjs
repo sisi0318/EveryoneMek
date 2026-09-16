@@ -10,5 +10,11 @@ const sharp = require(require.resolve('sharp', {paths: [path.join(root, 'art'), 
   const meta = await sharp(target).metadata();
   if (meta.width !== 16 || meta.height !== 16 || !meta.hasAlpha) throw new Error('Invalid runtime sprite');
   await sharp(target).resize(256, 256, {kernel: 'nearest'}).png().toFile(path.join(root, 'art/pendant-preview.png'));
-  process.stdout.write('Exported pendant sprite with original alpha and nearest-neighbour scaling.\n');
+  const ward = path.join(out, 'thunder_ward.png');
+  const wardSource = path.join(root, 'art/source/thunder_ward.png');
+  await sharp(wardSource).trim().resize(16, 16, {kernel: 'nearest', fit: 'contain', background: {r: 0, g: 0, b: 0, alpha: 0}}).png().toFile(ward);
+  const wardMeta = await sharp(ward).metadata();
+  if (wardMeta.width !== 16 || wardMeta.height !== 16 || !wardMeta.hasAlpha) throw new Error('Invalid ward sprite');
+  await sharp(ward).resize(256, 256, {kernel: 'nearest'}).png().toFile(path.join(root, 'art/ward-preview.png'));
+  process.stdout.write('Exported pendant and ward sprites with original alpha and nearest-neighbour scaling.\n');
 })().catch(e => {process.stderr.write(e.stack+'\n');process.exitCode=1;});

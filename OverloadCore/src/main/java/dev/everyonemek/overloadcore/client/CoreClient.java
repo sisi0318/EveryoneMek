@@ -35,6 +35,8 @@ public final class CoreClient {
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             top.theillusivec4.curios.api.client.CuriosRendererRegistry.register(CoreContent.CORE.get(), PendantRenderer::new);
+            top.theillusivec4.curios.api.client.CuriosRendererRegistry.register(CoreContent.WARD.get(), WardRenderer::new);
+            CorePackets.onWardPulse = () -> Minecraft.getInstance().gameRenderer.displayItemActivation(new ItemStack(CoreContent.WARD.get()));
         });
     }
     @SubscribeEvent public static void keys(RegisterKeyMappingsEvent event) { event.register(KEY); }
@@ -53,13 +55,15 @@ public final class CoreClient {
     @SubscribeEvent public static void tooltip(RenderTooltipEvent.GatherComponents event) {
         var stack = event.getItemStack();
         var mc = Minecraft.getInstance();
-        if (!stack.is(CoreContent.CORE) || !mc.isWindowActive()) return;
+        boolean ward = stack.is(CoreContent.WARD);
+        if ((!stack.is(CoreContent.CORE) && !ward) || !mc.isWindowActive()) return;
+        String prefix = ward ? "ward." : "";
         var lines = event.getTooltipElements();
         long now = Util.getMillis();
         int maxWidth = Math.min(360, Math.max(12, event.getScreenWidth() - 24));
         if (event.getMaxWidth() > 0) maxWidth = Math.min(maxWidth, event.getMaxWidth());
         for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).left().filter(line -> tooltipKey(line, "lore")).isPresent()) {
+            if (lines.get(i).left().filter(line -> tooltipKey(line, prefix + "lore")).isPresent()) {
                 var lore = ((Component) lines.get(i).left().orElseThrow()).copy().withStyle(ChatFormatting.WHITE);
                 lines.set(i, Either.right(new ProgressiveCoreTooltip(java.util.List.of(lore), TooltipReveal.WRITE_MS, maxWidth, now)));
                 break;
@@ -68,25 +72,33 @@ public final class CoreClient {
         if (!Screen.hasShiftDown()) return;
         int hint = -1;
         for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).left().filter(line -> tooltipKey(line, "details_hint")).isPresent()) { hint = i; break; }
+            if (lines.get(i).left().filter(line -> tooltipKey(line, prefix + "details_hint")).isPresent()) { hint = i; break; }
         }
         if (hint < 0) return;
 
         var details = new ArrayList<Component>();
-        details.add(CoreContent.text("effects", CoreConfig.RANGE.get()).withStyle(ChatFormatting.GRAY));
-        for (int i = 0; i < 8; i++) {
-            var line = i == 6 ? CoreContent.text("curse." + i, CoreConfig.METAL_LIMIT.get()) : CoreContent.text("curse." + i);
-            details.add(line.withStyle(ChatFormatting.RED));
-        }
-        for (int i = 0; i < 4; i++) {
-            var line = i == 3 ? CoreContent.text("gift." + i, KEY.getTranslatedKeyMessage()) : CoreContent.text("gift." + i);
-            details.add(line.withStyle(ChatFormatting.GREEN));
-        }
-        var identity = stack.get(CoreContent.DATA.get());
-        var player = mc.player;
-        if (player != null && identity != null && identity.hasUUID("owner")
-              && identity.getUUID("owner").equals(player.getUUID()) && CorePackets.clientState.getBoolean("bound")) {
-            details.add(CoreContent.text("stored", CorePackets.clientState.getLong("energy")).withStyle(ChatFormatting.AQUA));
+        if (ward) {
+            details.add(CoreContent.text("ward.scope", CoreConfig.RANGE.get()).withStyle(ChatFormatting.GRAY));
+            details.add(CoreContent.text("ward.price", CoreConfig.WARD_COST_FE.get()).withStyle(ChatFormatting.AQUA));
+            details.add(CoreContent.text("ward.rescue").withStyle(ChatFormatting.GREEN));
+            details.add(CoreContent.text("ward.unfunded").withStyle(ChatFormatting.RED));
+            details.add(CoreContent.text("ward.removable").withStyle(ChatFormatting.GRAY));
+        } else {
+            details.add(CoreContent.text("effects", CoreConfig.RANGE.get()).withStyle(ChatFormatting.GRAY));
+            for (int i = 0; i < 8; i++) {
+                var line = i == 6 ? CoreContent.text("curse." + i, CoreConfig.METAL_LIMIT.get()) : CoreContent.text("curse." + i);
+                details.add(line.withStyle(ChatFormatting.RED));
+            }
+            for (int i = 0; i < 4; i++) {
+                var line = i == 3 ? CoreContent.text("gift." + i, KEY.getTranslatedKeyMessage()) : CoreContent.text("gift." + i);
+                details.add(line.withStyle(ChatFormatting.GREEN));
+            }
+            var identity = stack.get(CoreContent.DATA.get());
+            var player = mc.player;
+            if (player != null && identity != null && identity.hasUUID("owner")
+                  && identity.getUUID("owner").equals(player.getUUID()) && CorePackets.clientState.getBoolean("bound")) {
+                details.add(CoreContent.text("stored", CorePackets.clientState.getLong("energy")).withStyle(ChatFormatting.AQUA));
+            }
         }
         Slot slot = mc.screen instanceof AbstractContainerScreen<?> container ? container.getSlotUnderMouse() : null;
         if (slot != null && !ItemStack.isSameItemSameComponents(slot.getItem(), stack)) slot = null;
