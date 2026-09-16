@@ -34,7 +34,7 @@ public final class CoreEvents {
         if (event.getEntity() instanceof Player player && !player.level().isClientSide) DeviceScope.placed(player.level().getBlockEntity(event.getPos()), player.getUUID());
     }
     @SubscribeEvent public static void drops(BlockDropsEvent event) {
-        var tile = event.getBlockEntity(); if (tile == null || !DeviceScope.supported(tile)) return;
+        var tile = event.getBlockEntity(); if (tile == null || !DeviceScope.supported(tile) && !(tile instanceof mekanism.common.tile.base.TileEntityMekanism)) return;
         var data = DeviceScope.data(tile); if (data.isEmpty()) return;
         for (var drop : event.getDrops()) if (drop.getItem().is(tile.getBlockState().getBlock().asItem())) drop.getItem().set(CoreContent.MACHINE.get(), data.copy());
     }
@@ -56,6 +56,7 @@ public final class CoreEvents {
     }
     @SubscribeEvent public static void commands(RegisterCommandsEvent event) {
         var command = Commands.literal("overloadcore")
+              .then(WardCommands.commands())
               .then(Commands.literal("info").executes(c -> { CorePackets.sendStatus(c.getSource().getPlayerOrException(), true); return 1; }))
               .then(Commands.literal("clear").requires(s -> s.hasPermission(2)).then(Commands.argument("player", EntityArgument.player())
                     .executes(c -> { CoreBinding.clear(EntityArgument.getPlayer(c, "player")); return 1; })))

@@ -29,6 +29,7 @@ public abstract class WardPlayerMixin {
     private net.minecraft.world.entity.Entity overload$dimension(net.minecraft.world.level.portal.DimensionTransition transition,
           Operation<net.minecraft.world.entity.Entity> original) {
         var player = (ServerPlayer)(Object)this;
+        dev.everyonemek.overloadcore.WardRuntime.clearShield(player);
         ThunderWard.beginLifecycle(player);
         try { return original.call(transition); }
         finally { ThunderWard.endLifecycle(player); }

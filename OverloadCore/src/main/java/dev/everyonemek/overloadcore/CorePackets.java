@@ -13,6 +13,17 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public final class CorePackets {
     public static CompoundTag clientState = new CompoundTag();
+    public static CompoundTag clientWardState = new CompoundTag();
+    public record WardStatus(CompoundTag data) implements CustomPacketPayload {
+        public static final Type<WardStatus> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "ward_status"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, WardStatus> CODEC = StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, WardStatus::data, WardStatus::new);
+        @Override public Type<WardStatus> type() { return TYPE; }
+    }
+    public record WardExtreme(boolean enabled) implements CustomPacketPayload {
+        public static final Type<WardExtreme> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "ward_extreme"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, WardExtreme> CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, WardExtreme::enabled, WardExtreme::new);
+        @Override public Type<WardExtreme> type() { return TYPE; }
+    }
     public static Runnable onWardPulse = () -> { };
     public record WardPulse() implements CustomPacketPayload {
         public static final Type<WardPulse> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "ward_pulse"));
@@ -30,7 +41,11 @@ public final class CorePackets {
         @Override public Type<Request> type() { return TYPE; }
     }
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        var registrar = event.registrar("2");
+        registrar.playToClient(WardStatus.TYPE, WardStatus.CODEC, (packet, context) -> context.enqueueWork(() -> clientWardState = packet.data.copy()));
+        registrar.playToServer(WardExtreme.TYPE, WardExtreme.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer player) handleWardExtreme(player, packet);
+        }));
         registrar.playToClient(WardPulse.TYPE, WardPulse.CODEC, (packet, context) -> context.enqueueWork(onWardPulse));
         registrar.playToClient(Status.TYPE, Status.CODEC, (packet, context) -> context.enqueueWork(() -> clientState = packet.data.copy()));
         registrar.playToServer(Request.TYPE, Request.CODEC, (packet, context) -> context.enqueueWork(() -> {
@@ -41,6 +56,8 @@ public final class CorePackets {
         }));
     }
     public static void wardPulse(ServerPlayer player) { PacketDistributor.sendToPlayer(player, new WardPulse()); }
+    public static void handleWardExtreme(ServerPlayer player, WardExtreme packet) { WardRuntime.setExtreme(player, packet.enabled); }
+    public static void sendWardStatus(ServerPlayer player, CompoundTag tag) { PacketDistributor.sendToPlayer(player, new WardStatus(tag)); }
     public static void sendStatus(ServerPlayer player, boolean report) {
         var tag = new CompoundTag(); var data = CoreBinding.data(player);
         tag.putBoolean("bound", CoreBinding.bound(player));

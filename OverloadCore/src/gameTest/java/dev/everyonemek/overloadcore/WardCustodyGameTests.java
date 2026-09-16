@@ -115,14 +115,15 @@ public final class WardCustodyGameTests {
             p.getInventory().setItem(1,stale.copy());WardCustody.ensure(p);
             check(p.getInventory().getItem(1).isEmpty(), "A forced inventory copy survived repair");
             var forced=new ItemEntity(h.getLevel(),p.getX(),p.getY(),p.getZ(),stale.copy());
-            check(!h.getLevel().addFreshEntity(forced), "Forced world drop created a second physical ward");
+            check(h.getLevel().addFreshEntity(forced) && !slots(p).isItemValid(0,forced.getItem()), "Unverified drop was destroyed or became usable");
+            forced.discard();
             click(p,ClickType.THROW,1);
             check(!ThunderWard.equipped(p), "Deliberate Q-drop could not release custody");
             var drops=h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(4),e->e.getItem().is(CoreContent.WARD));
             check(drops.size()==1 && !drops.getFirst().getItem().has(CoreContent.WARD_SEAL), "Q-drop did not create exactly one ordinary ward");
             check(!slots(p).isItemValid(0,stale), "Old copy became equipable after legitimate release");
             p.getInventory().setItem(2,stale);p.getInventory().tick();
-            check(p.getInventory().getItem(2).isEmpty(), "Stale copy survived in ordinary inventory");
+            check(p.getInventory().getItem(2).is(CoreContent.WARD) && !slots(p).isItemValid(0,p.getInventory().getItem(2)), "Stale item was destroyed or became equipable");
             drops.forEach(Entity::discard);
         } finally { ThunderWardGameTests.close(f); }
         h.succeed();

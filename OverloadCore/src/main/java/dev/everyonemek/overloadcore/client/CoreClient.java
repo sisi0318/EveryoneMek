@@ -29,6 +29,8 @@ import org.lwjgl.glfw.GLFW;
 @EventBusSubscriber(modid = OverloadCore.ID, value = Dist.CLIENT)
 public final class CoreClient {
     private static final KeyMapping KEY = new KeyMapping("key.overloadcore.status", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "key.categories.overloadcore");
+    private static final KeyMapping EXTREME = new KeyMapping("key.overloadcore.extreme", net.neoforged.neoforge.client.settings.KeyConflictContext.IN_GAME,
+          InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.overloadcore");
     private static boolean diagnostics;
     private static final TooltipReveal REVEAL = new TooltipReveal();
     private record HoverTarget(Slot slot, Item item, DataComponentPatch components) { }
@@ -39,7 +41,7 @@ public final class CoreClient {
             CorePackets.onWardPulse = () -> Minecraft.getInstance().gameRenderer.displayItemActivation(new ItemStack(CoreContent.WARD.get()));
         });
     }
-    @SubscribeEvent public static void keys(RegisterKeyMappingsEvent event) { event.register(KEY); }
+    @SubscribeEvent public static void keys(RegisterKeyMappingsEvent event) { event.register(KEY); event.register(EXTREME); }
     @SubscribeEvent public static void tooltipFactory(RegisterClientTooltipComponentFactoriesEvent event) {
         event.register(ProgressiveCoreTooltip.class, tooltip -> tooltip);
     }
@@ -48,9 +50,13 @@ public final class CoreClient {
     }
     @SubscribeEvent public static void afterFrame(RenderFrameEvent.Post event) { REVEAL.endFrame(); }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
-        var mc = Minecraft.getInstance(); if (mc.player == null) { CorePackets.clientState = new CompoundTag(); return; }
+        var mc = Minecraft.getInstance(); if (mc.player == null) { CorePackets.clientState = new CompoundTag(); CorePackets.clientWardState = new CompoundTag(); return; }
         if (CorePackets.clientState.getBoolean("bound") && CorePackets.clientState.getBoolean("heavy")) mc.player.setSprinting(false);
         while (KEY.consumeClick()) diagnostics = !diagnostics;
+        while (EXTREME.consumeClick()) if (mc.screen == null && CorePackets.clientWardState.getBoolean("equipped"))
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new CorePackets.WardExtreme(!CorePackets.clientWardState.getBoolean("extreme")));
+        var wardState=CorePackets.clientWardState;
+        if (wardState.getInt("ticks") > 0) wardState.putInt("ticks",wardState.getInt("ticks")-1);
     }
     @SubscribeEvent public static void tooltip(RenderTooltipEvent.GatherComponents event) {
         var stack = event.getItemStack();
@@ -84,6 +90,11 @@ public final class CoreClient {
             details.add(CoreContent.text("ward.unfunded").withStyle(ChatFormatting.RED));
             details.add(CoreContent.text("ward.removable").withStyle(ChatFormatting.GRAY));
             details.add(CoreContent.text("ward.custody").withStyle(ChatFormatting.GRAY));
+            details.add(CoreContent.text("ward.extreme_hint", EXTREME.getTranslatedKeyMessage(), CoreConfig.WARD_RESERVE_PERCENT.get()).withStyle(ChatFormatting.AQUA));
+            details.add(CoreContent.text("ward.shield_hint", CoreConfig.WARD_SHIELD_HITS.get(), CoreConfig.WARD_SHIELD_TICKS.get()/20.0).withStyle(ChatFormatting.GREEN));
+            var seal=stack.get(CoreContent.WARD_SEAL);
+            if (seal != null && (!CorePackets.clientWardState.hasUUID("seal") || !seal.equals(CorePackets.clientWardState.getUUID("seal"))))
+                details.add(CoreContent.text("ward.pending_item").withStyle(ChatFormatting.YELLOW));
         } else {
             details.add(CoreContent.text("effects", CoreConfig.RANGE.get()).withStyle(ChatFormatting.GRAY));
             for (int i = 0; i < 8; i++) {
@@ -123,10 +134,21 @@ public final class CoreClient {
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event) {
         var mc = Minecraft.getInstance(); var data = CorePackets.clientState;
         if (mc.player == null || mc.screen != null || mc.options.hideGui || !mc.player.isAlive()
-              || mc.player.isSpectator() || !data.getBoolean("bound")) return;
+              || mc.player.isSpectator()) return;
         var gui = event.getGuiGraphics();
-        CoreHud.render(gui, mc.font, data);
-        if (diagnostics) {
+        if (data.getBoolean("bound")) CoreHud.render(gui, mc.font, data);
+        var ward=CorePackets.clientWardState;
+        if (ward.getBoolean("equipped") || ward.getBoolean("pending")) {
+            int y=Math.max(8,gui.guiHeight()-(data.getBoolean("bound")?132:86));
+            var mode=CoreContent.text(ward.getBoolean("pending")?"ward.state.pending":ward.getBoolean("extreme")?"ward.mode.extreme":"ward.mode.normal");
+            gui.fill(8,y,20+mc.font.width(mode),y+12,0xA312101B);
+            gui.drawString(mc.font,mode,12,y+2,ward.getBoolean("extreme")?0xFFFFAE74:0xFFADE5EA,false);
+            if(ward.getInt("hits")>0 && ward.getInt("ticks")>0) {
+                var shield=CoreContent.text("ward.shield_hud",ward.getInt("hits"),(ward.getInt("ticks")+19)/20);
+                gui.drawString(mc.font,shield,12,y+15,0xFFA9E7FF,false);
+            }
+        }
+        if (diagnostics && data.getBoolean("bound")) {
             int line = 0;
             for (var value : data.getList("devices", Tag.TAG_COMPOUND)) {
                 if (line >= 8) break; var d = (CompoundTag)value; var p = BlockPos.of(d.getLong("pos"));
@@ -136,6 +158,6 @@ public final class CoreClient {
         }
     }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) {
-        CorePackets.clientState = new CompoundTag(); diagnostics = false; REVEAL.reset();
+        CorePackets.clientState = new CompoundTag(); CorePackets.clientWardState = new CompoundTag(); diagnostics = false; REVEAL.reset();
     }
 }

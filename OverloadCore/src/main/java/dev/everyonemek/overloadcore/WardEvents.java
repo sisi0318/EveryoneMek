@@ -4,10 +4,13 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 @EventBusSubscriber(modid = OverloadCore.ID)
 public final class WardEvents {
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void damage(LivingDamageEvent.Pre event) { WardRuntime.block(event); }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void death(LivingDeathEvent event) {
         if (event.getEntity() instanceof ServerPlayer player && ThunderWard.rescue(player)) event.setCanceled(true);
@@ -16,13 +19,14 @@ public final class WardEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             WardCustody.ensure(player);
             ThunderWard.beforeTick(player);
+            if (player.tickCount % 10 == 0) WardRuntime.sync(player);
         }
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) ThunderWard.forget(player);
     }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) WardCustody.ensure(player);
+        if (event.getEntity() instanceof ServerPlayer player) { WardCustody.ensure(player); WardRuntime.sync(player); }
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void itemJoin(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {

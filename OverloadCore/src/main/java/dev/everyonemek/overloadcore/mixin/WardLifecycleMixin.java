@@ -14,7 +14,7 @@ public abstract class WardLifecycleMixin {
         WardCustody.ensure(player);
         ThunderWard.beginLifecycle(player);
         try { original.call(player); }
-        finally { ThunderWard.endLifecycle(player); WardCustody.forget(player); }
+        finally { ThunderWard.endLifecycle(player); WardCustody.forget(player); dev.everyonemek.overloadcore.WardRuntime.forget(player); }
     }
     @WrapMethod(method = "respawn")
     private ServerPlayer overload$respawn(ServerPlayer player, boolean keepEverything, Entity.RemovalReason reason, Operation<ServerPlayer> original) {
@@ -22,8 +22,10 @@ public abstract class WardLifecycleMixin {
         try {
             var replacement = original.call(player, keepEverything, reason);
             WardCustody.forget(player);
+            dev.everyonemek.overloadcore.WardRuntime.forget(player);
             ThunderWard.newLife(replacement);
             WardCustody.ensure(replacement);
+            dev.everyonemek.overloadcore.WardRuntime.sync(replacement);
             return replacement;
         }
         finally { ThunderWard.endLifecycle(player); }

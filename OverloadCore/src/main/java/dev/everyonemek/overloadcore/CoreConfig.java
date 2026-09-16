@@ -8,6 +8,7 @@ public final class CoreConfig {
     public static final ModConfigSpec.DoubleValue SOUND_GAIN;
     public static final ModConfigSpec.BooleanValue WORK, GENERATION, TRANSPORT, HAZARDS;
     public static final ModConfigSpec.IntValue WARD_COST_FE;
+    public static final ModConfigSpec.IntValue WARD_RESERVE_PERCENT, WARD_SHIELD_HITS, WARD_SHIELD_TICKS;
     static {
         var b = new ModConfigSpec.Builder();
         RANGE = b.comment("Radius in blocks; only owned or explicitly shared devices.").defineInRange("range", 32, 1, 64);
@@ -17,6 +18,12 @@ public final class CoreConfig {
         SOUND_GAIN = b.defineInRange("soundGain", 1.8, 1, 3);
         WARD_COST_FE = b.comment("Thunder Ward: total FE cost per averted fatal incident; no cooldown.")
               .defineInRange("wardCostFE", 100000, 1, 1000000000);
+        WARD_RESERVE_PERCENT = b.comment("Stored capacity reserved by normal ward extraction; extreme mode bypasses this reserve.")
+              .defineInRange("wardReservePercent", 10, 0, 100);
+        WARD_SHIELD_HITS = b.comment("Damage hits absorbed after a paid rescue. Does not stack across rescues.")
+              .defineInRange("wardShieldHits", 3, 0, 20);
+        WARD_SHIELD_TICKS = b.comment("Lifetime of the post-rescue hit shield, in server ticks.")
+              .defineInRange("wardShieldTicks", 60, 1, 1200);
         WORK = b.define("workCurse", true); GENERATION = b.define("generationCurse", true);
         TRANSPORT = b.define("transportCurse", true); HAZARDS = b.define("workplaceHazards", true);
         SPEC = b.build();

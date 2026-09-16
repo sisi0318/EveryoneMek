@@ -62,7 +62,8 @@ public final class WardCustody {
                 if (!stack.is(CoreContent.WARD)) return false;
                 // Only an unsealed physical item may start a new custody. Old copies never mint a new one.
                 if (stack.has(CoreContent.WARD_SEAL)) {
-                    slot.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+                    // A missing world record can be a partial backup restore, not proof of duplication.
+                    WardRuntime.quarantined(p);
                     return false;
                 }
                 if (stack.getCount() != 1) return false;
@@ -137,9 +138,9 @@ public final class WardCustody {
                       && sealed(actual.get().getStacks().getStackInSlot(0), entry)
                       && !actual.get().getStacks().getStackInSlot(0).isEmpty();
                 if (!stillWorn && releaseOne(p, menu, transfer)) {
-                    WardLedger.get(p).worn.remove(p.getUUID());
-                    WardLedger.get(p).setDirty();
+                    WardLedger.get(p).release(p.getUUID());
                     LIVE.remove(entry.live);
+                    WardRuntime.clearShield(p);
                 }
             } finally {
                 TRANSFERS.remove(p);
@@ -174,7 +175,50 @@ public final class WardCustody {
         for (var transfer : TRANSFERS.values()) if (transfer.entry.token.equals(token)) {
             transfer.drops.add(item); return false;
         }
-        return true;
+        // Keep ambiguous/stale items inert, not destroyed: player and world backups may be from different times.
+        return false;
+    }
+    public static boolean pending(ServerPlayer p) {
+        return !WardLedger.get(p).worn.containsKey(p.getUUID()) && CuriosApi.getCuriosInventory(p)
+              .flatMap(h -> h.getStacksHandler(ThunderWardItem.SLOT)).map(h -> h.getStacks().getSlots() > 0
+                    && h.getStacks().getStackInSlot(0).has(CoreContent.WARD_SEAL)).orElse(false);
+    }
+    /** Operator action: adopt the extant item only when no active/retired identity conflicts. Never mints an item. */
+    public static boolean repair(ServerPlayer p) {
+        if (ensure(p)) return true;
+        var slot = CuriosApi.getCuriosInventory(p).flatMap(h -> h.getStacksHandler(ThunderWardItem.SLOT)).orElse(null);
+        if (slot == null || slot.getStacks().getSlots() == 0) return false;
+        var stack = slot.getStacks().getStackInSlot(0);
+        boolean fromHand = stack.isEmpty();
+        if (fromHand) stack = p.getMainHandItem();
+        var token = stack.get(CoreContent.WARD_SEAL);
+        var ledger = WardLedger.get(p);
+        if (!stack.is(CoreContent.WARD) || stack.getCount() != 1 || token == null || ledger.known(token)) return false;
+        ledger.worn.put(p.getUUID(), new WardLedger.Entry(stack, p.registryAccess()));
+        ledger.setDirty();
+        if (fromHand) {
+            REPAIRING.put(p, true);
+            try {
+                slot.getStacks().setStackInSlot(0, ledger.worn.get(p.getUUID()).restore(p.registryAccess()));
+                p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            } finally { REPAIRING.remove(p); }
+        }
+        return ensure(p);
+    }
+    /** Operator release returns the registered original; it does not delete equipment or reset player data. */
+    public static boolean release(ServerPlayer p) {
+        if (!ensure(p)) return false;
+        var ledger = WardLedger.get(p); var entry = ledger.worn.get(p.getUUID());
+        var stack = released(p, entry);
+        REPAIRING.put(p, true);
+        try {
+            ledger.release(p.getUUID()); LIVE.remove(entry.live);
+            CuriosApi.getCuriosInventory(p).flatMap(h -> h.getStacksHandler(ThunderWardItem.SLOT))
+                  .ifPresent(h -> h.getStacks().setStackInSlot(0, ItemStack.EMPTY));
+            p.getInventory().placeItemBackInInventory(stack);
+            WardRuntime.clearShield(p);
+            return true;
+        } finally { REPAIRING.remove(p); }
     }
     public static void forget(ServerPlayer p) {
         var entry = WardLedger.get(p).worn.get(p.getUUID());

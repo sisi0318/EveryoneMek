@@ -11,6 +11,7 @@ public abstract class MachineDataMixin {
     private void overload$restore(ItemStack stack, CallbackInfo ci) {
         var tile=(BlockEntity)(Object)this;
         var data=stack.get(CoreContent.MACHINE.get());
-        if (data != null && DeviceScope.supported(tile)) tile.getPersistentData().put(DeviceScope.KEY,data.copy());
+        if (data != null && (DeviceScope.supported(tile) || tile instanceof mekanism.common.tile.base.TileEntityMekanism))
+            tile.getPersistentData().put(DeviceScope.KEY,data.copy());
     }
 }

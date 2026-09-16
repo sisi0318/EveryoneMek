@@ -74,8 +74,10 @@ public final class DeviceScope {
     private static boolean permitted(Device device, ServerPlayer player, boolean allowMarkedRemoval) {
         if (device == null || device.owner == null || (!allowMarkedRemoval && player.isRemoved()) || player.isSpectator()
               || player.level() != device.anchor.getLevel() || !live(device.anchor)) return false;
+        var settings = data(device.anchor);
+        if (allowMarkedRemoval && settings.getBoolean("ward_blocked")) return false;
         if (!device.owner.equals(player.getUUID())) {
-            var shares = data(device.anchor).getList("shares", Tag.TAG_INT_ARRAY);
+            var shares = settings.getList(allowMarkedRemoval && settings.contains("ward_shares") ? "ward_shares" : "shares", Tag.TAG_INT_ARRAY);
             if (shares.stream().limit(64).noneMatch(t -> t instanceof IntArrayTag a && a.getAsIntArray().length == 4 && NbtUtils.loadUUID(t).equals(player.getUUID()))) return false;
         }
         var p = player.position(); double x = Math.clamp(p.x, device.bounds.minX, device.bounds.maxX), y = Math.clamp(p.y, device.bounds.minY, device.bounds.maxY), z = Math.clamp(p.z, device.bounds.minZ, device.bounds.maxZ);
@@ -114,6 +116,8 @@ public final class DeviceScope {
         var device = device(tile); if (device == null) device = powerDevice(tile);
         if (device == null || !owner.getUUID().equals(device.owner)) return false;
         var data = data(device.anchor); var shares = data.getList("shares", Tag.TAG_INT_ARRAY);
+        // Freeze old explicit consent for migration; new curse sharing must not silently grant rescue extraction.
+        if (!data.contains("ward_shares")) data.put("ward_shares", shares.copy());
         shares.removeIf(t -> !(t instanceof IntArrayTag a) || a.getAsIntArray().length != 4 || NbtUtils.loadUUID(t).equals(target)); if (allow && shares.size() < 64) shares.add(NbtUtils.createUUID(target));
         data.put("shares", shares); save(device.anchor, data); return true;
     }

@@ -53,6 +53,8 @@ public final class ThunderWardGameTests {
         check(slots.isItemValid(0, ward), "Ward could not be placed in its real Curios slot");
         check(slots.insertItem(0, ward.copy(), true).isEmpty() && slots.getStackInSlot(0).isEmpty(), "Simulated equip mutated inventory");
         check(slots.insertItem(0, ward, false).isEmpty() && ThunderWard.equipped(p), "Ward did not equip through Curios");
+        // Existing death-path tests exercise full extraction; mode/reserve behavior has its own regression below.
+        WardLedger.get(p).extreme(p,true);
         return new Fixture(p, packets);
     }
     private static TileEntityEnergyCube cube(GameTestHelper h, BlockPos pos, UUID owner, long amount) {
@@ -66,6 +68,7 @@ public final class ThunderWardGameTests {
     static void close(Fixture f) {
         // Test teardown discards the artificial player's durable record, not a production removal bypass.
         WardCustody.forget(f.player);
+        WardRuntime.forget(f.player);
         WardLedger.get(f.player).worn.remove(f.player.getUUID());
         WardLedger.get(f.player).setDirty();
         CuriosApi.getCuriosInventory(f.player).flatMap(h -> h.getStacksHandler(ThunderWardItem.SLOT))
@@ -95,6 +98,7 @@ public final class ThunderWardGameTests {
                 check(tiny.getEnergyContainer().isEmpty(),"A small nearby reservoir never participated in the shared price");
                 check(a.getEnergyContainer().getEnergy()+b.getEnergyContainer().getEnergy()==price()*3+1,"First rescue did not debit exactly the pooled price");
                 p.invulnerableTime=0;
+                WardRuntime.clearShield(p); // Verify a fresh paid incident independently of the optional afterguard.
                 p.hurt(p.damageSources().genericKill(),40);
                 alive(f);
                 check(a.getEnergyContainer().getEnergy()+b.getEnergyContainer().getEnergy()==price()*2+1,"Second hit in the same tick was free or blocked by a cooldown");
@@ -148,7 +152,7 @@ public final class ThunderWardGameTests {
         var f=player(h,new BlockPos(20,4,20));var p=f.player;
         try {
             check(!CoreBinding.bound(p),"Ward unexpectedly needed a permanently bound core");
-            check(DeviceScope.share(owner,power,p.getUUID(),true),"Owner could not grant power consent");
+            check(WardSources.share(owner,power,p.getUUID(),true),"Owner could not grant power consent");
             p.setHealth(0); alive(f);
             check(power.getEnergyContainer().getEnergy()==price()*3,"Direct health clearing was not resisted");
             ThunderWard.forget(p);
@@ -360,10 +364,11 @@ public final class ThunderWardGameTests {
             try {
                 int paid=0;
                 for(var source:sources) {
+                    WardRuntime.clearShield(p); // Each registry entry independently exercises the paid fatal path.
                     p.setHealth(20);p.invulnerableTime=0;p.hurt(source,100);alive(f);paid++;
                     check(power.getEnergyContainer().getEnergy()==price()*(sources.size()+2-paid),"Wrong charge for damage source "+source.getMsgId());
                 }
-                p.invulnerableTime=0;p.kill();alive(f);
+                WardRuntime.clearShield(p);p.invulnerableTime=0;p.kill();alive(f);
                 check(power.getEnergyContainer().getEnergy()==price(),"Native kill method was not resisted and charged");
                 org.slf4j.LoggerFactory.getLogger("OverloadCore GameTest").info("Validated {} registered damage types and native kill",sources.size());
             } finally { close(f); }
