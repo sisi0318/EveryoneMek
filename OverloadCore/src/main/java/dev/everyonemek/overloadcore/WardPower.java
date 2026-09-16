@@ -34,7 +34,7 @@ public final class WardPower {
                 // Matrix cells are accounted for through their assembled matrix, never again as individual reservoirs.
                 if (!(tile instanceof TileEntityMekanism machine) || tile instanceof TileEntityInductionCell) continue;
                 var device = DeviceScope.powerDevice(tile);
-                if (!DeviceScope.permitted(device, player)) continue;
+                if (!DeviceScope.powerPermitted(device, player)) continue;
                 for (var tank : machine.getEnergyContainers(null)) {
                     long stored = tank.getEnergy();
                     long available = tank instanceof MatrixEnergyContainer matrix
@@ -66,7 +66,7 @@ public final class WardPower {
         if (remaining != 0) return false;
         for (int i = 0; i < sources.size(); i++) {
             var source = sources.get(i);
-            if (!DeviceScope.permitted(source.device, player) || source.tank.getEnergy() != source.stored) return false;
+            if (!DeviceScope.powerPermitted(source.device, player) || source.tank.getEnergy() != source.stored) return false;
             if (source.tank instanceof MatrixEnergyContainer matrix
                   && matrix.extract(shares[i], Action.SIMULATE, AutomationType.INTERNAL) != shares[i]) return false;
         }

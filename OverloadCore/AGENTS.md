@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.7，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.7.jar`。
+- 0.1.0-alpha.8，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.8.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -36,9 +36,14 @@
 
 ## 逆命雷印
 
-- `ThunderWardItem` / `ThunderWard` / `WardEvents`：检查实际有效 Curios 栏位；仅服务器玩家触发。普通致死使用未取消的 LOWEST LivingDeathEvent，给原版图腾优先机会；成功付款保留 1 点真实生命，不额外添加无敌时间或护盾。
+- `ThunderWardItem` / `ThunderWard` / `WardEvents`：检查实际有效 Curios 栏位，仅主线程上仍被世界双索引追踪的服务端玩家触发。alpha.8 在 ServerPlayer.die 的方法体之前尝试付费抵抗，死亡事件保留兜底；原版图腾已经在此之前检查，但其他模组死亡事件监听器的优先级可能因此改变。成功付款保留 1 点真实生命，不额外添加无敌时间或护盾。
 - 临时抵抗状态使用 MapMaker weakKeys 的弱对象身份键，不能改成按 Entity.equals 的 WeakHashMap：原版重生会把旧实体 ID 分配给新玩家，Entity.equals 恰好按 ID 比较，会误继承上一条生命的已结算状态。
-- `WardHealthMixin` / `WardPlayerMixin` / `WardRemoveMixin` / `WardSetRemovedMixin` / `WardLivingAccess`：补充直接清血和移除入口；getHealth 只在已付费的当前致死链内兜底非正/非有限值。新的 hurt 无论同 tick 与否都开启下一次付费判定；同 tick 的 die/清血/discard 收尾链防重复计费。完整死亡方法到 TAIL 后记为已结算，不允许库存掉落后再恢复玩家。
+- `WardHealthMixin` / `WardPlayerMixin` / `WardRemoveMixin` / `WardSetRemovedMixin`：保护直接清血、生命/死亡状态读取、异常最大生命、tickDeath、在线 NBT 和玩家移除；普通 hurt 中的真实扣血仍等待图腾/死亡判定。坏状态读取可触发实际付费恢复，禁止免费篡改返回值伪装不死。新的 hurt 无论同 tick 与否都重开判定，同 tick 的收尾链防重复计费；观察性失败当 tick 缓存，显式致死调用仍重新核对。
+- `WardSyncedHealthMixin`：SynchedEntityData 的写入与批量赋值单独接入，不能只钩 setHealth。修复直接写回真实同步生命值；restoring/paying 防止自身修复递归收费。
+- `WardLevelCallbackMixin` / `WardManagerRemovalMixin` / `WardLookupRemovalMixin` / `WardTickListMixin` / `WardTrackingEndMixin`：在实际世界的回调、实体分区管理、追踪、查找索引和 tick 列表入口拦截。按容器/管理器身份限定，不阻止无关临时集合移除。回调可能被其他模组包装，必须核对所属管理器，不能要求原回调与玩家当前回调对象相同。
+- `WardLifecycleMixin` 与 ServerPlayer.changeDimension：退出、重生、正常传送包裹放行上下文；PlayerLoggedOutEvent 中清理状态要延后至上下文结束。不能只凭 DISCARDED 判断攻击，正式 respawn 也可以使用此原因。
+- 最大生命通过原生 AttributeInstance 健康快照恢复，保留有效的永久/临时修饰符；没有快照时在脱离玩家的实例中重新计算，再 replaceFrom，避免设置相同 baseValue 仍保留伪造的 cachedValue/dirty。合法限幅后的 1 点最大生命不是非法值。
+- 完整死亡到 TAIL 后保存 `overloadcore_ward_death_finalized`，原版 respawn 返回新生命时清除。不能因重载/忘记临时缓存而复活已结算的尸体；这一标记只涉及雷印，不修改原核心绑定。
 - 不拦截换维度、正常卸载和退出；不在每 tick 无条件强改最大生命或把所有实体设为无敌。截图未提供实现的 Unsafe/抹除工具不能宣称全部兼容，具体顺序和边界维护在 [DEATH_PROTECTION.md](DEATH_PROTECTION.md)。
 - `WardPower`：只在付费时查已加载区块的 BE；Mek 机器及采用同类原生容器的扩展机器可参加。`DeviceScope.permitted/powerDevice` 复用归属与授权，不要求先绑定过载核心；原 `allowed` 仍保留旧核心激活条件。
 - BasicEnergyContainer 直接扣真实储能，避免受机器 I/O 面限制、机器工作耗能翻倍和回收影响。矩阵 setEnergy 会抛异常，必须使用 MatrixEnergyContainer 原生模拟/提取队列及供能余量；排除独立感应元件，矩阵多端口按容器对象去重。其他未知储能类型不强行改写；传输器共享网络不纳入。
@@ -54,6 +59,7 @@
 - 直接用 GameTest `setBlock` 不会应用 Mek 方块物品默认侧面配置。测试须明确设置能源输入与弹出，并调用 `invalidateCapabilitiesFull()` 刷新已缓存 capability。能源立方出口用 `RelativeSide.fromDirections` 计算，不能把世界北面直接当相对前面。
 - 默认 GameTest mock 玩家会向未协商 Curios 通道的 EmbeddedChannel 同步而失败。测试通过 FakePlayerFactory、SURVIVAL、`level.addNewPlayer` 与每 tick `doTick` 驱动真实使用/玩家事件，不把假通道错误当成运行兼容问题。
 - **死亡测试不能使用 FakePlayer**：该类 isInvulnerableTo 恒 true，die 为空。ThunderWardGameTests 使用真正的 ServerPlayer 和只记录/吞掉网络输出的连接；等待原生 60 tick 出生保护结束，验证实际伤害、死亡包、图腾与移除路径。
+- 测试真实 respawn 时 NeoForge 附件同步会访问 Connection.channel 的属性，测试连接必须提供 EmbeddedChannel；send 仍只记录且不接真实客户端。null channel 导致的失败属于夹具问题，不能跳过正式重生/退出测试。
 - 不在任意 FE capability 全局注入倍率。原生能量以 J 计量，处理 SIMULATE 与 EXTERNAL/MANUAL/INTERNAL 的差别。
 
 ## 资源与验证
@@ -68,6 +74,7 @@
 - alpha.5：红蓝色散渲染通过 `classes jar` 和打包检查；逐行计时类与游戏数据和 alpha.4 一致，两个渲染类保留 huige233 署名。本次没有运行客户端或重复 GameTest，截图匹配程度需玩家验收。
 - alpha.6：魂契文案和双条 HUD 通过 `classes jar`、中英文占位符及打包检查；公共游戏逻辑类、数据和字体效果类与 alpha.5 一致。未重复 GameTest，状态面板的游戏内位置与风格由用户验收。
 - alpha.7：`build runGameTestServer` 通过，**21/21 服务端用例、3/3 单元用例**。新增 7 项真实玩家测试：真实槽位装备、和核心同戴的分摊/无冷却/库存守恒、不足与未授权电量、无限伤害串联、直接清血/死亡/移除、图腾优先及正常换维度、矩阵多端口与元件实存一致、重生复用实体 ID 时不继承旧生命状态。不把此结果描述为已验证任意第三方 Unsafe 实现。
+- alpha.8：**30/30 服务端用例、3/3 单元用例**通过。直接遍历测试环境 DAMAGE_TYPE 注册表，逐项验证 55 种伤害及原生 kill；同时验证同步/批量生命写入、在线 NBT、原始字段与死亡时钟、伪造移除标记、包装回调、真实世界索引/tick 列表、临时容器放行、最大生命有/无快照修复、正式重生/退出和持久结算标记。没有启动客户端，也不将注册表测试外推成任意其他模组实现的绝对兼容。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

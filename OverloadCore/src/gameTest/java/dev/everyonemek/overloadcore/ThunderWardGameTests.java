@@ -33,7 +33,12 @@ public final class ThunderWardGameTests {
         var p = new ServerPlayer(h.getLevel().getServer(), h.getLevel(), new GameProfile(UUID.randomUUID(), "ward-test"), ClientInformation.createDefault());
         if (reusedId != null) p.setId(reusedId);
         var packets = new ArrayList<Packet<?>>();
-        p.connection = new ServerGamePacketListenerImpl(h.getLevel().getServer(), new Connection(PacketFlow.SERVERBOUND), p,
+        // Respawn/attachment synchronization inspects channel attributes even though send() is intercepted below.
+        var connection = new Connection(PacketFlow.SERVERBOUND) {
+            private final io.netty.channel.embedded.EmbeddedChannel localChannel = new io.netty.channel.embedded.EmbeddedChannel();
+            @Override public io.netty.channel.Channel channel() { return localChannel; }
+        };
+        p.connection = new ServerGamePacketListenerImpl(h.getLevel().getServer(), connection, p,
               CommonListenerCookie.createInitial(p.getGameProfile(), false)) {
             @Override public void send(Packet<?> packet) { packets.add(packet); }
             @Override public void send(Packet<?> packet, PacketSendListener listener) { packets.add(packet); }
@@ -63,6 +68,7 @@ public final class ThunderWardGameTests {
               .ifPresent(h -> h.getStacks().setStackInSlot(0, ItemStack.EMPTY));
         ThunderWard.forget(f.player);
         f.player.serverLevel().removePlayerImmediately(f.player, Entity.RemovalReason.DISCARDED);
+        f.player.connection.getConnection().channel().close();
     }
     private static void alive(Fixture f) {
         check(f.player.isAlive() && !f.player.isRemoved() && f.player.getHealth() == 1F, "Ward failed to retain one real health point");
@@ -218,6 +224,195 @@ public final class ThunderWardGameTests {
             ThunderWard.forget(previous.player);
             if (replacement != null) close(replacement);
         }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=90)
+    public static void synchronizedHealthAndOnlineNbtCannotBypassPayment(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()*4);
+        var healthId=dev.everyonemek.overloadcore.mixin.WardLivingAccess.overload$healthId();
+        h.startSequence().thenExecute(() -> {
+            p.getEntityData().set(healthId,0F,true); alive(f);
+            check(p.getEntityData().get(healthId)==1F,"Sync-data health was only visually masked");
+            check(power.getEnergyContainer().getEnergy()==price()*3,"Direct synchronized health write was not paid");
+        }).thenIdle(1).thenExecute(() -> {
+            p.getEntityData().assignValues(List.of(net.minecraft.network.syncher.SynchedEntityData.DataValue.create(healthId,Float.NEGATIVE_INFINITY)));
+            alive(f);
+            check(power.getEnergyContainer().getEnergy()==price()*2,"Bulk synchronized write was not separately paid");
+        }).thenIdle(1).thenExecute(() -> {
+            try {
+                var data=p.saveWithoutId(new net.minecraft.nbt.CompoundTag());
+                data.putFloat("Health",0);data.putShort("DeathTime",(short)19);
+                p.readAdditionalSaveData(data);alive(f);
+                check(p.deathTime==0&&power.getEnergyContainer().getEnergy()==price(),"Online NBT retained a death timer or escaped exact payment");
+            } finally { close(f); }
+        }).thenSucceed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=60)
+    public static void rawHealthAndDeathFlagsAreRepairedBeforeDeathTicks(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()*3);
+        try {
+            var getItem=net.minecraft.network.syncher.SynchedEntityData.class.getDeclaredMethod("getItem",net.minecraft.network.syncher.EntityDataAccessor.class);
+            getItem.setAccessible(true);
+            @SuppressWarnings("unchecked") var item=(net.minecraft.network.syncher.SynchedEntityData.DataItem<Float>)getItem.invoke(p.getEntityData(),dev.everyonemek.overloadcore.mixin.WardLivingAccess.overload$healthId());
+            item.setValue(Float.NaN); // Bypasses both setHealth and SynchedEntityData.set.
+            ((dev.everyonemek.overloadcore.mixin.WardLivingAccess)p).overload$dead(true);
+            p.deathTime=19;p.setPose(net.minecraft.world.entity.Pose.DYING);
+            p.tick();alive(f);
+            check(item.getValue()==1F&&p.deathTime==0&&!((dev.everyonemek.overloadcore.mixin.WardLivingAccess)p).overload$dead(),"Raw death state survived the watchdog");
+            check(power.getEnergyContainer().getEnergy()==price()*2,"Raw corruption did not cost exactly one rescue");
+            var tickDeath=net.minecraft.world.entity.LivingEntity.class.getDeclaredMethod("tickDeath");tickDeath.setAccessible(true);tickDeath.invoke(p);
+            alive(f);check(p.deathTime==0,"Direct tickDeath advanced the resisted death clock");
+            check(power.getEnergyContainer().getEnergy()==price()*2,"One corruption chain was billed again by tickDeath");
+        } catch(ReflectiveOperationException error) { throw new AssertionError(error); }
+        finally { close(f); }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=60)
+    public static void forgedRemovalFlagDoesNotHideAStillTrackedPlayer(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()*2);
+        try {
+            ((dev.everyonemek.overloadcore.mixin.WardEntityAccess)p).overload$removalReason(Entity.RemovalReason.KILLED);
+            check(!p.isRemoved(),"Forged removal reason bypassed resistance");alive(f);
+            check(p.getRemovalReason()==null&&ThunderWard.tracked(p),"Removal flag or world membership was not restored");
+            check(power.getEnergyContainer().getEnergy()==price(),"Marked-removed player could not use authorized power");
+        } finally { close(f); }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=60)
+    public static void actualWorldManagerLookupAndTickListCannotEraseTheWearer(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()*2);
+        try {
+            var access=(dev.everyonemek.overloadcore.mixin.WardServerLevelAccess)h.getLevel();
+            var manager=access.overload$manager();
+            var lookup=((dev.everyonemek.overloadcore.mixin.WardManagerAccess)manager).overload$lookup();
+            var original=((dev.everyonemek.overloadcore.mixin.WardEntityAccess)p).overload$levelCallback();
+            p.setLevelCallback(new net.minecraft.world.level.entity.EntityInLevelCallback() {
+                @Override public void onMove() { original.onMove(); }
+                @Override public void onRemove(Entity.RemovalReason reason) { original.onRemove(reason); }
+            });
+            ((dev.everyonemek.overloadcore.mixin.WardEntityAccess)p).overload$levelCallback().onRemove(Entity.RemovalReason.DISCARDED);
+            var stop=net.minecraft.world.level.entity.PersistentEntitySectionManager.class.getDeclaredMethod("stopTracking",net.minecraft.world.level.entity.EntityAccess.class);
+            stop.setAccessible(true);stop.invoke(manager,p);
+            lookup.remove(p);access.overload$tickList().remove(p);
+            var callbacks=net.minecraft.world.level.entity.PersistentEntitySectionManager.class.getDeclaredField("callbacks");callbacks.setAccessible(true);
+            @SuppressWarnings("unchecked") var callback=(net.minecraft.world.level.entity.LevelCallback<Entity>)callbacks.get(manager);
+            callback.onTrackingEnd(p);p.onRemovedFromLevel();alive(f);
+            check(ThunderWard.tracked(p)&&h.getLevel().players().stream().anyMatch(value -> value==p),"A world index or player list lost the resisted player");
+            check(p.isAddedToLevel()&&access.overload$tickList().contains(p),"The player stopped ticking or became detached");
+            check(h.getLevel().getEntitiesOfClass(ServerPlayer.class,p.getBoundingBox().inflate(1)).stream().anyMatch(value -> value==p),"Delegated removal bypassed the guard and damaged the spatial section index");
+            check(power.getEnergyContainer().getEnergy()==price(),"One manager-removal chain charged repeatedly");
+            var temporary=new net.minecraft.world.level.entity.EntityLookup<Entity>();temporary.add(p);temporary.remove(p);
+            var temporaryTicks=new net.minecraft.world.level.entity.EntityTickList();temporaryTicks.add(p);temporaryTicks.remove(p);
+            check(temporary.count()==0&&!temporaryTicks.contains(p),"Unrelated temporary collections were intercepted");
+        } catch(ReflectiveOperationException error) { throw new AssertionError(error); }
+        finally { close(f); }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=60)
+    public static void invalidMaximumHealthRestoresOnlyTheHealthyAttributeSnapshot(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()*2);
+        try {
+            var attribute=p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            var permanent=new net.minecraft.world.entity.ai.attributes.AttributeModifier(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,"ward_permanent"),4,net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
+            var temporary=new net.minecraft.world.entity.ai.attributes.AttributeModifier(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,"ward_temporary"),6,net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
+            attribute.addPermanentModifier(permanent);attribute.addTransientModifier(temporary);
+            ThunderWard.inspect(p);check(p.getMaxHealth()==30,"Fixture max-health bonuses missing");
+            var cached=net.minecraft.world.entity.ai.attributes.AttributeInstance.class.getDeclaredField("cachedValue");cached.setAccessible(true);
+            var dirty=net.minecraft.world.entity.ai.attributes.AttributeInstance.class.getDeclaredField("dirty");dirty.setAccessible(true);
+            cached.setDouble(attribute,Double.NaN);dirty.setBoolean(attribute,false);
+            check(p.getMaxHealth()==30,"Poisoned max health was not repaired");alive(f);
+            check(attribute.hasModifier(permanent.id())&&attribute.hasModifier(temporary.id()),"Valid max-health modifiers were wiped");
+            check(attribute.save().getList("modifiers",10).size()==1,"Transient modifiers were made permanent");
+            check(power.getEnergyContainer().getEnergy()==price(),"Attribute recovery did not pay exactly once");
+            ThunderWard.forget(p); // The same corruption must also work immediately after equipping, before a snapshot.
+            cached.setDouble(attribute,0);dirty.setBoolean(attribute,false);
+            check(p.getMaxHealth()==30&&attribute.getValue()==30,"A forged cached maximum survived without a prior snapshot");
+            check(attribute.getModifiers().size()==2&&power.getEnergyContainer().isEmpty(),"Fresh-ward recovery lost valid modifiers or skipped payment");
+        } catch(ReflectiveOperationException error) { throw new AssertionError(error); }
+        finally { close(f); }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=130)
+    public static void nativeDamageFamiliesAndKillRemainPayPerFatalHit(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        var sources=h.getLevel().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE)
+              .holders().map(net.minecraft.world.damagesource.DamageSource::new).toList();
+        h.setBlock(new BlockPos(20,4,23),MekanismBlocks.ULTIMATE_ENERGY_CUBE.get());
+        var power=(TileEntityEnergyCube)h.getBlockEntity(new BlockPos(20,4,23));
+        DeviceScope.placed(power,p.getUUID());power.getEnergyContainer().setEnergy(price()*(sources.size()+2));
+        check(power.getEnergyContainer().getEnergy()==price()*(sources.size()+2),"Registry sweep fixture lacks power");
+        h.startSequence().thenIdle(65).thenExecute(() -> {
+            try {
+                int paid=0;
+                for(var source:sources) {
+                    p.setHealth(20);p.invulnerableTime=0;p.hurt(source,100);alive(f);paid++;
+                    check(power.getEnergyContainer().getEnergy()==price()*(sources.size()+2-paid),"Wrong charge for damage source "+source.getMsgId());
+                }
+                p.invulnerableTime=0;p.kill();alive(f);
+                check(power.getEnergyContainer().getEnergy()==price(),"Native kill method was not resisted and charged");
+                org.slf4j.LoggerFactory.getLogger("OverloadCore GameTest").info("Validated {} registered damage types and native kill",sources.size());
+            } finally { close(f); }
+        }).thenSucceed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=90)
+    public static void realRespawnAndLogoutAreNotMistakenForAttacks(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var power=cube(h,new BlockPos(20,4,23),f.player.getUUID(),price()*2);
+        var list=h.getLevel().getServer().getPlayerList();ServerPlayer replacement=null;
+        try {
+            replacement=list.respawn(f.player,true,Entity.RemovalReason.DISCARDED);
+            check(f.player.isRemoved()&&replacement!=f.player&&ThunderWard.tracked(replacement),"A real player replacement was blocked");
+            check(power.getEnergyContainer().getEnergy()==price()*2,"Respawn/End-return removal spent ward power");
+            list.remove(replacement);
+            check(!ThunderWard.tracked(replacement)&&replacement.isRemoved(),"Normal logout was blocked");
+            check(power.getEnergyContainer().getEnergy()==price()*2,"Logout spent ward power");
+        } finally {
+            ThunderWard.forget(f.player);
+            if(replacement!=null) { ThunderWard.forget(replacement);if(!replacement.isRemoved())list.remove(replacement); }
+            f.player.connection.getConnection().channel().close();
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=60)
+    public static void insufficientPowerAndUnequippingDisableDeepProtection(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()/2);
+        try {
+            p.getEntityData().set(dev.everyonemek.overloadcore.mixin.WardLivingAccess.overload$healthId(),0F,true);
+            check(p.getHealth()==0&&!p.isAlive(),"Unfunded raw health was made immortal");
+            check(power.getEnergyContainer().getEnergy()==price()/2,"Failed probes partially drained power");
+            p.setHealth(20);
+            CuriosApi.getCuriosInventory(p).orElseThrow().getStacksHandler(ThunderWardItem.SLOT).orElseThrow().getStacks().setStackInSlot(0,ItemStack.EMPTY);
+            power.getEnergyContainer().setEnergy(price()*2);
+            ((dev.everyonemek.overloadcore.mixin.WardEntityAccess)p).overload$levelCallback().onRemove(Entity.RemovalReason.DISCARDED);
+            check(!ThunderWard.tracked(p)&&power.getEnergyContainer().getEnergy()==price()*2,"A removed accessory kept protecting its former wearer");
+        } finally { close(f); }
+        h.succeed();
+    }
+
+    @GameTest(template="empty", timeoutTicks=60)
+    public static void completedDeathSurvivesTransientStateLossUntilRealRespawn(GameTestHelper h) {
+        var f=player(h,new BlockPos(20,4,20));var p=f.player;
+        try {
+            p.hurt(p.damageSources().genericKill(),40);
+            check(p.getPersistentData().getBoolean(ThunderWard.FINALIZED_KEY),"Committed death was not recorded for save/reload");
+            ThunderWard.forget(p);
+            var power=cube(h,new BlockPos(20,4,23),p.getUUID(),price()*2);
+            p.getEntityData().set(dev.everyonemek.overloadcore.mixin.WardLivingAccess.overload$healthId(),0F,true);
+            ThunderWard.inspect(p);
+            check(!p.isAlive()&&power.getEnergyContainer().getEnergy()==price()*2,"Losing the transient cache revived an already settled death");
+        } finally { close(f); }
         h.succeed();
     }
 }

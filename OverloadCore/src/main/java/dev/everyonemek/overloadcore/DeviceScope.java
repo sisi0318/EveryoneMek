@@ -65,7 +65,14 @@ public final class DeviceScope {
     }
     /** Consent and distance without requiring a cursed core or a currently positive health value. */
     public static boolean permitted(Device device, ServerPlayer player) {
-        if (device == null || device.owner == null || player.isRemoved() || player.isSpectator()
+        return permitted(device, player, false);
+    }
+    /** A forged removal flag must not hide a player that is still present in both world indices. */
+    public static boolean powerPermitted(Device device, ServerPlayer player) {
+        return ThunderWard.tracked(player) && permitted(device, player, true);
+    }
+    private static boolean permitted(Device device, ServerPlayer player, boolean allowMarkedRemoval) {
+        if (device == null || device.owner == null || (!allowMarkedRemoval && player.isRemoved()) || player.isSpectator()
               || player.level() != device.anchor.getLevel() || !live(device.anchor)) return false;
         if (!device.owner.equals(player.getUUID())) {
             var shares = data(device.anchor).getList("shares", Tag.TAG_INT_ARRAY);

@@ -16,6 +16,8 @@ def generate(mek_jar):
     write(f'{MOD}.mixins.json', {'required': True, 'package': 'dev.everyonemek.overloadcore.mixin', 'compatibilityLevel': 'JAVA_21',
           'plugin': 'dev.everyonemek.overloadcore.mixin.OptionalMixinPlugin',
           'mixins': ['WardLivingAccess', 'WardHealthMixin', 'WardPlayerMixin', 'WardRemoveMixin', 'WardSetRemovedMixin',
+                     'WardEntityAccess', 'WardSyncedHealthMixin', 'WardLifecycleMixin', 'WardServerLevelAccess', 'WardManagerAccess',
+                     'WardLevelCallbackMixin', 'WardManagerRemovalMixin', 'WardLookupRemovalMixin', 'WardTickListMixin', 'WardTrackingEndMixin',
                      'CachedRecipeAccess', 'MachineEnergyOwner', 'RecipeMonitorMixin', 'CachedEnergyMixin', 'RecipeOutputMixin',
                      'MachineTickMixin', 'TransmitterTickMixin', 'ManualEnergyMixin', 'MachineDataMixin', 'PlayerSprintMixin', 'GeneratorMixin',
                      'GeneratorHeatMixin', 'GeneratorTurbineMixin', 'GeneratorFusionMixin', 'NetworkAccess', 'EnergyNetworkMixin',
