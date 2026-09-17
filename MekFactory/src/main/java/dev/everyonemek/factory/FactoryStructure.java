@@ -18,6 +18,19 @@ public final class FactoryStructure {
     public long inputCapacity,outputCapacity,transfer;
     public String error="structure";public BlockPos errorPos;
     public FactoryStructure(Controller owner){this.owner=owner;}
+    public static Controller inductionController(Level level,BlockPos pos){
+        if(level.isClientSide||!level.hasChunkAt(pos))return null;
+        var be=level.getBlockEntity(pos);if(!(be instanceof TileEntityInductionCell)&&!(be instanceof TileEntityInductionProvider))return null;
+        var map=OWNERS.get(level);var c=map==null?null:map.get(pos);
+        return c!=null&&!c.isRemoved()&&c.structure.valid()&&(c.structure.cells.contains(be)||c.structure.providers.contains(be))?c:null;
+    }
+    public static void interact(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
+        if(event.getEntity().isShiftKeyDown())return;
+        var c=inductionController(event.getLevel(),event.getPos());if(c==null)return;
+        // Once linked, denied access must not fall back to a native machine menu.
+        event.setCanceled(true);event.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+        FactoryMenu.open(event.getEntity(),c,event.getPos());
+    }
     public static void changed(Level level,BlockPos pos){if(level==null||level.isClientSide)return;var map=OWNERS.get(level);if(map!=null){var c=map.get(pos);if(c!=null)c.structure.invalidate();}}
     public static void unload(LevelEvent.Unload event){OWNERS.remove(event.getLevel());}
     public static void chunkUnload(net.neoforged.neoforge.event.level.ChunkEvent.Unload e){var map=OWNERS.get(e.getLevel());if(map!=null){var affected=new HashSet<Controller>();for(var entry:map.entrySet())if(new net.minecraft.world.level.ChunkPos(entry.getKey()).equals(e.getChunk().getPos()))affected.add(entry.getValue());affected.forEach(c->c.structure.invalidate());}}
@@ -47,6 +60,8 @@ public final class FactoryStructure {
                 if(edges>=2){if(!(block instanceof PartBlock p)||p.kind!=PartBlock.Kind.FRAME)return fail("frame",pos);tier=Math.min(tier,p.grade.ordinal());}
                 else if(edges==1){
                     if(pos.equals(owner.getBlockPos()))continue;
+                    var be=level.getBlockEntity(pos);
+                    if(be instanceof TileEntityInductionCell||be instanceof TileEntityInductionProvider){if(!addInduction(be,pos))return false;continue;}
                     if(!(block instanceof PartBlock p)||p.kind==PartBlock.Kind.FRAME)return fail("shell",pos);
                     if(level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();if(p.kind==PartBlock.Kind.PORT){
                         ports.add(part);if(state.getValue(PartBlock.OUTPUT)){outputs++;outputSlots+=p.grade.slots;outputCapacity+=p.grade.capacity;}
@@ -54,10 +69,7 @@ public final class FactoryStructure {
                     }}else return fail("shell",pos);
                 }else if(!state.isAir()){
                     var tile=level.getBlockEntity(pos);
-                    if(tile instanceof mekanism.common.tile.prefab.TileEntityInternalMultiblock internal&&internal.getMultiblock()!=null&&internal.getMultiblock().isFormed())return fail("occupied",pos);
-                    if(tile instanceof TileEntityInductionCell cell)cells.add(cell);
-                    else if(tile instanceof TileEntityInductionProvider provider){providers.add(provider);transfer=mekanism.api.math.MathUtils.addClamped(transfer,provider.tier.getOutput());}
-                    else return fail("interior",pos);
+                    if(!addInduction(tile,pos))return false;
                 }
                 if(edges>=2&&level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();}
             }
@@ -66,9 +78,16 @@ public final class FactoryStructure {
             if(inputs==0||outputs==0)return fail("ports",owner.getBlockPos());
             if(inputs>8||outputs>8)return fail("port_limit",owner.getBlockPos());
             if(cells.isEmpty()||providers.isEmpty())return fail("induction",owner.getBlockPos());
-            parallel=Math.min(grade.parallel(),(owner.sizeX-2)*(owner.sizeY-2)*(owner.sizeZ-2));
+            parallel=grade.parallel();
             error="ready";errorPos=null;formed=true;return true;
         }finally{checking=false;owner.markForSave();if(formed)notifyPorts();}
+    }
+    private boolean addInduction(net.minecraft.world.level.block.entity.BlockEntity tile,BlockPos pos){
+        if(tile instanceof mekanism.common.tile.prefab.TileEntityInternalMultiblock internal&&internal.getMultiblock()!=null&&internal.getMultiblock().isFormed())return fail("occupied",pos);
+        if(tile instanceof TileEntityInductionCell cell)cells.add(cell);
+        else if(tile instanceof TileEntityInductionProvider provider){providers.add(provider);transfer=mekanism.api.math.MathUtils.addClamped(transfer,provider.tier.getOutput());}
+        else return fail("interior",pos);
+        return true;
     }
     private boolean fail(String code,BlockPos pos){error=code;errorPos=pos;return false;}
     public Direction outward(BlockPos p){for(var side:Direction.values())if(!contains(p.relative(side)))return side;return null;}

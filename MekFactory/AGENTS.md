@@ -4,18 +4,21 @@
 
 ## 基线与用户偏好
 
-- 0.1.0-alpha.1，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.1.jar`。
+- 0.1.0-alpha.2，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.2.jar`。
 - MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
 - 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
 - 默认一台原机确定加工类型、框架提供并行。`machinesLimitParallel=true` 额外按原机数量限并行；参考 GTNH 不等于强行改掉框架方案。
 - 用户明确参考的是 GTNH 处理阵列。该旧实现按机器选 RecipeMap，再用 ProcessingLogic 处理，不是复制世界 BE 多 tick。MI 与 GTNH 参考路径见 DESIGN；未复制它们的实现代码或添加依赖。
 - 禁止 runClient，由用户做客户端验收。
+- 用户随后要求简化到 3×3：alpha.2 新建结构固定默认 3×3×3，界面移除尺寸修改；旧尺寸从存档原样读取，不能自动缩容或清空资源。
 
 ## 实现入口
 
 - `Content` 注册 4 主控、4 框架、4 通用端口、外壳和玻璃。主控复用 Mek 基类、原升级/红石/安全与菜单；模板是唯一 Mek 原库存槽，其余缓存在 factory_data。
 - `Controller` 父构造回调建立 template/energy，不能用字段初始化覆盖。`FactoryEnergy` 的 constructor 阶段 structure/level 尚未就绪，读取须返回 0。
-- `FactoryStructure` 按主控背后的配置长方体校验。棱角为框架，恰好一个主控，内部限空气/原 Cell/Provider，最低框架和主控等级决定尺寸上限。工位=min(等级上限,内部体积)。
+- `FactoryStructure` 按主控背后的存档长方体校验。棱角为框架，恰好一个主控，内部限空气/原 Cell/Provider，非棱角表面也允许 Cell/Provider。最低框架和主控等级直接决定并行，不再乘内部体积；尺寸上限保留给旧结构。
+- `Construction` 的 3×3×3 蓝图：20 框架、1 主控、2 端口、2 外壳、中心 Cell、顶面中央 Provider。更大的旧尺寸继续使用原内部 Cell/Provider 布局。原组件仍保存自己的能量，不生成合并电池。
+- 原感应部件开菜单通过 RightClickBlock，仅接管位置索引中已验证归属当前工厂的部件；权限拒绝后取消原交互，不回退原 GUI。菜单距离按实际点击点校验；卸载、移除与占用冲突不能保留入口。
 - 整个体积均登记失效位置；`StructureChangeMixin` 在 LevelChunk.setBlockState 后触发失效，ChunkUnload 也失效。不能只查相邻外壳或强制加载区块。通知端口时遍历快照，避免能力回调重入修改集合。
 - `Part` 只存主控位置。`Ports` 每次调用核对自身对象、外侧方向、主控与结构，旧 handler 不能绕过损坏；恢复结构后可继续用 guard。形成/失效时通知能力与邻居，让已有管道恢复连接。
 - `FactoryEnergy` 直接读写原 Cell 实存，以供应器合计共享输入/工作预算，不创建第二个电池。Controller 的 ENERGY persists 关闭。Mek 控制器物品可含默认空 energy 组件，检查其没有非零副本，不应断言组件不存在。
@@ -40,7 +43,7 @@
 
 ## 验证与构建
 
-- `build runGameTestServer` 已通过 10 项：并行/能耗/在制重载，guard 失效，缩容保留，共享能量预算，电解双输出，真实施工取消/扣料，远角菜单，真实漏斗/箱子，分批输出，PRC，以及原生升级槽安装/卸载后的实时费率。
+- 服务端共 11 项：并行/能耗/在制重载，guard 失效，缩容保留，共享能量预算，电解双输出，3×3 生存施工取消/扣料，远角菜单，真实漏斗/箱子，分批输出，PRC，原生升级槽安装/卸载，以及紧凑结构的真实能量立方→通用线缆供电、屋顶菜单和断结构停机。
 - GUI 与放置测试用真实 ServerPlayer + 只接收输出的 EmbeddedChannel；FakePlayer.openMenu 为空，不能据此判断 GUI 不工作。
 - GameTestServer 无 GameProfileCache；测试为唯一临时 UUID 填充 NeoForge UsernameCache 并在 finally 清理，通过测试专用反射访问 protected 方法。不要把该夹具修复放到生产代码。
 - 未运行客户端。512 工位结构校验不是大型整合包压力测试。JEI/HUD/模型视觉由用户验收。

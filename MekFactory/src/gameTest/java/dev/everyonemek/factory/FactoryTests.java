@@ -112,7 +112,7 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=100)
     public static void buildUsesRealMaterialsAndHonorsPlaceCancellation(GameTestHelper h){
-        var c=controller(h,Grade.BASIC,4);var p=player(h,c.getBlockPos().north(2));var plan=Construction.plan(c);var counts=new HashMap<Item,Integer>();plan.values().forEach(s->counts.merge(s.getBlock().asItem(),1,Integer::sum));
+        var c=controller(h,Grade.BASIC,3);var p=player(h,c.getBlockPos().north(2));var plan=Construction.plan(c);var counts=new HashMap<Item,Integer>();plan.values().forEach(s->counts.merge(s.getBlock().asItem(),1,Integer::sum));
         counts.forEach((item,n)->p.getInventory().add(new ItemStack(item,n)));
         var blocked=plan.keySet().stream().skip(2).findFirst().orElseThrow();java.util.function.Consumer<BlockEvent.EntityPlaceEvent> listener=e->{if(e.getEntity()==p&&e.getPos().equals(blocked))e.setCanceled(true);};
         NeoForge.EVENT_BUS.addListener(listener);
@@ -123,6 +123,47 @@ public final class FactoryTests {
             var corner=(Part)h.getLevel().getBlockEntity(c.structure.at(0,0,0));p.setPos(corner.getBlockPos().getCenter());corner.open(p);
             check(p.containerMenu instanceof FactoryMenu&&p.containerMenu.stillValid(p),"Corner could not open the shared GUI");
         }finally{close(p);}h.succeed();
+    }
+
+    @GameTest(template="empty",timeoutTicks=350)
+    public static void compactFactoryUsesCablePowerAndNativeRoofOpensSharedMenu(GameTestHelper h){
+        var pos=h.absolutePos(new BlockPos(20,4,20));h.getLevel().setBlockAndUpdate(pos,Content.CONTROLLERS.get(Grade.ULTIMATE).get().defaultBlockState());
+        var c=(Controller)h.getLevel().getBlockEntity(pos);
+        check(c.sizeX==3&&c.sizeY==3&&c.sizeZ==3,"New controller did not default to 3 x 3 x 3");
+        var plan=Construction.plan(c);check(plan.size()==26,"Compact blueprint exceeded 27 blocks including controller");
+        for(var e:plan.entrySet())h.getLevel().setBlockAndUpdate(e.getKey(),e.getValue());
+        check(c.structure.validate()&&c.structure.parallel==512,"Compact tier lost its parallel capacity");
+        var frame=c.structure.at(0,0,0);h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());
+        check(c.structure.valid()&&c.structure.parallel==8,"Lowest frame failed to limit compact parallelism");
+        h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.ULTIMATE).get().defaultBlockState());check(c.structure.valid(),"Restoring frame did not reform");
+        var roof=c.structure.at(1,2,1);var providerState=h.getLevel().getBlockState(roof);var cell=c.structure.cells.getFirst();
+        check(cell.getBlockPos().equals(c.structure.at(1,1,1))&&c.structure.providers.getFirst().getBlockPos().equals(roof),"Compact induction positions incorrect");
+        var input=port(c,false);var side=c.structure.outward(input.getBlockPos());
+        var fe=h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,input.getBlockPos(),side);
+        check(fe!=null&&fe.receiveEnergy(1000,true)==1000&&cell.getEnergyContainer().isEmpty(),"FE simulation failed or changed the real cell");
+        var output=port(c,true);var outputFe=h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,output.getBlockPos(),c.structure.outward(output.getBlockPos()));
+        check(outputFe!=null&&outputFe.receiveEnergy(1000,false)==0,"Output port accepted electricity");
+        var p=player(h,roof.above());
+        try {
+            var event=new net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock(p,net.minecraft.world.InteractionHand.MAIN_HAND,roof,new net.minecraft.world.phys.BlockHitResult(roof.getCenter(),Direction.UP,roof,false));
+            NeoForge.EVENT_BUS.post(event);
+            check(event.isCanceled()&&p.containerMenu instanceof FactoryMenu&&p.containerMenu.stillValid(p),"Native roof provider did not open factory GUI");
+            h.getLevel().setBlockAndUpdate(roof,Blocks.AIR.defaultBlockState());
+            check(fe.receiveEnergy(1000,false)==0&&!p.containerMenu.stillValid(p),"Removed roof retained power or menu access");
+            h.getLevel().setBlockAndUpdate(roof,providerState);check(c.structure.valid(),"Roof repair failed");
+        }finally{close(p);}
+        var cubePos=input.getBlockPos().relative(side,2);
+        h.getLevel().setBlockAndUpdate(cubePos,MekanismBlocks.BASIC_ENERGY_CUBE.get().defaultBlockState());
+        var cube=(mekanism.common.tile.TileEntityEnergyCube)h.getLevel().getBlockEntity(cubePos);
+        cube.getEnergyContainers(null).getFirst().setEnergy(1000000);
+        var config=cube.getConfig().getConfig(mekanism.common.lib.transmitter.TransmissionType.ENERGY);
+        config.setDataType(mekanism.common.tile.component.config.DataType.OUTPUT,mekanism.api.RelativeSide.fromDirections(cube.getDirection(),side.getOpposite()));config.setEjecting(true);
+        h.getLevel().setBlockAndUpdate(input.getBlockPos().relative(side),MekanismBlocks.BASIC_UNIVERSAL_CABLE.get().defaultBlockState());
+        var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
+        h.startSequence().thenWaitUntil(()->check(cell.getEnergyContainer().getEnergy()>0,"Energy cube and real cable did not charge input port"))
+              .thenExecute(()->{c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
+              .thenWaitUntil(()->check(count(c.outputs,dust)==8,"Cable-powered compact factory did not finish work"))
+              .thenExecute(()->{c.enabled=false;config.setEjecting(false);check(c.inputs.items[0].isEmpty(),"Compact work duplicated input");}).thenSucceed();
     }
 
     @GameTest(template="empty",timeoutTicks=120)

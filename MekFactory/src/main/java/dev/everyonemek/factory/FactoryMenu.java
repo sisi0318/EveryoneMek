@@ -40,7 +40,8 @@ public final class FactoryMenu extends MekanismTileContainer<Controller> {
     @Override protected int getInventoryYOffset(){return 178;}
     @Override public boolean stillValid(Player p){if(clicked==null)return true;if(!super.stillValid(p)||p.distanceToSqr(clicked.getCenter())>64)return false;
         if(p.level().isClientSide)return true;if(!tile.access(p)||!p.level().hasChunkAt(clicked))return false;
-        return clicked.equals(tile.getBlockPos())?p.level().getBlockEntity(clicked)==tile:p.level().getBlockEntity(clicked) instanceof Part part&&part.controller()==tile;
+        return clicked.equals(tile.getBlockPos())?p.level().getBlockEntity(clicked)==tile:
+              p.level().getBlockEntity(clicked) instanceof Part part&&part.controller()==tile||FactoryStructure.inductionController(p.level(),clicked)==tile;
     }
     public boolean canConfigure(Player p){return !p.level().isClientSide&&stillValid(p)&&tile.access(p);}
     @Override public boolean clickMenuButton(Player p,int id){if(!canConfigure(p))return false;

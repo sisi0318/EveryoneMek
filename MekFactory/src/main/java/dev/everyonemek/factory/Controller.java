@@ -20,7 +20,7 @@ public final class Controller extends TileEntityMekanism {
     public final FactoryStructure structure=new FactoryStructure(this);
     public final Buffers inputs=new Buffers(this,false),outputs=new Buffers(this,true);
     public final Processing processing=new Processing();
-    public int sizeX=4,sizeY=4,sizeZ=4,parallelLimit=512,parallel,running,progress,inputRevision;
+    public int sizeX=3,sizeY=3,sizeZ=3,parallelLimit=512,parallel,running,progress,inputRevision;
     public long powerUsed,clientEnergy,clientCapacity;public String status="structure";
     public boolean enabled=true,rotaryReverse,preview;
     public Controller(BlockPos pos,BlockState state){super(Content.CONTROLLERS.get(((ControllerBlock)state.getBlock()).grade),pos,state);}
@@ -39,7 +39,7 @@ public final class Controller extends TileEntityMekanism {
     @Override public void setRemoved(){structure.detach();super.setRemoved();}
     public boolean resize(int axis,int delta){if(!processing.jobs.isEmpty())return false;int n=(axis==0?sizeX:axis==1?sizeY:sizeZ)+delta;if(n<3||n>grade().size())return false;structure.detach();if(axis==0)sizeX=n;else if(axis==1)sizeY=n;else sizeZ=n;markForSave();return true;}
     private CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();t.putInt("x",sizeX);t.putInt("y",sizeY);t.putInt("z",sizeZ);t.putInt("parallel",parallelLimit);t.putBoolean("enabled",enabled);t.putBoolean("rotary",rotaryReverse);t.put("inputs",inputs.save(r));t.put("outputs",outputs.save(r));t.put("jobs",processing.save(r));return t;}
-    private void read(CompoundTag t,HolderLookup.Provider r){sizeX=Math.clamp(t.getInt("x"),3,11);sizeY=Math.clamp(t.getInt("y"),3,11);sizeZ=Math.clamp(t.getInt("z"),3,11);if(!t.contains("x"))sizeX=sizeY=sizeZ=4;parallelLimit=t.contains("parallel")?Math.clamp(t.getInt("parallel"),1,512):512;enabled=!t.contains("enabled")||t.getBoolean("enabled");rotaryReverse=t.getBoolean("rotary");inputs.load(t.getCompound("inputs"),r);outputs.load(t.getCompound("outputs"),r);processing.load(t.getList("jobs",Tag.TAG_COMPOUND),r);structure.invalidate();}
+    private void read(CompoundTag t,HolderLookup.Provider r){sizeX=Math.clamp(t.getInt("x"),3,11);sizeY=Math.clamp(t.getInt("y"),3,11);sizeZ=Math.clamp(t.getInt("z"),3,11);if(!t.contains("x"))sizeX=sizeY=sizeZ=3;parallelLimit=t.contains("parallel")?Math.clamp(t.getInt("parallel"),1,512):512;enabled=!t.contains("enabled")||t.getBoolean("enabled");rotaryReverse=t.getBoolean("rotary");inputs.load(t.getCompound("inputs"),r);outputs.load(t.getCompound("outputs"),r);processing.load(t.getList("jobs",Tag.TAG_COMPOUND),r);structure.invalidate();}
     @Override public void saveAdditional(CompoundTag t,HolderLookup.Provider r){super.saveAdditional(t,r);t.put("factory",data(r));}
     @Override public void loadAdditional(CompoundTag t,HolderLookup.Provider r){super.loadAdditional(t,r);read(t.getCompound("factory"),r);}
     @Override protected void collectImplicitComponents(DataComponentMap.Builder b){super.collectImplicitComponents(b);b.set(Content.DATA.get(),data(level.registryAccess()));}

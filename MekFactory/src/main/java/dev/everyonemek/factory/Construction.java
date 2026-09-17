@@ -19,11 +19,15 @@ public final class Construction {
         }
         plan.put(c.structure.at(1,1,c.sizeZ-1),Content.PORTS.get(g).get().defaultBlockState());
         plan.put(c.structure.at(c.sizeX-1,1,1),Content.PORTS.get(g).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
-        if(inside.size()<2)return Map.of();
+        if(inside.isEmpty())return Map.of();
         Block cell=switch(g){case BASIC->MekanismBlocks.BASIC_INDUCTION_CELL.get();case ADVANCED->MekanismBlocks.ADVANCED_INDUCTION_CELL.get();case ELITE->MekanismBlocks.ELITE_INDUCTION_CELL.get();case ULTIMATE->MekanismBlocks.ULTIMATE_INDUCTION_CELL.get();};
         Block provider=switch(g){case BASIC->MekanismBlocks.BASIC_INDUCTION_PROVIDER.get();case ADVANCED->MekanismBlocks.ADVANCED_INDUCTION_PROVIDER.get();case ELITE->MekanismBlocks.ELITE_INDUCTION_PROVIDER.get();case ULTIMATE->MekanismBlocks.ULTIMATE_INDUCTION_PROVIDER.get();};
-        // Internals first, so a surrounding shell never makes the normal placement context unreachable.
-        var ordered=new LinkedHashMap<BlockPos,BlockState>();ordered.put(inside.get(0),cell.defaultBlockState());ordered.put(inside.get(1),provider.defaultBlockState());ordered.putAll(plan);return ordered;
+        // A compact cube stores energy in its center; its provider replaces the top center casing.
+        // Larger saved factories keep their original internal cell/provider placement.
+        var ordered=new LinkedHashMap<BlockPos,BlockState>();ordered.put(inside.get(0),cell.defaultBlockState());
+        if(inside.size()==1){var top=c.structure.at(1,c.sizeY-1,1);plan.remove(top);ordered.put(top,provider.defaultBlockState());}
+        else ordered.put(inside.get(1),provider.defaultBlockState());
+        ordered.putAll(plan);return ordered;
     }
     public static void preview(Controller c,ServerPlayer p){var plan=plan(c);if(plan.isEmpty()){p.displayClientMessage(Content.text("build_small"),false);return;}var needed=new LinkedHashMap<Item,Integer>();int shown=0;
         for(var e:plan.entrySet()){if(!p.serverLevel().hasChunkAt(e.getKey()))continue;if(p.serverLevel().getBlockState(e.getKey()).is(e.getValue().getBlock()))continue;needed.merge(e.getValue().getBlock().asItem(),1,Integer::sum);if(shown++<256){var v=e.getKey().getCenter();p.serverLevel().sendParticles(p,ParticleTypes.END_ROD,true,v.x,v.y,v.z,1,0,0,0,0);}}

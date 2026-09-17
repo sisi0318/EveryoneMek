@@ -50,6 +50,10 @@ for i,g in enumerate(grades):
   write(Path(f'data/mekfactory/recipe/{g}_{kind}.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':keys,'result':{'id':f'mekfactory:{g}_{kind}','count':4 if kind=='frame' and i==0 else 1}})
 pairs={
  'settings':('结构设置','Structure'),'resources':('资源缓存','Resources'),'empty':('空','Empty'),
+ 'dimensions':('尺寸 %s × %s × %s','Size %s × %s × %s'),
+ 'power_hint':('电力接入输入端口外侧','Connect power to an input port'),
+ 'port_power_hint':('输入模式下，从朝外的一面接入电力和物料。','In input mode, accepts power and materials from its outer face.'),
+ 'port_mode_hint':('潜行持配置器右键切换输入与输出。','Sneak-use a Configurator to switch input and output.'),
  'dimension.0':('宽 %s','Width %s'),'dimension.1':('高 %s','Height %s'),'dimension.2':('深 %s','Depth %s'),
  'template':('主机器','Machine'),'input':('输入 · %s','Input · %s'),'output_page':('输出 · %s','Output · %s'),'pause':('停机','Stop'),'resume':('启用','Run'),'limit':('设置上限 %s','Limit %s'),
  'resource_view.0':('输入流体','Input fluids'),'resource_view.1':('输入化学品','Input chemicals'),'resource_view.2':('输出流体','Output fluids'),'resource_view.3':('输出化学品','Output chemicals'),
@@ -65,7 +69,7 @@ pairs={
  'machine':('放入支持的主机器','Insert a supported machine'),'template_not_empty':('请先清空主机器内的物料','Empty the machine inventory and tanks first'),
  'paused':('已停机','Stopped'),'redstone':('等待红石条件','Waiting for redstone'),'draining':('正在完成在制任务','Finishing queued work'),'conditions':('加工条件不满足','Processing conditions not met'),'energy':('能量或供应器吞吐不足','Insufficient energy or provider throughput'),
  'output':('等待产物空间','Waiting for output space'),'output_or_energy':('检查产物空间和供能','Check output space and power'),
- 'build_small':('内部至少需要两个位置','At least two internal positions required'),'build_complete':('工厂结构已完成','Factory structure complete'),
+ 'build_small':('结构至少需要 3 × 3 × 3','Structure must be at least 3 x 3 x 3'),'build_complete':('工厂结构已完成','Factory structure complete'),
  'build_blocked':('无法在 %s 放置，请清理或检查权限','Cannot place at %s; check space and permissions'),'build_missing':('缺少 %s，蓝图需要 %s 个','Missing %s; blueprint requires %s'),
 }
 for k,(z,e) in pairs.items():zh['mekfactory.'+k]=z;en['mekfactory.'+k]=e

@@ -19,6 +19,9 @@ public final class PartBlock extends BaseEntityBlock {
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState>b){b.add(OUTPUT);}
     @Override public RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new Part(pos,state);}
+    @Override public void appendHoverText(ItemStack stack,net.minecraft.world.item.Item.TooltipContext context,java.util.List<net.minecraft.network.chat.Component> tooltip,net.minecraft.world.item.TooltipFlag flag){
+        if(kind==Kind.PORT){tooltip.add(Content.text("port_power_hint"));tooltip.add(Content.text("port_mode_hint"));}
+    }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
         if(kind==Kind.PORT&&player.isShiftKeyDown()&&stack.is(mekanism.common.registries.MekanismItems.CONFIGURATOR.get())){
             if(!level.isClientSide&&level.getBlockEntity(pos) instanceof Part p)p.toggle(player);

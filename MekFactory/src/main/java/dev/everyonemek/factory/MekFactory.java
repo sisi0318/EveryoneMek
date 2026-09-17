@@ -10,5 +10,6 @@ public final class MekFactory {
         Content.register(bus); bus.addListener(Ports::register);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryStructure::unload);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryStructure::chunkUnload);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryStructure::interact);
     }
 }
