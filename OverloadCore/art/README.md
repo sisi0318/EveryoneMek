@@ -17,9 +17,11 @@
 
 ## 逆命雷印
 
-- alpha.12 按用户澄清改为蓝青色能量盾徽记，正面盾形、明亮外缘与中央白青雷纹。内置 ImageGen 原稿为 [source/thunder_ward-energy-shield-v3.png](source/thunder_ward-energy-shield-v3.png)，完整提示词见 [thunder-ward-energy-shield-prompt.txt](thunder-ward-energy-shield-prompt.txt)。
-- 原稿为真正的 1254×1254 RGBA，带透明背景和半透明盾面；直接经 `tools/export_art.cjs` 裁去透明边距、保持比例、最近邻缩为 16×16 的 `textures/item/thunder_ward.png`，保留生成图的透明度，不再去背景或重绘。
-- 旧腕环和实体印章原稿/提示词保留为历史设计。alpha.11 的 [去背景记录](thunder-ward-seal-notes.md) 与 `prepare_ward_seal.cjs` 不参与当前能量盾导出。
+- alpha.13 按用户反馈收敛蓝色，采用 Minecraft 风格的灰白像素盾面、少量青色科技触点与外围浅金白雷弧。内置 ImageGen 原稿为 [source/thunder_ward-lightning-v4-raw.png](source/thunder_ward-lightning-v4-raw.png)，完整提示词见 [thunder-ward-lightning-prompt.txt](thunder-ward-lightning-prompt.txt)。
+- 原图为 1254×1254 RGB。沿用用户已授权的背景处理，`tools/prepare_ward_lightning.cjs` 保护盾面轮廓及明亮雷弧，仅清理外围连通棋盘背景，不改 RGB；结果为 [source/thunder_ward-lightning-v4.png](source/thunder_ward-lightning-v4.png)。`tools/export_art.cjs` 保持比例并最近邻缩为实际 16×16 的 `textures/item/thunder_ward.png`。
+- 旧腕环、实体印章和高饱和蓝色能量盾原稿/提示词均保留为历史设计。alpha.11 的 [去背景记录](thunder-ward-seal-notes.md) 与 `prepare_ward_seal.cjs` 不参与当前导出。
+
+当前完整导出流程：在模组目录依次运行 `node tools/prepare_ward_lightning.cjs`、`node tools/export_art.cjs`。
 - Curios 佩戴外观跟随右前臂，与胸前过载挂坠分开，避免两件饰品重叠。触发动画使用自己的物品图标。
 
 ![逆命雷印实际 16×16 贴图放大](ward-preview.png)
