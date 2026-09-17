@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "active=false,facing=north": {
+      "model": "mekfactory:block/elite_controller",
+      "y": 0
+    },
+    "active=false,facing=east": {
+      "model": "mekfactory:block/elite_controller",
+      "y": 90
+    },
+    "active=false,facing=south": {
+      "model": "mekfactory:block/elite_controller",
+      "y": 180
+    },
+    "active=false,facing=west": {
+      "model": "mekfactory:block/elite_controller",
+      "y": 270
+    },
+    "active=true,facing=north": {
+      "model": "mekfactory:block/elite_controller_active",
+      "y": 0
+    },
+    "active=true,facing=east": {
+      "model": "mekfactory:block/elite_controller_active",
+      "y": 90
+    },
+    "active=true,facing=south": {
+      "model": "mekfactory:block/elite_controller_active",
+      "y": 180
+    },
+    "active=true,facing=west": {
+      "model": "mekfactory:block/elite_controller_active",
+      "y": 270
+    }
+  }
+}

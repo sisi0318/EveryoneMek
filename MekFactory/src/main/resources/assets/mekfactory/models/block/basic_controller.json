@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "mekanism:block/enrichment_chamber/front",
+    "side": "mekanism:block/steel_casing",
+    "top": "mekanism:block/induction_casing"
+  }
+}

@@ -19,6 +19,7 @@ on:
           - Forbidden-Arcanus
           - Botania
           - OverloadCore
+          - MekFactory
 
 permissions:
   contents: read

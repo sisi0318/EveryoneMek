@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "dev.everyonemek.factory.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "StructureChangeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

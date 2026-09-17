@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "mekfactory:block/advanced_port"
+    },
+    "output=true": {
+      "model": "mekfactory:block/advanced_port_output"
+    }
+  }
+}

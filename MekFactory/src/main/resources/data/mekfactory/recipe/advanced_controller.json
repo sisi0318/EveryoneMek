@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "SMS",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "M": {
+      "item": "mekfactory:casing"
+    }
+  },
+  "result": {
+    "id": "mekfactory:advanced_controller",
+    "count": 1
+  }
+}

@@ -1,0 +1,45 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.146'
+}
+group = 'dev.everyonemek'
+version = mod_version
+base { archivesName = 'MekFactory' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+sourceSets { gameTest { compileClasspath += sourceSets.main.output; runtimeClasspath += sourceSets.main.output } }
+configurations {
+    gameTestImplementation.extendsFrom implementation
+    gameTestCompileOnly.extendsFrom compileOnly
+    gameTestRuntimeOnly.extendsFrom runtimeOnly
+}
+repositories {
+    maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
+    maven { url = 'https://maven.blamejared.com/'; content { includeGroup 'mezz.jei' } }
+    mavenCentral()
+}
+neoForge {
+    version = project.neo_version
+    addModdingDependenciesTo sourceSets.gameTest
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = layout.buildDirectory.dir('gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'mekfactory'
+        }
+    }
+    mods { mekfactory { sourceSet sourceSets.main; sourceSet sourceSets.gameTest } }
+}
+dependencies {
+    implementation "mekanism:Mekanism:${mekanism_version}"
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.22.1.316'
+}
+tasks.named('check') { dependsOn 'compileGameTestJava' }
+tasks.named('jar', Jar) { from('LICENSE') }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def resourceProperties = [version: project.version.toString()]
+tasks.named('processResources', ProcessResources) {
+    inputs.properties(resourceProperties)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(resourceProperties) }
+}

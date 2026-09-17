@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ASA",
+    "SCS",
+    "ASA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "C": {
+      "item": "mekfactory:elite_frame"
+    }
+  },
+  "result": {
+    "id": "mekfactory:ultimate_frame",
+    "count": 1
+  }
+}

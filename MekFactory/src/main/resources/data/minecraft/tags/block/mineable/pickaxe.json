@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "mekfactory:basic_controller",
+    "mekfactory:basic_frame",
+    "mekfactory:basic_port",
+    "mekfactory:advanced_controller",
+    "mekfactory:advanced_frame",
+    "mekfactory:advanced_port",
+    "mekfactory:elite_controller",
+    "mekfactory:elite_frame",
+    "mekfactory:elite_port",
+    "mekfactory:ultimate_controller",
+    "mekfactory:ultimate_frame",
+    "mekfactory:ultimate_port",
+    "mekfactory:casing",
+    "mekfactory:glass"
+  ]
+}

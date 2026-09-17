@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "SCS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "C": {
+      "item": "mekanism:structural_glass"
+    }
+  },
+  "result": {
+    "id": "mekfactory:glass",
+    "count": 8
+  }
+}

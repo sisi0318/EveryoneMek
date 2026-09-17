@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "mekfactory:block/elite_port"
+    },
+    "output=true": {
+      "model": "mekfactory:block/elite_port_output"
+    }
+  }
+}

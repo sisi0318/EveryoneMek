@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "mekfactory:block/ultimate_port"
+    },
+    "output=true": {
+      "model": "mekfactory:block/ultimate_port_output"
+    }
+  }
+}

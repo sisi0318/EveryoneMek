@@ -16,6 +16,7 @@ class BuildSelectionTest(unittest.TestCase):
             (["Forbidden-Arcanus/src/main/java/Controller.java"], ["Forbidden-Arcanus"]),
             (["Botania/src/main/java/ManaLotus.java"], ["Botania"]),
             (["OverloadCore/src/main/java/CoreItem.java"], ["OverloadCore"]),
+            (["MekFactory/src/main/java/Controller.java"], ["MekFactory"]),
             (["Ars-Nouveau/old.java", "Forbidden-Arcanus/new.java"], ["Ars-Nouveau", "Forbidden-Arcanus"]),
             (["README.md", "Ars-Nouveau/AGENTS.md", "docs/diagram.svg"], []),
             ([".github/workflows/build.yml"], list(MODULES)),

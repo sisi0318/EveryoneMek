@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "SHS",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_infused"
+    },
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    }
+  },
+  "result": {
+    "id": "mekfactory:basic_port",
+    "count": 1
+  }
+}

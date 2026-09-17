@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "mekfactory:block/basic_port"
+    },
+    "output=true": {
+      "model": "mekfactory:block/basic_port_output"
+    }
+  }
+}

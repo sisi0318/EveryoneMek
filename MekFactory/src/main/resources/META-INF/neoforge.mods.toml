@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+[[mods]]
+modId="mekfactory"
+version="${version}"
+displayName="Mek Factory"
+authors="EveryoneMek"
+description='''Tiered parallel factories with real Mekanism induction storage and shared material ports.'''
+[[mixins]]
+config="mekfactory.mixins.json"
+[[dependencies.mekfactory]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.241,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.mekfactory]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.mekfactory]]
+modId="mekanism"
+type="required"
+versionRange="[10.7.19,10.8)"
+ordering="AFTER"
+side="BOTH"

@@ -1,12 +1,47 @@
 # MekFactory 接手入口
 
-先读根目录 AGENTS.md，再读本目录 README.md 与 DESIGN.md。
+先读根目录 AGENTS.md，再读 README、CHANGELOG、DESIGN。当前行为以 README 和代码为准。
 
-- 当前只有设计稿，没有注册 ID、构建脚手架、运行代码或测试结果。不要声称通用工厂已经可以进游戏，也不要把它加入发布模组表制造无效构建项。
-- 用户要求：分级框架控制尺寸/并行，分级输入输出端口及数量控制物料缓存，复用 Mek 感应元件/供应器控制储能与吞吐，GUI 放主机器和升级，统一外观，一键成型，并尽量兼容 Mek 及附属加工机器。
-- 推荐将两套描述合并：保留分级主控作为唯一数据锚点，成型外壳/端口/玻璃均可开统一 GUI。端口只贡献容量并转发，不另存库存。
-- 一台模板机器还是多台同类机器决定并行已向用户询问；目前用一台模板、框架提供并行作为草案假设，不得写成已确认选择。
-- DESIGN 中的尺寸、并行与缓存数值均为初拟配置，不是用户已批准的最终平衡。所有改动必须保留用户后续答案。
-- 兼容依据配方输入输出形态和显式适配接口，禁止用模组命名空间、机器名字或继承 TileEntityMekanism 就宣称支持。流体不可遗漏；额外魔力/魔源、温度/维度/辐射等条件不能被普通配方适配绕过。
-- MatrixEnergyContainer 构造与 MatrixMultiblockData 直接耦合，不能直接拿来套自定义工厂；应适配原元件的真实容器，避免 controller 和 cell 双份储能。原感应元件/供应器的内部多方块关联仍需在实现前验证。
-- 进入实现阶段时再建立独立 Wrapper/build.gradle/gradle.properties/命名空间/CHANGELOG，并同步根 README 和 CI/发布入口；客户端验收由用户做，不运行 runClient。
+## 基线与用户偏好
+
+- 0.1.0-alpha.1，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.1.jar`。
+- MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
+- 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
+- 默认一台原机确定加工类型、框架提供并行。`machinesLimitParallel=true` 额外按原机数量限并行；参考 GTNH 不等于强行改掉框架方案。
+- 用户明确参考的是 GTNH 处理阵列。该旧实现按机器选 RecipeMap，再用 ProcessingLogic 处理，不是复制世界 BE 多 tick。MI 与 GTNH 参考路径见 DESIGN；未复制它们的实现代码或添加依赖。
+- 禁止 runClient，由用户做客户端验收。
+
+## 实现入口
+
+- `Content` 注册 4 主控、4 框架、4 通用端口、外壳和玻璃。主控复用 Mek 基类、原升级/红石/安全与菜单；模板是唯一 Mek 原库存槽，其余缓存在 factory_data。
+- `Controller` 父构造回调建立 template/energy，不能用字段初始化覆盖。`FactoryEnergy` 的 constructor 阶段 structure/level 尚未就绪，读取须返回 0。
+- `FactoryStructure` 按主控背后的配置长方体校验。棱角为框架，恰好一个主控，内部限空气/原 Cell/Provider，最低框架和主控等级决定尺寸上限。工位=min(等级上限,内部体积)。
+- 整个体积均登记失效位置；`StructureChangeMixin` 在 LevelChunk.setBlockState 后触发失效，ChunkUnload 也失效。不能只查相邻外壳或强制加载区块。通知端口时遍历快照，避免能力回调重入修改集合。
+- `Part` 只存主控位置。`Ports` 每次调用核对自身对象、外侧方向、主控与结构，旧 handler 不能绕过损坏；恢复结构后可继续用 guard。形成/失效时通知能力与邻居，让已有管道恢复连接。
+- `FactoryEnergy` 直接读写原 Cell 实存，以供应器合计共享输入/工作预算，不创建第二个电池。Controller 的 ENERGY persists 关闭。Mek 控制器物品可含默认空 energy 组件，检查其没有非零副本，不应断言组件不存在。
+- `Buffers` 两个方向各固定保留 432 物品槽、4 流体罐、4 Chemical 罐。活动容量由端口贡献，缩容只限制新插入；原库存不按容量截断。停机时输入端口允许抽取，便于清理。SIMULATE 不改资源。
+- 放射性 Chemical 首版禁止入库/生成；不可去掉限制却不补辐射生命周期。端口能量仅输入，不对外供电。
+- `Profiles` 显式注册 10 原机和三类原生工厂变体。配方查询使用原 Mek 管理器，调用完整 test/getOutput，保留输入组件。原工厂条数不重复乘进结构并行。
+- `Profiles.register` 只是标准加工族/耗能/条件注册入口，不是额外魔力、热量、概率副产物的完整 API。对原机 tick 的第三方注入不会自动继承，不得宣称所有附属已兼容。
+- `RecipePlan`/`Processing` 预检后预留原料，持久化每批结果和原始工期/能耗，按实际推进扣电。用批次记录，不生成 512 个世界机器 BE。输入/输出变更触发匹配，未匹配时定期重试。
+- 速度/能量升级实时重算在制的有效工期/能耗；已完成批次不重新收费。单 tick 多操作数与工位数分开，不把 2048 次操作显示成 2048/8 工位。PRC 用自己的配方工期。
+- 已完成批次按现有输出空间分份送出，只扣送出份数，其余持久化。不能要求整个大批次一次塞入缩小后的缓存。批次分裂总数限 512，保存不能截断合法任务。
+- 停机只停止新任务，在制继续收尾；红石控制实际暂停。仍有在制时模板不可取出。原模板库存/储罐必须空，升级合计限原上限，模板电量只在原件中保留。
+
+## GUI、施工和数据
+
+- `FactoryMenu` 根据点击的实际部件核对距离和同主控归属，不按远处主控误判距离。安全仍用主控权限。已关联但失效的结构可查看诊断/取物，端口传输关闭。
+- 模板槽 132,30；输入/输出各 3×3 可见槽从 18/204,60 开始；玩家槽偏移 60,178；屏幕 282×260，结构和资源放独立 Mek 式窗口；进度箭头 127,50。升级等保留 Mek 侧栏。
+- Mek 先发送原版 Slot 包，再发送属性包。客户端分页库存必须使用独立显示格接收 Slot 包，不按旧页码写入库存数组；页版本确认前禁止点击。即便拒绝持物翻页也要发送页版本，避免客户端永久等待。
+- `Construction` 预检加载/权限/材料/占位，使用 ItemStack.useOn 触发真实 NeoForge 放置事件。临时手持单件保留源物品组件，finally 恢复原手持；成功后扣实物，取消时保留已放和未用材料。不得用直接 setBlock 冒充生存扣料。
+- `tools/generate_resources.py` 维护 JSON；模型引用 Mek 原工业贴图，不复制 PNG。主控掉落复制 factory_data、mekanism:items、upgrades、owner/security/redstone；不能拼成 mekanism:item，也不能复制聚合能量。
+- 各级主控独立合成，不用普通升级配方吞掉旧主控组件。首版未做原位安装器。
+- JEI 复用原分类，无自动填料；同时安装 EMI 时遵循 Mek shouldLoad。JEI 插件不能从公共初始化加载。
+
+## 验证与构建
+
+- `build runGameTestServer` 已通过 10 项：并行/能耗/在制重载，guard 失效，缩容保留，共享能量预算，电解双输出，真实施工取消/扣料，远角菜单，真实漏斗/箱子，分批输出，PRC，以及原生升级槽安装/卸载后的实时费率。
+- GUI 与放置测试用真实 ServerPlayer + 只接收输出的 EmbeddedChannel；FakePlayer.openMenu 为空，不能据此判断 GUI 不工作。
+- GameTestServer 无 GameProfileCache；测试为唯一临时 UUID 填充 NeoForge UsernameCache 并在 finally 清理，通过测试专用反射访问 protected 方法。不要把该夹具修复放到生产代码。
+- 未运行客户端。512 工位结构校验不是大型整合包压力测试。JEI/HUD/模型视觉由用户验收。
+- 使用自身 Wrapper/.gradle-home，可临时使用已有 GRADLE_RO_DEP_CACHE；缓存、参考源码和游戏世界不提交。CI/发布入口已注册 MekFactory。
