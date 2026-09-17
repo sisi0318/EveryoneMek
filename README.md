@@ -18,6 +18,7 @@ Botania 的完整主线、适配边界与后续候选见 [完整规划](Botania/
 
 开发资料：
 
+- [MekFactory：并行矩阵工厂设计草案](MekFactory/DESIGN.md)：分级框架/端口、原感应储能、主机与升级、一键搭建及兼容边界；设计阶段，尚无运行模组。
 - [Overload Core：过载短路核心设计](OverloadCore/DESIGN.md)：面向 Mek 科技包的诅咒饰品设计与实现范围。
 - [NaturesAura 适配与机器设计](docs/NATURES_AURA_DESIGN.md)
 - [Ars Nouveau 机器设计提案](Ars-Nouveau/DESIGN.md)
