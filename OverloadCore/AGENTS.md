@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.11，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.11.jar`。
+- 0.1.0-alpha.12，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.12.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -14,7 +14,8 @@
 - 用户指定本模组物品说明采用中二、玄幻科技风，围绕魂契、机枢和雷霆，不能退回纯硬性条款。保留关键量值与条件；缺槽、权限、加工故障等操作反馈仍写清可采取的动作。具体机制在 README 解释，不因文案增加实际能力。
 - 新饰品“逆命雷印” `thunder_ward` 使用独立 `overload_ward`（护命）槽，可右键或拖入正常佩戴、自由摘下，不继承过载核心永久绑定。用户明确指定 **100,000 FE／次、无冷却**，不要改回最初建议的百万 FE／30 秒。采用同维度 32 格自有/明确授权供能。
 - 用户要求快捷键切换极限抽能，成功保命后增加短暂次数盾。alpha.10 默认 V、普通模式留设备容量 10%、护盾 3 次/60 tick；均可配置，护盾不是触发冷却。主世界保存玩家模式，客户端只能请求切换自己的模式。
-- 用户要求雷印图案改为印章。alpha.11 使用 `art/source/thunder_ward-seal-v2.png` 方形金属印章、短柄和青色雷纹，旧腕环图稿仅作历史参考。内置 ImageGen 两次未给出真实透明通道，用户明确允许脚本只去背景和缩放；`tools/prepare_ward_seal.cjs` 仅去除与画布边缘连通的灰白棋盘背景，RGB 不改。后续不要把此授权扩展为任意代码重绘。
+- 用户澄清雷印图案需要“能量盾那种感觉”，不接受 alpha.11 的实体印章。alpha.12 改用 `art/source/thunder_ward-energy-shield-v3.png`：正面蓝青色能量盾、明亮边缘和中央雷纹。直接保留 ImageGen 原始 RGBA 与半透明像素，只进行透明边距裁切和最近邻缩放；不能重新套用旧印章的二值去背景处理。
+- 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
 
 ## 实现入口与数据契约
 
@@ -91,6 +92,7 @@
 - alpha.9：**34/34 服务端用例、3/3 单元用例**通过，保留 55 种伤害验证。新增真实菜单数据包的普通点击/Shift/数字键/主动丢弃与满背包失败、数量/组件直接和绕过 setter 的篡改、去标识恢复不复制、缺失/停用槽、独立记录读回恢复、游离副本及真实缺电死亡重生。测试正式 respawn 后须按原版 handleClientCommand 赋值 connection.player，再发菜单包，不能把连接仍指向旧玩家的夹具错误当作功能缺陷。
 - alpha.10：**38/38 服务端用例、3/3 单元用例**通过。新增数据包编解码与极限模式实际扣电/持久化/未佩戴拒绝、精确留电边界、三次护盾/零伤害/虚空与 genericKill/到期/摘下、缺记录保留槽位/背包/掉落实物、管理员命令权限与原件核验/退役标识拒绝、独立抽电授权/禁供/撤销/同 tick 新设备与真实电量。原 55 种伤害用例逐项清除次数盾后独立验证付费路径；原供能守恒夹具显式极限模式，新用例另验默认留电模式。没有把玩家自然回血后的非致命一击误判成护盾到期失效。
 - alpha.11：`classes jar` 通过；确认 JAR 内雷印是 16×16 RGBA，alpha 仅 0/255，模型引用正确且无原稿/GameTest。去背景前后所有 RGB 值一致，已检查 256×256 最近邻预览。仅改外观，不重复服务端逻辑测试；未启动客户端。
+- alpha.12：`classes jar` 和 JAR 资源检查通过。能量盾为 16×16 RGBA，含真实透明背景和 15 级 alpha，保留生成图的半透明效果；已检查实际像素放大预览。仅更换资源，未重复逻辑测试或启动客户端。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。
