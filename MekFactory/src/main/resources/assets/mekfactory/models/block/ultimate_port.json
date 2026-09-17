@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "mekanism:block/induction_port"
-  }
+  "parent": "mekanism:block/sps_port"
 }

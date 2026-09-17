@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 public final class FactoryWindow extends GuiWindow {
     private final Controller c;private final int menu;private final boolean resources;private int view;
     public FactoryWindow(IGuiWrapper gui,Controller c,int menu,boolean resources){
-        super(gui,26,24,230,resources?126:152,WindowType.UNSPECIFIED);this.c=c;this.menu=menu;this.resources=resources;
+        super(gui,7,18,230,resources?126:152,WindowType.UNSPECIFIED);this.c=c;this.menu=menu;this.resources=resources;
         if(resources){
             addChild(new GuiInnerScreen(gui,relativeX+8,relativeY+28,214,61,()->{
                 var b=view>=2?c.outputs:c.inputs;var lines=new ArrayList<Component>();for(int i=0;i<Buffers.TANKS;i++){

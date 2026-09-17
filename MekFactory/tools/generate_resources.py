@@ -15,16 +15,18 @@ for index,g in enumerate(grades):
   zh['block.mekfactory.'+name]=zhgrades[index]+{'controller':'并行矩阵工厂','frame':'工厂框架','port':'通用工厂端口'}[kind]
   en['block.mekfactory.'+name]=g.title()+' '+{'controller':'Parallel Matrix Factory','frame':'Factory Frame','port':'Universal Factory Port'}[kind]
   if kind=='controller':
+   zh['container.mekfactory.'+name]=zh['block.mekfactory.'+name]
+   en['container.mekfactory.'+name]=en['block.mekfactory.'+name]
    for active in [False,True]:
     suffix='_active' if active else ''
     tex='mekanism:block/enrichment_chamber/front'+('_active' if active else '')
-    write(Path(f'assets/mekfactory/models/block/{name}{suffix}.json'),{'parent':'minecraft:block/orientable','textures':{'front':tex,'side':'mekanism:block/steel_casing','top':'mekanism:block/induction_casing'}})
+    write(Path(f'assets/mekfactory/models/block/{name}{suffix}.json'),{'parent':'minecraft:block/orientable','textures':{'front':tex,'side':'mekanism:block/steel_casing','top':'mekanism:block/steel_casing'}})
    variants={f'active={str(a).lower()},facing={d}':{'model':f'mekfactory:block/{name}'+('_active' if a else ''),'y':rot} for a in [False,True] for d,rot in [('north',0),('east',90),('south',180),('west',270)]}
   else:
-   write(Path(f'assets/mekfactory/models/block/{name}.json'),{'parent':'minecraft:block/cube_all','textures':{'all':'mekanism:block/'+('induction_casing' if kind=='frame' else 'induction_port')}})
+   write(Path(f'assets/mekfactory/models/block/{name}.json'),{'parent':'mekanism:block/steel_casing' if kind=='frame' else 'mekanism:block/sps_port'})
    variants={'':{'model':f'mekfactory:block/{name}'}}
    if kind=='port':
-    write(Path(f'assets/mekfactory/models/block/{name}_output.json'),{'parent':'minecraft:block/cube_all','textures':{'all':'mekanism:block/induction_port_output'}})
+    write(Path(f'assets/mekfactory/models/block/{name}_output.json'),{'parent':'mekanism:block/sps_port_output'})
     variants={'output=false':{'model':f'mekfactory:block/{name}'},'output=true':{'model':f'mekfactory:block/{name}_output'}}
   write(Path(f'assets/mekfactory/blockstates/{name}.json'),{'variants':variants})
 for name,tex,z,e in [('casing','steel_casing','工厂外壳','Factory Casing'),('glass','structural_glass','工厂结构玻璃','Factory Structural Glass')]:
@@ -50,6 +52,11 @@ for i,g in enumerate(grades):
   write(Path(f'data/mekfactory/recipe/{g}_{kind}.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':keys,'result':{'id':f'mekfactory:{g}_{kind}','count':4 if kind=='frame' and i==0 else 1}})
 pairs={
  'settings':('结构设置','Structure'),'resources':('资源缓存','Resources'),'empty':('空','Empty'),
+ 'port_config':('端口配置','Port Configuration'),
+ 'port_counts':('输入 %s · 输出 %s','Input %s / Output %s'),
+ 'port_face_hint':('点击切换该面全部端口','Click to switch all ports on a face'),
+ 'port_corner_hint':('棱角端口的各外侧面共用模式。','A corner port shares its mode across exposed faces.'),
+ 'auto_eject_on':('自动弹出：开','Auto-eject: On'),'auto_eject_off':('自动弹出：关','Auto-eject: Off'),
  'dimensions':('尺寸 %s × %s × %s','Size %s × %s × %s'),
  'power_hint':('电力接入输入端口外侧','Connect power to an input port'),
  'port_power_hint':('输入模式下，从朝外的一面接入电力和物料。','In input mode, accepts power and materials from its outer face.'),
@@ -60,7 +67,7 @@ pairs={
  'parallel':('工作 %s / %s','Working %s / %s'),'power':('%s FE/t','%s FE/t'),
  'preview':('结构预览','Preview'),'build':('一键搭建','Build'),'rotary_gas':('冷凝模式','Condense'),'rotary_fluid':('气化模式','Decondense'),
  'unlinked':('尚未连接工厂主控','Not linked to a factory'), 'port_output':('端口：输出','Port: output'),'port_input':('端口：输入','Port: input'),
- 'structure':('检查工厂结构','Check factory structure'),'frame':('棱角需要工厂框架','Factory frames required on edges'),
+ 'structure':('检查工厂结构','Check factory structure'),'frame':('至少需要一个工厂框架','At least one factory frame required'),
  'shell':('外壳缺失或存在多个主控','Missing shell or multiple controllers'),'interior':('内部只能放感应元件和供应器','Only induction cells/providers allowed inside'),
  'tier':('框架等级不足以支撑当前尺寸','Frame tier too low for this size'),'unloaded':('等待结构区块加载','Waiting for structure chunks'),
  'occupied':('部件已属于其他结构','Part belongs to another structure'),'ports':('至少需要一个输入端口和输出端口','At least one input and output port required'),

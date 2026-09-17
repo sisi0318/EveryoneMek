@@ -78,6 +78,40 @@ public final class FactoryTests {
         h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());check(items.getSlots()>0&&c.inputs.items[26].getCount()==33,"Repaired structure could not reuse safe handlers");h.succeed();
     }
 
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void cornerPortsFollowConfiguratorAndWholeFaceMenu(GameTestHelper h){
+        var c=controller(h,Grade.BASIC,3);c.setFacing(Direction.WEST);
+        for(var e:Construction.plan(c).entrySet())h.getLevel().setBlockAndUpdate(e.getKey(),e.getValue());
+        var corner=c.structure.at(0,0,2);var movedProvider=c.structure.at(2,2,2);var roof=c.structure.at(1,2,1);
+        var provider=h.getLevel().getBlockState(roof);
+        h.getLevel().setBlockAndUpdate(roof,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());
+        h.getLevel().setBlockAndUpdate(movedProvider,provider);
+        h.getLevel().setBlockAndUpdate(corner,Content.PORTS.get(Grade.BASIC).get().defaultBlockState());
+        h.getLevel().setBlockAndUpdate(c.structure.at(0,1,1),Content.PORTS.get(Grade.BASIC).get().defaultBlockState());
+        check(c.structure.validate(),"Corner components or face-center frame refused: "+c.structure.error);
+        var port=(Part)h.getLevel().getBlockEntity(corner);var back=RelativeSide.BACK.getDirection(c.getDirection());
+        var outer=h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,corner,back);
+        var underside=h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,corner,Direction.DOWN);
+        var inner=h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,corner,Direction.UP);
+        check(outer!=null&&outer.getSlots()>0&&underside!=null&&underside.getSlots()>0&&(inner==null||inner.getSlots()==0),"Corner did not expose all and only outward faces");
+        var p=player(h,corner.relative(back));var tool=new ItemStack(MekanismItems.CONFIGURATOR.get());p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,tool);
+        try{
+            var hit=new net.minecraft.world.phys.BlockHitResult(corner.getCenter(),back,corner,false);
+            p.setShiftKeyDown(true);p.gameMode.useItemOn(p,h.getLevel(),tool,net.minecraft.world.InteractionHand.MAIN_HAND,hit);
+            check(port.getBlockState().getValue(PartBlock.OUTPUT),"Real crouching configurator did not switch port exactly once");
+            check(!outer.insertItem(0,new ItemStack(Items.DIAMOND),false).isEmpty(),"Cached handler ignored output mode");
+            p.setShiftKeyDown(false);FactoryMenu.open(p,c,corner);check(p.containerMenu instanceof FactoryMenu,"Port could not open factory");
+            PortConfiguration.refresh(c);check(c.portInputs[RelativeSide.BACK.ordinal()]==1&&c.portOutputs[RelativeSide.BACK.ordinal()]==1,"Whole rotated face was not summarized");
+            var menu=(FactoryMenu)p.containerMenu;check(menu.clickMenuButton(p,40+RelativeSide.BACK.ordinal()),"Side-menu action rejected");
+            check(!port.getBlockState().getValue(PartBlock.OUTPUT)&&c.portInputs[RelativeSide.BACK.ordinal()]==2&&c.portOutputs[RelativeSide.BACK.ordinal()]==0,"Mixed face did not become all input");
+            check(underside.insertItem(0,new ItemStack(Items.DIAMOND,3),false).isEmpty(),"Second corner face did not follow menu mode");
+            check(menu.clickMenuButton(p,40+RelativeSide.BACK.ordinal())&&port.getBlockState().getValue(PartBlock.OUTPUT),"All-input face did not become all output");
+            check(menu.clickMenuButton(p,46)&&!c.autoEject,"Menu did not disable automatic eject");
+            var saved=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(saved,h.getLevel().registryAccess());
+            check(!c.autoEject&&count(c.inputs,Items.DIAMOND)==3&&c.structure.valid(),"Port configuration reload lost state or inventory");
+        }finally{close(p);}h.succeed();
+    }
+
     @GameTest(template="empty",timeoutTicks=70)
     public static void multipleEnergyPortsShareRealCellsAndProviderBudget(GameTestHelper h){
         var c=formed(h,Grade.BASIC,4);var extraPos=c.structure.at(1,2,0);h.getLevel().setBlockAndUpdate(extraPos,Content.PORTS.get(Grade.BASIC).get().defaultBlockState());check(c.structure.valid(),"Extra port invalid");

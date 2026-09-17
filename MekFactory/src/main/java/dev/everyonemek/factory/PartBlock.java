@@ -23,10 +23,7 @@ public final class PartBlock extends BaseEntityBlock {
         if(kind==Kind.PORT){tooltip.add(Content.text("port_power_hint"));tooltip.add(Content.text("port_mode_hint"));}
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
-        if(kind==Kind.PORT&&player.isShiftKeyDown()&&stack.is(mekanism.common.registries.MekanismItems.CONFIGURATOR.get())){
-            if(!level.isClientSide&&level.getBlockEntity(pos) instanceof Part p)p.toggle(player);
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
-        }
+        if(kind==Kind.PORT&&stack.canPerformAction(mekanism.api.MekanismItemAbilities.WRENCH_CONFIGURE))return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         if(level.getBlockEntity(pos) instanceof Part p)p.open(player);
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }

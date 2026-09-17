@@ -48,7 +48,7 @@ public final class FactoryStructure {
         checking=true;formed=false;dirty=false;cells.clear();providers.clear();ports.clear();parallel=inputSlots=outputSlots=0;inputCapacity=outputCapacity=transfer=0;
         var level=owner.getLevel();var map=OWNERS.computeIfAbsent(level,l->new HashMap<>());
         for(var p:claimed)map.remove(p,owner);claimed.clear();
-        int tier=owner.grade().ordinal(),inputs=0,outputs=0;
+        int tier=owner.grade().ordinal(),inputs=0,outputs=0,frames=0;
         try {
             for(int x=0;x<owner.sizeX;x++)for(int y=0;y<owner.sizeY;y++)for(int z=0;z<owner.sizeZ;z++){
                 var pos=at(x,y,z);
@@ -57,12 +57,12 @@ public final class FactoryStructure {
                 // Watch incomplete structures too, so filling the missing location can trigger a new scan.
                 map.put(pos,owner);claimed.add(pos);
                 var state=level.getBlockState(pos);var block=state.getBlock();int edges=(x==0||x==owner.sizeX-1?1:0)+(y==0||y==owner.sizeY-1?1:0)+(z==0||z==owner.sizeZ-1?1:0);
-                if(edges>=2){if(!(block instanceof PartBlock p)||p.kind!=PartBlock.Kind.FRAME)return fail("frame",pos);tier=Math.min(tier,p.grade.ordinal());}
-                else if(edges==1){
+                if(edges>0){
                     if(pos.equals(owner.getBlockPos()))continue;
                     var be=level.getBlockEntity(pos);
                     if(be instanceof TileEntityInductionCell||be instanceof TileEntityInductionProvider){if(!addInduction(be,pos))return false;continue;}
-                    if(!(block instanceof PartBlock p)||p.kind==PartBlock.Kind.FRAME)return fail("shell",pos);
+                    if(!(block instanceof PartBlock p))return fail("shell",pos);
+                    if(p.kind==PartBlock.Kind.FRAME){frames++;tier=Math.min(tier,p.grade.ordinal());}
                     if(level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();if(p.kind==PartBlock.Kind.PORT){
                         ports.add(part);if(state.getValue(PartBlock.OUTPUT)){outputs++;outputSlots+=p.grade.slots;outputCapacity+=p.grade.capacity;}
                         else {inputs++;inputSlots+=p.grade.slots;inputCapacity+=p.grade.capacity;}
@@ -71,8 +71,8 @@ public final class FactoryStructure {
                     var tile=level.getBlockEntity(pos);
                     if(!addInduction(tile,pos))return false;
                 }
-                if(edges>=2&&level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();}
             }
+            if(frames==0)return fail("frame",owner.getBlockPos());
             var grade=Grade.values()[tier];
             if(Math.max(owner.sizeX,Math.max(owner.sizeY,owner.sizeZ))>grade.size())return fail("tier",owner.getBlockPos());
             if(inputs==0||outputs==0)return fail("ports",owner.getBlockPos());
@@ -90,5 +90,6 @@ public final class FactoryStructure {
         return true;
     }
     private boolean fail(String code,BlockPos pos){error=code;errorPos=pos;return false;}
+    public boolean isOutward(BlockPos p,Direction side){return side!=null&&contains(p)&&!contains(p.relative(side));}
     public Direction outward(BlockPos p){for(var side:Direction.values())if(!contains(p.relative(side)))return side;return null;}
 }

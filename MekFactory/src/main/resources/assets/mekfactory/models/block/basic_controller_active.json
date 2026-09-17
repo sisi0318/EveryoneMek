@@ -3,6 +3,6 @@
   "textures": {
     "front": "mekanism:block/enrichment_chamber/front_active",
     "side": "mekanism:block/steel_casing",
-    "top": "mekanism:block/induction_casing"
+    "top": "mekanism:block/steel_casing"
   }
 }

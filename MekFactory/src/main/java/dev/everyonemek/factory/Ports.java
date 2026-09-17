@@ -12,13 +12,14 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 public final class Ports {
     public static void register(RegisterCapabilitiesEvent e){
+        e.registerBlockEntity(mekanism.common.capabilities.Capabilities.CONFIGURABLE,Content.PART.get(),(p,s)->p.getBlockState().getBlock() instanceof PartBlock b&&b.kind==PartBlock.Kind.PORT?p:null);
         e.registerBlockEntity(Capabilities.ItemHandler.BLOCK,Content.PART.get(),ItemPort::new);
         e.registerBlockEntity(Capabilities.FluidHandler.BLOCK,Content.PART.get(),FluidPort::new);
         e.registerBlockEntity(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),Content.PART.get(),ChemPort::new);
         e.registerBlockEntity(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.block(),Content.PART.get(),PowerPort::new);
         e.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,Content.PART.get(),(p,s)->new ForgeEnergyIntegration(new PowerPort(p,s)));
     }
-    public static Controller controller(Part p,Direction side){var c=p.controller();if(c==null||side==null||!(p.getBlockState().getBlock() instanceof PartBlock b)||b.kind!=PartBlock.Kind.PORT||!c.structure.valid()||c.structure.outward(p.getBlockPos())!=side)return null;return c;}
+    public static Controller controller(Part p,Direction side){var c=p.controller();if(c==null||side==null||!(p.getBlockState().getBlock() instanceof PartBlock b)||b.kind!=PartBlock.Kind.PORT||!c.structure.valid()||!c.structure.isOutward(p.getBlockPos(),side))return null;return c;}
     private static boolean output(Part p){return p.getBlockState().getValue(PartBlock.OUTPUT);}
     public record ItemPort(Part port,Direction side) implements IItemHandler {
         private Buffers bank(){var c=controller(port,side);return c==null?null:output(port)?c.outputs:c.inputs;}
@@ -59,10 +60,10 @@ public final class Ports {
         public long insertEnergy(int i,long n,Action a){var c=c();return c==null||i!=0||output(port)?n:c.energy().insert(n,a,AutomationType.INTERNAL);}
         public long extractEnergy(int i,long n,Action a){return 0; /* Work is the only output consumer in this version. */}
     }
-    public static void eject(Controller c){if(!c.structure.valid()||c.getLevel().getGameTime()%5!=0)return;for(var p:c.structure.ports){if(!output(p))continue;var side=c.structure.outward(p.getBlockPos());var next=p.getBlockPos().relative(side);var level=c.getLevel();if(!level.hasChunkAt(next))continue;
+    public static void eject(Controller c){if(!c.autoEject||!c.structure.valid()||c.getLevel().getGameTime()%5!=0)return;for(var p:java.util.List.copyOf(c.structure.ports)){if(!output(p))continue;for(var side:Direction.values()){if(!c.structure.isOutward(p.getBlockPos(),side))continue;var next=p.getBlockPos().relative(side);var level=c.getLevel();if(!level.hasChunkAt(next))continue;
         var items=level.getCapability(Capabilities.ItemHandler.BLOCK,next,side.getOpposite());if(items!=null){var request=TransitRequest.anyItem(new ItemPort(p,side),64);if(!request.isEmpty()){var response=request.eject(p,items,0,t->null);if(!response.isEmpty())response.useAll();}}
         var fluid=level.getCapability(Capabilities.FluidHandler.BLOCK,next,side.getOpposite());if(fluid!=null){var source=new FluidPort(p,side);for(int i=0;i<Buffers.TANKS;i++){var offer=source.getFluidInTank(i);if(offer.isEmpty())continue;offer.setAmount(Math.min(offer.getAmount(),16000));int n=fluid.fill(offer,IFluidHandler.FluidAction.EXECUTE);if(n>0)source.drain(offer.copyWithAmount(n),IFluidHandler.FluidAction.EXECUTE);}}
         var chemical=level.getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),next,side.getOpposite());if(chemical!=null){var source=new ChemPort(p,side);for(int i=0;i<Buffers.TANKS;i++){var offer=source.getChemicalInTank(i);if(offer.isEmpty())continue;offer.setAmount(Math.min(offer.getAmount(),64000));long n=offer.getAmount()-chemical.insertChemical(offer,Action.EXECUTE).getAmount();if(n>0)source.extractChemical(i,n,Action.EXECUTE);}}
-    }}
+    }}}
     private Ports(){}
 }

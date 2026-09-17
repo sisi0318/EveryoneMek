@@ -27,7 +27,7 @@ public final class FactoryMenu extends MekanismTileContainer<Controller> {
                 public int getSlotLimit(int ignored){return index()<b.slots()?64:getStackInSlot(0).getCount();}
                 public boolean isItemValid(int ignored,ItemStack stack){return !output&&index()<b.slots();}
             };
-            addSlot(new SlotItemHandler(view,0,(out?204:18)+i%3*18,60+i/3*18){
+            addSlot(new SlotItemHandler(view,0,(out?172:18)+i%3*18,44+i/3*18){
                 @Override public boolean mayPickup(Player p){return p.level().isClientSide||canConfigure(p);}
                 @Override public boolean mayPlace(ItemStack s){return (inv.player.level().isClientSide||canConfigure(inv.player))&&super.mayPlace(s);}
             });
@@ -36,8 +36,8 @@ public final class FactoryMenu extends MekanismTileContainer<Controller> {
     public static FactoryMenu fromNetwork(int id,Inventory inv,RegistryFriendlyByteBuf buf){var pos=buf.readBlockPos();var clicked=buf.readBlockPos();return new FactoryMenu(id,inv,(Controller)inv.player.level().getBlockEntity(pos),clicked);}
     public static void open(Player player,Controller c,BlockPos clicked){if(player instanceof ServerPlayer server&&c.access(player)&&player.distanceToSqr(clicked.getCenter())<=64&&(clicked.equals(c.getBlockPos())||c.structure.contains(clicked)))
         server.openMenu(new SimpleMenuProvider((id,inv,p)->new FactoryMenu(id,inv,c,clicked),c.getDisplayName()),buf->{buf.writeBlockPos(c.getBlockPos());buf.writeBlockPos(clicked);});}
-    @Override protected int getInventoryXOffset(){return 60;}
-    @Override protected int getInventoryYOffset(){return 178;}
+    @Override protected int getInventoryXOffset(){return 41;}
+    @Override protected int getInventoryYOffset(){return 162;}
     @Override public boolean stillValid(Player p){if(clicked==null)return true;if(!super.stillValid(p)||p.distanceToSqr(clicked.getCenter())>64)return false;
         if(p.level().isClientSide)return true;if(!tile.access(p)||!p.level().hasChunkAt(clicked))return false;
         return clicked.equals(tile.getBlockPos())?p.level().getBlockEntity(clicked)==tile:
@@ -52,6 +52,8 @@ public final class FactoryMenu extends MekanismTileContainer<Controller> {
         if(id==20||id==21||id==23||id==24){tile.parallelLimit=Math.clamp(tile.parallelLimit+(id==20||id==23?-1:1)*(id>=23?16:1),1,512);tile.markForSave();return true;}
         if(id==22&&tile.processing.jobs.isEmpty()){tile.rotaryReverse=!tile.rotaryReverse;tile.markForSave();return true;}
         if(id>=30&&id<=33){if(getCarried().isEmpty()){if(id<32)inputPage=Math.clamp(inputPage+(id==30?-1:1),0,maxPage(tile.inputs));else outputPage=Math.clamp(outputPage+(id==32?-1:1),0,maxPage(tile.outputs));}pageRevision++;broadcastChanges();return true;}
+        if(id>=40&&id<46)return PortConfiguration.cycleFace(tile,p,mekanism.api.RelativeSide.values()[id-40]);
+        if(id==46){tile.autoEject=!tile.autoEject;tile.markForSave();return true;}
         return false;
     }
     private int maxPage(Buffers b){int last=b.slots();for(int i=Buffers.SLOTS-1;i>=last;i--)if(!b.items[i].isEmpty()){last=i+1;break;}return Math.max(0,(last-1)/PAGE_SIZE);}
