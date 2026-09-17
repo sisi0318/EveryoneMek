@@ -95,12 +95,11 @@ public final class ThunderWard {
             restore(player);
             WardRuntime.afterRescue(player);
             if (WardRuntime.pulse(player)) {
-            player.displayClientMessage(CoreContent.text("ward.saved"), true);
-            player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ELECTRIC_SPARK,
-                  player.getX(), player.getY() + 1, player.getZ(), 32, .4, .7, .4, .03);
-            player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.TOTEM_USE,
-                  net.minecraft.sounds.SoundSource.PLAYERS, .7F, .7F);
-            CorePackets.wardPulse(player);
+                player.displayClientMessage(CoreContent.text("ward.saved"), true);
+                player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ELECTRIC_SPARK,
+                      player.getX(), player.getY() + 1, player.getZ(), 32, .4, .7, .4, .03);
+                player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.TOTEM_USE,
+                      net.minecraft.sounds.SoundSource.PLAYERS, .7F, .7F);
             }
             return true;
         } finally { state.paying = false; }

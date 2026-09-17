@@ -38,7 +38,6 @@ public final class CoreClient {
         event.enqueueWork(() -> {
             top.theillusivec4.curios.api.client.CuriosRendererRegistry.register(CoreContent.CORE.get(), PendantRenderer::new);
             top.theillusivec4.curios.api.client.CuriosRendererRegistry.register(CoreContent.WARD.get(), WardRenderer::new);
-            CorePackets.onWardPulse = () -> Minecraft.getInstance().gameRenderer.displayItemActivation(new ItemStack(CoreContent.WARD.get()));
         });
     }
     @SubscribeEvent public static void keys(RegisterKeyMappingsEvent event) { event.register(KEY); event.register(EXTREME); }

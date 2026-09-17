@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.14，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.14.jar`。
+- 0.1.0-alpha.15，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.15.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -63,7 +63,7 @@
 - 新 WardExtreme 数据包只有期望布尔值，没有玩家 UUID；处理器检查真实佩戴、主线程/玩家状态并限制 5 tick 重复输入。WardStatus 独立于过载核心状态，状态有变化才发；客户端按剩余 tick 绘制倒计时，不能据此做实际护盾结算。网络协议升为 2，客户端与服务器一起更新。
 - BasicEnergyContainer 直接扣真实储能，避免受机器 I/O 面限制、机器工作耗能翻倍和回收影响。矩阵 setEnergy 会抛异常，必须使用 MatrixEnergyContainer 原生模拟/提取队列及供能余量；排除独立感应元件，矩阵多端口按容器对象去重。其他未知储能类型不强行改写；传输器共享网络不纳入。
 - 按可用储能比例分摊；费用粒度允许时每个非空容器先分到 1 J。BigInteger 处理比例和总量，先预检全部快照与金额，再扣费；不足不部分扣款。Mek FE/J 换算是唯一费用单位入口。
-- `WardRenderer` 将雷印放在右前臂，避免与胸前核心重叠；`CorePackets.WardPulse` 在本人客户端播放自己的物品图标。原生电火花仅取有限个供能节点做视觉反馈，不限制实际供能数量。
+- `WardRenderer` 将雷印放在右前臂，避免与胸前核心重叠。用户明确不需要图腾式弹出，alpha.15 删除 displayItemActivation 调用并停止发送 WardPulse；保留协议 2 的旧消息类与静默处理以兼容旧端。不要拦截原版不死图腾自己的动画。原生电火花仅取有限个供能节点做视觉反馈，不限制实际供能数量。
 
 ## 目标版本已核实的 API 经验
 
@@ -96,6 +96,7 @@
 - alpha.12：`classes jar` 和 JAR 资源检查通过。能量盾为 16×16 RGBA，含真实透明背景和 15 级 alpha，保留生成图的半透明效果；已检查实际像素放大预览。仅更换资源，未重复逻辑测试或启动客户端。
 - alpha.13：`classes jar` 与 JAR 资源检查通过。运行贴图为 16×16 RGBA，157 个不透明像素；源图处理前后所有 RGB 不变，抽查灰色盾面保留完整，已查看实际像素放大预览及两侧雷弧。只改美术资源，不重复逻辑测试，未运行客户端。
 - alpha.14：已查看实际 MekaSuit/模块 PNG 与 MekaTool 图集；`classes jar` 和打包检查通过。新图为 16×16 RGBA、120 个不透明像素，源图处理前后 RGB 一致，盾面护板与核心保留完整；已查看实际像素预览。上游参考、原稿及测试未打包，未启动客户端或重复逻辑测试。
+- alpha.15：`classes jar` 通过；检查发布字节码确认 displayItemActivation、onWardPulse 和 wardPulse 发送入口均已移除，旧 WardPulse 消息类仍在且静默处理；afterRescue、电火花和原贴图保留。仅移除展示调用，不新增/重复逻辑测试，未启动客户端。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。

@@ -24,7 +24,7 @@ public final class CorePackets {
         public static final StreamCodec<RegistryFriendlyByteBuf, WardExtreme> CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, WardExtreme::enabled, WardExtreme::new);
         @Override public Type<WardExtreme> type() { return TYPE; }
     }
-    public static Runnable onWardPulse = () -> { };
+    // Retain the protocol-2 payload so older servers can connect; it no longer triggers a screen animation.
     public record WardPulse() implements CustomPacketPayload {
         public static final Type<WardPulse> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(OverloadCore.ID, "ward_pulse"));
         public static final StreamCodec<RegistryFriendlyByteBuf, WardPulse> CODEC = StreamCodec.unit(new WardPulse());
@@ -46,7 +46,7 @@ public final class CorePackets {
         registrar.playToServer(WardExtreme.TYPE, WardExtreme.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) handleWardExtreme(player, packet);
         }));
-        registrar.playToClient(WardPulse.TYPE, WardPulse.CODEC, (packet, context) -> context.enqueueWork(onWardPulse));
+        registrar.playToClient(WardPulse.TYPE, WardPulse.CODEC, (packet, context) -> { });
         registrar.playToClient(Status.TYPE, Status.CODEC, (packet, context) -> context.enqueueWork(() -> clientState = packet.data.copy()));
         registrar.playToServer(Request.TYPE, Request.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player) || packet.action != 0) return;
@@ -55,7 +55,6 @@ public final class CorePackets {
             data.putLong("last_request", tick); CoreBinding.save(player, data); sendStatus(player, true);
         }));
     }
-    public static void wardPulse(ServerPlayer player) { PacketDistributor.sendToPlayer(player, new WardPulse()); }
     public static void handleWardExtreme(ServerPlayer player, WardExtreme packet) { WardRuntime.setExtreme(player, packet.enabled); }
     public static void sendWardStatus(ServerPlayer player, CompoundTag tag) { PacketDistributor.sendToPlayer(player, new WardStatus(tag)); }
     public static void sendStatus(ServerPlayer player, boolean report) {
