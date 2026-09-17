@@ -17,11 +17,13 @@
 
 ## 逆命雷印
 
-- alpha.13 按用户反馈收敛蓝色，采用 Minecraft 风格的灰白像素盾面、少量青色科技触点与外围浅金白雷弧。内置 ImageGen 原稿为 [source/thunder_ward-lightning-v4-raw.png](source/thunder_ward-lightning-v4-raw.png)，完整提示词见 [thunder-ward-lightning-prompt.txt](thunder-ward-lightning-prompt.txt)。
-- 原图为 1254×1254 RGB。沿用用户已授权的背景处理，`tools/prepare_ward_lightning.cjs` 保护盾面轮廓及明亮雷弧，仅清理外围连通棋盘背景，不改 RGB；结果为 [source/thunder_ward-lightning-v4.png](source/thunder_ward-lightning-v4.png)。`tools/export_art.cjs` 保持比例并最近邻缩为实际 16×16 的 `textures/item/thunder_ward.png`。
-- 旧腕环、实体印章和高饱和蓝色能量盾原稿/提示词均保留为历史设计。alpha.11 的 [去背景记录](thunder-ward-seal-notes.md) 与 `prepare_ward_seal.cjs` 不参与当前导出。
+- alpha.14 按用户要求参考实际 Mek 装备：深灰底层、银灰分块护板、黑色凹槽、绿色能源纹路与白绿雷弧。内置 ImageGen 原稿为 [source/thunder_ward-mek-v5-raw.png](source/thunder_ward-mek-v5-raw.png)，完整提示词见 [thunder-ward-mek-prompt.txt](thunder-ward-mek-prompt.txt)。
+- 原图为 1254×1254 RGB。沿用用户已授权的背景处理，`tools/prepare_ward_mek.cjs` 保护盾面中性深色轮廓与白绿雷弧，仅清理外围连通棋盘背景，不改 RGB；结果为 [source/thunder_ward-mek-v5.png](source/thunder_ward-mek-v5.png)。`tools/export_art.cjs` 保持比例并最近邻缩为实际 16×16 的 `textures/item/thunder_ward.png`。
+- 参考取自实际依赖 `Mekanism-1.21.1-10.7.19.85.jar`：`assets/mekanism/textures/item/mekasuit_helmet.png`、`mekasuit_bodyarmor.png` 及对应 `_tint_layer.png`；`module_energy_unit.png`、`module_radiation_shielding_unit.png` 和 `energy_tablet.png`。另核对 MekaTool 使用 OBJ 模型及 `assets/mekanism/textures/entity/armor/mekatool.png` 图集，不把它误当作普通物品 PNG。
+- ImageGen 输入包含旧雷印改图对象，以及 MekaSuit 胸甲、能量模块两个风格参考。上游贴图只在忽略的 `build/reference/ward-mek-style/` 用于观察，不复制进运行材质或发布包。
+- 旧腕环、实体印章、蓝色能量盾及灰白雷盾原稿/提示词均保留为历史设计；对应旧背景处理脚本不参与当前导出。
 
-当前完整导出流程：在模组目录依次运行 `node tools/prepare_ward_lightning.cjs`、`node tools/export_art.cjs`。
+当前完整导出流程：在模组目录依次运行 `node tools/prepare_ward_mek.cjs`、`node tools/export_art.cjs`。
 - Curios 佩戴外观跟随右前臂，与胸前过载挂坠分开，避免两件饰品重叠。触发动画使用自己的物品图标。
 
 ![逆命雷印实际 16×16 贴图放大](ward-preview.png)

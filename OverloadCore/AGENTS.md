@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.13，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.13.jar`。
+- 0.1.0-alpha.14，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.14.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -14,8 +14,8 @@
 - 用户指定本模组物品说明采用中二、玄幻科技风，围绕魂契、机枢和雷霆，不能退回纯硬性条款。保留关键量值与条件；缺槽、权限、加工故障等操作反馈仍写清可采取的动作。具体机制在 README 解释，不因文案增加实际能力。
 - 新饰品“逆命雷印” `thunder_ward` 使用独立 `overload_ward`（护命）槽，可右键或拖入正常佩戴、自由摘下，不继承过载核心永久绑定。用户明确指定 **100,000 FE／次、无冷却**，不要改回最初建议的百万 FE／30 秒。采用同维度 32 格自有/明确授权供能。
 - 用户要求快捷键切换极限抽能，成功保命后增加短暂次数盾。alpha.10 默认 V、普通模式留设备容量 10%、护盾 3 次/60 tick；均可配置，护盾不是触发冷却。主世界保存玩家模式，客户端只能请求切换自己的模式。
-- 用户要求雷印有能量盾感，拒绝实体印章；又指出 alpha.12 太蓝，需要融合 MC 风格、少量科技感与雷电环绕。alpha.13 使用 `art/source/thunder_ward-lightning-v4.png`：灰白像素盾面、深灰轮廓、少量青色触点及外围浅金白雷弧。不要退回大面积高饱和蓝色盾面或实体印章。
-- 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_lightning.cjs` 仅设置背景 alpha，不更改 RGB。灰色盾面与背景同色，须保护实际深色轮廓包围的盾面，不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
+- 用户要求雷印有能量盾感，拒绝实体印章和大面积高饱和蓝色，并进一步明确参考 Mek 装备风格。alpha.14 使用 `art/source/thunder_ward-mek-v5.png`：MekaSuit 风格的深灰底层、分块银灰护板、绿色能源核心与外围白绿雷弧。不能只换颜色而不参考实际装备；参考路径见 art/README。
+- 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_mek.cjs` 仅设置背景 alpha，不更改 RGB。保护实际中性深灰轮廓包围的盾面，绿色雷弧不能被算入盾面跨度；不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
 
 ## 实现入口与数据契约
@@ -95,6 +95,7 @@
 - alpha.11：`classes jar` 通过；确认 JAR 内雷印是 16×16 RGBA，alpha 仅 0/255，模型引用正确且无原稿/GameTest。去背景前后所有 RGB 值一致，已检查 256×256 最近邻预览。仅改外观，不重复服务端逻辑测试；未启动客户端。
 - alpha.12：`classes jar` 和 JAR 资源检查通过。能量盾为 16×16 RGBA，含真实透明背景和 15 级 alpha，保留生成图的半透明效果；已检查实际像素放大预览。仅更换资源，未重复逻辑测试或启动客户端。
 - alpha.13：`classes jar` 与 JAR 资源检查通过。运行贴图为 16×16 RGBA，157 个不透明像素；源图处理前后所有 RGB 不变，抽查灰色盾面保留完整，已查看实际像素放大预览及两侧雷弧。只改美术资源，不重复逻辑测试，未运行客户端。
+- alpha.14：已查看实际 MekaSuit/模块 PNG 与 MekaTool 图集；`classes jar` 和打包检查通过。新图为 16×16 RGBA、120 个不透明像素，源图处理前后 RGB 一致，盾面护板与核心保留完整；已查看实际像素预览。上游参考、原稿及测试未打包，未启动客户端或重复逻辑测试。
 - 运行命令：`./gradlew.bat build runGameTestServer`；可选依赖缺失检查：`./gradlew.bat -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer`。
 - **没有运行游戏客户端。** 挂坠实体位置、声音、界面和物品运输客户端插值需用户游戏内验收。实际服务端物流已验证；不要写成视觉验证通过。
 - 原机 GUI 仍可能显示额定发电/工作参数；当前测试验证实际资源变化，不宣称已改完所有原机面板。扩展兼容前核对相应设备的真实耗能/产电入口。
