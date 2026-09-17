@@ -7,6 +7,7 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 /** Event-invalidated leases cover the whole volume, including floating induction components. */
 public final class FactoryStructure {
     private static final Map<Level,Map<BlockPos,Controller>> OWNERS=new WeakHashMap<>();
+    private static final Map<Level,Set<Controller>> CONTROLLERS=new WeakHashMap<>();
     public final Controller owner;
     public final List<TileEntityInductionCell> cells=new ArrayList<>();
     public final List<TileEntityInductionProvider> providers=new ArrayList<>();
@@ -32,11 +33,18 @@ public final class FactoryStructure {
         FactoryMenu.open(event.getEntity(),c,event.getPos());
     }
     public static void changed(Level level,BlockPos pos){if(level==null||level.isClientSide)return;var map=OWNERS.get(level);if(map!=null){var c=map.get(pos);if(c!=null)c.structure.invalidate();}}
-    public static void unload(LevelEvent.Unload event){OWNERS.remove(event.getLevel());}
+    public static Set<Controller> controllersInChunk(Level level,net.minecraft.world.level.ChunkPos chunk){
+        var result=new HashSet<Controller>();var known=CONTROLLERS.get(level);if(known!=null)for(var c:known){
+            var a=c.structure.at(0,0,0);var b=c.structure.at(c.sizeX-1,c.sizeY-1,c.sizeZ-1);
+            if((Math.min(a.getX(),b.getX())>>4)<=chunk.x&&(Math.max(a.getX(),b.getX())>>4)>=chunk.x
+                  &&(Math.min(a.getZ(),b.getZ())>>4)<=chunk.z&&(Math.max(a.getZ(),b.getZ())>>4)>=chunk.z)result.add(c);
+        }return result;
+    }
+    public static void unload(LevelEvent.Unload event){OWNERS.remove(event.getLevel());CONTROLLERS.remove(event.getLevel());}
     public static void chunkUnload(net.neoforged.neoforge.event.level.ChunkEvent.Unload e){var map=OWNERS.get(e.getLevel());if(map!=null){var affected=new HashSet<Controller>();for(var entry:map.entrySet())if(new net.minecraft.world.level.ChunkPos(entry.getKey()).equals(e.getChunk().getPos()))affected.add(entry.getValue());affected.forEach(c->c.structure.invalidate());}}
     public void invalidate(){boolean was=formed;dirty=true;formed=false;if(was)notifyPorts();}
     private void notifyPorts(){var level=owner.getLevel();if(level==null||level.isClientSide)return;for(var p:List.copyOf(ports))if(!p.isRemoved()&&level.hasChunkAt(p.getBlockPos())){level.invalidateCapabilities(p.getBlockPos());level.updateNeighborsAt(p.getBlockPos(),p.getBlockState().getBlock());}}
-    public void detach(){var map=OWNERS.get(owner.getLevel());if(map!=null)for(var pos:claimed)map.remove(pos,owner);claimed.clear();invalidate();}
+    public void detach(){var map=OWNERS.get(owner.getLevel());if(map!=null)for(var pos:claimed)map.remove(pos,owner);var known=CONTROLLERS.get(owner.getLevel());if(known!=null)known.remove(owner);claimed.clear();invalidate();}
     public BlockPos at(int x,int y,int z){return owner.getBlockPos().relative(owner.getDirection().getClockWise(),x-1).above(y-1).relative(owner.getDirection().getOpposite(),z);}
     public boolean contains(BlockPos p){var a=at(0,0,0);var b=at(owner.sizeX-1,owner.sizeY-1,owner.sizeZ-1);return p.getX()>=Math.min(a.getX(),b.getX())&&p.getX()<=Math.max(a.getX(),b.getX())&&p.getY()>=a.getY()&&p.getY()<=b.getY()&&p.getZ()>=Math.min(a.getZ(),b.getZ())&&p.getZ()<=Math.max(a.getZ(),b.getZ());}
     public boolean valid(){if(owner.getLevel()==null||owner.getLevel().isClientSide||owner.isRemoved())return false;if(checking)return false;
@@ -47,6 +55,7 @@ public final class FactoryStructure {
         if(checking||owner.getLevel()==null||owner.getLevel().isClientSide)return false;
         checking=true;formed=false;dirty=false;cells.clear();providers.clear();ports.clear();parallel=inputSlots=outputSlots=0;inputCapacity=outputCapacity=transfer=0;
         var level=owner.getLevel();var map=OWNERS.computeIfAbsent(level,l->new HashMap<>());
+        CONTROLLERS.computeIfAbsent(level,l->new HashSet<>()).add(owner);
         for(var p:claimed)map.remove(p,owner);claimed.clear();
         int tier=owner.grade().ordinal(),inputs=0,outputs=0,frames=0;
         try {

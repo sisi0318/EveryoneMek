@@ -1,3 +1,6 @@
 {
-  "parent": "mekanism:block/sps_port_output"
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "mekfactory:block/port_output"
+  }
 }

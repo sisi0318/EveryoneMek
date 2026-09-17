@@ -1,0 +1,48 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "front": "mekfactory:block/controller_front_active",
+    "shell": "mekfactory:block/formed_panel",
+    "particle": "mekfactory:block/formed_panel"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#shell",
+          "cullface": "north"
+        },
+        "east": {
+          "texture": "#front",
+          "cullface": "east"
+        },
+        "south": {
+          "texture": "#shell",
+          "cullface": "south"
+        },
+        "west": {
+          "texture": "#shell",
+          "cullface": "west"
+        },
+        "up": {
+          "texture": "#shell",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#shell",
+          "cullface": "down"
+        }
+      }
+    }
+  ]
+}

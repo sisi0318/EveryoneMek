@@ -8,8 +8,10 @@ public final class MekFactory {
     public MekFactory(IEventBus bus, ModContainer container) {
         container.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, FactoryConfig.SPEC);
         Content.register(bus); bus.addListener(Ports::register);
+        bus.addListener(FactoryAppearance::register);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryStructure::unload);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryStructure::chunkUnload);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryStructure::interact);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FactoryAppearance::chunkSent);
     }
 }

@@ -24,6 +24,7 @@ public final class Controller extends TileEntityMekanism {
     public long powerUsed,clientEnergy,clientCapacity;public String status="structure";
     public boolean enabled=true,autoEject=true,rotaryReverse,preview;
     public final int[] portInputs=new int[6],portOutputs=new int[6];
+    public FactoryAppearance.Snapshot publishedAppearance;
     public Controller(BlockPos pos,BlockState state){super(Content.CONTROLLERS.get(((ControllerBlock)state.getBlock()).grade),pos,state);}
     public Grade grade(){return ((ControllerBlock)getBlockState().getBlock()).grade;}
     public FactoryEnergy energy(){return energy;}
@@ -36,8 +37,8 @@ public final class Controller extends TileEntityMekanism {
     @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();
         if(!structure.formed&&level.getGameTime()%20==0)structure.invalidate();
         if(structure.valid())processing.tick(this);else{running=0;powerUsed=0;status=structure.error;}
-        Ports.eject(this);if(level.getGameTime()%5==0)PortConfiguration.refresh(this);setActive(running>0);return changed;}
-    @Override public void setRemoved(){structure.detach();super.setRemoved();}
+        Ports.eject(this);if(level.getGameTime()%5==0)PortConfiguration.refresh(this);setActive(running>0);FactoryAppearance.sync(this);return changed;}
+    @Override public void setRemoved(){FactoryAppearance.clear(this);structure.detach();super.setRemoved();}
     public boolean resize(int axis,int delta){if(!processing.jobs.isEmpty())return false;int n=(axis==0?sizeX:axis==1?sizeY:sizeZ)+delta;if(n<3||n>grade().size())return false;structure.detach();if(axis==0)sizeX=n;else if(axis==1)sizeY=n;else sizeZ=n;markForSave();return true;}
     private CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();t.putInt("x",sizeX);t.putInt("y",sizeY);t.putInt("z",sizeZ);t.putInt("parallel",parallelLimit);t.putBoolean("enabled",enabled);t.putBoolean("auto_eject",autoEject);t.putBoolean("rotary",rotaryReverse);t.put("inputs",inputs.save(r));t.put("outputs",outputs.save(r));t.put("jobs",processing.save(r));return t;}
     private void read(CompoundTag t,HolderLookup.Provider r){sizeX=Math.clamp(t.getInt("x"),3,11);sizeY=Math.clamp(t.getInt("y"),3,11);sizeZ=Math.clamp(t.getInt("z"),3,11);if(!t.contains("x"))sizeX=sizeY=sizeZ=3;parallelLimit=t.contains("parallel")?Math.clamp(t.getInt("parallel"),1,512):512;enabled=!t.contains("enabled")||t.getBoolean("enabled");autoEject=!t.contains("auto_eject")||t.getBoolean("auto_eject");rotaryReverse=t.getBoolean("rotary");inputs.load(t.getCompound("inputs"),r);outputs.load(t.getCompound("outputs"),r);processing.load(t.getList("jobs",Tag.TAG_COMPOUND),r);structure.invalidate();}

@@ -1,9 +1,36 @@
-"""Runtime JSON only. Uses Mekanism's installed textures by reference, without copying them."""
+"""Runtime JSON for original factory artwork and server-synchronized assembled skins."""
 import json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]/'src/main/resources'
 def write(p,v):
  t=ROOT/p;t.parent.mkdir(parents=True,exist_ok=True);t.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+def cube(texture):
+ return {'parent':'minecraft:block/cube_all','textures':{'all':'mekfactory:block/'+texture}}
+
+def window_model(texture):
+ # Opaque frame rails leave a genuinely clear window; no fake transparent/checkerboard bitmap.
+ elements=[]
+ for axis in [1,0,2]:
+  other=[i for i in range(3) if i!=axis]
+  for a in [0,15]:
+   for b in [0,15]:
+    start=[0,0,0];end=[16,16,16]
+    if axis!=1:start[axis]=1;end[axis]=15
+    start[other[0]]=a;end[other[0]]=a+1;start[other[1]]=b;end[other[1]]=b+1
+    elements.append({'from':start,'to':end,'faces':{side:{'texture':'#all'} for side in ['north','south','east','west','up','down']}})
+ return {'parent':'minecraft:block/block','render_type':'minecraft:cutout','textures':{'all':'mekfactory:block/'+texture,'particle':'mekfactory:block/'+texture},'elements':elements}
+
+for name in ['formed_panel','formed_port_input','formed_port_output','formed_cell','formed_provider']:
+ write(Path(f'assets/mekfactory/models/block/{name}.json'),cube(name))
+write(Path('assets/mekfactory/models/block/formed_glass.json'),window_model('formed_panel'))
+for facing in ['north','east','south','west']:
+ for active in [False,True]:
+  suffix='_active' if active else ''
+  faces={side:{'texture':'#front' if side==facing else '#shell','cullface':side} for side in ['north','east','south','west','up','down']}
+  write(Path(f'assets/mekfactory/models/block/formed_controller_{facing}{suffix}.json'),{
+   'parent':'minecraft:block/block','textures':{'front':'mekfactory:block/controller_front'+suffix,'shell':'mekfactory:block/formed_panel','particle':'mekfactory:block/formed_panel'},
+   'elements':[{'from':[0,0,0],'to':[16,16,16],'faces':faces}]})
 grades=['basic','advanced','elite','ultimate'];zhgrades=['初级','高级','精英','终极']
 write(Path('pack.mcmeta'),{'pack':{'pack_format':34,'description':'Mek Factory'}})
 write(Path('mekfactory.mixins.json'),{'required':True,'package':'dev.everyonemek.factory.mixin','compatibilityLevel':'JAVA_21','mixins':['StructureChangeMixin'],'injectors':{'defaultRequire':1}})
@@ -19,19 +46,19 @@ for index,g in enumerate(grades):
    en['container.mekfactory.'+name]=en['block.mekfactory.'+name]
    for active in [False,True]:
     suffix='_active' if active else ''
-    tex='mekanism:block/enrichment_chamber/front'+('_active' if active else '')
-    write(Path(f'assets/mekfactory/models/block/{name}{suffix}.json'),{'parent':'minecraft:block/orientable','textures':{'front':tex,'side':'mekanism:block/steel_casing','top':'mekanism:block/steel_casing'}})
+    tex='mekfactory:block/controller_front'+suffix
+    write(Path(f'assets/mekfactory/models/block/{name}{suffix}.json'),{'parent':'minecraft:block/orientable','textures':{'front':tex,'side':'mekfactory:block/controller_side','top':'mekfactory:block/controller_top'}})
    variants={f'active={str(a).lower()},facing={d}':{'model':f'mekfactory:block/{name}'+('_active' if a else ''),'y':rot} for a in [False,True] for d,rot in [('north',0),('east',90),('south',180),('west',270)]}
   else:
-   write(Path(f'assets/mekfactory/models/block/{name}.json'),{'parent':'mekanism:block/steel_casing' if kind=='frame' else 'mekanism:block/sps_port'})
+   write(Path(f'assets/mekfactory/models/block/{name}.json'),cube('frame' if kind=='frame' else 'port_input'))
    variants={'':{'model':f'mekfactory:block/{name}'}}
    if kind=='port':
-    write(Path(f'assets/mekfactory/models/block/{name}_output.json'),{'parent':'mekanism:block/sps_port_output'})
+    write(Path(f'assets/mekfactory/models/block/{name}_output.json'),cube('port_output'))
     variants={'output=false':{'model':f'mekfactory:block/{name}'},'output=true':{'model':f'mekfactory:block/{name}_output'}}
   write(Path(f'assets/mekfactory/blockstates/{name}.json'),{'variants':variants})
-for name,tex,z,e in [('casing','steel_casing','工厂外壳','Factory Casing'),('glass','structural_glass','工厂结构玻璃','Factory Structural Glass')]:
+for name,tex,z,e in [('casing','controller_side','工厂外壳','Factory Casing'),('glass','frame','工厂结构玻璃','Factory Structural Glass')]:
  blocks.append(name);zh['block.mekfactory.'+name]=z;en['block.mekfactory.'+name]=e
- write(Path(f'assets/mekfactory/models/block/{name}.json'),{'parent':'minecraft:block/cube_all','render_type':'minecraft:cutout','textures':{'all':'mekanism:block/'+tex}})
+ write(Path(f'assets/mekfactory/models/block/{name}.json'),window_model(tex) if name=='glass' else cube(tex))
  write(Path(f'assets/mekfactory/blockstates/{name}.json'),{'variants':{'':{'model':f'mekfactory:block/{name}'}}})
 for name in blocks:
  write(Path(f'assets/mekfactory/models/item/{name}.json'),{'parent':f'mekfactory:block/{name}'})

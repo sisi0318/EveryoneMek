@@ -49,6 +49,24 @@ public final class FactoryTests {
     }catch(ReflectiveOperationException e){throw new IllegalStateException("GameTest username cache fixture",e);}}
     static void close(ServerPlayer p){try{p.closeContainer();p.serverLevel().removePlayerImmediately(p,Entity.RemovalReason.DISCARDED);p.connection.getConnection().channel().close();}finally{username(p,false);}}
 
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void appearanceFollowsStructureWithoutReplacingInductionOrCopyingEnergy(GameTestHelper h){
+        var c=formed(h,Grade.BASIC,3);var cell=c.structure.cells.getFirst();var provider=c.structure.providers.getFirst();
+        cell.getEnergyContainer().setEnergy(123456);FactoryAppearance.sync(c);
+        var original=c.publishedAppearance;
+        check(original.formed()&&original.contains(cell.getBlockPos())&&original.contains(provider.getBlockPos()),"Appearance did not include the real induction blocks");
+        c.setActive(true);check(c.structure.formed,"Active lamp invalidated formed appearance");FactoryAppearance.sync(c);
+        check(c.publishedAppearance.equals(original),"Lamp-only change sent a false structure transition");
+        var bytes=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        try{FactoryAppearance.Snapshot.CODEC.encode(bytes,original);check(FactoryAppearance.Snapshot.CODEC.decode(bytes).equals(original),"Appearance payload did not round-trip");}finally{bytes.release();}
+        check(FactoryStructure.controllersInChunk(h.getLevel(),new net.minecraft.world.level.ChunkPos(provider.getBlockPos())).contains(c),"Joining chunk cannot discover appearance");
+        var frame=c.structure.at(0,0,0);h.getLevel().setBlockAndUpdate(frame,Blocks.AIR.defaultBlockState());FactoryAppearance.sync(c);
+        check(!c.publishedAppearance.formed(),"Broken structure kept assembled appearance");
+        h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());check(c.structure.valid(),"Repair did not form");FactoryAppearance.sync(c);
+        check(c.publishedAppearance.formed()&&h.getLevel().getBlockEntity(cell.getBlockPos())==cell&&h.getLevel().getBlockEntity(provider.getBlockPos())==provider&&cell.getEnergyContainer().getEnergy()==123456,"Visual transition replaced or modified original energy storage");
+        h.getLevel().setBlockAndUpdate(c.getBlockPos(),Blocks.AIR.defaultBlockState());check(c.publishedAppearance==null&&cell.getEnergyContainer().getEnergy()==123456,"Removing controller kept a published skin or lost energy");h.succeed();
+    }
+
     @GameTest(template="empty",timeoutTicks=280)
     public static void nativeCrusherParallelAndReloadKeepExactEnergyAndOutputs(GameTestHelper h){
         var c=formed(h,Grade.BASIC,4);var cell=c.structure.cells.getFirst();long start=10000000;cell.getEnergyContainer().setEnergy(start);
