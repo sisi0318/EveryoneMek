@@ -17,8 +17,9 @@
 
 ## 逆命雷印
 
-- 原创图稿通过内置 ImageGen 生成，原稿为 [source/thunder_ward.png](source/thunder_ward.png)，完整提示词见 [thunder-ward-prompt.txt](thunder-ward-prompt.txt)。
-- 银灰科技腕环、青色电路与紫色触点；源文件含真正透明通道。沿用 `tools/export_art.cjs` 透明外沿裁切与最近邻缩放，输出 16×16 的 `textures/item/thunder_ward.png`。
+- alpha.11 按用户要求改为方形科技印章：银灰金属边、短柄和青色雷纹。由内置 ImageGen 生成，原始输出为 [source/thunder_ward-seal-v2-raw.png](source/thunder_ward-seal-v2-raw.png)，完整提示词见 [thunder-ward-seal-prompt.txt](thunder-ward-seal-prompt.txt)。
+- 图像工具将透明背景误绘为棋盘格。经用户明确允许，`tools/prepare_ward_seal.cjs` 仅去除外沿连通的棋盘背景，不改变任何 RGB 值；透明原稿为 [source/thunder_ward-seal-v2.png](source/thunder_ward-seal-v2.png)。再由 `tools/export_art.cjs` 最近邻缩放为 16×16 的 `textures/item/thunder_ward.png`。详细记录见 [thunder-ward-seal-notes.md](thunder-ward-seal-notes.md)。
+- 旧腕环原稿 `source/thunder_ward.png` 和 `thunder-ward-prompt.txt` 保留为历史设计，不再参与当前导出。
 - Curios 佩戴外观跟随右前臂，与胸前过载挂坠分开，避免两件饰品重叠。触发动画使用自己的物品图标。
 
 ![逆命雷印实际 16×16 贴图放大](ward-preview.png)

@@ -11,7 +11,7 @@ const sharp = require(require.resolve('sharp', {paths: [path.join(root, 'art'), 
   if (meta.width !== 16 || meta.height !== 16 || !meta.hasAlpha) throw new Error('Invalid runtime sprite');
   await sharp(target).resize(256, 256, {kernel: 'nearest'}).png().toFile(path.join(root, 'art/pendant-preview.png'));
   const ward = path.join(out, 'thunder_ward.png');
-  const wardSource = path.join(root, 'art/source/thunder_ward.png');
+  const wardSource = path.join(root, 'art/source/thunder_ward-seal-v2.png');
   await sharp(wardSource).trim().resize(16, 16, {kernel: 'nearest', fit: 'contain', background: {r: 0, g: 0, b: 0, alpha: 0}}).png().toFile(ward);
   const wardMeta = await sharp(ward).metadata();
   if (wardMeta.width !== 16 || wardMeta.height !== 16 || !wardMeta.hasAlpha) throw new Error('Invalid ward sprite');
