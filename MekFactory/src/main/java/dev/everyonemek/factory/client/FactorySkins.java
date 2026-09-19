@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
 /** Render-worker reads use immutable snapshots; updates and rebuild requests run on the client thread. */
@@ -34,7 +35,10 @@ public final class FactorySkins {
             var be = level.getBlockEntity(pos);
             if (be != null) level.getModelDataManager().requestRefresh(be);
             var state = level.getBlockState(pos);
-            level.setBlocksDirty(pos, state, state);
+            // setBlocksDirty compares BlockStates and skips an appearance-only change.
+            // On ClientLevel this calls LevelRenderer.blockChanged and schedules an urgent
+            // local section rebuild even when the state object itself stays identical.
+            level.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS | Block.UPDATE_IMMEDIATE);
         }
     }
 

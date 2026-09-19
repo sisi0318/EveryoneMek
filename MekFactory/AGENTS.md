@@ -4,7 +4,7 @@
 
 ## 基线与用户偏好
 
-- 0.1.0-alpha.4，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.4.jar`。
+- 0.1.0-alpha.5，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.5.jar`。
 - MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
 - 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
 - 默认一台原机确定加工类型、框架提供并行。`machinesLimitParallel=true` 额外按原机数量限并行；参考 GTNH 不等于强行改掉框架方案。
@@ -13,6 +13,7 @@
 - 用户随后要求简化到 3×3：alpha.2 新建结构固定默认 3×3×3，界面移除尺寸修改；旧尺寸从存档原样读取，不能自动缩容或清空资源。
 - alpha.3 用户要求左侧端口配置与真实端口联动，外壳各位置可替换，修复配置器和容器标题，统一深色工业材质；“只放普通机器”要求已被用户撤回，原工厂变体仍支持。
 - alpha.4 用户明确要求原创材质与成型后换肤，不再沿用借用原 Mek 机壳的外观。原稿、提示词、导出流程在 art/。
+- alpha.5 用户否定深色重型机壳，改为参考原 Mek 感应外壳的浅白材质、细灰接缝、小型功能接口。此为本模组外观例外，不能又套回通用深灰框架。
 
 ## 实现入口
 
@@ -45,7 +46,8 @@
 - `tools/generate_resources.py` 维护 JSON，材质使用原创 assets/mekfactory/textures/block。主控掉落复制 factory_data、mekanism:items、upgrades、owner/security/redstone；不能拼成 mekanism:item，也不能复制聚合能量。
 - Mek getDisplayName 使用 container.<modid>.<blockid>，生成器须给四级主控同时生成 block/container 键。图稿和导出映射见 art/README.md；不要直接改生成 JSON 或用代码重绘位图。
 - `FactoryAppearance` 的 Snapshot 只同步维度、主控、边界和成型状态，不保存入 NBT。Controller 每次服务端 tick 在校验后发布变化，setRemoved 清除；ChunkWatchEvent.Sent 补发，不能用 Watch 在区块数据之前发包。发现相关工厂按已知 Controller 集合筛选，不能每次发送区块都遍历整维度全部方块归属。
-- `FactorySkins` 客户端以已加载位置缓存成型范围，接包后 requestRefresh(BlockEntity) 与 setBlocksDirty；区块卸载移除对应位置，世界卸载清空。相同 Snapshot 重进新加载区块仍需填充位置，不能简单去重后 return。
+- `FactorySkins` 客户端以已加载位置缓存成型范围，接包后 requestRefresh(BlockEntity)，然后 ClientLevel.sendBlockUpdated(pos,state,state,UPDATE_CLIENTS|UPDATE_IMMEDIATE)；区块卸载移除对应位置，世界卸载清空。相同 Snapshot 重进新加载区块仍需填充位置，不能简单去重后 return。
+- 已确认 1.21.1 的 ClientLevel.setBlocksDirty 调用 LevelRenderer.setBlockDirty(pos,old,new)，后者通过 ModelManager.requiresRender 比较 BlockState；old==new 时跳过重绘，导致必须手动敲旁边方块。sendBlockUpdated 则直达 LevelRenderer.blockChanged→setBlockDirty(pos,boolean)，不经过状态相等过滤。不能再用 state/state 的 setBlocksDirty 刷新仅模型数据的变化，也不需要伪造方块状态或整世界 allChanged。
 - `FactoryModels` 通过 ModelEvent.RegisterAdditional/ModifyBakingResult 包装本模组状态和原 Cell/Provider 的世界模型；在工作线程只读取事件模型表，不访问尚未就绪的 ModelManager。FactorySkinModel.getModelData 选择成型模型，物品渲染仍委托原模型，普通感应矩阵不换肤。
 - 服务端注册只引用 FactoryAppearance 的空 clientReceiver，客户端 setup 赋实际接收器；渲染类只在 Dist.CLIENT 事件加载。不得通过替换原感应方块为自定义外壳来实现换肤。
 - StructureChangeMixin 忽略仅 Controller active 指示灯变化；朝向、OUTPUT 与真实方块变化仍使结构失效，避免工作灯每次切换都打断成型外观。
@@ -59,4 +61,5 @@
 - GameTestServer 无 GameProfileCache；测试为唯一临时 UUID 填充 NeoForge UsernameCache 并在 finally 清理，通过测试专用反射访问 protected 方法。不要把该夹具修复放到生产代码。
 - 未运行客户端。512 工位结构校验不是大型整合包压力测试。JEI/HUD/模型视觉由用户验收。
 - 共 13 项服务端测试；外观测试验证状态/数据同步、灯光切换不失效、网络编解码、拆修恢复和原储能身份，但不代替客户端模型渲染验收。资源检查须包含 PNG 16×16、成型模型引用、玻璃框架几何不重叠与 JAR 排除源图。
+- alpha.5 是客户端与材质修复，执行 build、资源检查、当前 Minecraft 与编译产物的重绘调用核对；不以再跑服务端 GameTest 冒充修复客户端重绘的验证。
 - 使用自身 Wrapper/.gradle-home，可临时使用已有 GRADLE_RO_DEP_CACHE；缓存、参考源码和游戏世界不提交。CI/发布入口已注册 MekFactory。
