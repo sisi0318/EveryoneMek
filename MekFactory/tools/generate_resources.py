@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]/'src/main/resources'
 def write(p,v):
- t=ROOT/p;t.parent.mkdir(parents=True,exist_ok=True);t.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+ t=ROOT/p;t.parent.mkdir(parents=True,exist_ok=True);t.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 
 def cube(texture):
  return {'parent':'minecraft:block/cube_all','textures':{'all':'mekfactory:block/'+texture}}
@@ -87,6 +87,12 @@ pairs={
  'fluids':('流体','Fluids'),'chemicals':('化学品','Chemicals'),
  'tank_fluid_amount':('%s / %s mB','%s / %s mB'),'tank_chemical_amount':('%s / %s 单位','%s / %s units'),
  'current_recipe':('配方：%s','Recipe: %s'),'no_recipe':('空闲','Idle'),'recipe_progress':('进度：%s','Progress: %s'),
+ 'machine_lanes':('%s 台 × %s 线 = %s 并行','%s machines × %s lanes = %s parallel'),
+ 'frame_limit':('框架上限：%s','Frame limit: %s'),'available_parallel':('可用并行：%s','Available parallel: %s'),
+ 'parallel_label':('工作 / 可用','Working / Available'),'power_label':('当前耗能','Power usage'),
+ 'limit_step':('点击调整 1，Shift 调整 16','Click to adjust by 1; Shift by 16'),
+ 'batch_size':('批量 %s','Batch %s'),'job_page':('任务 %s / %s','Job %s / %s'),
+ 'tank_number':('储罐 %s','Tank %s'),
  'batch':('批量 %s · 任务 %s / %s','Batch %s · Job %s / %s'),'power_limit':('供能上限：%s FE/t','Power limit: %s FE/t'),
  'settings':('结构设置','Structure'),'resources':('资源缓存','Resources'),'empty':('空','Empty'),
  'port_config':('端口配置','Port Configuration'),

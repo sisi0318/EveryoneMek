@@ -12,6 +12,7 @@ import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.*;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 public final class Controller extends TileEntityMekanism {
@@ -33,7 +34,9 @@ public final class Controller extends TileEntityMekanism {
     public ResourceBank outputBank(){return warehouseBank(true);}
     @Override protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener){var b=EnergyContainerHelper.forSide(facingSupplier);b.addContainer(energy=new FactoryEnergy(this));return b.build();}
     @Override protected IInventorySlotHolder getInitialInventory(IContentsListener listener){var b=InventorySlotHelper.forSide(facingSupplier);
-        template=BasicInventorySlot.at((s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),(s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),s->Profiles.get(s)!=null,listener,18,30);
+        template=BasicInventorySlot.at((s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),
+              (s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()||template!=null&&ItemStack.isSameItemSameComponents(s,template.getStack())),
+              s->Profiles.get(s)!=null,listener,18,30);
         b.addSlot(template);return b.build();}
     @Override public boolean persists(ContainerType<?,?,?> type){return type!=ContainerType.ENERGY&&super.persists(type);}
     public boolean access(Player p){return !isRemoved()&&p.level()==level&&mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(p,level,worldPosition,this);}

@@ -18,7 +18,7 @@ public final class WarehouseScreen extends GuiMekanism<WarehouseMenu> {
         }
         for(int i=0;i<2;i++){final int action=i+1;addRenderableWidget(new MekanismButton(this,i==0?8:144,90,24,14,Component.literal(i==0?"<":">"),(b,x,y)->{
             if(menu.getCarried().isEmpty()){menu.awaitingPage=true;minecraft.gameMode.handleInventoryButtonClick(menu.containerId,action);}return true;
-        }));}
+        }){@Override public void tick(){super.tick();visible=menu.pageCount>1;active=!menu.awaitingPage&&menu.getCarried().isEmpty()&&(action==1?menu.page>0:menu.page+1<menu.pageCount);}});}
         addRenderableWidget(new MekanismButton(this,8,108,76,14,Content.text("fluids"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,false));return true;}));
         addRenderableWidget(new MekanismButton(this,92,108,76,14,Content.text("chemicals"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,true));return true;}));
     }
@@ -26,6 +26,6 @@ public final class WarehouseScreen extends GuiMekanism<WarehouseMenu> {
     @Override public boolean keyPressed(int key,int scan,int modifiers){return menu.awaitingPage&&key!=org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE||super.keyPressed(key,scan,modifiers);}
     @Override protected void drawForegroundText(GuiGraphics g,int x,int y){super.drawForegroundText(g,x,y);renderTitleText(g);renderInventoryText(g);
         g.drawString(font,Content.text("warehouse_slots",menu.visibleSlots),8,18,titleTextColor(),false);
-        g.drawString(font,Content.text("page",menu.page+1,menu.pageCount),64,93,titleTextColor(),false);
+        if(menu.pageCount>1)g.drawString(font,Content.text("page",menu.page+1,menu.pageCount),64,93,titleTextColor(),false);
     }
 }

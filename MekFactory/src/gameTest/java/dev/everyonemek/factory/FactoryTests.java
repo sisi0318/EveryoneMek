@@ -135,10 +135,48 @@ public final class FactoryTests {
         h.getLevel().setBlockAndUpdate(c.getBlockPos(),Blocks.AIR.defaultBlockState());check(c.publishedAppearance==null&&cell.getEnergyContainer().getEnergy()==123456,"Removing controller kept a published skin or lost energy");h.succeed();
     }
 
+    @GameTest(template="empty",timeoutTicks=260)
+    public static void machineCountsAndNativeFactoryLanesBoundRealWork(GameTestHelper h){
+        var c=formed(h,Grade.ULTIMATE,3);var cell=c.structure.cells.getFirst();long start=1_000_000_000;cell.getEnergyContainer().setEnergy(start);
+        c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));check(Profiles.availableParallel(c)==1,"A single machine borrowed the entire frame capacity");
+        c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));check(Profiles.availableParallel(c)==8,"Machine count did not add lanes");
+        int[] nativeLanes={3,5,7,9};int i=0;
+        for(var tier:mekanism.common.tier.FactoryTier.values()){
+            var factory=new ItemStack(MekanismBlocks.getFactory(tier,mekanism.common.content.blocktype.FactoryType.CRUSHING),2);c.template.setStack(factory);
+            check(Profiles.processingLines(factory)==nativeLanes[i]&&Profiles.availableParallel(c)==2*nativeLanes[i++],"Factory tier did not use native processing lines");
+        }
+        c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ELITE,mekanism.common.content.blocktype.FactoryType.CRUSHING),64));
+        check(Profiles.availableParallel(c)==448,"64 elite factories did not supply 448 lanes");
+        c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ULTIMATE,mekanism.common.content.blocktype.FactoryType.CRUSHING),64));
+        check(Profiles.machineParallel(c.template.getStack())==576&&Profiles.availableParallel(c)==512,"Raw lane count or frame cap is incorrect");
+        c.parallelLimit=11;check(Profiles.availableParallel(c)==11,"Player limit was ignored");c.parallelLimit=512;
+        var frame=c.structure.at(0,0,0);h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());
+        check(c.structure.valid()&&Profiles.availableParallel(c)==8,"Lowest frame did not cap native lanes");
+        h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.ULTIMATE).get().defaultBlockState());check(c.structure.valid(),"Restored frame did not form");
+        var player=player(h,c.getBlockPos().north());
+        try{FactoryMenu.open(player,c,c.getBlockPos());var menu=(FactoryMenu)player.containerMenu;boolean mode=c.rotaryReverse;
+            check(!menu.clickMenuButton(player,22)&&c.rotaryReverse==mode,"Non-rotary factory accepted a rotary mode action");
+            c.template.setStack(new ItemStack(MekanismBlocks.ROTARY_CONDENSENTRATOR));check(menu.clickMenuButton(player,22)&&c.rotaryReverse!=mode,"Rotary mode stopped working");
+        }finally{close(player);}
+        c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ADVANCED,mekanism.common.content.blocktype.FactoryType.CRUSHING),2));
+        port(c,false).storage().insert(0,new ItemStack(Items.IRON_INGOT,20),false);
+        long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
+        h.startSequence().thenIdle(30).thenExecute(()->{
+            check(c.parallel==10&&c.running==10&&c.processing.reserved()==10,"Two advanced factories did not run exactly ten lanes");
+            check(c.powerUsed==usage*10&&c.processing.jobs.getFirst().ticks==200,"Factory tier multiplied speed or discounted energy");
+            check(count(c.inputBank(),Items.IRON_INGOT)==10,"Lane allocation consumed the wrong input quantity");c.enabled=false;
+            var extra=c.template.getStack().copyWithCount(1);
+            check(c.template.insertItem(extra,Action.EXECUTE,AutomationType.MANUAL).isEmpty()&&Profiles.availableParallel(c)==15,"Running factory could not accept another identical machine");
+            check(c.template.extractItem(1,Action.SIMULATE,AutomationType.MANUAL).isEmpty(),"In-flight template could be removed");
+            check(!c.template.insertItem(new ItemStack(MekanismBlocks.CRUSHER),Action.EXECUTE,AutomationType.MANUAL).isEmpty(),"Running factory accepted a different machine");
+        }).thenWaitUntil(()->check(count(c.outputBank(),dust)==10,"Ten native lanes did not finish"))
+              .thenExecute(()->{check(cell.getEnergyContainer().getEnergy()==start-10*200*usage,"Factory work did not pay for ten complete native cycles");check(c.processing.jobs.isEmpty(),"Finished work was retained");}).thenSucceed();
+    }
+
     @GameTest(template="empty",timeoutTicks=280)
     public static void nativeCrusherParallelAndReloadKeepExactEnergyAndOutputs(GameTestHelper h){
         var c=formed(h,Grade.BASIC,4);var cell=c.structure.cells.getFirst();long start=10000000;cell.getEnergyContainer().setEnergy(start);
-        c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);
+        c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);
         long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenIdle(60).thenExecute(()->{
             check(c.processing.reserved()==8&&count(c.outputBank(),dust)==0,"Processing did not reserve eight real lanes");
@@ -213,7 +251,7 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=65)
     public static void electrolysisDualOutputsAreAtomicAndRecoverable(GameTestHelper h){
-        var c=formed(h,Grade.BASIC,4);c.structure.cells.getFirst().getEnergyContainer().setEnergy(10000000);c.template.setStack(new ItemStack(MekanismBlocks.ELECTROLYTIC_SEPARATOR));
+        var c=formed(h,Grade.BASIC,4);c.structure.cells.getFirst().getEnergyContainer().setEnergy(10000000);c.template.setStack(new ItemStack(MekanismBlocks.ELECTROLYTIC_SEPARATOR,8));
         var input=port(c,false);var io=new Ports.FluidPort(input,c.structure.outward(input.getBlockPos()));
         var recipe=mekanism.common.recipe.MekanismRecipeType.SEPARATING.findFirst(h.getLevel(),r->r.test(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,1000)));
         check(recipe!=null,"Native water electrolysis recipe missing");int amount=recipe.getInput().getMatchingInstance(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,1000)).getAmount();var result=recipe.getOutput(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,amount));
@@ -281,7 +319,7 @@ public final class FactoryTests {
         h.getLevel().setBlockAndUpdate(input.getBlockPos().relative(side),MekanismBlocks.BASIC_UNIVERSAL_CABLE.get().defaultBlockState());
         var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenWaitUntil(()->check(cell.getEnergyContainer().getEnergy()>0,"Energy cube and real cable did not charge input port"))
-              .thenExecute(()->{c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
+              .thenExecute(()->{c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
               .thenWaitUntil(()->check(count(c.outputBank(),dust)==8,"Cable-powered compact factory did not finish work"))
               .thenExecute(()->{c.enabled=false;config.setEjecting(false);check(c.inputs.items[0].isEmpty(),"Compact work duplicated input");}).thenSucceed();
     }
@@ -298,7 +336,7 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=350)
     public static void realHopperFeedsAndOutputEjectsIntoChest(GameTestHelper h){
-        var c=formed(h,Grade.BASIC,4);c.structure.cells.getFirst().getEnergyContainer().setEnergy(10000000);c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));
+        var c=formed(h,Grade.BASIC,4);c.structure.cells.getFirst().getEnergyContainer().setEnergy(10000000);c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,4));
         var input=port(c,false);var outward=c.structure.outward(input.getBlockPos());var feed=input.getBlockPos().relative(outward);
         h.getLevel().setBlockAndUpdate(feed,Blocks.HOPPER.defaultBlockState().setValue(net.minecraft.world.level.block.HopperBlock.FACING,outward.getOpposite()));
         var hopper=(HopperBlockEntity)h.getLevel().getBlockEntity(feed);hopper.setItem(0,new ItemStack(Items.IRON_INGOT,4));hopper.setChanged();
@@ -312,7 +350,7 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=300)
     public static void smallerOutputPortDrainsPaidBatchInParts(GameTestHelper h){
-        var c=formed(h,Grade.ELITE,6);c.structure.cells.getFirst().getEnergyContainer().setEnergy(1000000000);c.template.setStack(new ItemStack(MekanismBlocks.ENRICHMENT_CHAMBER));
+        var c=formed(h,Grade.ELITE,6);c.structure.cells.getFirst().getEnergyContainer().setEnergy(1000000000);c.template.setStack(new ItemStack(MekanismBlocks.ENRICHMENT_CHAMBER,64));
         var recipe=mekanism.common.recipe.MekanismRecipeType.ENRICHING.findFirst(h.getLevel(),r->r.test(new ItemStack(Items.RAW_IRON_BLOCK,64)));
         check(recipe!=null,"Native raw iron block recipe missing");var result=recipe.getOutput(new ItemStack(Items.RAW_IRON_BLOCK));int total=64*result.getCount();check(total>9*64,"Fixture output does not exceed downgraded capacity");
         c.inputs.insert(0,new ItemStack(Items.RAW_IRON_BLOCK,64),false);final int[] removed={0};
@@ -341,7 +379,7 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=350)
     public static void removingLiveSpeedUpgradesRecalculatesWorkInsteadOfLendingFreeSpeed(GameTestHelper h){
-        var c=formed(h,Grade.BASIC,4);var cell=c.structure.cells.getFirst();long start=100000000;cell.getEnergyContainer().setEnergy(start);c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));
+        var c=formed(h,Grade.BASIC,4);var cell=c.structure.cells.getFirst();long start=100000000;cell.getEnergyContainer().setEnergy(start);c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));
         check(c.getComponent().getUpgradeSlot().insertItem(mekanism.common.util.UpgradeUtils.getStack(Upgrade.SPEED,8),Action.EXECUTE,AutomationType.MANUAL).isEmpty(),"Native upgrade input refused modules");
         final int[] fastTicks={0};final long[] fastUsage={0};long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenWaitUntil(()->check(c.getComponent().getUpgrades(Upgrade.SPEED)==8,"Native upgrade installation did not tick"))

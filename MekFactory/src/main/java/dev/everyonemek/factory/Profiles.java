@@ -85,6 +85,15 @@ public final class Profiles {
         }
     }
     public static Profile get(ItemStack stack){initialize();return stack.getItem() instanceof BlockItem block?PROFILES.get(BuiltInRegistries.BLOCK.getKey(block.getBlock())):null;}
+    /** A factory contributes its native lanes, not a second speed or energy multiplier. */
+    public static int processingLines(ItemStack stack){
+        if(stack.isEmpty()||get(stack)==null)return 0;
+        var tier=Attribute.get(((BlockItem)stack.getItem()).getBlock(),AttributeTier.class);
+        return tier!=null&&tier.tier() instanceof mekanism.common.tier.FactoryTier factory?factory.processes:1;
+    }
+    public static int machineParallel(ItemStack stack){return (int)Math.min(Integer.MAX_VALUE,(long)stack.getCount()*processingLines(stack));}
+    public static int availableParallel(Controller c){return c.structure.formed?Math.max(0,Math.min(machineParallel(c.template.getStack()),Math.min(c.parallelLimit,c.structure.parallel))):0;}
+    public static boolean rotary(ItemStack stack){var profile=get(stack);return profile!=null&&profile.kind()==Kind.ROTARY;}
     public static boolean clean(ItemStack s){return ContainerType.ITEM.getAttachmentContainersIfPresent(s).stream().allMatch(v->v.getStack().isEmpty())&&ContainerType.FLUID.getAttachmentContainersIfPresent(s).stream().allMatch(v->v.getFluid().isEmpty())&&ContainerType.CHEMICAL.getAttachmentContainersIfPresent(s).stream().allMatch(v->v.getStack().isEmpty());}
     public static int upgrades(Controller c,Upgrade upgrade){var nativeUpgrades=c.template.getStack().getOrDefault(MekanismDataComponents.UPGRADES,UpgradeAware.EMPTY);return Math.min(upgrade.getMax(),c.getComponent().getUpgrades(upgrade)+nativeUpgrades.getUpgradeCount(upgrade));}
     private Profiles(){}

@@ -28,8 +28,7 @@ public final class Processing {
         var profile=Profiles.get(c.template.getStack());if(profile==null){c.status="machine";return;}
         if(!Profiles.clean(c.template.getStack())){c.status="template_not_empty";return;}
         if(!profile.condition().test(c)){c.status="conditions";return;}
-        c.parallel=Math.min(c.parallelLimit,c.structure.parallel);
-        if(FactoryConfig.MACHINES_LIMIT_PARALLEL.get())c.parallel=Math.min(c.parallel,c.template.getStack().getCount());
+        c.parallel=Profiles.availableParallel(c);
         int limit=c.parallel;var inputs=c.inputBank();var outputs=c.outputBank();
         for(var j:jobs)j.refresh(c);
         for(var it=jobs.iterator();it.hasNext();){var j=it.next();if(j.progress>=j.ticks&&j.deliver(outputs)){it.remove();c.markForSave();}}

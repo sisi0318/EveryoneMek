@@ -1,26 +1,57 @@
 package dev.everyonemek.factory.client;
+
 import dev.everyonemek.factory.*;
-import java.util.*;
+import java.util.List;
 import java.util.function.Supplier;
 import mekanism.client.gui.IGuiWrapper;
 import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.button.MekanismButton;
 import mekanism.client.gui.element.window.GuiWindow;
+import mekanism.client.gui.tooltip.TooltipUtils;
 import mekanism.common.inventory.container.SelectedWindowData.WindowType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+
 public final class FactoryWindow extends GuiWindow {
-    private final Controller c;private final int menu;
-    public FactoryWindow(IGuiWrapper gui,Controller c,int menu){
-        super(gui,0,18,230,152,WindowType.UNSPECIFIED);this.c=c;this.menu=menu;
-            addChild(new GuiInnerScreen(gui,relativeX+8,relativeY+28,214,18,()->List.of(Content.text("dimensions",c.sizeX,c.sizeY,c.sizeZ))));
-            button(8,51,24,()->Component.literal("-"),20);button(198,51,24,()->Component.literal("+"),21);
-            addChild(new GuiInnerScreen(gui,relativeX+38,relativeY+51,154,18,()->List.of(Content.text("limit",c.parallelLimit))));
-            button(8,74,214,()->Content.text(c.rotaryReverse?"rotary_gas":"rotary_fluid"),22);
-            addChild(new GuiInnerScreen(gui,relativeX+8,relativeY+97,214,18,()->List.of(Content.text("power_hint"))));
-            button(8,123,102,()->Content.text("preview"),2);button(120,123,102,()->Content.text("build"),3);
+    private final Controller tile;
+    private final FactoryMenu menu;
+    public FactoryWindow(IGuiWrapper gui, Controller tile, FactoryMenu menu) {
+        super(gui, 23, 18, 184, 138, WindowType.UNSPECIFIED);
+        this.tile = tile; this.menu = menu;
+        button(10, 46, 20, () -> Component.literal("−"), 20);
+        button(154, 46, 20, () -> Component.literal("+"), 21);
+        addChild(new GuiInnerScreen(gui, relativeX + 34, relativeY + 46, 116, 16, () -> List.of(Content.text("limit", tile.parallelLimit)))
+              .tooltip(() -> List.of(Content.text("limit_step"), Content.text("frame_limit", menu.frameParallel), Content.text("available_parallel", menu.availableParallel))));
+        addChild(new MekanismButton(gui, relativeX + 10, relativeY + 68, 164, 16, Content.text("rotary_fluid"),
+              (b, x, y) -> send(22)) {
+            @Override public void tick() { super.tick(); visible = Profiles.rotary(tile.template.getStack()); active = menu.jobCount == 0; setMessage(Content.text(tile.rotaryReverse ? "rotary_gas" : "rotary_fluid")); }
+        });
+        button(10, 92, 78, () -> Content.text("preview"), 2);
+        button(96, 92, 78, () -> Content.text("build"), 3);
+        addChild(new MekanismButton(gui, relativeX + 10, relativeY + 114, 164, 16, Content.text("legacy_stock"),
+              (b, x, y) -> { gui.addWindow(new LegacyStockWindow(gui, menu)); return true; }) {
+            @Override public void tick() { super.tick(); visible = menu.legacyInput || menu.legacyOutput; }
+        });
     }
-    private void button(int x,int y,int w,Supplier<Component> text,int id){addChild(new MekanismButton(gui(),relativeX+x,relativeY+y,w,16,text.get(),(b,mx,my)->{int action=(id==20||id==21)&&net.minecraft.client.gui.screens.Screen.hasShiftDown()?id+3:id;Minecraft.getInstance().gameMode.handleInventoryButtonClick(menu,action);return true;}){@Override public void tick(){super.tick();setMessage(text.get());}});}
-    @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,Content.text("settings"),5);}
+    private boolean send(int action) { Minecraft.getInstance().gameMode.handleInventoryButtonClick(menu.containerId, action); return true; }
+    private void button(int x, int y, int width, Supplier<Component> label, int id) {
+        addChild(new MekanismButton(gui(), relativeX + x, relativeY + y, width, 16, label.get(),
+              (b, mx, my) -> send((id == 20 || id == 21) && Screen.hasShiftDown() ? id + 3 : id)) {
+            @Override public void tick() { super.tick(); if (id == 20 || id == 21) active = id == 20 ? tile.parallelLimit > 1 : tile.parallelLimit < 512; }
+            @Override public void updateTooltip(int mx, int my) { if (id == 20 || id == 21) setTooltip(TooltipUtils.create(Content.text("limit_step"))); }
+        });
+    }
+    @Override public void renderForeground(GuiGraphics g, int x, int y) {
+        super.renderForeground(g, x, y); drawTitleText(g, Content.text("settings"), 5);
+        drawScaledScrollingString(g, Content.text("dimensions", tile.sizeX, tile.sizeY, tile.sizeZ), relativeX + 10, relativeY + 27, relativeX + 174, relativeY + 40,
+              TextAlignment.LEFT, titleTextColor(), false, 0.9F, getTimeOpened());
+        if (!Profiles.rotary(tile.template.getStack()))
+            drawScaledScrollingString(g, Content.text("available_parallel", menu.availableParallel), relativeX + 10, relativeY + 68, relativeX + 174, relativeY + 84,
+                  TextAlignment.LEFT, titleTextColor(), false, 0.9F, getTimeOpened());
+        if (!menu.legacyInput && !menu.legacyOutput)
+            drawScaledScrollingString(g, Content.text("power_hint"), relativeX + 10, relativeY + 114, relativeX + 174, relativeY + 129,
+                  TextAlignment.LEFT, titleTextColor(), false, 0.8F, getTimeOpened());
+    }
 }

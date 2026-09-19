@@ -1,12 +1,12 @@
 # 并行矩阵工厂设计草案
 
-日期：2026-09-19。状态：已完成 `0.1.0-alpha.6` 可运行原型，后续扩展仍按下文设计推进。
+日期：2026-09-19。状态：已完成 `0.1.0-alpha.7` 可运行原型，后续扩展仍按下文设计推进。
 
 ## 首版落实范围
 
 当前已实现四级主控/框架/物料仓、独立仓库存与共享升级、原感应元件储能和供应器吞吐、主控运行看板、仓口独立 GUI、施工预览与生存扣料搭建。已接入 10 种原机，以及富集、粉碎、熔炼工厂变体，具体列表以 README 为准。
 
-默认一台机器选择加工类型，框架等级提供工位；可配置 `machinesLimitParallel=true` 再按机器数量限流。alpha.2 按用户反馈将新建结构统一简化为 3×3×3，原感应元件在中心，供应器放顶面中央。GUI 每方向显示 9 个物品槽并可翻页，结构预览、搭建与流体/Chemical 视图放在 Mek 式窗口中，移除尺寸增减按钮。已有大结构保持原存档尺寸。
+alpha.7 起按用户确认改为机器数量 × 原生处理线数，再取框架与设置上限；不再使用旧 machinesLimitParallel 开关。alpha.2 按用户反馈将新建结构统一简化为 3×3×3，原感应元件在中心，供应器放顶面中央。GUI 每方向显示 9 个物品槽并可翻页，结构预览、搭建与流体/Chemical 视图放在 Mek 式窗口中，移除尺寸增减按钮。已有大结构保持原存档尺寸。
 
 alpha.3 将外壳位置放开到棱角，端口与感应部件可替换任意外壳位置，至少保留一个框架。左侧增加整面端口设置，配置器、方块 OUTPUT 状态、缓存方向与实际 capability 同步。角端口的所有外侧面共用模式，成组配置导致其他相关面更新是预期行为。用户撤回“只放普通机器”的限制，已支持的原工厂变体继续可用。
 
@@ -68,7 +68,7 @@ alpha.2 移除内部体积限制，由主控与框架的最低等级决定工位
 
 `目标并行 = min(结构并行, 玩家设置, 机器适配器支持额度, 机器投入额度)`
 
-模板模式下机器投入额度不额外限流；开启数量限制配置后，再按实际投入同类机器数量计算这一项。速度升级控制每个工位的加工效率，不能同时在工位数和单工位上重复乘一次速度倍率。
+机器投入额度为数量 × 原生处理线数：普通单机 1，四级原工厂 3/5/7/9。速度升级控制每个工位的加工效率，不能同时在工位数和单工位上重复乘一次速度倍率。
 
 以上为工位数，不等同于所有机器的每 tick 产出。电解分离等原机本身已有单 tick 多操作语义，适配时应保留原单位能耗与速度曲线，并明确显示实际吞吐。
 
@@ -197,7 +197,7 @@ JEI 优先接入原有加工分类和对应催化机器；不为同一配方重�
 ### 处理阵列参考
 
 - 用户提供的 [GTNH 处理阵列词条](https://gtnh.huijiwiki.com/wiki/%E5%A4%84%E7%90%86%E9%98%B5%E5%88%97) 在本次抓取中返回 403，具体实现转查官方历史源码。
-- [GTNH `MTEProcessingArray.java`，修订 `19466f7`](https://github.com/GTNewHorizons/GT5-Unofficial/blob/19466f7202e1dd521196554349c8333f0bcbda43/src/main/java/gregtech/common/tileentities/machines/multi/MTEProcessingArray.java)：根据主机器选择配方表，缓存机器变化，由 ProcessingLogic 统一校验与执行，常规并行受插入机器数量限制。该实现后来已从上游删除，因此引用明确的历史修订。本项目参考其“机器选择加工类型、统一调度”的分工，并保留框架提供工位的默认规则。
+- [GTNH `MTEProcessingArray.java`，修订 `19466f7`](https://github.com/GTNewHorizons/GT5-Unofficial/blob/19466f7202e1dd521196554349c8333f0bcbda43/src/main/java/gregtech/common/tileentities/machines/multi/MTEProcessingArray.java)：根据主机器选择配方表，缓存机器变化，由 ProcessingLogic 统一校验与执行，常规并行受插入机器数量限制。该实现后来已从上游删除，因此引用明确的历史修订。本项目参考其“机器选择加工类型、统一调度”的分工，alpha.7 按用户确认加入数量 × 原生处理线数的限制，框架仍决定最高并行。
 - [Modern Industrialization `MultiblockInventoryComponent`](https://github.com/AztechMC/Modern-Industrialization/blob/1.21.x/src/main/java/aztech/modern_industrialization/machines/components/MultiblockInventoryComponent.java) 和 [CrafterComponent](https://github.com/AztechMC/Modern-Industrialization/blob/1.21.x/src/main/java/aztech/modern_industrialization/machines/components/CrafterComponent.java)：参考多方块库存汇总、库存变化后重试匹配、输出预检和加工调度。未找到同名处理阵列，不把 MI 的普通电力多方块称为该装置。
 
 未复制 MI/GTNH 实现代码或素材，也不将它们作为运行依赖。原料、能量和配方行为按当前 Mek 发布版重新实现并验证。
