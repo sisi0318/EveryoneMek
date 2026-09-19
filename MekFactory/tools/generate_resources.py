@@ -118,6 +118,7 @@ pairs={
  'ready':('结构完整','Structure formed'),'idle':('等待工作','Idle'),'working':('正在加工','Processing'),'materials':('等待配方材料','Waiting for ingredients'),
  'machine':('放入支持的主机器','Insert a supported machine'),'template_not_empty':('请先清空主机器内的物料','Empty the machine inventory and tanks first'),
  'paused':('已停机','Stopped'),'redstone':('等待红石条件','Waiting for redstone'),'draining':('正在完成在制任务','Finishing queued work'),'conditions':('加工条件不满足','Processing conditions not met'),'energy':('能量或供应器吞吐不足','Insufficient energy or provider throughput'),
+ 'secondary':('等待加工所需的化学品','Waiting for process chemicals'),
  'output':('等待产物空间','Waiting for output space'),'output_or_energy':('检查产物空间和供能','Check output space and power'),
  'build_small':('结构至少需要 3 × 3 × 3','Structure must be at least 3 x 3 x 3'),'build_complete':('工厂结构已完成','Factory structure complete'),
  'build_blocked':('无法在 %s 放置，请清理或检查权限','Cannot place at %s; check space and permissions'),'build_missing':('缺少 %s，蓝图需要 %s 个','Missing %s; blueprint requires %s'),

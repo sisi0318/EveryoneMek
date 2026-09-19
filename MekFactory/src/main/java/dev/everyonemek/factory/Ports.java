@@ -60,10 +60,45 @@ public final class Ports {
         public long insertEnergy(int i,long n,Action a){var c=c();return c==null||i!=0||output(port)?n:c.energy().insert(n,a,AutomationType.INTERNAL);}
         public long extractEnergy(int i,long n,Action a){return 0; /* Work is the only output consumer in this version. */}
     }
-    public static void eject(Controller c){if(!c.autoEject||!c.structure.valid()||c.getLevel().getGameTime()%5!=0)return;for(var p:java.util.List.copyOf(c.structure.ports)){if(!output(p))continue;for(var side:Direction.values()){if(!c.structure.isOutward(p.getBlockPos(),side))continue;var next=p.getBlockPos().relative(side);var level=c.getLevel();if(!level.hasChunkAt(next))continue;
-        var items=level.getCapability(Capabilities.ItemHandler.BLOCK,next,side.getOpposite());if(items!=null){var request=TransitRequest.anyItem(new ItemPort(p,side),64);if(!request.isEmpty()){var response=request.eject(p,items,0,t->null);if(!response.isEmpty())response.useAll();}}
-        var fluid=level.getCapability(Capabilities.FluidHandler.BLOCK,next,side.getOpposite());if(fluid!=null){var source=new FluidPort(p,side);for(int i=0;i<Buffers.TANKS;i++){var offer=source.getFluidInTank(i);if(offer.isEmpty())continue;offer.setAmount(Math.min(offer.getAmount(),16000));int n=fluid.fill(offer,IFluidHandler.FluidAction.EXECUTE);if(n>0)source.drain(offer.copyWithAmount(n),IFluidHandler.FluidAction.EXECUTE);}}
-        var chemical=level.getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),next,side.getOpposite());if(chemical!=null){var source=new ChemPort(p,side);for(int i=0;i<Buffers.TANKS;i++){var offer=source.getChemicalInTank(i);if(offer.isEmpty())continue;offer.setAmount(Math.min(offer.getAmount(),64000));long n=offer.getAmount()-chemical.insertChemical(offer,Action.EXECUTE).getAmount();if(n>0)source.extractChemical(i,n,Action.EXECUTE);}}
-    }}}
+    public static void eject(Controller c){
+        if(!c.autoEject||!c.structure.valid())return;
+        for(var p:java.util.List.copyOf(c.structure.ports)){
+            if(!output(p)||!p.storage().hasContents())continue;
+            for(var side:Direction.values()){
+                if(controller(p,side)!=c)continue;
+                var next=p.getBlockPos().relative(side);var level=c.getLevel();if(!level.hasChunkAt(next))continue;
+                var bank=p.storage();
+                if(java.util.Arrays.stream(bank.items).anyMatch(s->!s.isEmpty())){
+                    var target=level.getCapability(Capabilities.ItemHandler.BLOCK,next,side.getOpposite());
+                    if(target!=null){
+                        // Native responses debit their slot map after every success. Reuse the request,
+                        // including Mek transporter routing, instead of rescanning all slots for each type.
+                        var request=TransitRequest.anyItem(new ItemPort(p,side),Integer.MAX_VALUE);
+                        for(int pass=0;pass<bank.itemSlots()&&!request.isEmpty();pass++){
+                            var response=request.eject(p,target,0,t->null);
+                            if(response.isEmpty())break;
+                            response.useAll();
+                        }
+                    }
+                }
+                if(java.util.Arrays.stream(bank.fluids).anyMatch(s->!s.isEmpty())){
+                    var target=level.getCapability(Capabilities.FluidHandler.BLOCK,next,side.getOpposite());
+                    if(target!=null){var source=new FluidPort(p,side);for(int i=0;i<Buffers.TANKS;i++){
+                        var offer=source.getFluidInTank(i);if(offer.isEmpty())continue;
+                        int accepted=target.fill(offer.copy(),IFluidHandler.FluidAction.EXECUTE);
+                        if(accepted>0)source.drain(offer.copyWithAmount(Math.min(accepted,offer.getAmount())),IFluidHandler.FluidAction.EXECUTE);
+                    }}
+                }
+                if(java.util.Arrays.stream(bank.chemicals).anyMatch(s->!s.isEmpty())){
+                    var target=level.getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),next,side.getOpposite());
+                    if(target!=null){var source=new ChemPort(p,side);for(int i=0;i<Buffers.TANKS;i++){
+                        var offer=source.getChemicalInTank(i);if(offer.isEmpty())continue;
+                        long accepted=offer.getAmount()-target.insertChemical(offer.copy(),Action.EXECUTE).getAmount();
+                        if(accepted>0)source.extractChemical(i,accepted,Action.EXECUTE);
+                    }}
+                }
+            }
+        }
+    }
     private Ports(){}
 }

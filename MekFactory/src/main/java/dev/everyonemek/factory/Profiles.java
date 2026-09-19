@@ -15,7 +15,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Block;
 /** Explicit machine profiles allow recipe additions without pretending arbitrary world machines are recipes. */
 public final class Profiles {
-    public enum Kind {ITEM,OXIDIZE,CRYSTAL,INFUSER,WASHER,SEPARATOR,REACTION,ROTARY}
+    public enum Kind {ITEM,OXIDIZE,CRYSTAL,INFUSER,WASHER,SEPARATOR,REACTION,ROTARY,METALLURGIC,PURIFYING}
     public record Settings(int ticks,long energy,int operations){}
     public static Settings settings(Controller c,int baseTicks,long baseEnergy,boolean exponential,boolean fixed){
         int speed=upgrades(c,Upgrade.SPEED),efficiency=upgrades(c,Upgrade.ENERGY);
@@ -31,6 +31,17 @@ public final class Profiles {
                 var r=holder.value();if(r.isIncomplete())continue;RecipePlan found=null;String id=holder.id().toString();
                 switch(kind){
                     case ITEM -> {if(r instanceof ItemStackToItemStackRecipe v)for(int i=0;i<b.itemSlots();i++)if(v.test(b.item(i))){found=new RecipePlan(id).item(i,v.getInput().getMatchingInstance(b.item(i)).getCount()).out(v.getOutput(b.item(i)));break;}}
+                    case METALLURGIC,PURIFYING -> {if(r instanceof ItemStackChemicalToItemStackRecipe v)outer:for(int i=0;i<b.itemSlots();i++)if(v.getItemInput().test(b.item(i)))for(int g=0;g<b.chemicalTanks();g++)if(!b.chemical(g).isRadioactive()&&v.test(b.item(i),b.chemical(g))){
+                        var chemical=v.getChemicalInput().getMatchingInstance(b.chemical(g));
+                        found=new RecipePlan(id).item(i,v.getItemInput().getMatchingInstance(b.item(i)).getCount()).out(v.getOutput(b.item(i),b.chemical(g)));
+                        if(v.perTickUsage()){
+                            found.chemicalWork=new ChemicalWork(chemical,kind==Kind.PURIFYING,kind==Kind.PURIFYING&&MekanismConfig.usage.randomizedConsumption.get());
+                            // Native single infusers use their upgraded duration; infusing factories use the base duration.
+                            found.chemicalWork.durationBased=kind==Kind.METALLURGIC&&processingLines(c.template.getStack())==1;
+                        }
+                        else found.chemical(g,chemical.getAmount());
+                        break outer;
+                    }}
                     case OXIDIZE -> {if(r instanceof ItemStackToChemicalRecipe v)for(int i=0;i<b.itemSlots();i++)if(v.test(b.item(i))){found=new RecipePlan(id).item(i,v.getInput().getMatchingInstance(b.item(i)).getCount()).out(v.getOutput(b.item(i)));break;}}
                     case CRYSTAL -> {if(r instanceof ChemicalCrystallizerRecipe v)for(int i=0;i<b.chemicalTanks();i++)if(v.test(b.chemical(i))){found=new RecipePlan(id).chemical(i,v.getInput().getMatchingInstance(b.chemical(i)).getAmount()).out(v.getOutput(b.chemical(i)));break;}}
                     case INFUSER -> {if(r instanceof ChemicalChemicalToChemicalRecipe v)outer:for(int i=0;i<b.chemicalTanks();i++)for(int j=0;j<b.chemicalTanks();j++)if(v.getLeftInput().test(b.chemical(i))&&v.getRightInput().test(b.chemical(j))&&v.test(b.chemical(i),b.chemical(j))){
@@ -73,6 +84,8 @@ public final class Profiles {
         nativeProfile(MekanismBlocks.ENRICHMENT_CHAMBER.get(),MekanismRecipeType.ENRICHING,Kind.ITEM,200);
         nativeProfile(MekanismBlocks.CRUSHER.get(),MekanismRecipeType.CRUSHING,Kind.ITEM,200);
         nativeProfile(MekanismBlocks.ENERGIZED_SMELTER.get(),MekanismRecipeType.SMELTING,Kind.ITEM,200);
+        nativeProfile(MekanismBlocks.METALLURGIC_INFUSER.get(),MekanismRecipeType.METALLURGIC_INFUSING,Kind.METALLURGIC,200);
+        nativeProfile(MekanismBlocks.PURIFICATION_CHAMBER.get(),MekanismRecipeType.PURIFYING,Kind.PURIFYING,200);
         nativeProfile(MekanismBlocks.CHEMICAL_OXIDIZER.get(),MekanismRecipeType.OXIDIZING,Kind.OXIDIZE,100);
         nativeProfile(MekanismBlocks.CHEMICAL_CRYSTALLIZER.get(),MekanismRecipeType.CRYSTALLIZING,Kind.CRYSTAL,200);
         nativeProfile(MekanismBlocks.CHEMICAL_INFUSER.get(),MekanismRecipeType.CHEMICAL_INFUSING,Kind.INFUSER,1);
@@ -80,8 +93,9 @@ public final class Profiles {
         nativeProfile(MekanismBlocks.ELECTROLYTIC_SEPARATOR.get(),MekanismRecipeType.SEPARATING,Kind.SEPARATOR,1);
         nativeProfile(MekanismBlocks.PRESSURIZED_REACTION_CHAMBER.get(),MekanismRecipeType.REACTION,Kind.REACTION,200);
         nativeProfile(MekanismBlocks.ROTARY_CONDENSENTRATOR.get(),MekanismRecipeType.ROTARY,Kind.ROTARY,1);
-        for(var tier:mekanism.common.tier.FactoryTier.values())for(var type:List.of(mekanism.common.content.blocktype.FactoryType.ENRICHING,mekanism.common.content.blocktype.FactoryType.CRUSHING,mekanism.common.content.blocktype.FactoryType.SMELTING)){
-            var block=MekanismBlocks.getFactory(tier,type).get();var profile=switch(type){case ENRICHING->PROFILES.get(BuiltInRegistries.BLOCK.getKey(MekanismBlocks.ENRICHMENT_CHAMBER.get()));case CRUSHING->PROFILES.get(BuiltInRegistries.BLOCK.getKey(MekanismBlocks.CRUSHER.get()));default->PROFILES.get(BuiltInRegistries.BLOCK.getKey(MekanismBlocks.ENERGIZED_SMELTER.get()));};register(BuiltInRegistries.BLOCK.getKey(block),profile);
+        for(var tier:mekanism.common.tier.FactoryTier.values())for(var type:List.of(mekanism.common.content.blocktype.FactoryType.ENRICHING,mekanism.common.content.blocktype.FactoryType.CRUSHING,mekanism.common.content.blocktype.FactoryType.SMELTING,mekanism.common.content.blocktype.FactoryType.INFUSING,mekanism.common.content.blocktype.FactoryType.PURIFYING)){
+            var base=switch(type){case ENRICHING->MekanismBlocks.ENRICHMENT_CHAMBER;case CRUSHING->MekanismBlocks.CRUSHER;case INFUSING->MekanismBlocks.METALLURGIC_INFUSER;case PURIFYING->MekanismBlocks.PURIFICATION_CHAMBER;default->MekanismBlocks.ENERGIZED_SMELTER;};
+            register(BuiltInRegistries.BLOCK.getKey(MekanismBlocks.getFactory(tier,type).get()),PROFILES.get(BuiltInRegistries.BLOCK.getKey(base.get())));
         }
     }
     public static Profile get(ItemStack stack){initialize();return stack.getItem() instanceof BlockItem block?PROFILES.get(BuiltInRegistries.BLOCK.getKey(block.getBlock())):null;}

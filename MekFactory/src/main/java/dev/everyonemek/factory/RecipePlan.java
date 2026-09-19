@@ -6,6 +6,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 /** Immutable per-operation outputs and exact reservations; no copied world block entities. */
 public final class RecipePlan {
     public final String id;public int ticks=200,baseTicks=200;public long energy,baseEnergy;public int operations=1;public boolean exponential,fixedEnergy;
+    public ChemicalWork chemicalWork;
     public final Map<Integer,Integer> items=new HashMap<>(),fluids=new HashMap<>();public final Map<Integer,Long> chemicals=new HashMap<>();
     public final List<ItemStack> outItems=new ArrayList<>();public final List<FluidStack> outFluids=new ArrayList<>();public final List<ChemicalStack> outChemicals=new ArrayList<>();
     public RecipePlan(String id){this.id=id;}

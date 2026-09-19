@@ -99,6 +99,7 @@
   "mekfactory.draining": "Finishing queued work",
   "mekfactory.conditions": "Processing conditions not met",
   "mekfactory.energy": "Insufficient energy or provider throughput",
+  "mekfactory.secondary": "Waiting for process chemicals",
   "mekfactory.output": "Waiting for output space",
   "mekfactory.output_or_energy": "Check output space and power",
   "mekfactory.build_small": "Structure must be at least 3 x 3 x 3",

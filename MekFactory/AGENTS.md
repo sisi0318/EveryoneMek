@@ -4,7 +4,7 @@
 
 ## 基线与用户偏好
 
-- 0.1.0-alpha.7，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.7.jar`。
+- 0.1.0-alpha.8，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.8.jar`。
 - MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
 - 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
 - alpha.7 用户明确改为机器数量 × 原生处理线数，再取主控/最低框架上限与设置上限的最小值。普通原机 1 线，原工厂通过 AttributeTier/FactoryTier.processes 获取 3/5/7/9；旧 machinesLimitParallel 开关退役，不能让已有 false 配置阻止新规则。
@@ -34,9 +34,15 @@
 - `GroupedInputBank` 把同物品同组件、同流体同组件及同 Chemical 跨仓合并计数，只有输入消耗视图，不接受插入、不存盘。消费从对应原仓依次扣除，剩余量在本次视图中同步。不得只检查单个罐是否够一份配方，否则管道平分 200 为 100+100 会让结晶器停住。
 - `LegacyMigration` 每 5 tick 把旧输入/输出转入相应实际仓，按真实接收量扣减源；超额保留，旧输入余量继续可加工。迁入仓的数据不再保存在主控物品里。旧缓存菜单禁止新插入；不能一复制到多个仓或直接清空旧标签。
 - 放射性 Chemical 首版禁止入库/生成；不可去掉限制却不补辐射生命周期。端口能量仅输入，不对外供电。
-- `Profiles` 显式注册 10 原机和三类原生工厂变体。配方查询使用原 Mek 管理器，调用完整 test/getOutput，保留输入组件。Profiles.processingLines/machineParallel/availableParallel 为 UI 与加工的共同计算入口。原工厂条数只提供并行，不再次乘速度或电费倍率。
+- `Profiles` 显式注册 12 原机和五类原生工厂变体。配方查询使用原 Mek 管理器，调用完整 test/getOutput，保留输入组件。Profiles.processingLines/machineParallel/availableParallel 为 UI 与加工的共同计算入口。原工厂条数只提供并行，不再次乘速度或电费倍率。
+- alpha.8 新增 METALLURGIC/PURIFYING 加工族及四级原工厂变体，保留 perTickUsage。定量 Chemical 在开工时预留；持续消耗在 ChemicalWork 中保存 ingredient、used、pending、耗量策略及 pending 的升级条件，按实际推进付费。缺化学品不扣电，拆分任务复制各自的已用量，不能改成每份只扣一次或在重载时重抽未支付耗量。
+- ChemicalWork 使用原 ChemicalUsageMultiplier.constantUse 与 StatUtils.inversePoisson；随机耗量按批次共享采样。提纯计入速度/CHEMICAL 倍率；原生单机灌注的自定义 per-tick 配方按升级后 ticksRequired 总量，灌注工厂按 BASE_TICKS_REQUIRED 总量，这两条原实现确有区别。
+- SecondaryInputs 用原 CHEMICAL_CONVERSION 与 ItemChemical 输入缓存，把辅料转入其所属输入仓，容量不足不扣料，所有余料留仓。主料匹配优先，避免共享槽误转可充当主料的物品。停机且仍有在制时继续转化，便于完成收尾。
 - `Profiles.register` 只是标准加工族/耗能/条件注册入口，不是额外魔力、热量、概率副产物的完整 API。对原机 tick 的第三方注入不会自动继承，不得宣称所有附属已兼容。
 - `RecipePlan`/`Processing` 预检后预留原料，持久化每批结果和原始工期/能耗，按实际推进扣电。用批次记录，不生成 512 个世界机器 BE。输入/输出变更触发匹配，未匹配时定期重试。
+- alpha.8 的 processingCyclesPerTick 默认为 2（范围 1..8）。Processing.tick 内复用同一物料视图推进多个原生步骤，每一步按原耗电付费；FactoryEnergy 按世界 tick 共用供应器预算，不能因步骤加倍重置预算。running 取步骤峰值而非相加，powerUsed 累计实际电费；旧 progress/ticks NBT 不变。
+- Ports.eject 每 tick 批量输出，每个工作步骤之间也清理产物；物品复用一次 TransitRequest，response.useAll 更新源槽映射，每面最多仓槽数次成功响应，满目标立即停止。保持 Mek transporter 专用路由，不使用普通 insertItem 绕过它。流体/Chemical 提供当前整罐量，按真实接收扣源；空仓不查邻居，区块不加载。
+- Job.fitting 先检查整批，放不下才二分；ResourceBank.store 只快照当前配方会产出的资源类型，仍须全部预检后一起提交。
 - 速度/能量升级实时重算在制的有效工期/能耗；已完成批次不重新收费。单 tick 多操作数与工位数分开，不把 2048 次操作显示成 2048/8 工位。PRC 用自己的配方工期。
 - 已完成批次按现有输出空间分份送出，只扣送出份数，其余持久化。不能要求整个大批次一次塞入缩小后的缓存。批次分裂总数限 512，保存不能截断合法任务。
 - 停机只停止新任务，在制继续收尾；红石控制实际暂停。仍有在制时模板不可取出，但允许手工插入 same item + same components 的机器增加数量；不同机型或不同升级组件仍拒绝。原模板库存/储罐必须空，升级合计限原上限，模板电量只在原件中保留。
@@ -68,8 +74,9 @@
 - GUI 与放置测试用真实 ServerPlayer + 只接收输出的 EmbeddedChannel；FakePlayer.openMenu 为空，不能据此判断 GUI 不工作。
 - GameTestServer 无 GameProfileCache；测试为唯一临时 UUID 填充 NeoForge UsernameCache 并在 finally 清理，通过测试专用反射访问 protected 方法。不要把该夹具修复放到生产代码。
 - 未运行客户端。512 工位结构校验不是大型整合包压力测试。JEI/HUD/模型视觉由用户验收。
-- 共 17 项服务端测试；新增实际右键开独立仓→shift 取料、仓间隔离、真实掉落/放置保留三类资源与模式、旧缓冲部分迁移后恢复、不同仓双 Chemical 原料、同种 Chemical 分仓凑足一份结晶配方，以及缺电时主控进度保持。外观和菜单实际渲染仍由用户验收。
+- 共 21 项服务端测试；新增实际右键开独立仓→shift 取料、仓间隔离、真实掉落/放置保留三类资源与模式、旧缓冲部分迁移后恢复、不同仓双 Chemical 原料、同种 Chemical 分仓凑足一份结晶配方，以及缺电时主控进度保持。外观和菜单实际渲染仍由用户验收。
 - alpha.7 增加机器数量/四级原工厂处理线、设置与最低框架限制、实际 10 线耗电与产物、非回转设备拒绝动作 22 的回归。原八线/多线夹具须提供对应机器数量，不能靠旧规则借用框架空位。
-- alpha.7 改变菜单协议，FactoryAppearance registrar 版本为 3，客户端与服务端需一致。资源检查包含新 menu/PORT_DATA、四档仓 loot 与 item override，以及配方不再消耗低级有库存仓。
+- ThroughputTests 覆盖真实 tick 驱动、多种物品跨可见页出料、既有堆叠补货、第二输出仓经真实 Mek 管道送箱、100,000 mB 水与 500,000 Chemical 输出、双倍工作共享供能预算、辅料转换剩余量及提纯缺氧/重载/续作。原合金配方在本依赖中用铜，不要按旧版铁锭猜测试材料；ChemicalTank 接收侧要明确设 INPUT，默认正面 OUTPUT 不收料。
+- alpha.8 改变状态与升级支持，FactoryAppearance registrar 版本为 4，客户端与服务端需一致。资源检查包含新 menu/PORT_DATA、四档仓 loot 与 item override，以及配方不再消耗低级有库存仓。
 - alpha.5 是客户端与材质修复，执行 build、资源检查、当前 Minecraft 与编译产物的重绘调用核对；不以再跑服务端 GameTest 冒充修复客户端重绘的验证。
 - 使用自身 Wrapper/.gradle-home，可临时使用已有 GRADLE_RO_DEP_CACHE；缓存、参考源码和游戏世界不提交。CI/发布入口已注册 MekFactory。

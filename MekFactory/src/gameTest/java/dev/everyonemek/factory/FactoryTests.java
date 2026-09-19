@@ -163,7 +163,7 @@ public final class FactoryTests {
         long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenIdle(30).thenExecute(()->{
             check(c.parallel==10&&c.running==10&&c.processing.reserved()==10,"Two advanced factories did not run exactly ten lanes");
-            check(c.powerUsed==usage*10&&c.processing.jobs.getFirst().ticks==200,"Factory tier multiplied speed or discounted energy");
+            check(c.powerUsed==usage*10*FactoryConfig.PROCESSING_CYCLES.get()&&c.processing.jobs.getFirst().ticks==200,"Factory tier multiplied speed or discounted energy");
             check(count(c.inputBank(),Items.IRON_INGOT)==10,"Lane allocation consumed the wrong input quantity");c.enabled=false;
             var extra=c.template.getStack().copyWithCount(1);
             check(c.template.insertItem(extra,Action.EXECUTE,AutomationType.MANUAL).isEmpty()&&Profiles.availableParallel(c)==15,"Running factory could not accept another identical machine");

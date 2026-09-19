@@ -63,7 +63,10 @@ public interface ResourceBank {
     }
 
     default boolean store(List<ItemStack> stacks, List<FluidStack> liquids, List<ChemicalStack> gases, boolean simulate) {
-        var items = new ItemStack[itemSlots()]; var fluids = new FluidStack[fluidTanks()]; var chemicals = new ChemicalStack[chemicalTanks()];
+        // Only snapshot resource kinds produced by this recipe. A common item recipe need not copy every tank.
+        var items = new ItemStack[stacks.isEmpty()?0:itemSlots()];
+        var fluids = new FluidStack[liquids.isEmpty()?0:fluidTanks()];
+        var chemicals = new ChemicalStack[gases.isEmpty()?0:chemicalTanks()];
         for (int i = 0; i < items.length; i++) items[i] = item(i).copy();
         for (int i = 0; i < fluids.length; i++) fluids[i] = fluid(i).copy();
         for (int i = 0; i < chemicals.length; i++) chemicals[i] = chemical(i).copy();

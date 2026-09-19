@@ -3,9 +3,10 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class FactoryConfig {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.IntValue[] PARALLEL=new ModConfigSpec.IntValue[4], SIZE=new ModConfigSpec.IntValue[4];
+    public static final ModConfigSpec.IntValue PROCESSING_CYCLES;
     static {var b=new ModConfigSpec.Builder();for(int i=0;i<4;i++) {
         PARALLEL[i]=b.defineInRange("parallelTier"+i,new int[]{8,32,128,512}[i],1,512);
         SIZE[i]=b.defineInRange("sizeTier"+i,5+2*i,4,11);
-    }SPEC=b.build();}
+    }PROCESSING_CYCLES=b.comment("Native work steps per server tick. Each step pays its normal energy cost; provider throughput is shared.").defineInRange("processingCyclesPerTick",2,1,8);SPEC=b.build();}
     private FactoryConfig(){}
 }

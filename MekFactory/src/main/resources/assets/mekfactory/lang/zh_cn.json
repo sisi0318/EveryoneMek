@@ -99,6 +99,7 @@
   "mekfactory.draining": "正在完成在制任务",
   "mekfactory.conditions": "加工条件不满足",
   "mekfactory.energy": "能量或供应器吞吐不足",
+  "mekfactory.secondary": "等待加工所需的化学品",
   "mekfactory.output": "等待产物空间",
   "mekfactory.output_or_energy": "检查产物空间和供能",
   "mekfactory.build_small": "结构至少需要 3 × 3 × 3",

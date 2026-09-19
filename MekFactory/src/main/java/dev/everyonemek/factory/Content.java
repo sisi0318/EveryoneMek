@@ -40,7 +40,7 @@ public final class Content {
     static {
         for(var g:Grade.values()) {
             var machine=Machine.MachineBuilder.<Controller>createMachine(()->CONTROLLER_TILES.get(g),g).withGui(()->MENU)
-                  .withEnergyConfig(()->0L,()->0L).withSupportedUpgrades(Upgrade.SPEED,Upgrade.ENERGY).build();
+                  .withEnergyConfig(()->0L,()->0L).withSupportedUpgrades(Upgrade.SPEED,Upgrade.ENERGY,Upgrade.CHEMICAL).build();
             var block=BLOCKS.registerDetails(g.id+"_controller",()->new ControllerBlock(g,machine));
             block.forItemHolder(h->h.addAttachmentOnlyContainers(ContainerType.ITEM,()->ItemSlotsBuilder.builder().addInput(1).build()));
             CONTROLLERS.put(g,block);CONTROLLER_TILES.put(g,TILES.mekBuilder(block,Controller::new).clientTicker(TileEntityMekanism::tickClient).serverTicker(TileEntityMekanism::tickServer).build());

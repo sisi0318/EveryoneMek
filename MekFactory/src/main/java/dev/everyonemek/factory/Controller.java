@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 public final class Controller extends TileEntityMekanism {
-    private static final java.util.List<String> STATES=java.util.List.of("structure","frame","shell","interior","tier","unloaded","occupied","ports","port_limit","induction","ready","idle","working","materials","machine","template_not_empty","paused","conditions","energy","output","output_or_energy","redstone","draining");
+    private static final java.util.List<String> STATES=java.util.List.of("structure","frame","shell","interior","tier","unloaded","occupied","ports","port_limit","induction","ready","idle","working","materials","machine","template_not_empty","paused","conditions","energy","output","output_or_energy","redstone","draining","secondary");
     public BasicInventorySlot template;private FactoryEnergy energy;
     public final FactoryStructure structure=new FactoryStructure(this);
     public final Buffers inputs=new Buffers(this,false),outputs=new Buffers(this,true);
