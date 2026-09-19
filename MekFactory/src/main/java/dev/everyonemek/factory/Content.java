@@ -22,7 +22,9 @@ public final class Content {
     public static final ContainerTypeDeferredRegister MENUS=new ContainerTypeDeferredRegister(MekFactory.ID);
     private static final DataComponentDeferredRegister COMPONENTS=new DataComponentDeferredRegister(MekFactory.ID);
     public static final java.util.function.Supplier<DataComponentType<CompoundTag>> DATA=COMPONENTS.simple("factory_data",b->b.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
+    public static final java.util.function.Supplier<DataComponentType<CompoundTag>> PORT_DATA=COMPONENTS.simple("port_data",b->b.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG));
     public static final ContainerTypeRegistryObject<FactoryMenu> MENU=MENUS.registerMenu("factory",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(FactoryMenu::fromNetwork));
+    public static final ContainerTypeRegistryObject<WarehouseMenu> WAREHOUSE_MENU=MENUS.registerMenu("warehouse",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(WarehouseMenu::fromNetwork));
     public static final Map<Grade,BlockRegistryObject<ControllerBlock,ItemBlockTooltip<ControllerBlock>>> CONTROLLERS=new EnumMap<>(Grade.class);
     public static final Map<Grade,TileEntityTypeRegistryObject<Controller>> CONTROLLER_TILES=new EnumMap<>(Grade.class);
     public static final Map<Grade,BlockRegistryObject<PartBlock,BlockItem>> FRAMES=new EnumMap<>(Grade.class),PORTS=new EnumMap<>(Grade.class);

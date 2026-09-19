@@ -28,15 +28,18 @@ public final class Controller extends TileEntityMekanism {
     public Controller(BlockPos pos,BlockState state){super(Content.CONTROLLERS.get(((ControllerBlock)state.getBlock()).grade),pos,state);}
     public Grade grade(){return ((ControllerBlock)getBlockState().getBlock()).grade;}
     public FactoryEnergy energy(){return energy;}
+    public ResourceBank inputBank(){var banks=new java.util.ArrayList<ResourceBank>();if(inputs.hasContents())banks.add(inputs);for(var p:structure.ports)if(!p.getBlockState().getValue(PartBlock.OUTPUT))banks.add(p.storage());return new GroupedInputBank(new CombinedBank(banks));}
+    public ResourceBank warehouseBank(boolean output){var banks=new java.util.ArrayList<ResourceBank>();for(var p:structure.ports)if(p.getBlockState().getValue(PartBlock.OUTPUT)==output)banks.add(p.storage());return new CombinedBank(banks);}
+    public ResourceBank outputBank(){return warehouseBank(true);}
     @Override protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener){var b=EnergyContainerHelper.forSide(facingSupplier);b.addContainer(energy=new FactoryEnergy(this));return b.build();}
     @Override protected IInventorySlotHolder getInitialInventory(IContentsListener listener){var b=InventorySlotHelper.forSide(facingSupplier);
-        template=BasicInventorySlot.at((s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),(s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),s->Profiles.get(s)!=null,listener,114,34);
+        template=BasicInventorySlot.at((s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),(s,a)->a!=AutomationType.EXTERNAL&&(processing==null||processing.jobs.isEmpty()),s->Profiles.get(s)!=null,listener,18,30);
         b.addSlot(template);return b.build();}
     @Override public boolean persists(ContainerType<?,?,?> type){return type!=ContainerType.ENERGY&&super.persists(type);}
     public boolean access(Player p){return !isRemoved()&&p.level()==level&&mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(p,level,worldPosition,this);}
     @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();
         if(!structure.formed&&level.getGameTime()%20==0)structure.invalidate();
-        if(structure.valid())processing.tick(this);else{running=0;powerUsed=0;status=structure.error;}
+        if(structure.valid()){LegacyMigration.transfer(this);processing.tick(this);}else{running=0;powerUsed=0;status=structure.error;}
         Ports.eject(this);if(level.getGameTime()%5==0)PortConfiguration.refresh(this);setActive(running>0);FactoryAppearance.sync(this);return changed;}
     @Override public void setRemoved(){FactoryAppearance.clear(this);structure.detach();super.setRemoved();}
     public boolean resize(int axis,int delta){if(!processing.jobs.isEmpty())return false;int n=(axis==0?sizeX:axis==1?sizeY:sizeZ)+delta;if(n<3||n>grade().size())return false;structure.detach();if(axis==0)sizeX=n;else if(axis==1)sizeY=n;else sizeZ=n;markForSave();return true;}
@@ -55,6 +58,7 @@ public final class Controller extends TileEntityMekanism {
         menu.track(SyncableInt.create(()->Math.max(0,STATES.indexOf(status)),v->status=STATES.get(Math.clamp(v,0,STATES.size()-1))));menu.track(SyncableLong.create(energy::getEnergy,v->clientEnergy=v));menu.track(SyncableLong.create(energy::getMaxEnergy,v->clientCapacity=v));menu.track(SyncableLong.create(()->powerUsed,v->powerUsed=v));
         menu.track(SyncableInt.create(()->structure.inputSlots,v->structure.inputSlots=v));menu.track(SyncableInt.create(()->structure.outputSlots,v->structure.outputSlots=v));
         menu.track(SyncableLong.create(()->structure.inputCapacity,v->structure.inputCapacity=v));menu.track(SyncableLong.create(()->structure.outputCapacity,v->structure.outputCapacity=v));
-        for(int i=0;i<Buffers.TANKS;i++){final int n=i;menu.track(SyncableChemicalStack.create(()->inputs.chemicals[n],v->inputs.chemicals[n]=v));menu.track(SyncableChemicalStack.create(()->outputs.chemicals[n],v->outputs.chemicals[n]=v));menu.track(SyncableFluidStack.create(()->inputs.fluids[n],v->inputs.fluids[n]=v));menu.track(SyncableFluidStack.create(()->outputs.fluids[n],v->outputs.fluids[n]=v));}
+        menu.track(SyncableLong.create(()->structure.transfer,v->structure.transfer=v));
+
     }
 }

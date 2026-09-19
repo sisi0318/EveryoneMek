@@ -19,6 +19,7 @@ public final class PartBlock extends BaseEntityBlock {
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState>b){b.add(OUTPUT);}
     @Override public RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new Part(pos,state);}
+    @Override public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context){var state=defaultBlockState();var data=context.getItemInHand().get(Content.PORT_DATA.get());return data==null||kind!=Kind.PORT?state:state.setValue(OUTPUT,data.getBoolean("output"));}
     @Override public void appendHoverText(ItemStack stack,net.minecraft.world.item.Item.TooltipContext context,java.util.List<net.minecraft.network.chat.Component> tooltip,net.minecraft.world.item.TooltipFlag flag){
         if(kind==Kind.PORT){tooltip.add(Content.text("port_power_hint"));tooltip.add(Content.text("port_mode_hint"));}
     }

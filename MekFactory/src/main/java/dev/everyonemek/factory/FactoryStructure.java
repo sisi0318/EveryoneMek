@@ -89,7 +89,7 @@ public final class FactoryStructure {
             if(cells.isEmpty()||providers.isEmpty())return fail("induction",owner.getBlockPos());
             parallel=grade.parallel();
             error="ready";errorPos=null;formed=true;return true;
-        }finally{checking=false;owner.markForSave();if(formed)notifyPorts();}
+        }finally{checking=false;owner.inputRevision++;owner.markForSave();if(formed)notifyPorts();}
     }
     private boolean addInduction(net.minecraft.world.level.block.entity.BlockEntity tile,BlockPos pos){
         if(tile instanceof mekanism.common.tile.prefab.TileEntityInternalMultiblock internal&&internal.getMultiblock()!=null&&internal.getMultiblock().isFormed())return fail("occupied",pos);

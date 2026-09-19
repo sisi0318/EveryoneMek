@@ -16,8 +16,8 @@ public final class Processing {
         Job copy(int n){var p=new RecipePlan(recipe);p.ticks=ticks;p.energy=energy;p.baseTicks=baseTicks;p.baseEnergy=baseEnergy;p.fixedEnergy=fixedEnergy;p.exponential=exponential;p.operations=operations;p.outItems.addAll(items);p.outFluids.addAll(fluids);p.outChemicals.addAll(chemicals);var j=new Job(p,n);j.progress=progress;return j;}
         int lanes(){return (units+operations-1)/operations;}
         void refresh(Controller c){if(progress>=ticks)return;var next=Profiles.settings(c,baseTicks,baseEnergy,exponential,fixedEnergy);ticks=next.ticks();energy=next.energy();operations=next.operations();progress=Math.min(progress,ticks-1);}
-        boolean store(Buffers b,int n,boolean simulate){try{return b.store(items.stream().map(s->s.copyWithCount(Math.multiplyExact(s.getCount(),n))).toList(),fluids.stream().map(s->s.copyWithAmount(Math.multiplyExact(s.getAmount(),n))).toList(),chemicals.stream().map(s->s.copyWithAmount(Math.multiplyExact(s.getAmount(),n))).toList(),simulate);}catch(ArithmeticException e){return false;}}
-        boolean deliver(Buffers b){int lo=0,hi=units;while(lo<hi){int mid=lo+(hi-lo+1)/2;if(store(b,mid,true))lo=mid;else hi=mid-1;}if(lo>0){store(b,lo,false);units-=lo;}return units==0;}
+        boolean store(ResourceBank b,int n,boolean simulate){try{return b.store(items.stream().map(s->s.copyWithCount(Math.multiplyExact(s.getCount(),n))).toList(),fluids.stream().map(s->s.copyWithAmount(Math.multiplyExact(s.getAmount(),n))).toList(),chemicals.stream().map(s->s.copyWithAmount(Math.multiplyExact(s.getAmount(),n))).toList(),simulate);}catch(ArithmeticException e){return false;}}
+        boolean deliver(ResourceBank b){int lo=0,hi=units;while(lo<hi){int mid=lo+(hi-lo+1)/2;if(store(b,mid,true))lo=mid;else hi=mid-1;}if(lo>0){store(b,lo,false);units-=lo;}return units==0;}
     }
     public int reserved(){return jobs.stream().mapToInt(j->j.units).sum();}
     public void tick(Controller c){
@@ -30,17 +30,17 @@ public final class Processing {
         if(!profile.condition().test(c)){c.status="conditions";return;}
         c.parallel=Math.min(c.parallelLimit,c.structure.parallel);
         if(FactoryConfig.MACHINES_LIMIT_PARALLEL.get())c.parallel=Math.min(c.parallel,c.template.getStack().getCount());
-        int limit=c.parallel;
+        int limit=c.parallel;var inputs=c.inputBank();var outputs=c.outputBank();
         for(var j:jobs)j.refresh(c);
-        for(var it=jobs.iterator();it.hasNext();){var j=it.next();if(j.progress>=j.ticks&&j.deliver(c.outputs)){it.remove();c.markForSave();}}
+        for(var it=jobs.iterator();it.hasNext();){var j=it.next();if(j.progress>=j.ticks&&j.deliver(outputs)){it.remove();c.markForSave();}}
         int free=Math.max(0,limit-jobs.stream().mapToInt(Job::lanes).sum());String template=c.template.getStack().getItem().toString()+"/"+c.rotaryReverse;
         if(c.enabled&&free>0&&jobs.size()<512&&c.energy().available()>0&&(failedRevision!=c.inputRevision||!failedTemplate.equals(template)||c.getLevel().getGameTime()%20==0)){
             for(int tries=0;tries<16&&free>0;tries++){
-                var p=profile.find(c);if(p==null){failedRevision=c.inputRevision;failedTemplate=template;break;}
-                int n=p.available(c.inputs,(int)Math.min(65536L,(long)free*p.operations));n=(int)Math.min(n,c.energy().available()/p.energy);
-                var candidate=new Job(p,n);int low=0,high=n;while(low<high){int mid=low+(high-low+1)/2;if(candidate.store(c.outputs,mid,true))low=mid;else high=mid-1;}n=low;
+                var p=profile.find(c,inputs);if(p==null){failedRevision=c.inputRevision;failedTemplate=template;break;}
+                int n=p.available(inputs,(int)Math.min(65536L,(long)free*p.operations));n=(int)Math.min(n,c.energy().available()/p.energy);
+                var candidate=new Job(p,n);int low=0,high=n;while(low<high){int mid=low+(high-low+1)/2;if(candidate.store(outputs,mid,true))low=mid;else high=mid-1;}n=low;
                 if(n==0){c.status="output_or_energy";break;}
-                p.consume(c.inputs,n);var added=new Job(p,n);jobs.add(added);free-=added.lanes();c.markForSave();
+                p.consume(inputs,n);var added=new Job(p,n);jobs.add(added);free-=added.lanes();c.markForSave();
             }
         }
         int original=jobs.size(),budget=limit;var split=new ArrayList<Job>();
@@ -53,7 +53,7 @@ public final class Processing {
             int used=(n+j.operations-1)/j.operations;c.running+=used;budget-=used;c.powerUsed=mekanism.api.math.MathUtils.addClamped(c.powerUsed,cost);c.progress=Math.max(c.progress,active.progress*100/active.ticks);c.markForSave();
         }
         jobs.addAll(split);if(!jobs.isEmpty())cursor=(cursor+1)%jobs.size();
-        for(var it=jobs.iterator();it.hasNext();){var j=it.next();if(j.progress>=j.ticks&&j.deliver(c.outputs)){it.remove();c.markForSave();}}
+        for(var it=jobs.iterator();it.hasNext();){var j=it.next();if(j.progress>=j.ticks&&j.deliver(outputs)){it.remove();c.markForSave();}}
         if(c.running>0)c.status=c.enabled?"working":"draining";else if(jobs.isEmpty()&&c.status.equals("idle"))c.status=c.enabled?"materials":"paused";
     }
     public ListTag save(HolderLookup.Provider r){var list=new ListTag();for(var j:jobs){var tag=new CompoundTag();tag.putString("recipe",j.recipe);tag.putInt("units",j.units);tag.putInt("ticks",j.ticks);tag.putInt("progress",j.progress);tag.putLong("energy",j.energy);tag.putInt("base_ticks",j.baseTicks);tag.putLong("base_energy",j.baseEnergy);tag.putInt("operations",j.operations);tag.putBoolean("fixed",j.fixedEnergy);tag.putBoolean("exponential",j.exponential);var i=new ListTag();j.items.forEach(s->i.add(s.save(r)));tag.put("items",i);var f=new ListTag();j.fluids.forEach(s->f.add(s.saveOptional(r)));tag.put("fluids",f);var g=new ListTag();j.chemicals.forEach(s->g.add(s.saveOptional(r)));tag.put("chemicals",g);list.add(tag);}return list;}

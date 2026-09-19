@@ -39,8 +39,8 @@ blocks=[]
 for index,g in enumerate(grades):
  for kind in ['controller','frame','port']:
   name=g+'_'+kind;blocks.append(name)
-  zh['block.mekfactory.'+name]=zhgrades[index]+{'controller':'并行矩阵工厂','frame':'工厂框架','port':'通用工厂端口'}[kind]
-  en['block.mekfactory.'+name]=g.title()+' '+{'controller':'Parallel Matrix Factory','frame':'Factory Frame','port':'Universal Factory Port'}[kind]
+  zh['block.mekfactory.'+name]=zhgrades[index]+{'controller':'并行矩阵工厂','frame':'工厂框架','port':'工厂物料仓'}[kind]
+  en['block.mekfactory.'+name]=g.title()+' '+{'controller':'Parallel Matrix Factory','frame':'Factory Frame','port':'Factory Warehouse'}[kind]
   if kind=='controller':
    zh['container.mekfactory.'+name]=zh['block.mekfactory.'+name]
    en['container.mekfactory.'+name]=en['block.mekfactory.'+name]
@@ -61,8 +61,11 @@ for name,tex,z,e in [('casing','controller_side','工厂外壳','Factory Casing'
  write(Path(f'assets/mekfactory/models/block/{name}.json'),window_model(tex) if name=='glass' else cube(tex))
  write(Path(f'assets/mekfactory/blockstates/{name}.json'),{'variants':{'':{'model':f'mekfactory:block/{name}'}}})
 for name in blocks:
- write(Path(f'assets/mekfactory/models/item/{name}.json'),{'parent':f'mekfactory:block/{name}'})
- functions=[{'function':'minecraft:copy_name','source':'block_entity'},{'function':'minecraft:copy_components','source':'block_entity','include':['mekfactory:factory_data','mekanism:items','mekanism:upgrades','mekanism:security','mekanism:owner','mekanism:redstone_control']}] if name.endswith('controller') else []
+ item_model={'parent':f'mekfactory:block/{name}'}
+ if name.endswith('_port'):item_model['overrides']=[{'predicate':{'mekfactory:output':1},'model':f'mekfactory:block/{name}_output'}]
+ write(Path(f'assets/mekfactory/models/item/{name}.json'),item_model)
+ components=['mekfactory:factory_data','mekanism:items','mekanism:upgrades','mekanism:security','mekanism:owner','mekanism:redstone_control'] if name.endswith('controller') else ['mekfactory:port_data'] if name.endswith('_port') else []
+ functions=[{'function':'minecraft:copy_name','source':'block_entity'},{'function':'minecraft:copy_components','source':'block_entity','include':components}] if components else []
  write(Path(f'data/mekfactory/loot_table/blocks/{name}.json'),{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'mekfactory:'+name,'functions':functions}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
 write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'values':['mekfactory:'+n for n in blocks]})
 for name in ['casing','glass']:
@@ -70,7 +73,7 @@ for name in ['casing','glass']:
 for i,g in enumerate(grades):
  circuit='mekanism:'+g+'_control_circuit';alloy=['infused','reinforced','atomic','atomic'][i]
  for kind in ['frame','port','controller']:
-  middle='mekfactory:casing' if i==0 or kind=='controller' else 'mekfactory:'+grades[i-1]+'_'+kind
+  middle='mekfactory:casing' if i==0 or kind in ['controller','port'] else 'mekfactory:'+grades[i-1]+'_'+kind
   pattern={'frame':['ASA','SCS','ASA'],'port':['ACA','SHS','ACA'],'controller':['ACA','SMS','ACA']}[kind]
   keys={'A':{'item':'mekanism:alloy_'+alloy},'S':{'item':'mekanism:ingot_steel'},'C':{'item':circuit},'H':{'item':'minecraft:hopper'},'M':{'item':middle}}
   if kind=='frame':keys['C']={'item':middle}
@@ -78,6 +81,13 @@ for i,g in enumerate(grades):
   used=set(''.join(pattern));keys={k:v for k,v in keys.items() if k in used}
   write(Path(f'data/mekfactory/recipe/{g}_{kind}.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':keys,'result':{'id':f'mekfactory:{g}_{kind}','count':4 if kind=='frame' and i==0 else 1}})
 pairs={
+ 'input_warehouse':('输入仓','Input Warehouse'),'output_warehouse':('输出仓','Output Warehouse'),
+ 'legacy_stock':('旧版缓存','Legacy Stock'),'legacy_input':('旧版输入缓存','Legacy Input Stock'),'legacy_output':('旧版输出缓存','Legacy Output Stock'),
+ 'warehouse_slots':('容量：%s 格','Capacity: %s slots'),'page':('%s / %s','%s / %s'),
+ 'fluids':('流体','Fluids'),'chemicals':('化学品','Chemicals'),
+ 'tank_fluid_amount':('%s / %s mB','%s / %s mB'),'tank_chemical_amount':('%s / %s 单位','%s / %s units'),
+ 'current_recipe':('配方：%s','Recipe: %s'),'no_recipe':('空闲','Idle'),'recipe_progress':('进度：%s','Progress: %s'),
+ 'batch':('批量 %s · 任务 %s / %s','Batch %s · Job %s / %s'),'power_limit':('供能上限：%s FE/t','Power limit: %s FE/t'),
  'settings':('结构设置','Structure'),'resources':('资源缓存','Resources'),'empty':('空','Empty'),
  'port_config':('端口配置','Port Configuration'),
  'port_counts':('输入 %s · 输出 %s','Input %s / Output %s'),
@@ -86,7 +96,7 @@ pairs={
  'auto_eject_on':('自动弹出：开','Auto-eject: On'),'auto_eject_off':('自动弹出：关','Auto-eject: Off'),
  'dimensions':('尺寸 %s × %s × %s','Size %s × %s × %s'),
  'power_hint':('电力接入输入端口外侧','Connect power to an input port'),
- 'port_power_hint':('输入模式下，从朝外的一面接入电力和物料。','In input mode, accepts power and materials from its outer face.'),
+ 'port_power_hint':('独立存放物料，成型后从外侧接入物流和电力。','Stores its own materials. Connect transport and power to outer faces after forming.'),
  'port_mode_hint':('潜行持配置器右键切换输入与输出。','Sneak-use a Configurator to switch input and output.'),
  'dimension.0':('宽 %s','Width %s'),'dimension.1':('高 %s','Height %s'),'dimension.2':('深 %s','Depth %s'),
  'template':('主机器','Machine'),'input':('输入 · %s','Input · %s'),'output_page':('输出 · %s','Output · %s'),'pause':('停机','Stop'),'resume':('启用','Run'),'limit':('设置上限 %s','Limit %s'),

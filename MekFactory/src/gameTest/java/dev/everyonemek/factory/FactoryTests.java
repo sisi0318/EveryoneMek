@@ -31,7 +31,7 @@ public final class FactoryTests {
     static Controller controller(GameTestHelper h,Grade g,int size){var pos=h.absolutePos(new BlockPos(20,4,20));h.getLevel().setBlockAndUpdate(pos,Content.CONTROLLERS.get(g).get().defaultBlockState());var c=(Controller)h.getLevel().getBlockEntity(pos);c.sizeX=c.sizeY=c.sizeZ=size;return c;}
     static Controller formed(GameTestHelper h,Grade g,int size){var c=controller(h,g,size);for(var e:Construction.plan(c).entrySet())h.getLevel().setBlockAndUpdate(e.getKey(),e.getValue());check(c.structure.validate(),"Structure failed: "+c.structure.error+" "+c.structure.errorPos);return c;}
     static Part port(Controller c,boolean output){return c.structure.ports.stream().filter(p->p.getBlockState().getValue(PartBlock.OUTPUT)==output).findFirst().orElseThrow();}
-    static int count(Buffers b,Item item){return Arrays.stream(b.items).filter(s->s.is(item)).mapToInt(ItemStack::getCount).sum();}
+    static int count(ResourceBank b,Item item){int total=0;for(int i=0;i<b.itemSlots();i++)if(b.item(i).is(item))total+=b.item(i).getCount();return total;}
     static ServerPlayer player(GameTestHelper h,BlockPos pos){
         var p=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),"factory-test"),net.minecraft.server.level.ClientInformation.createDefault());
         var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND){private final io.netty.channel.embedded.EmbeddedChannel channel=new io.netty.channel.embedded.EmbeddedChannel();@Override public io.netty.channel.Channel channel(){return channel;}};
@@ -48,6 +48,74 @@ public final class FactoryTests {
         if(add)method.invoke(null,p.getUUID(),p.getGameProfile().getName());else method.invoke(null,p.getUUID());
     }catch(ReflectiveOperationException e){throw new IllegalStateException("GameTest username cache fixture",e);}}
     static void close(ServerPlayer p){try{p.closeContainer();p.serverLevel().removePlayerImmediately(p,Entity.RemovalReason.DISCARDED);p.connection.getConnection().channel().close();}finally{username(p,false);}}
+
+    @GameTest(template="empty",timeoutTicks=80)
+    public static void warehousesKeepSeparateStockAndCarryItThroughRealDropAndPlacement(GameTestHelper h){
+        var c=formed(h,Grade.BASIC,3);c.enabled=false;var a=port(c,false);
+        var second=c.structure.at(0,1,1);h.getLevel().setBlockAndUpdate(second,Content.PORTS.get(Grade.BASIC).get().defaultBlockState());check(c.structure.valid(),"Second input warehouse failed");var b=(Part)h.getLevel().getBlockEntity(second);
+        var ia=new Ports.ItemPort(a,c.structure.outward(a.getBlockPos()));var ib=new Ports.ItemPort(b,c.structure.outward(b.getBlockPos()));
+        check(ia.insertItem(0,new ItemStack(Items.IRON_INGOT,5),false).isEmpty()&&ib.insertItem(0,new ItemStack(Items.GOLD_INGOT,7),false).isEmpty(),"Warehouse insertion failed");
+        check(count(a.storage(),Items.GOLD_INGOT)==0&&count(b.storage(),Items.IRON_INGOT)==0&&c.inputs.hasContents()==false,"Warehouses still shared stock");
+        a.storage().insertFluid(0,new FluidStack(net.minecraft.world.level.material.Fluids.WATER,2000),false);
+        a.storage().insertChem(0,new ChemicalStack(MekanismChemicals.HYDROGEN,100),false);
+        var p=player(h,a.getBlockPos().relative(c.structure.outward(a.getBlockPos())));
+        try{
+            var hand=net.minecraft.world.InteractionHand.MAIN_HAND;
+            p.gameMode.useItemOn(p,h.getLevel(),p.getMainHandItem(),hand,new net.minecraft.world.phys.BlockHitResult(a.getBlockPos().getCenter(),c.structure.outward(a.getBlockPos()),a.getBlockPos(),false));
+            check(p.containerMenu instanceof WarehouseMenu&&((WarehouseMenu)p.containerMenu).stock==a.storage(),"Right click did not open that warehouse inventory");
+            var old=(WarehouseMenu)p.containerMenu;old.quickMoveStack(p,0);
+            check(count(a.storage(),Items.IRON_INGOT)==0&&count(b.storage(),Items.GOLD_INGOT)==7&&p.getInventory().countItem(Items.IRON_INGOT)==5,"Shift-extract touched a different warehouse");
+            ia.insertItem(0,new ItemStack(Items.DIAMOND,3),false);check(a.setOutput(p,true)&&!old.stillValid(p),"Mode change left an input menu live");
+            var drops=net.minecraft.world.level.block.Block.getDrops(a.getBlockState(),h.getLevel(),a.getBlockPos(),a);
+            check(drops.size()==1&&drops.getFirst().get(Content.PORT_DATA.get()).getBoolean("output"),"Warehouse drop lost its mode/component");
+            var where=a.getBlockPos();h.getLevel().destroyBlock(where,false);p.setItemInHand(hand,drops.getFirst());
+            p.getItemInHand(hand).useOn(new net.minecraft.world.item.context.UseOnContext(p,hand,new net.minecraft.world.phys.BlockHitResult(where.getCenter(),Direction.UP,where,false)));
+            var restored=(Part)h.getLevel().getBlockEntity(where);
+            check(restored!=a&&restored.getBlockState().getValue(PartBlock.OUTPUT)&&count(restored.storage(),Items.DIAMOND)==3&&restored.storage().fluids[0].getAmount()==2000&&restored.storage().chemicals[0].getAmount()==100,"Placed warehouse lost stock or mode");
+            check(count(b.storage(),Items.GOLD_INGOT)==7&&c.inputs.hasContents()==false&&!old.stillValid(p),"Warehouse drop copied stock into controller or reopened an old menu");
+            c.setFacing(Direction.EAST);check(restored.canOpen(p),"Controller rotation stranded an independent warehouse inventory");
+            restored.open(p);check(p.containerMenu instanceof WarehouseMenu&&p.containerMenu.stillValid(p),"Detached warehouse could not be accessed manually");
+        }finally{close(p);}h.succeed();
+    }
+
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void legacyCacheMigratesOnceAndRetainsOverflow(GameTestHelper h){
+        var c=formed(h,Grade.BASIC,3);c.enabled=false;var input=port(c,false);var output=port(c,true);
+        c.inputs.items[0]=new ItemStack(Items.IRON_INGOT,64);for(int i=0;i<Buffers.TANKS;i++)c.inputs.fluids[i]=new FluidStack(net.minecraft.world.level.material.Fluids.WATER,20000);
+        c.inputs.chemicals[0]=new ChemicalStack(MekanismChemicals.HYDROGEN,50000);
+        c.outputs.items[0]=new ItemStack(Items.GOLD_INGOT,64);c.outputs.fluids[0]=new FluidStack(net.minecraft.world.level.material.Fluids.LAVA,6000);
+        h.startSequence().thenWaitUntil(()->check(Arrays.stream(c.inputs.fluids).mapToInt(FluidStack::getAmount).sum()==16000&&!c.outputs.hasContents(),"Legacy goods did not migrate with retained overflow"))
+              .thenIdle(10).thenExecute(()->{
+                  check(count(input.storage(),Items.IRON_INGOT)==64&&count(output.storage(),Items.GOLD_INGOT)==64,"Repeated migration copied item stock");
+                  check(Arrays.stream(input.storage().fluids).mapToInt(FluidStack::getAmount).sum()==64000&&Arrays.stream(input.storage().chemicals).mapToLong(ChemicalStack::getAmount).sum()==50000&&output.storage().fluids[0].getAmount()==6000,"Migration changed fluid/chemical quantities");
+                  var stack=new ItemStack(Content.CONTROLLERS.get(Grade.BASIC));c.saveToItem(stack,h.getLevel().registryAccess());
+                  var retained=new Buffers(c,false);retained.load(stack.get(Content.DATA.get()).getCompound("inputs"),h.getLevel().registryAccess());
+                  check(count(retained,Items.IRON_INGOT)==0&&Arrays.stream(retained.fluids).mapToInt(FluidStack::getAmount).sum()==16000,"Controller item copied hatch goods or lost retained legacy fluid");
+                  var io=new Ports.FluidPort(input,c.structure.outward(input.getBlockPos()));check(io.drain(16000,IFluidHandler.FluidAction.EXECUTE).getAmount()==16000,"Could not recover input fluid while stopped");
+              }).thenWaitUntil(()->check(!c.inputs.hasContents(),"Legacy remainder did not resume after space opened"))
+              .thenExecute(()->check(Arrays.stream(input.storage().fluids).mapToInt(FluidStack::getAmount).sum()==64000,"Legacy retry duplicated or lost fluid")).thenSucceed();
+    }
+
+    @GameTest(template="empty",timeoutTicks=500)
+    public static void inputsAcrossHatchesAndDashboardProgressAreReal(GameTestHelper h){
+        var c=formed(h,Grade.BASIC,4);var extra=c.structure.at(1,2,0);h.getLevel().setBlockAndUpdate(extra,Content.PORTS.get(Grade.BASIC).get().defaultBlockState());check(c.structure.valid(),"Extra input did not form");
+        var inputs=c.structure.ports.stream().filter(p->!p.getBlockState().getValue(PartBlock.OUTPUT)).toList();
+        var recipe=mekanism.common.recipe.MekanismRecipeType.CHEMICAL_INFUSING.findFirst(h.getLevel(),r->!r.getLeftInput().getRepresentations().isEmpty()&&!r.getRightInput().getRepresentations().isEmpty()&&!r.getLeftInput().getRepresentations().getFirst().isRadioactive()&&!r.getRightInput().getRepresentations().getFirst().isRadioactive());
+        check(recipe!=null,"No native dual chemical recipe");var left=recipe.getLeftInput().getRepresentations().getFirst();var right=recipe.getRightInput().getRepresentations().getFirst();left=recipe.getLeftInput().getMatchingInstance(left);right=recipe.getRightInput().getMatchingInstance(right);var result=recipe.getOutput(left,right);
+        inputs.get(0).storage().insertChem(0,left.copyWithAmount(left.getAmount()*4),false);inputs.get(1).storage().insertChem(0,right.copyWithAmount(right.getAmount()*4),false);
+        var cell=c.structure.cells.getFirst();cell.getEnergyContainer().setEnergy(10000000);c.template.setStack(new ItemStack(MekanismBlocks.CHEMICAL_INFUSER));
+        var crystallizing=mekanism.common.recipe.MekanismRecipeType.CRYSTALLIZING.findFirst(h.getLevel(),r->!r.getInput().getRepresentations().isEmpty()&&!r.getInput().getRepresentations().getFirst().isRadioactive()&&r.getInput().getRepresentations().getFirst().getAmount()>=2);
+        check(crystallizing!=null,"No native crystallizer quantity fixture");var chemical=crystallizing.getInput().getMatchingInstance(crystallizing.getInput().getRepresentations().getFirst());var crystal=crystallizing.getOutput(chemical);
+        h.startSequence().thenWaitUntil(()->check(c.outputBank().chemical(0).getAmount()==result.getAmount()*4,"Recipe could not combine two distinct hatch tanks"))
+              .thenExecute(()->{check(inputs.get(0).storage().chemicals[0].isEmpty()&&inputs.get(1).storage().chemicals[0].isEmpty(),"Recipe did not consume both hatch ingredients");
+                  c.template.setStack(new ItemStack(MekanismBlocks.CHEMICAL_CRYSTALLIZER));long half=chemical.getAmount()/2;inputs.get(0).storage().insertChem(0,chemical.copyWithAmount(half),false);inputs.get(1).storage().insertChem(0,chemical.copyWithAmount(chemical.getAmount()-half),false);})
+              .thenWaitUntil(()->check(count(c.outputBank(),crystal.getItem())==crystal.getCount(),"Two partial hatch tanks could not supply one complete recipe"))
+              .thenExecute(()->{check(inputs.get(0).storage().chemicals[0].isEmpty()&&inputs.get(1).storage().chemicals[0].isEmpty(),"Grouped consumption left or duplicated raw chemical");c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));inputs.get(0).storage().insert(0,new ItemStack(Items.IRON_INGOT),false);})
+              .thenIdle(30).thenExecute(()->{
+                  var p=player(h,c.getBlockPos().north());
+                  try{FactoryMenu.open(p,c,c.getBlockPos());var menu=(FactoryMenu)p.containerMenu;double progress=menu.progressRatio();check(progress>0&&progress<1,"Dashboard did not expose real fractional progress");cell.getEnergyContainer().setEnergy(0);c.processing.tick(c);check(menu.progressRatio()==progress,"Dashboard reset progress when energy ran out");check(menu.slots.size()<50,"Controller still exposes bulk material slots");}finally{close(p);}
+              }).thenSucceed();
+    }
 
     @GameTest(template="empty",timeoutTicks=60)
     public static void appearanceFollowsStructureWithoutReplacingInductionOrCopyingEnergy(GameTestHelper h){
@@ -73,12 +141,12 @@ public final class FactoryTests {
         c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);
         long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenIdle(60).thenExecute(()->{
-            check(c.processing.reserved()==8&&count(c.outputs,dust)==0,"Processing did not reserve eight real lanes");
+            check(c.processing.reserved()==8&&count(c.outputBank(),dust)==0,"Processing did not reserve eight real lanes");
             check(c.template.extractItem(1,Action.SIMULATE,AutomationType.MANUAL).isEmpty(),"Running template could be removed");
             var tag=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(tag,h.getLevel().registryAccess());
             c.enabled=false; // Stop admitting work, but permit paid in-flight work to finish and unlock the template.
-        }).thenWaitUntil(()->check(count(c.outputs,dust)==8,"Eight outputs not completed")).thenExecute(()->{
-            c.enabled=false;check(count(c.inputs,Items.IRON_INGOT)==0&&c.processing.jobs.isEmpty(),"Reload duplicated inputs or retained completed work");
+        }).thenWaitUntil(()->check(count(c.outputBank(),dust)==8,"Eight outputs not completed")).thenExecute(()->{
+            c.enabled=false;check(count(c.inputBank(),Items.IRON_INGOT)==0&&c.processing.jobs.isEmpty(),"Reload duplicated inputs or retained completed work");
             check(cell.getEnergyContainer().getEnergy()==start-8*200*usage,"Energy did not equal eight native machine cycles");
         }).thenSucceed();
     }
@@ -126,7 +194,7 @@ public final class FactoryTests {
             check(menu.clickMenuButton(p,40+RelativeSide.BACK.ordinal())&&port.getBlockState().getValue(PartBlock.OUTPUT),"All-input face did not become all output");
             check(menu.clickMenuButton(p,46)&&!c.autoEject,"Menu did not disable automatic eject");
             var saved=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(saved,h.getLevel().registryAccess());
-            check(!c.autoEject&&count(c.inputs,Items.DIAMOND)==3&&c.structure.valid(),"Port configuration reload lost state or inventory");
+            check(!c.autoEject&&count(port.storage(),Items.DIAMOND)==3&&c.structure.valid(),"Port configuration reload lost state or inventory");
         }finally{close(p);}h.succeed();
     }
 
@@ -151,12 +219,12 @@ public final class FactoryTests {
         check(recipe!=null,"Native water electrolysis recipe missing");int amount=recipe.getInput().getMatchingInstance(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,1000)).getAmount();var result=recipe.getOutput(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,amount));
         check(io.fill(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,amount*8),IFluidHandler.FluidAction.EXECUTE)==amount*8,"Fluid input failed");
         h.startSequence().thenIdle(3).thenExecute(()->{
-            check(Arrays.stream(c.outputs.chemicals).filter(s->ChemicalStack.isSameChemical(s,result.left())).mapToLong(ChemicalStack::getAmount).sum()==8*result.left().getAmount(),"Left output incorrect");
-            check(Arrays.stream(c.outputs.chemicals).filter(s->ChemicalStack.isSameChemical(s,result.right())).mapToLong(ChemicalStack::getAmount).sum()==8*result.right().getAmount(),"Right output incorrect");
-            for(int i=0;i<Buffers.TANKS;i++)c.outputs.chemicals[i]=result.left().copyWithAmount(c.outputs.capacity());
+            check(Arrays.stream(port(c,true).storage().chemicals).filter(s->ChemicalStack.isSameChemical(s,result.left())).mapToLong(ChemicalStack::getAmount).sum()==8*result.left().getAmount(),"Left output incorrect");
+            check(Arrays.stream(port(c,true).storage().chemicals).filter(s->ChemicalStack.isSameChemical(s,result.right())).mapToLong(ChemicalStack::getAmount).sum()==8*result.right().getAmount(),"Right output incorrect");
+            for(int i=0;i<Buffers.TANKS;i++)port(c,true).storage().chemicals[i]=result.left().copyWithAmount(port(c,true).storage().capacity());
             io.fill(new FluidStack(net.minecraft.world.level.material.Fluids.WATER,amount),IFluidHandler.FluidAction.EXECUTE);
         }).thenIdle(3).thenExecute(()->{
-            check(c.inputs.fluids[0].getAmount()==amount,"Blocked second output consumed water");
+            check(input.storage().fluids[0].getAmount()==amount,"Blocked second output consumed water");
             var chem=new Ports.ChemPort(input,c.structure.outward(input.getBlockPos()));check(!chem.isValid(0,new ChemicalStack(MekanismChemicals.POLONIUM,100)),"Radioactive materials bypassed unsupported safety behavior");
             c.enabled=false;check(io.drain(amount,IFluidHandler.FluidAction.EXECUTE).getAmount()==amount,"Paused input could not be recovered");
         }).thenSucceed();
@@ -214,7 +282,7 @@ public final class FactoryTests {
         var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenWaitUntil(()->check(cell.getEnergyContainer().getEnergy()>0,"Energy cube and real cable did not charge input port"))
               .thenExecute(()->{c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
-              .thenWaitUntil(()->check(count(c.outputs,dust)==8,"Cable-powered compact factory did not finish work"))
+              .thenWaitUntil(()->check(count(c.outputBank(),dust)==8,"Cable-powered compact factory did not finish work"))
               .thenExecute(()->{c.enabled=false;config.setEjecting(false);check(c.inputs.items[0].isEmpty(),"Compact work duplicated input");}).thenSucceed();
     }
 
@@ -239,7 +307,7 @@ public final class FactoryTests {
         h.startSequence().thenWaitUntil(()->{
             var target=h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,destination,Direction.UP);int count=0;for(int i=0;i<target.getSlots();i++)if(target.getStackInSlot(i).is(dust))count+=target.getStackInSlot(i).getCount();
             check(count==4,"Real hopper/automatic chest output did not deliver four products");
-        }).thenExecute(()->{c.enabled=false;check(hopper.getItem(0).isEmpty()&&count(c.inputs,Items.IRON_INGOT)==0,"Hopper transfer duplicated ingredients");}).thenSucceed();
+        }).thenExecute(()->{c.enabled=false;check(hopper.getItem(0).isEmpty()&&count(c.inputBank(),Items.IRON_INGOT)==0,"Hopper transfer duplicated ingredients");}).thenSucceed();
     }
 
     @GameTest(template="empty",timeoutTicks=300)
@@ -250,10 +318,10 @@ public final class FactoryTests {
         c.inputs.insert(0,new ItemStack(Items.RAW_IRON_BLOCK,64),false);final int[] removed={0};
         h.startSequence().thenIdle(40).thenExecute(()->{
             check(c.processing.reserved()==64,"Batch did not start");var p=port(c,true);h.getLevel().setBlockAndUpdate(p.getBlockPos(),Content.PORTS.get(Grade.BASIC).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
-        }).thenWaitUntil(()->check(count(c.outputs,result.getItem())>0,"Completed batch could not partially fit smaller output"))
-              .thenExecute(()->{removed[0]=count(c.outputs,result.getItem());check(!c.processing.jobs.isEmpty(),"Oversized job was lost instead of retained");for(int i=0;i<Buffers.SLOTS;i++)c.outputs.take(i,64,false);})
+        }).thenWaitUntil(()->check(count(c.outputBank(),result.getItem())>0,"Completed batch could not partially fit smaller output"))
+              .thenExecute(()->{removed[0]=count(c.outputBank(),result.getItem());check(!c.processing.jobs.isEmpty(),"Oversized job was lost instead of retained");var bank=c.outputBank();for(int i=0;i<bank.itemSlots();i++)bank.take(i,64,false);})
               .thenWaitUntil(()->check(c.processing.jobs.isEmpty(),"Remainder did not resume after extraction"))
-              .thenExecute(()->{c.enabled=false;check(removed[0]+count(c.outputs,result.getItem())==total,"Partial output duplicated or discarded paid products");}).thenSucceed();
+              .thenExecute(()->{c.enabled=false;check(removed[0]+count(c.outputBank(),result.getItem())==total,"Partial output duplicated or discarded paid products");}).thenSucceed();
     }
 
     @GameTest(template="empty",timeoutTicks=450)
@@ -265,9 +333,9 @@ public final class FactoryTests {
         item=recipe.getInputSolid().getMatchingInstance(item);fluid=recipe.getInputFluid().getMatchingInstance(fluid);chemical=recipe.getInputChemical().getMatchingInstance(chemical);
         var result=recipe.getOutput(item,fluid,chemical);check(!result.chemical().isRadioactive(),"Prc fixture produces radioactive material");
         c.inputs.insert(0,item,false);c.inputs.insertFluid(0,fluid,false);c.inputs.insertChem(0,chemical,false);
-        h.startSequence().thenWaitUntil(()->check(!c.outputs.items[0].isEmpty()||!c.outputs.chemicals[0].isEmpty(),"PRC did not complete"))
+        h.startSequence().thenWaitUntil(()->check(!c.outputBank().item(0).isEmpty()||!c.outputBank().chemical(0).isEmpty(),"PRC did not complete"))
               .thenExecute(()->{c.enabled=false;check(c.inputs.items[0].isEmpty()&&c.inputs.fluids[0].isEmpty()&&c.inputs.chemicals[0].isEmpty(),"PRC did not consume exact inputs");
-                  check(count(c.outputs,result.item().getItem())==result.item().getCount(),"PRC item output incorrect");check(ChemicalStack.isSameChemical(c.outputs.chemicals[0],result.chemical())&&c.outputs.chemicals[0].getAmount()==result.chemical().getAmount(),"PRC chemical output incorrect");
+                  check(count(c.outputBank(),result.item().getItem())==result.item().getCount(),"PRC item output incorrect");check(ChemicalStack.isSameChemical(c.outputBank().chemical(0),result.chemical())&&c.outputBank().chemical(0).getAmount()==result.chemical().getAmount(),"PRC chemical output incorrect");
               }).thenSucceed();
     }
 
@@ -280,7 +348,7 @@ public final class FactoryTests {
               .thenExecute(()->{fastUsage[0]=mekanism.common.util.MekanismUtils.getEnergyPerTick(c,usage);c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
               .thenIdle(5).thenExecute(()->{check(!c.processing.jobs.isEmpty(),"Upgraded batch did not start");fastTicks[0]=c.processing.jobs.getFirst().progress;c.getComponent().removeUpgrade(Upgrade.SPEED,true);check(c.getComponent().getUpgradeOutputSlot().getCount()==8,"Uninstall lost modules");})
               .thenIdle(2).thenExecute(()->check(c.processing.jobs.getFirst().ticks==200&&c.processing.jobs.getFirst().energy==usage,"Removed upgrades still influenced reserved work"))
-              .thenWaitUntil(()->check(count(c.outputs,dust)==8,"Recalculated work did not finish"))
+              .thenWaitUntil(()->check(count(c.outputBank(),dust)==8,"Recalculated work did not finish"))
               .thenExecute(()->{c.enabled=false;check(cell.getEnergyContainer().getEnergy()==start-8*(fastUsage[0]*fastTicks[0]+usage*(200-fastTicks[0])),"Upgrade transition charged incorrect energy");}).thenSucceed();
     }
 }

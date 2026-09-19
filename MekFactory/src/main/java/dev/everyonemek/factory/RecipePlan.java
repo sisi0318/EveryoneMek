@@ -15,13 +15,13 @@ public final class RecipePlan {
     public RecipePlan out(ItemStack s){if(!s.isEmpty())outItems.add(s.copy());return this;}
     public RecipePlan out(FluidStack s){if(!s.isEmpty())outFluids.add(s.copy());return this;}
     public RecipePlan out(ChemicalStack s){if(!s.isEmpty())outChemicals.add(s.copy());return this;}
-    public int available(Buffers b,int limit){
-        for(var e:items.entrySet())limit=Math.min(limit,b.items[e.getKey()].getCount()/e.getValue());
-        for(var e:fluids.entrySet())limit=Math.min(limit,b.fluids[e.getKey()].getAmount()/e.getValue());
-        for(var e:chemicals.entrySet())limit=(int)Math.min(limit,b.chemicals[e.getKey()].getAmount()/e.getValue());
+    public int available(ResourceBank b,int limit){
+        for(var e:items.entrySet())limit=Math.min(limit,b.item(e.getKey()).getCount()/e.getValue());
+        for(var e:fluids.entrySet())limit=Math.min(limit,b.fluid(e.getKey()).getAmount()/e.getValue());
+        for(var e:chemicals.entrySet())limit=(int)Math.min(limit,b.chemical(e.getKey()).getAmount()/e.getValue());
         return Math.max(0,limit);
     }
-    public void consume(Buffers b,int n){for(var e:items.entrySet())b.take(e.getKey(),Math.multiplyExact(n,e.getValue()),false);
-        for(var e:fluids.entrySet()){int i=e.getKey();b.fluids[i]=b.fluids[i].copyWithAmount(b.fluids[i].getAmount()-Math.multiplyExact(n,e.getValue()));}
-        for(var e:chemicals.entrySet()){int i=e.getKey();b.chemicals[i]=b.chemicals[i].copyWithAmount(b.chemicals[i].getAmount()-Math.multiplyExact(n,e.getValue()));}b.changed();}
+    public void consume(ResourceBank b,int n){for(var e:items.entrySet())b.take(e.getKey(),Math.multiplyExact(n,e.getValue()),false);
+        for(var e:fluids.entrySet()){int i=e.getKey();b.fluid(i,b.fluid(i).copyWithAmount(b.fluid(i).getAmount()-Math.multiplyExact(n,e.getValue())));}
+        for(var e:chemicals.entrySet()){int i=e.getKey();b.chemical(i,b.chemical(i).copyWithAmount(b.chemical(i).getAmount()-Math.multiplyExact(n,e.getValue())));}}
 }

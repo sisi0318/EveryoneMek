@@ -21,7 +21,7 @@
 - [Forbidden-Arcanus](Forbidden-Arcanus/AGENTS.md)：机内锻造、自定义升级、原多方块嵌入与共享库存端口。
 
 - [Botania](Botania/AGENTS.md)：仿生花、魔力加工、原生火花接入与旧存档兼容。
-- [MekFactory](MekFactory/AGENTS.md)：分级并行工厂、共享物料端口、原感应储能、在制持久化与一键施工。
+- [MekFactory](MekFactory/AGENTS.md)：分级并行工厂、独立物料仓、原感应储能、在制持久化与一键施工。
 
 ### 新模组启动
 

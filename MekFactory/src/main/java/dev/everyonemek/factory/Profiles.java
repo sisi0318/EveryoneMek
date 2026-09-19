@@ -24,32 +24,33 @@ public final class Profiles {
               exponential?1<<speed:Math.clamp((int)(factor/baseTicks),1,65536));
     }
     public record Profile(IMekanismRecipeTypeProvider<?,?,?> recipes,Kind kind,int baseTicks,LongSupplier energy,Predicate<Controller> condition) {
-        public RecipePlan find(Controller c){
-            if(!condition.test(c))return null;var b=c.inputs;
+        public RecipePlan find(Controller c){return find(c,c.inputBank());}
+        public RecipePlan find(Controller c,ResourceBank b){
+            if(!condition.test(c))return null;
             for(var holder:recipes.getRecipes(c.getLevel())){
                 var r=holder.value();if(r.isIncomplete())continue;RecipePlan found=null;String id=holder.id().toString();
                 switch(kind){
-                    case ITEM -> {if(r instanceof ItemStackToItemStackRecipe v)for(int i=0;i<b.slots();i++)if(v.test(b.items[i])){found=new RecipePlan(id).item(i,v.getInput().getMatchingInstance(b.items[i]).getCount()).out(v.getOutput(b.items[i]));break;}}
-                    case OXIDIZE -> {if(r instanceof ItemStackToChemicalRecipe v)for(int i=0;i<b.slots();i++)if(v.test(b.items[i])){found=new RecipePlan(id).item(i,v.getInput().getMatchingInstance(b.items[i]).getCount()).out(v.getOutput(b.items[i]));break;}}
-                    case CRYSTAL -> {if(r instanceof ChemicalCrystallizerRecipe v)for(int i=0;i<Buffers.TANKS;i++)if(v.test(b.chemicals[i])){found=new RecipePlan(id).chemical(i,v.getInput().getMatchingInstance(b.chemicals[i]).getAmount()).out(v.getOutput(b.chemicals[i]));break;}}
-                    case INFUSER -> {if(r instanceof ChemicalChemicalToChemicalRecipe v)outer:for(int i=0;i<Buffers.TANKS;i++)for(int j=0;j<Buffers.TANKS;j++)if(v.getLeftInput().test(b.chemicals[i])&&v.getRightInput().test(b.chemicals[j])&&v.test(b.chemicals[i],b.chemicals[j])){
-                        var p=new RecipePlan(id).chemical(i,v.getLeftInput().getMatchingInstance(b.chemicals[i]).getAmount()).chemical(j,v.getRightInput().getMatchingInstance(b.chemicals[j]).getAmount()).out(v.getOutput(b.chemicals[i],b.chemicals[j]));
+                    case ITEM -> {if(r instanceof ItemStackToItemStackRecipe v)for(int i=0;i<b.itemSlots();i++)if(v.test(b.item(i))){found=new RecipePlan(id).item(i,v.getInput().getMatchingInstance(b.item(i)).getCount()).out(v.getOutput(b.item(i)));break;}}
+                    case OXIDIZE -> {if(r instanceof ItemStackToChemicalRecipe v)for(int i=0;i<b.itemSlots();i++)if(v.test(b.item(i))){found=new RecipePlan(id).item(i,v.getInput().getMatchingInstance(b.item(i)).getCount()).out(v.getOutput(b.item(i)));break;}}
+                    case CRYSTAL -> {if(r instanceof ChemicalCrystallizerRecipe v)for(int i=0;i<b.chemicalTanks();i++)if(v.test(b.chemical(i))){found=new RecipePlan(id).chemical(i,v.getInput().getMatchingInstance(b.chemical(i)).getAmount()).out(v.getOutput(b.chemical(i)));break;}}
+                    case INFUSER -> {if(r instanceof ChemicalChemicalToChemicalRecipe v)outer:for(int i=0;i<b.chemicalTanks();i++)for(int j=0;j<b.chemicalTanks();j++)if(v.getLeftInput().test(b.chemical(i))&&v.getRightInput().test(b.chemical(j))&&v.test(b.chemical(i),b.chemical(j))){
+                        var p=new RecipePlan(id).chemical(i,v.getLeftInput().getMatchingInstance(b.chemical(i)).getAmount()).chemical(j,v.getRightInput().getMatchingInstance(b.chemical(j)).getAmount()).out(v.getOutput(b.chemical(i),b.chemical(j)));
                         if(p.available(b,1)>0){found=p;break outer;}
                     }}
-                    case WASHER -> {if(r instanceof FluidChemicalToChemicalRecipe v)outer:for(int i=0;i<Buffers.TANKS;i++)for(int j=0;j<Buffers.TANKS;j++)if(v.test(b.fluids[i],b.chemicals[j])){
-                        found=new RecipePlan(id).fluid(i,v.getFluidInput().getMatchingInstance(b.fluids[i]).getAmount()).chemical(j,v.getChemicalInput().getMatchingInstance(b.chemicals[j]).getAmount()).out(v.getOutput(b.fluids[i],b.chemicals[j]));break outer;
+                    case WASHER -> {if(r instanceof FluidChemicalToChemicalRecipe v)outer:for(int i=0;i<b.fluidTanks();i++)for(int j=0;j<b.chemicalTanks();j++)if(v.test(b.fluid(i),b.chemical(j))){
+                        found=new RecipePlan(id).fluid(i,v.getFluidInput().getMatchingInstance(b.fluid(i)).getAmount()).chemical(j,v.getChemicalInput().getMatchingInstance(b.chemical(j)).getAmount()).out(v.getOutput(b.fluid(i),b.chemical(j)));break outer;
                     }}
-                    case SEPARATOR -> {if(r instanceof ElectrolysisRecipe v)for(int i=0;i<Buffers.TANKS;i++)if(v.test(b.fluids[i])){
-                        var result=v.getOutput(b.fluids[i]);found=new RecipePlan(id).fluid(i,v.getInput().getMatchingInstance(b.fluids[i]).getAmount()).out(result.left()).out(result.right());
+                    case SEPARATOR -> {if(r instanceof ElectrolysisRecipe v)for(int i=0;i<b.fluidTanks();i++)if(v.test(b.fluid(i))){
+                        var result=v.getOutput(b.fluid(i));found=new RecipePlan(id).fluid(i,v.getInput().getMatchingInstance(b.fluid(i)).getAmount()).out(result.left()).out(result.right());
                         found.energy=mekanism.api.math.MathUtils.multiplyClamped(energy.getAsLong(),v.getEnergyMultiplier());break;
                     }}
-                    case REACTION -> {if(r instanceof PressurizedReactionRecipe v)outer:for(int i=0;i<b.slots();i++)if(v.getInputSolid().test(b.items[i]))for(int f=0;f<Buffers.TANKS;f++)if(v.getInputFluid().test(b.fluids[f]))for(int g=0;g<Buffers.TANKS;g++)if(v.getInputChemical().test(b.chemicals[g])&&v.test(b.items[i],b.fluids[f],b.chemicals[g])){
-                        var result=v.getOutput(b.items[i],b.fluids[f],b.chemicals[g]);found=new RecipePlan(id).item(i,v.getInputSolid().getMatchingInstance(b.items[i]).getCount()).fluid(f,v.getInputFluid().getMatchingInstance(b.fluids[f]).getAmount()).chemical(g,v.getInputChemical().getMatchingInstance(b.chemicals[g]).getAmount()).out(result.item()).out(result.chemical());
+                    case REACTION -> {if(r instanceof PressurizedReactionRecipe v)outer:for(int i=0;i<b.itemSlots();i++)if(v.getInputSolid().test(b.item(i)))for(int f=0;f<b.fluidTanks();f++)if(v.getInputFluid().test(b.fluid(f)))for(int g=0;g<b.chemicalTanks();g++)if(v.getInputChemical().test(b.chemical(g))&&v.test(b.item(i),b.fluid(f),b.chemical(g))){
+                        var result=v.getOutput(b.item(i),b.fluid(f),b.chemical(g));found=new RecipePlan(id).item(i,v.getInputSolid().getMatchingInstance(b.item(i)).getCount()).fluid(f,v.getInputFluid().getMatchingInstance(b.fluid(f)).getAmount()).chemical(g,v.getInputChemical().getMatchingInstance(b.chemical(g)).getAmount()).out(result.item()).out(result.chemical());
                         found.ticks=v.getDuration();found.energy=mekanism.api.math.MathUtils.addClamped(energy.getAsLong(),v.getEnergyRequired());break outer;
                     }}
-                    case ROTARY -> {if(r instanceof RotaryRecipe v)for(int i=0;i<Buffers.TANKS;i++){
-                        if(!c.rotaryReverse&&v.hasFluidToChemical()&&v.getFluidInput().test(b.fluids[i])&&v.test(b.fluids[i])){found=new RecipePlan(id).fluid(i,v.getFluidInput().getMatchingInstance(b.fluids[i]).getAmount()).out(v.getChemicalOutput(b.fluids[i]));break;}
-                        if(c.rotaryReverse&&v.hasChemicalToFluid()&&v.getChemicalInput().test(b.chemicals[i])&&v.test(b.chemicals[i])){found=new RecipePlan(id).chemical(i,v.getChemicalInput().getMatchingInstance(b.chemicals[i]).getAmount()).out(v.getFluidOutput(b.chemicals[i]));break;}
+                    case ROTARY -> {if(r instanceof RotaryRecipe v)for(int i=0;i<(c.rotaryReverse?b.chemicalTanks():b.fluidTanks());i++){
+                        if(!c.rotaryReverse&&v.hasFluidToChemical()&&v.getFluidInput().test(b.fluid(i))&&v.test(b.fluid(i))){found=new RecipePlan(id).fluid(i,v.getFluidInput().getMatchingInstance(b.fluid(i)).getAmount()).out(v.getChemicalOutput(b.fluid(i)));break;}
+                        if(c.rotaryReverse&&v.hasChemicalToFluid()&&v.getChemicalInput().test(b.chemical(i))&&v.test(b.chemical(i))){found=new RecipePlan(id).chemical(i,v.getChemicalInput().getMatchingInstance(b.chemical(i)).getAmount()).out(v.getFluidOutput(b.chemical(i)));break;}
                     }}
                 }
                 if(found!=null){
@@ -59,7 +60,7 @@ public final class Profiles {
                     var settings=settings(c,found.baseTicks,found.baseEnergy,found.exponential,found.fixedEnergy);found.ticks=settings.ticks;found.energy=settings.energy;found.operations=settings.operations;
                     if(found.available(b,1)==0)continue;
                     if(c.energy().available()<found.energy){c.status="energy";continue;}
-                    if(!new Processing.Job(found,1).store(c.outputs,1,true)){c.status="output";continue;}
+                    if(!new Processing.Job(found,1).store(c.outputBank(),1,true)){c.status="output";continue;}
                     return found;
                 }
             }return null;
