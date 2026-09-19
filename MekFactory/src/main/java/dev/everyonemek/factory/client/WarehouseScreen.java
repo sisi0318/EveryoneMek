@@ -13,12 +13,18 @@ public final class WarehouseScreen extends GuiMekanism<WarehouseMenu> {
     @Override protected void addGuiElements(){super.addGuiElements();
         for(int i=0;i<WarehouseMenu.PAGE_SIZE;i++){final int n=i;
             addRenderableWidget(new GuiSlot(menu.output?SlotType.OUTPUT:SlotType.INPUT,this,7+i%9*18,29+i/9*18){
-                @Override public void tick(){super.tick();visible=menu.page*WarehouseMenu.PAGE_SIZE+n<menu.visibleSlots;}
+                { refreshState(); }
+                private void refreshState(){visible=menu.page*WarehouseMenu.PAGE_SIZE+n<menu.visibleSlots;}
+                @Override public void tick(){super.tick();refreshState();}
             });
         }
         for(int i=0;i<2;i++){final int action=i+1;addRenderableWidget(new MekanismButton(this,i==0?8:144,90,24,14,Component.literal(i==0?"<":">"),(b,x,y)->{
             if(menu.getCarried().isEmpty()){menu.awaitingPage=true;minecraft.gameMode.handleInventoryButtonClick(menu.containerId,action);}return true;
-        }){@Override public void tick(){super.tick();visible=menu.pageCount>1;active=!menu.awaitingPage&&menu.getCarried().isEmpty()&&(action==1?menu.page>0:menu.page+1<menu.pageCount);}});}
+        }){
+            { refreshState(); }
+            private void refreshState(){visible=menu.pageCount>1;active=visible&&!menu.awaitingPage&&menu.getCarried().isEmpty()&&(action==1?menu.page>0:menu.page+1<menu.pageCount);}
+            @Override public void tick(){super.tick();refreshState();}
+        });}
         addRenderableWidget(new MekanismButton(this,8,108,76,14,Content.text("fluids"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,false));return true;}));
         addRenderableWidget(new MekanismButton(this,92,108,76,14,Content.text("chemicals"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,true));return true;}));
     }

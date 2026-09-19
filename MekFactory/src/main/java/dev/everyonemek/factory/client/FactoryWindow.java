@@ -26,20 +26,26 @@ public final class FactoryWindow extends GuiWindow {
               .tooltip(() -> List.of(Content.text("limit_step"), Content.text("frame_limit", menu.frameParallel), Content.text("available_parallel", menu.availableParallel))));
         addChild(new MekanismButton(gui, relativeX + 10, relativeY + 68, 164, 16, Content.text("rotary_fluid"),
               (b, x, y) -> send(22)) {
-            @Override public void tick() { super.tick(); visible = Profiles.rotary(tile.template.getStack()); active = menu.jobCount == 0; setMessage(Content.text(tile.rotaryReverse ? "rotary_gas" : "rotary_fluid")); }
+            { refreshState(); }
+            private void refreshState() { visible = Profiles.rotary(tile.template.getStack()); active = visible && menu.jobCount == 0; setMessage(Content.text(tile.rotaryReverse ? "rotary_gas" : "rotary_fluid")); }
+            @Override public void tick() { super.tick(); refreshState(); }
         });
         button(10, 92, 78, () -> Content.text("preview"), 2);
         button(96, 92, 78, () -> Content.text("build"), 3);
         addChild(new MekanismButton(gui, relativeX + 10, relativeY + 114, 164, 16, Content.text("legacy_stock"),
               (b, x, y) -> { gui.addWindow(new LegacyStockWindow(gui, menu)); return true; }) {
-            @Override public void tick() { super.tick(); visible = menu.legacyInput || menu.legacyOutput; }
+            { refreshState(); }
+            private void refreshState() { visible = menu.legacyInput || menu.legacyOutput; active = visible; }
+            @Override public void tick() { super.tick(); refreshState(); }
         });
     }
     private boolean send(int action) { Minecraft.getInstance().gameMode.handleInventoryButtonClick(menu.containerId, action); return true; }
     private void button(int x, int y, int width, Supplier<Component> label, int id) {
         addChild(new MekanismButton(gui(), relativeX + x, relativeY + y, width, 16, label.get(),
               (b, mx, my) -> send((id == 20 || id == 21) && Screen.hasShiftDown() ? id + 3 : id)) {
-            @Override public void tick() { super.tick(); if (id == 20 || id == 21) active = id == 20 ? tile.parallelLimit > 1 : tile.parallelLimit < 512; }
+            { refreshState(); }
+            private void refreshState() { if (id == 20 || id == 21) active = id == 20 ? tile.parallelLimit > 1 : tile.parallelLimit < 512; }
+            @Override public void tick() { super.tick(); refreshState(); }
             @Override public void updateTooltip(int mx, int my) { if (id == 20 || id == 21) setTooltip(TooltipUtils.create(Content.text("limit_step"))); }
         });
     }

@@ -4,7 +4,7 @@
 
 ## 基线与用户偏好
 
-- 0.1.0-alpha.8，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.8.jar`。
+- 0.1.0-alpha.9，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.9.jar`。
 - MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
 - 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
 - alpha.7 用户明确改为机器数量 × 原生处理线数，再取主控/最低框架上限与设置上限的最小值。普通原机 1 线，原工厂通过 AttributeTier/FactoryTier.processes 获取 3/5/7/9；旧 machinesLimitParallel 开关退役，不能让已有 false 配置阻止新规则。
@@ -51,6 +51,7 @@
 
 - `FactoryMenu` 根据点击的实际部件核对距离和同主控归属，不按远处主控误判距离。安全仍用主控权限。已关联但失效的结构可查看诊断/取物，端口传输关闭。
 - 主控 FactoryMenu/FactoryScreen：模板槽 18,30；玩家槽偏移 34,178；屏幕 230×260。同步当前任务的产物和真实 progress/ticks，而非 Controller 每 tick 清零的活动进度；暂停/缺电也保持百分比。菜单 70/71 切换任务，80/81 打开旧缓存。主界面使用原加工箭头，耗能缩写而精确值放 tooltip；结构窗口 184×138，只为 ROTARY 显示方向按钮，服务端动作 22 同样检查加工类型及在制。旧缓存入口移入结构设置。
+- alpha.9 修复首帧控件闪现：条件 visible/active 必须在控件构造时就按当前菜单设置，再由 tick 动态更新。FactoryScreen、WarehouseScreen、FactoryWindow、PortConfigurationWindow 的匿名控件共用自身 refreshState，不能只在第一次 tick 隐藏默认可见按钮；仓未开放槽框同样处理。
 - WarehouseMenu/Screen：屏幕 176×220，每页 27 格（9×3），槽位 8,30，玩家槽 8,138。直接指向一个 Part.storage；模式变化、部件移除/替换后失效。未成型可手工开仓，但管道仍按完整结构守卫。回收旧缓存用同一菜单类型，目标是 Controller 的历史 bank，禁止插入。
 - WarehouseResourcesWindow 为 176×118，每行四个原生 MEDIUM gauge，数据来自菜单同步数组，容量来自 tankCapacity。只读适配不保存第二份储罐、不发送原生 dropper 包；旧溢出量只限幅绘制高度，不截断实际库存。
 - 主控旋转/改尺寸后，旧仓可按原主控权限手工取料；关联主控区块未加载时不强制加载，也不绕过其权限。主控不存在后独立仓可正常开界面。
@@ -78,5 +79,6 @@
 - alpha.7 增加机器数量/四级原工厂处理线、设置与最低框架限制、实际 10 线耗电与产物、非回转设备拒绝动作 22 的回归。原八线/多线夹具须提供对应机器数量，不能靠旧规则借用框架空位。
 - ThroughputTests 覆盖真实 tick 驱动、多种物品跨可见页出料、既有堆叠补货、第二输出仓经真实 Mek 管道送箱、100,000 mB 水与 500,000 Chemical 输出、双倍工作共享供能预算、辅料转换剩余量及提纯缺氧/重载/续作。原合金配方在本依赖中用铜，不要按旧版铁锭猜测试材料；ChemicalTank 接收侧要明确设 INPUT，默认正面 OUTPUT 不收料。
 - alpha.8 改变状态与升级支持，FactoryAppearance registrar 版本为 4，客户端与服务端需一致。资源检查包含新 menu/PORT_DATA、四档仓 loot 与 item override，以及配方不再消耗低级有库存仓。
+- alpha.9 只改客户端控件初始状态，执行 build 与 JAR 检查，不重复运行不能覆盖首帧渲染的服务端测试；协议仍为 4，世界/菜单数据格式不变。
 - alpha.5 是客户端与材质修复，执行 build、资源检查、当前 Minecraft 与编译产物的重绘调用核对；不以再跑服务端 GameTest 冒充修复客户端重绘的验证。
 - 使用自身 Wrapper/.gradle-home，可临时使用已有 GRADLE_RO_DEP_CACHE；缓存、参考源码和游戏世界不提交。CI/发布入口已注册 MekFactory。

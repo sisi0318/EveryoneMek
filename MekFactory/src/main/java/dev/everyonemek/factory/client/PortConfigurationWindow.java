@@ -49,7 +49,9 @@ public final class PortConfigurationWindow extends GuiWindow {
               () -> tile.portInputs[n] > 0 ? tile.portOutputs[n] > 0 ? EnumColor.PURPLE : EnumColor.DARK_RED
                     : tile.portOutputs[n] > 0 ? EnumColor.DARK_BLUE : null,
               (button, mx, my) -> send(40 + n), (button, mx, my) -> send(40 + n)) {
-            @Override public void tick() { super.tick(); active = tile.portInputs[n] + tile.portOutputs[n] > 0; }
+            { refreshState(); }
+            private void refreshState() { active = tile.portInputs[n] + tile.portOutputs[n] > 0; }
+            @Override public void tick() { super.tick(); refreshState(); }
             @Override public void updateTooltip(int mouseX, int mouseY) {
                 setTooltip(TooltipUtils.create(Component.translatable(side.getTranslationKey()),
                       Content.text("port_counts", tile.portInputs[n], tile.portOutputs[n]), Content.text("port_corner_hint")));

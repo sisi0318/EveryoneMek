@@ -59,7 +59,9 @@ public final class FactoryScreen extends GuiMekanismTile<Controller, FactoryMenu
             final int action = i == 0 ? 70 : 71;
             addRenderableWidget(new MekanismButton(this, i == 0 ? 174 : 194, 76, 18, 16, Component.literal(i == 0 ? "<" : ">"),
                   (b, x, y) -> { minecraft.gameMode.handleInventoryButtonClick(menu.containerId, action); return true; }) {
-                @Override public void tick() { super.tick(); visible = menu.jobCount > 1; active = action == 70 ? menu.jobIndex > 0 : menu.jobIndex + 1 < menu.jobCount; }
+                { refreshState(); }
+                private void refreshState() { visible = menu.jobCount > 1; active = visible && (action == 70 ? menu.jobIndex > 0 : menu.jobIndex + 1 < menu.jobCount); }
+                @Override public void tick() { super.tick(); refreshState(); }
                 @Override public void updateTooltip(int x, int y) { setTooltip(TooltipUtils.create(Content.text("job_page", menu.jobIndex + 1, menu.jobCount))); }
             });
         }
