@@ -1,0 +1,8 @@
+{
+  "type": "mekgravity:matter_fuel",
+  "ingredient": {
+    "item": "mekgravity:dense_fuel_pellet"
+  },
+  "count": 1,
+  "energy": 50000000000
+}

@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "active=false,facing=north": {
+      "model": "mekgravity:block/reactor",
+      "y": 0
+    },
+    "active=false,facing=east": {
+      "model": "mekgravity:block/reactor",
+      "y": 90
+    },
+    "active=false,facing=south": {
+      "model": "mekgravity:block/reactor",
+      "y": 180
+    },
+    "active=false,facing=west": {
+      "model": "mekgravity:block/reactor",
+      "y": 270
+    },
+    "active=true,facing=north": {
+      "model": "mekgravity:block/reactor_active",
+      "y": 0
+    },
+    "active=true,facing=east": {
+      "model": "mekgravity:block/reactor_active",
+      "y": 90
+    },
+    "active=true,facing=south": {
+      "model": "mekgravity:block/reactor_active",
+      "y": 180
+    },
+    "active=true,facing=west": {
+      "model": "mekgravity:block/reactor_active",
+      "y": 270
+    }
+  }
+}

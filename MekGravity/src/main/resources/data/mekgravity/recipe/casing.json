@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "SOS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "O": {
+      "item": "mekanism:ingot_osmium"
+    }
+  },
+  "result": {
+    "id": "mekgravity:casing",
+    "count": 8
+  }
+}

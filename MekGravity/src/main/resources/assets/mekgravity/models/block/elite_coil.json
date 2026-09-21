@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "mekgravity:block/coil_front",
+    "top": "mekgravity:block/coil_top",
+    "side": "mekgravity:block/coil_side"
+  }
+}

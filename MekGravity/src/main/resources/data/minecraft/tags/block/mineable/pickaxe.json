@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "mekgravity:reactor",
+    "mekgravity:frame",
+    "mekgravity:casing",
+    "mekgravity:glass",
+    "mekgravity:fuel",
+    "mekgravity:coolant",
+    "mekgravity:energy",
+    "mekgravity:core",
+    "mekgravity:basic_coil",
+    "mekgravity:advanced_coil",
+    "mekgravity:elite_coil",
+    "mekgravity:ultimate_coil"
+  ]
+}

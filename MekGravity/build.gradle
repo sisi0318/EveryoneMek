@@ -1,0 +1,53 @@
+plugins { id 'java-library'; id 'net.neoforged.moddev' version '2.0.146' }
+group = 'dev.everyonemek'
+version = mod_version
+base { archivesName = 'MekGravity' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+sourceSets { gameTest { compileClasspath += sourceSets.main.output; runtimeClasspath += sourceSets.main.output } }
+configurations { gameTestImplementation.extendsFrom implementation; gameTestCompileOnly.extendsFrom compileOnly; gameTestRuntimeOnly.extendsFrom runtimeOnly }
+repositories {
+    maven { url = 'https://modmaven.dev/'; content { includeGroup 'mekanism' } }
+    maven { url = 'https://maven.blamejared.com/'; content { includeGroup 'mezz.jei' } }
+    mavenCentral()
+}
+neoForge {
+    version = project.neo_version
+    addModdingDependenciesTo sourceSets.gameTest
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        gameTestServer { type = 'gameTestServer'; gameDirectory = layout.buildDirectory.dir('gametest'); systemProperty 'neoforge.enabledGameTestNamespaces', 'mekgravity' }
+    }
+    mods { mekgravity { sourceSet sourceSets.main; sourceSet sourceSets.gameTest } }
+}
+dependencies {
+    implementation "mekanism:Mekanism:${mekanism_version}"
+    runtimeOnly "mekanism:Mekanism:${mekanism_version}:generators"
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.22.1.316'
+}
+tasks.named('check') { dependsOn 'compileGameTestJava' }
+tasks.named('jar', Jar) { from('LICENSE') }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def resourceProperties = [version: project.version.toString()]
+tasks.named('processResources', ProcessResources) {
+    inputs.properties(resourceProperties)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(resourceProperties) }
+}
+// A loader failure can return exit code zero before GameTest starts. Require a fresh completion record.
+def gameTestMarker = layout.buildDirectory.file('gametest/run-start.txt')
+def gameTestLog = layout.buildDirectory.file('gametest/logs/latest.log')
+tasks.named('runGameTestServer') {
+    doFirst {
+        def marker = gameTestMarker.get().asFile
+        marker.parentFile.mkdirs()
+        marker.text = System.currentTimeMillis().toString()
+    }
+    doLast {
+        def logFile = gameTestLog.get().asFile
+        def gameTestStarted = gameTestMarker.get().asFile.text.toLong()
+        def output = logFile.isFile() ? logFile.getText('UTF-8') : ''
+        if (!logFile.isFile() || logFile.lastModified() < gameTestStarted || !(output =~ /All [1-9][0-9]* required tests passed/) || output.contains('Parsing error loading recipe mekgravity:')) {
+            throw new GradleException('MekGravity GameTests did not complete cleanly; inspect build/gametest/logs/latest.log')
+        }
+    }
+}

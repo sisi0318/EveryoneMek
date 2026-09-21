@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "SXS",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "S": {
+      "item": "mekgravity:casing"
+    },
+    "X": {
+      "item": "minecraft:hopper"
+    }
+  },
+  "result": {
+    "id": "mekgravity:fuel",
+    "count": 1
+  }
+}

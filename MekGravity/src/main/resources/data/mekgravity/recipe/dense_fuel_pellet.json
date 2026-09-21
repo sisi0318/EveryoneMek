@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "mekanism:block_osmium"
+    },
+    {
+      "item": "mekanism:block_lead"
+    },
+    {
+      "item": "mekanism:block_refined_obsidian"
+    },
+    {
+      "item": "mekanism:pellet_polonium"
+    }
+  ],
+  "result": {
+    "id": "mekgravity:dense_fuel_pellet",
+    "count": 8
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "mekgravity:block/energy"
+    },
+    "output=true": {
+      "model": "mekgravity:block/energy_output"
+    }
+  }
+}

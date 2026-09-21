@@ -1,0 +1,11 @@
+{
+  "parent": "mekgravity:block/coolant",
+  "overrides": [
+    {
+      "predicate": {
+        "mekgravity:output": 1
+      },
+      "model": "mekgravity:block/coolant_output"
+    }
+  ]
+}

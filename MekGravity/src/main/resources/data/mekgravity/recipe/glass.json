@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SGS",
+    "G G",
+    "SGS"
+  ],
+  "key": {
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "G": {
+      "item": "mekanismgenerators:reactor_glass"
+    }
+  },
+  "result": {
+    "id": "mekgravity:glass",
+    "count": 8
+  }
+}

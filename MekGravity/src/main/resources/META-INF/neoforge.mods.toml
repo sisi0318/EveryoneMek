@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+[[mods]]
+modId="mekgravity"
+version="${version}"
+displayName="Mek Gravity"
+authors="EveryoneMek"
+description='''Gravitational containment reactors with material fuel and closed-loop sodium cooling.'''
+[[mixins]]
+config="mekgravity.mixins.json"
+[[dependencies.mekgravity]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.241,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.mekgravity]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.mekgravity]]
+modId="mekanism"
+type="required"
+versionRange="[10.7.19,10.8)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.mekgravity]]
+modId="mekanismgenerators"
+type="required"
+versionRange="[10.7.19,10.8)"
+ordering="AFTER"
+side="BOTH"

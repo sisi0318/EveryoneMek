@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "output=false": {
+      "model": "mekgravity:block/coolant"
+    },
+    "output=true": {
+      "model": "mekgravity:block/coolant_output"
+    }
+  }
+}

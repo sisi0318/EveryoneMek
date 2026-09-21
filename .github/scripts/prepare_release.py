@@ -10,6 +10,13 @@ from zipfile import ZipFile
 
 # Add new projects here and to build.yml/release.yml's module choices.
 MODULES = {
+    "MekGravity": {
+        "directory": "MekGravity",
+        "name": "Mek Gravity",
+        "archive": "MekGravity",
+        "mod_id": "mekgravity",
+        "java": "21",
+    },
     "MekFactory": {
         "directory": "MekFactory",
         "name": "Mek Factory",

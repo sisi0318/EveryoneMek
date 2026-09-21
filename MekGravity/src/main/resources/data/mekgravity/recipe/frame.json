@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SRS",
+    "SPS",
+    "SRS"
+  ],
+  "key": {
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "R": {
+      "item": "mekanism:ingot_refined_obsidian"
+    },
+    "P": {
+      "item": "mekanism:pellet_polonium"
+    }
+  },
+  "result": {
+    "id": "mekgravity:frame",
+    "count": 8
+  }
+}

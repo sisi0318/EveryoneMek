@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "ASA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:pellet_antimatter"
+    },
+    "S": {
+      "item": "mekanism:sps_casing"
+    }
+  },
+  "result": {
+    "id": "mekgravity:core",
+    "count": 1
+  }
+}

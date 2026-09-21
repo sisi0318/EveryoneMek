@@ -12,6 +12,7 @@
 - [Overload Core](OverloadCore/README.md)：科技核心挂坠、Mek 作业诅咒与受控增产、发电／物流限制和随身机具收益。
 - [Botanical Mekanism](Botania/README.md)：仿生花、原生词典与火花、Chemical 魔力加工，以及可选 AE2／多媒体物品互通和原装置控制器。
 - [Mek Factory](MekFactory/README.md)：分级并行矩阵工厂、原机与共享升级、独立输入输出仓、原感应储能，可选支持 Mekanism Extras 高阶工厂与感应部件。
+- [Mek Gravity](MekGravity/README.md)：7×7×7 引力约束反应堆、四级线圈、物质燃料、钠冷却与大功率供电。
 
 开发接手与新增模组先读 [AGENTS.md](AGENTS.md)，其中提供通用规则、启动清单和各模组开发入口。
 
@@ -20,7 +21,7 @@ Botania 的完整主线、适配边界与后续候选见 [完整规划](Botania/
 开发资料：
 
 - [MekFactory：并行矩阵工厂设计与范围](MekFactory/DESIGN.md)：分级框架/端口、原感应储能、主机与升级、一键搭建及兼容边界。
-- [引力约束反应堆设计提案](docs/MEK_GRAVITY_REACTOR_DESIGN.md)：SPS 后置的多方块发电、物质燃料、冷却回路和分级线圈；尚未实现。
+- [引力约束反应堆设计提案](docs/MEK_GRAVITY_REACTOR_DESIGN.md)：SPS 后置的多方块发电、物质燃料、冷却回路和分级线圈；已落实为 MekGravity 原型。
 - [Overload Core：过载短路核心设计](OverloadCore/DESIGN.md)：面向 Mek 科技包的诅咒饰品设计与实现范围。
 - [NaturesAura 适配与机器设计](docs/NATURES_AURA_DESIGN.md)
 - [Ars Nouveau 机器设计提案](Ars-Nouveau/DESIGN.md)

@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "active=false,facing=north": {
+      "model": "mekgravity:block/advanced_coil",
+      "x": 0,
+      "y": 0
+    },
+    "active=false,facing=east": {
+      "model": "mekgravity:block/advanced_coil",
+      "x": 0,
+      "y": 90
+    },
+    "active=false,facing=south": {
+      "model": "mekgravity:block/advanced_coil",
+      "x": 0,
+      "y": 180
+    },
+    "active=false,facing=west": {
+      "model": "mekgravity:block/advanced_coil",
+      "x": 0,
+      "y": 270
+    },
+    "active=false,facing=up": {
+      "model": "mekgravity:block/advanced_coil",
+      "x": 270,
+      "y": 0
+    },
+    "active=false,facing=down": {
+      "model": "mekgravity:block/advanced_coil",
+      "x": 90,
+      "y": 0
+    },
+    "active=true,facing=north": {
+      "model": "mekgravity:block/advanced_coil_active",
+      "x": 0,
+      "y": 0
+    },
+    "active=true,facing=east": {
+      "model": "mekgravity:block/advanced_coil_active",
+      "x": 0,
+      "y": 90
+    },
+    "active=true,facing=south": {
+      "model": "mekgravity:block/advanced_coil_active",
+      "x": 0,
+      "y": 180
+    },
+    "active=true,facing=west": {
+      "model": "mekgravity:block/advanced_coil_active",
+      "x": 0,
+      "y": 270
+    },
+    "active=true,facing=up": {
+      "model": "mekgravity:block/advanced_coil_active",
+      "x": 270,
+      "y": 0
+    },
+    "active=true,facing=down": {
+      "model": "mekgravity:block/advanced_coil_active",
+      "x": 90,
+      "y": 0
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "OPO",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "O": {
+      "item": "mekanism:ingot_refined_obsidian"
+    },
+    "P": {
+      "item": "mekgravity:elite_coil"
+    }
+  },
+  "result": {
+    "id": "mekgravity:ultimate_coil",
+    "count": 1
+  }
+}

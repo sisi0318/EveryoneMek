@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "OPO",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "O": {
+      "item": "mekanism:ingot_refined_obsidian"
+    },
+    "P": {
+      "item": "mekanism:pellet_polonium"
+    }
+  },
+  "result": {
+    "id": "mekgravity:basic_coil",
+    "count": 1
+  }
+}
