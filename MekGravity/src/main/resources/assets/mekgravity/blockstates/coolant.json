@@ -1,16 +1,124 @@
 {
   "variants": {
-    "formed=false,output=false": {
-      "model": "mekgravity:block/coolant"
+    "formed=false,facing=north,output=false": {
+      "model": "mekgravity:block/coolant",
+      "x": 0,
+      "y": 0
     },
-    "formed=false,output=true": {
-      "model": "mekgravity:block/coolant_output"
+    "formed=false,facing=east,output=false": {
+      "model": "mekgravity:block/coolant",
+      "x": 0,
+      "y": 90
     },
-    "formed=true,output=false": {
-      "model": "mekgravity:block/coolant_formed"
+    "formed=false,facing=south,output=false": {
+      "model": "mekgravity:block/coolant",
+      "x": 0,
+      "y": 180
     },
-    "formed=true,output=true": {
-      "model": "mekgravity:block/coolant_formed_output"
+    "formed=false,facing=west,output=false": {
+      "model": "mekgravity:block/coolant",
+      "x": 0,
+      "y": 270
+    },
+    "formed=false,facing=up,output=false": {
+      "model": "mekgravity:block/coolant",
+      "x": 270,
+      "y": 0
+    },
+    "formed=false,facing=down,output=false": {
+      "model": "mekgravity:block/coolant",
+      "x": 90,
+      "y": 0
+    },
+    "formed=false,facing=north,output=true": {
+      "model": "mekgravity:block/coolant_output",
+      "x": 0,
+      "y": 0
+    },
+    "formed=false,facing=east,output=true": {
+      "model": "mekgravity:block/coolant_output",
+      "x": 0,
+      "y": 90
+    },
+    "formed=false,facing=south,output=true": {
+      "model": "mekgravity:block/coolant_output",
+      "x": 0,
+      "y": 180
+    },
+    "formed=false,facing=west,output=true": {
+      "model": "mekgravity:block/coolant_output",
+      "x": 0,
+      "y": 270
+    },
+    "formed=false,facing=up,output=true": {
+      "model": "mekgravity:block/coolant_output",
+      "x": 270,
+      "y": 0
+    },
+    "formed=false,facing=down,output=true": {
+      "model": "mekgravity:block/coolant_output",
+      "x": 90,
+      "y": 0
+    },
+    "formed=true,facing=north,output=false": {
+      "model": "mekgravity:block/coolant_formed",
+      "x": 0,
+      "y": 0
+    },
+    "formed=true,facing=east,output=false": {
+      "model": "mekgravity:block/coolant_formed",
+      "x": 0,
+      "y": 90
+    },
+    "formed=true,facing=south,output=false": {
+      "model": "mekgravity:block/coolant_formed",
+      "x": 0,
+      "y": 180
+    },
+    "formed=true,facing=west,output=false": {
+      "model": "mekgravity:block/coolant_formed",
+      "x": 0,
+      "y": 270
+    },
+    "formed=true,facing=up,output=false": {
+      "model": "mekgravity:block/coolant_formed",
+      "x": 270,
+      "y": 0
+    },
+    "formed=true,facing=down,output=false": {
+      "model": "mekgravity:block/coolant_formed",
+      "x": 90,
+      "y": 0
+    },
+    "formed=true,facing=north,output=true": {
+      "model": "mekgravity:block/coolant_formed_output",
+      "x": 0,
+      "y": 0
+    },
+    "formed=true,facing=east,output=true": {
+      "model": "mekgravity:block/coolant_formed_output",
+      "x": 0,
+      "y": 90
+    },
+    "formed=true,facing=south,output=true": {
+      "model": "mekgravity:block/coolant_formed_output",
+      "x": 0,
+      "y": 180
+    },
+    "formed=true,facing=west,output=true": {
+      "model": "mekgravity:block/coolant_formed_output",
+      "x": 0,
+      "y": 270
+    },
+    "formed=true,facing=up,output=true": {
+      "model": "mekgravity:block/coolant_formed_output",
+      "x": 270,
+      "y": 0
+    },
+    "formed=true,facing=down,output=true": {
+      "model": "mekgravity:block/coolant_formed_output",
+      "x": 90,
+      "y": 0
     }
   }
 }

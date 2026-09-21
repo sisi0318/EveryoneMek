@@ -52,8 +52,8 @@ public final class CoreRenderer implements BlockEntityRenderer<Part> {
         pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(tick%720)*.5F));pose.mulPose(Axis.ZP.rotationDegrees(18));ring(pose,v,.44F,.016F,(int)(155*intensity*pulse));pose.popPose();
         var matrix=pose.last().pose();
         for(int axis=0;axis<3;axis++)for(int sign:new int[]{-1,1}){
-            ribbon(v,matrix,axis,sign*.39F,sign*1.49F,.011F,(int)(65*intensity*pulse),false);
-            for(int spark=0;spark<2;spark++){double phase=(tick/36+axis*.17+(sign+1)*.13+spark*.5)%1;float at=sign*(1.46F-(float)phase*1.04F);
+            ribbon(v,matrix,axis,sign*.39F,sign*1.375F,.011F,(int)(65*intensity*pulse),false);
+            for(int spark=0;spark<2;spark++){double phase=(tick/36+axis*.17+(sign+1)*.13+spark*.5)%1;float at=sign*(1.34F-(float)phase*.92F);
                 ribbon(v,matrix,axis,at-.025F,at+.025F,.022F,(int)(180*intensity),true);
             }
         }

@@ -2,7 +2,7 @@
 
 外观沿用已确认的浅灰 Mek 工业机壳、深色工作区和少量紫色指示灯。
 
-最新工作是[整机三维灰模](models/graybox-v1/README.md)：原生WebGL可旋转预览与可编辑OBJ、语义部件数据。此阶段直接制作几何，没有重新生成贴图；尚未写入运行模型。
+用户确认的[整机三维灰模](models/graybox-v1/README.md)已在alpha.5接入游戏。保留原生WebGL预览、可编辑OBJ与语义部件数据；运行模型由同一份assembly.json导出，并复用现有原创16×16材质，不再生成整块机壳图替代立体结构。
 
 - `concept-v1.png`：用户批准方向的整机剖视概念，只作设计参考。
 - `source/controller.png`、`source/coil.png`：本次由内置 image_gen 原创生成的2×2图集；完整提示词见 `prompts.json`。
@@ -29,3 +29,7 @@ alpha.4新增内置image_gen原稿 `source/shell-v2.png`、`source/orb.png` 与�
 `tools/core_mesh.py`创建原创低多边形OBJ：球半径0.375格，两环半径0.53/0.66格，宽0.036格、厚0.024格，互不相交。使用NeoForge自带加载器；仅能量材质通过MTL Ka保持可见，钢环保留正常光照。
 
 运行 `node tools/preview_core.cjs` 生成停机/运行核心近景（沿用文件名 `core-and-fuel-preview.png`），`node tools/preview_reactor.cjs` 生成 `reactor-assembled-preview.png`。共同的 `model_preview.cjs` 解析实际JSON/OBJ/MTL与UV，不是手绘概念图；整机视图省略透明玻璃边线及动态光效。均为离线检查，不是游戏截图。
+
+alpha.5运行模型入口为 `tools/runtime_geometry.py`，由 `tools/generate_resources.py` 调用。矩形体先做外表面合并，去除内部面和覆盖面；立柱/转角/面板/发射器/接口分别导出，不能再用cube_all模型替换已批准的形体。ModelShapes.java也由源数据生成，用于线圈外伸部位的选择及碰撞。材质使用shell_panel、orb_steel、orb_inner及已有指示灯区域，通过UV选择；没有脚本重绘位图。
+
+成型窗框使用实体边角模型，透明窗面通过NeoForge原生面颜色引用Minecraft白色混凝土贴图；没有导出、修改或复制原版位图。`node tools/preview_runtime_parts.cjs` 生成 `runtime-parts-preview.png`。SVG预览中的亚像素裁切补偿只修正离线投影接缝，不改变游戏几何。

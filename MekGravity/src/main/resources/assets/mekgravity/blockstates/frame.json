@@ -3,8 +3,33 @@
     "formed=false": {
       "model": "mekgravity:block/frame"
     },
-    "formed=true": {
-      "model": "mekgravity:block/frame_formed"
+    "formed=true,facing=up": {
+      "model": "mekgravity:block/frame_formed",
+      "x": 0,
+      "y": 0
+    },
+    "formed=true,facing=north": {
+      "model": "mekgravity:block/frame_formed",
+      "x": 90,
+      "y": 0
+    },
+    "formed=true,facing=south": {
+      "model": "mekgravity:block/frame_formed",
+      "x": 90,
+      "y": 0
+    },
+    "formed=true,facing=east": {
+      "model": "mekgravity:block/frame_formed",
+      "x": 90,
+      "y": 90
+    },
+    "formed=true,facing=west": {
+      "model": "mekgravity:block/frame_formed",
+      "x": 90,
+      "y": 90
+    },
+    "formed=true,facing=down": {
+      "model": "mekgravity:block/frame_joint"
     }
   }
 }

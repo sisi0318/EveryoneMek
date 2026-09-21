@@ -2,7 +2,7 @@
 
 默认布局已更新到alpha.2，取消两个冷却口并改为玻璃。概念图和界面草图保留初版参考，实际界面以当前模组为准。
 
-2026-09-22新增[可旋转的整机三维灰模](../../MekGravity/art/models/graybox-v1/index.html)与[OBJ建模包](../../MekGravity/art/models/graybox-v1/reactor-graybox-v1.zip)，用于先确认结构比例和层次，再制作材质、接入游戏。灰模与下方概念图分开维护，目前不改变已发布模组。
+2026-09-22新增的[可旋转整机三维灰模](../../MekGravity/art/models/graybox-v1/index.html)已获用户确认并在alpha.5拆分接入游戏。[OBJ建模包](../../MekGravity/art/models/graybox-v1/reactor-graybox-v1.zip)与下方概念图分开维护，预览保留灰模便于查看结构。
 
 2026-09-21。用户明确选择“先做结构和视觉设计”。本目录保留设计资产。后续可运行实现见 [MekGravity](../../MekGravity/README.md)，看板本身仍是静态设计预览。
 

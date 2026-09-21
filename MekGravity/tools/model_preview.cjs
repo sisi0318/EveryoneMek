@@ -46,14 +46,14 @@ function model(name){
       const corners={north:[[X,Y,z],[x,Y,z],[x,y,z],[X,y,z]],south:[[x,Y,Z],[X,Y,Z],[X,y,Z],[x,y,Z]],west:[[x,Y,z],[x,Y,Z],[x,y,Z],[x,y,z]],east:[[X,Y,Z],[X,Y,z],[X,y,z],[X,y,Z]],up:[[x,Y,z],[X,Y,z],[X,Y,Z],[x,Y,Z]],down:[[x,y,Z],[X,y,Z],[X,y,z],[x,y,z]]};
       for(const [side,f]of Object.entries(e.faces)){
         const [u,v,U,V]=(f.uv||[0,0,16,16]).map(n=>n/16);
-        polygon(corners[side].slice().reverse(),[[u,v],[U,v],[U,V],[u,V]].reverse(),tex(f.texture));
+        polygon(corners[side].slice().reverse(),[[u,v],[U,v],[U,V],[u,V]].reverse(),tex(f.texture),Boolean(f.neoforge_data?.block_light));
       }
     }
   }
   modelCache.set(name,triangles);return triangles;
 }
 async function render(file,panels,width,height){
-  const textureIds=new Map(),defs=[];let body='',index=0;
+  const textureIds=new Map(),filters=new Map(),defs=[];let body='',index=0;
   const texture=async id=>{
     if(!textureIds.has(id)){
       const key='texture'+textureIds.size;textureIds.set(id,key);
@@ -82,10 +82,13 @@ async function render(file,panels,width,height){
       const q=sub(p[1],p[0]),r=sub(p[2],p[0]);
       const A=(q[0]*e[1]-r[0]*d[1])/det,B=(q[1]*e[1]-r[1]*d[1])/det,C=(r[0]*d[0]-q[0]*e[0])/det,D=(r[1]*d[0]-q[1]*e[0])/det;
       const matrix=[A,B,C,D,p[0][0]-A*a[0]-C*a[1],p[0][1]-B*a[0]-D*a[1]];
-      const points=p.map(v=>v.join(',')).join(' '),clip='face'+index++;
+      // Raster clip edges need a sub-pixel overlap; the 3D model itself is unchanged.
+      const center=[p.reduce((s,v)=>s+v[0],0)/3,p.reduce((s,v)=>s+v[1],0)/3];
+      const points=p.map(v=>{const dx=v[0]-center[0],dy=v[1]-center[1],length=Math.hypot(dx,dy);return [v[0]+dx/length*.7,v[1]+dy/length*.7].join(',');}).join(' '),clip='face'+index++;
       defs.push(`<clipPath id="${clip}"><polygon points="${points}"/></clipPath>`);
-      body+=`<g clip-path="url(#${clip})"><use href="#${await texture(tri.texture)}" transform="matrix(${matrix.join(' ')})"/></g>`;
-      if(tri.shade>0)body+=`<polygon points="${points}" fill="black" opacity="${tri.shade}"/>`;
+      const slope=(1-tri.shade).toFixed(3);let filter=filters.get(slope);
+      if(!filter){filter='light'+filters.size;filters.set(slope,filter);defs.push(`<filter id="${filter}" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="linear" slope="${slope}"/><feFuncG type="linear" slope="${slope}"/><feFuncB type="linear" slope="${slope}"/></feComponentTransfer></filter>`);}
+      body+=`<g clip-path="url(#${clip})"><use href="#${await texture(tri.texture)}" transform="matrix(${matrix.join(' ')})" filter="url(#${filter})"/></g>`;
     }
     body+=`<text x="${panel.labelX??panel.x-100}" y="${panel.labelY??30}">${panel.label}</text>`;
   }

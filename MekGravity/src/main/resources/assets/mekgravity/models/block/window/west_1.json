@@ -1,0 +1,77 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "rim": "mekgravity:block/orb_steel",
+    "particle": "mekgravity:block/orb_steel"
+  },
+  "elements": [
+    {
+      "from": [
+        9.5,
+        2,
+        14
+      ],
+      "to": [
+        13.5,
+        14,
+        16
+      ],
+      "faces": {
+        "west": {
+          "texture": "#rim",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "east": {
+          "texture": "#rim",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "down": {
+          "texture": "#rim",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "up": {
+          "texture": "#rim",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "north": {
+          "texture": "#rim",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "south": {
+          "texture": "#rim",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    }
+  ]
+}

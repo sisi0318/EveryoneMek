@@ -29,6 +29,10 @@ public final class GlassConnections {
 
     public static int visibleParts(int neighbors,Direction face){
         if((neighbors&bit(face.getStepX(),face.getStepY(),face.getStepZ()))!=0)return 0;
+        return planarParts(neighbors,face);
+    }
+
+    public static int planarParts(int neighbors,Direction face){
         var axis=face.getAxis();int visible=0;
         boolean aMin=connected(neighbors,axis,-1,0),aMax=connected(neighbors,axis,1,0);
         boolean bMin=connected(neighbors,axis,0,-1),bMax=connected(neighbors,axis,0,1);

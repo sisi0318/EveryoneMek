@@ -20,6 +20,8 @@ public final class PartBlock extends BaseEntityBlock {
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return simpleCodec(p->new PartBlock(kind,grade));}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(OUTPUT,ACTIVE,FACING,FORMED);}
     @Override public RenderShape getRenderShape(BlockState s){return RenderShape.MODEL;}
+    @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState s,net.minecraft.world.level.BlockGetter level,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){return kind==Kind.COIL?ModelShapes.coil(s.getValue(FACING)):super.getShape(s,level,pos,context);}
+    @Override protected net.minecraft.world.phys.shapes.VoxelShape getCollisionShape(BlockState s,net.minecraft.world.level.BlockGetter level,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){return kind==Kind.COIL?ModelShapes.coil(s.getValue(FACING)):super.getCollisionShape(s,level,pos,context);}
     @Override protected boolean skipRendering(BlockState state,BlockState adjacent,Direction side){return kind==Kind.GLASS&&adjacent.is(this)||super.skipRendering(state,adjacent,side);}
     @Override public BlockEntity newBlockEntity(BlockPos p,BlockState s){return new Part(p,s);}
     @Override public BlockState getStateForPlacement(BlockPlaceContext c){var data=c.getItemInHand().get(Content.STOCK.get());return defaultBlockState().setValue(FACING,c.getNearestLookingDirection().getOpposite()).setValue(OUTPUT,data!=null&&data.getBoolean("output"));}

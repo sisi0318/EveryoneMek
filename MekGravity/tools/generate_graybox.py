@@ -178,7 +178,7 @@ for part in parts:
     bounds=[[min(p[i] for p in points) for i in range(3)],[max(p[i] for p in points) for i in range(3)]]
     scene.append({k:v for k,v in part.items() if k not in ['boxes','triangles']}|{'triangles':triangles,'bounds':bounds})
 
-assembly={'version':1,'name':'引力堆 · 整机灰模','stage':'外观比例审查，尚未接入游戏','size':[7,7,7],
+assembly={'version':1,'name':'引力堆 · 整机灰模','stage':'已确认并拆分接入alpha.5，预览保留灰模','size':[7,7,7],
           'materials':MATERIALS,'parts':parts,'logicalGlassAnchors':[p['position'] for p in windows],
           'notes':['建模稿使用既有方块锚点；发射头向内伸出0.25格，后续接入需处理选择框。','观察窗在整机模型中合并，实际游戏仍保留各玻璃方块。']}
 (OUT/'assembly.json').write_text(json.dumps(assembly,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')

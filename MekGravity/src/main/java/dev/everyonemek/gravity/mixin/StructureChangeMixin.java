@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class StructureChangeMixin {
     @Inject(method="setBlockState",at=@At("RETURN"))
     private void gravity$changed(BlockPos pos,BlockState next,boolean moving,CallbackInfoReturnable<BlockState> ci){var old=ci.getReturnValue();if(old==null)return;
-        if((old.getBlock() instanceof PartBlock||old.getBlock() instanceof ControllerBlock)&&old.is(next.getBlock())&&old.getValues().entrySet().stream().allMatch(e->e.getKey().getName().equals("active")||e.getKey().getName().equals("formed")||e.getValue().equals(next.getValues().get(e.getKey()))))return;
+        if((old.getBlock() instanceof PartBlock||old.getBlock() instanceof ControllerBlock)&&old.is(next.getBlock())&&old.getValues().entrySet().stream().allMatch(e->e.getKey().getName().equals("active")||e.getKey().getName().equals("formed")||e.getKey()==PartBlock.FACING&&old.getBlock() instanceof PartBlock part&&part.kind!=PartBlock.Kind.COIL||e.getValue().equals(next.getValues().get(e.getKey()))))return;
         Structure.changed(((LevelChunk)(Object)this).getLevel(),pos);
     }
 }

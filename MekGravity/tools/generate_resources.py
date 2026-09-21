@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 from core_mesh import generate_core
+from runtime_geometry import block_model, assembled_glass, generate_shapes
 ROOT=Path(__file__).resolve().parents[1]/'src/main/resources'
 def write(path,value):
     p=ROOT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
@@ -32,6 +33,10 @@ def glass():
 def core(active=False):
     return {'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/core.obj','mtl_override':'mekgravity:models/block/core_active.mtl' if active else 'mekgravity:models/block/core.mtl','automatic_culling':False,'shade_quads':True,'emissive_ambient':True,'flip_v':False,'ambientocclusion':False,'textures':{'energy':'mekgravity:block/orb_active' if active else 'mekgravity:block/orb_idle','steel':'mekgravity:block/orb_steel','inner':'mekgravity:block/orb_inner','particle':'mekgravity:block/orb_idle'}}
 generate_core(ROOT)
+generate_shapes()
+for face in faces:
+    for part in range(8):write(Path(f'assets/mekgravity/models/block/window/{face}_{part}.json'),assembled_glass(face,part))
+    write(Path(f'assets/mekgravity/models/block/window/{face}_pane.json'),assembled_glass(face))
 write(Path('pack.mcmeta'),{'pack':{'pack_format':34,'description':'Mek Gravity'}})
 write(Path('mekgravity.mixins.json'),{'required':True,'package':'dev.everyonemek.gravity.mixin','compatibilityLevel':'JAVA_21','mixins':['StructureChangeMixin'],'injectors':{'defaultRequire':1}})
 names=['reactor','frame','casing','glass','fuel','coolant','energy','core']+[g+'_coil' for g in ['basic','advanced','elite','ultimate']]
@@ -42,28 +47,33 @@ for name in names:
         for assembled in [False,True]:
             for active in [False,True]:
                 model='reactor'+('_formed' if assembled else '')+('_active' if active else '')
-                write(Path(f'assets/mekgravity/models/block/{model}.json'),orient('controller_front_active' if active else 'controller_front','shell_frame_formed' if assembled else 'controller_top','shell_panel_formed' if assembled else 'controller_side'))
+                write(Path(f'assets/mekgravity/models/block/{model}.json'),block_model('controller',active))
                 for face,rotation in [('north',0),('east',90),('south',180),('west',270)]:variants[f'active={str(active).lower()},facing={face},formed={str(assembled).lower()}']={'model':'mekgravity:block/'+model,'y':rotation}
     elif name.endswith('_coil'):
         variants={}
         for assembled in [False,True]:
             for active in [False,True]:
                 model=name+('_formed' if assembled else '')+('_active' if active else '')
-                write(Path(f'assets/mekgravity/models/block/{model}.json'),orient('coil_front_active' if active else 'coil_front','coil_top','shell_panel_formed' if assembled else 'coil_side'))
+                write(Path(f'assets/mekgravity/models/block/{model}.json'),block_model('coil',active))
                 for face,rx,ry in [('north',0,0),('east',0,90),('south',0,180),('west',0,270),('up',270,0),('down',90,0)]:variants[f'active={str(active).lower()},facing={face},formed={str(assembled).lower()}']={'model':'mekgravity:block/'+model,'x':rx,'y':ry}
-    elif name in ['coolant','energy']:
+    elif name in ['coolant','energy','fuel','casing']:
         variants={}
         for assembled in [False,True]:
-            for output in [False,True]:
-                texture='port_output' if output else 'port_input';model=name+('_formed' if assembled else '')+('_output' if output else '')
-                write(Path(f'assets/mekgravity/models/block/{model}.json'),cube('assembled_'+texture if assembled else texture if name=='coolant' else 'formed_'+texture))
-                variants[f'formed={str(assembled).lower()},output={str(output).lower()}']={'model':'mekgravity:block/'+model}
-    elif name in ['frame','casing','fuel']:
-        for assembled in [False,True]:
-            model=name+('_formed' if assembled else '')
-            texture=({'frame':'shell_frame_formed','casing':'shell_panel_formed','fuel':'assembled_port_input'} if assembled else {'frame':'shell_frame','casing':'shell_panel','fuel':'formed_port_input'})[name]
-            write(Path(f'assets/mekgravity/models/block/{model}.json'),cube(texture))
-        variants={f'formed={str(a).lower()}':{'model':'mekgravity:block/'+name+('_formed' if a else '')} for a in [False,True]}
+            for output in ([False,True] if name in ['coolant','energy'] else [False]):
+                model=name+('_formed' if assembled else '')+('_output' if output else '')
+                kind='panel' if name=='casing' else 'fuel' if name=='fuel' else 'excitation'
+                write(Path(f'assets/mekgravity/models/block/{model}.json'),block_model(kind,output=output if name in ['coolant','energy'] else None))
+                for face,rx,ry in [('north',0,0),('east',0,90),('south',0,180),('west',0,270),('up',270,0),('down',90,0)]:
+                    key=f'formed={str(assembled).lower()},facing={face}'+(f',output={str(output).lower()}' if name in ['coolant','energy'] else '')
+                    variants[key]={'model':'mekgravity:block/'+model,'x':rx,'y':ry}
+    elif name=='frame':
+        write(Path('assets/mekgravity/models/block/frame.json'),block_model('frame'))
+        write(Path('assets/mekgravity/models/block/frame_formed.json'),block_model('frame'))
+        write(Path('assets/mekgravity/models/block/frame_joint.json'),block_model('joint'))
+        variants={'formed=false':{'model':'mekgravity:block/frame'}}
+        for face,rx,ry in [('up',0,0),('north',90,0),('south',90,0),('east',90,90),('west',90,90)]:
+            variants[f'formed=true,facing={face}']={'model':'mekgravity:block/frame_formed','x':rx,'y':ry}
+        variants['formed=true,facing=down']={'model':'mekgravity:block/frame_joint'}
     elif name=='core':
         for active in [False,True]:write(Path('assets/mekgravity/models/block/core'+('_active' if active else '')+'.json'),core(active))
         variants={f'active={str(active).lower()}':{'model':'mekgravity:block/core'+('_active' if active else '')} for active in [False,True]}

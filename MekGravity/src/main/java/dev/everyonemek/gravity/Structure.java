@@ -56,12 +56,23 @@ public final class Structure {
     }
     private void appearance(boolean assembled){
         var l=owner.getLevel();if(l==null||l.isClientSide)return;
+        // A turned controller has new bounds; clear its previously claimed parts as well.
+        if(!assembled)for(var pos:claimed){
+            if(!l.hasChunkAt(pos))continue;var tile=l.getBlockEntity(pos);
+            if(tile instanceof Part p&&owner.getBlockPos().equals(p.master)){
+                var state=l.getBlockState(pos);var visual=AssemblyAppearance.apply(state,owner,0,0,0,false);
+                if(visual!=state)l.setBlock(pos,visual,2);
+            }
+        }
         // Include previously linked parts after a reload or failed validation, without touching another reactor.
         for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){
             var pos=at(x,y,z);if(!l.hasChunkAt(pos))continue;
             var tile=l.getBlockEntity(pos);boolean ours=tile==owner||tile instanceof Part p&&owner.getBlockPos().equals(p.master);
             var state=l.getBlockState(pos);
-            if(ours&&state.hasProperty(PartBlock.FORMED)&&state.getValue(PartBlock.FORMED)!=assembled)l.setBlock(pos,state.setValue(PartBlock.FORMED,assembled),2);
+            if(ours&&state.hasProperty(PartBlock.FORMED)){
+                var visual=AssemblyAppearance.apply(state,owner,x,y,z,assembled);
+                if(visual!=state)l.setBlock(pos,visual,2);
+            }
         }
     }
     public void activity(boolean active){var all=new ArrayList<>(coils);if(core!=null)all.add(core);var l=owner.getLevel();if(l==null||l.isClientSide)return;

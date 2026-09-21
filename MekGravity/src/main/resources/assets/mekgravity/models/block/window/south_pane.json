@@ -1,0 +1,65 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:translucent",
+  "ambientocclusion": false,
+  "textures": {
+    "pane": "minecraft:block/white_concrete",
+    "particle": "mekgravity:block/orb_steel"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        4.375
+      ],
+      "to": [
+        16,
+        16,
+        4.375
+      ],
+      "faces": {
+        "north": {
+          "texture": "#pane",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "neoforge_data": {
+            "color": "28577780",
+            "ambient_occlusion": false
+          }
+        }
+      }
+    },
+    {
+      "from": [
+        0,
+        0,
+        4.625
+      ],
+      "to": [
+        16,
+        16,
+        4.625
+      ],
+      "faces": {
+        "south": {
+          "texture": "#pane",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "neoforge_data": {
+            "color": "28577780",
+            "ambient_occlusion": false
+          }
+        }
+      }
+    }
+  ]
+}

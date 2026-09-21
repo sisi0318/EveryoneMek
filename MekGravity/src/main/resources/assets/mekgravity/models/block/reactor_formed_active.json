@@ -1,8 +1,910 @@
 {
-  "parent": "minecraft:block/orientable",
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
   "textures": {
-    "front": "mekgravity:block/controller_front_active",
-    "top": "mekgravity:block/shell_frame_formed",
-    "side": "mekgravity:block/shell_panel_formed"
-  }
+    "armor": "mekgravity:block/shell_panel",
+    "edge": "mekgravity:block/orb_steel",
+    "steel": "mekgravity:block/orb_steel",
+    "graphite": "mekgravity:block/orb_inner",
+    "recess": "mekgravity:block/orb_inner",
+    "lamp": "mekgravity:block/controller_front_active",
+    "orbit": "mekgravity:block/orb_active",
+    "particle": "mekgravity:block/shell_panel"
+  },
+  "elements": [
+    {
+      "from": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "to": [
+        0.0,
+        16.0,
+        16.0
+      ],
+      "faces": {
+        "west": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        3.0,
+        4.0,
+        1.0
+      ],
+      "to": [
+        3.0,
+        12.0,
+        3.0
+      ],
+      "faces": {
+        "west": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        4.0,
+        5.0,
+        0.75
+      ],
+      "to": [
+        4.0,
+        11.0,
+        1.0
+      ],
+      "faces": {
+        "west": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        5.0,
+        7.0,
+        0.5
+      ],
+      "to": [
+        5.0,
+        9.0,
+        0.75
+      ],
+      "faces": {
+        "west": {
+          "texture": "#lamp",
+          "uv": [
+            5,
+            7,
+            6,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        }
+      }
+    },
+    {
+      "from": [
+        14.0,
+        2.0,
+        0.0
+      ],
+      "to": [
+        14.0,
+        14.0,
+        3.0
+      ],
+      "faces": {
+        "west": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        2.0,
+        2.0,
+        0.0
+      ],
+      "to": [
+        2.0,
+        14.0,
+        3.0
+      ],
+      "faces": {
+        "east": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        6.0,
+        7.0,
+        0.5
+      ],
+      "to": [
+        6.0,
+        9.0,
+        0.75
+      ],
+      "faces": {
+        "east": {
+          "texture": "#lamp",
+          "uv": [
+            5,
+            7,
+            6,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        }
+      }
+    },
+    {
+      "from": [
+        12.0,
+        5.0,
+        0.75
+      ],
+      "to": [
+        12.0,
+        11.0,
+        1.0
+      ],
+      "faces": {
+        "east": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        13.0,
+        4.0,
+        1.0
+      ],
+      "to": [
+        13.0,
+        12.0,
+        3.0
+      ],
+      "faces": {
+        "east": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        16.0,
+        0.0,
+        0.0
+      ],
+      "to": [
+        16.0,
+        16.0,
+        16.0
+      ],
+      "faces": {
+        "east": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "to": [
+        16.0,
+        0.0,
+        16.0
+      ],
+      "faces": {
+        "down": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        3.0,
+        4.0,
+        1.0
+      ],
+      "to": [
+        13.0,
+        4.0,
+        3.0
+      ],
+      "faces": {
+        "down": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        4.0,
+        5.0,
+        0.75
+      ],
+      "to": [
+        12.0,
+        5.0,
+        1.0
+      ],
+      "faces": {
+        "down": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        5.0,
+        7.0,
+        0.5
+      ],
+      "to": [
+        6.0,
+        7.0,
+        0.75
+      ],
+      "faces": {
+        "down": {
+          "texture": "#lamp",
+          "uv": [
+            5,
+            7,
+            6,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        }
+      }
+    },
+    {
+      "from": [
+        2.0,
+        14.0,
+        0.0
+      ],
+      "to": [
+        14.0,
+        14.0,
+        3.0
+      ],
+      "faces": {
+        "down": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        2.0,
+        2.0,
+        0.0
+      ],
+      "to": [
+        14.0,
+        2.0,
+        3.0
+      ],
+      "faces": {
+        "up": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        5.0,
+        9.0,
+        0.5
+      ],
+      "to": [
+        6.0,
+        9.0,
+        0.75
+      ],
+      "faces": {
+        "up": {
+          "texture": "#lamp",
+          "uv": [
+            5,
+            7,
+            6,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        }
+      }
+    },
+    {
+      "from": [
+        4.0,
+        11.0,
+        0.75
+      ],
+      "to": [
+        12.0,
+        11.0,
+        1.0
+      ],
+      "faces": {
+        "up": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        3.0,
+        12.0,
+        1.0
+      ],
+      "to": [
+        13.0,
+        12.0,
+        3.0
+      ],
+      "faces": {
+        "up": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        16.0,
+        0.0
+      ],
+      "to": [
+        16.0,
+        16.0,
+        16.0
+      ],
+      "faces": {
+        "up": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "to": [
+        16.0,
+        2.0,
+        0.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        2.0,
+        0.0
+      ],
+      "to": [
+        2.0,
+        16.0,
+        0.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        2.0,
+        14.0,
+        0.0
+      ],
+      "to": [
+        16.0,
+        16.0,
+        0.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        14.0,
+        2.0,
+        0.0
+      ],
+      "to": [
+        16.0,
+        14.0,
+        0.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        5.0,
+        7.0,
+        0.5
+      ],
+      "to": [
+        6.0,
+        9.0,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#lamp",
+          "uv": [
+            5,
+            7,
+            6,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        }
+      }
+    },
+    {
+      "from": [
+        4.0,
+        5.0,
+        0.75
+      ],
+      "to": [
+        12.0,
+        7.0,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        4.0,
+        7.0,
+        0.75
+      ],
+      "to": [
+        5.0,
+        11.0,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        5.0,
+        9.0,
+        0.75
+      ],
+      "to": [
+        12.0,
+        11.0,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        6.0,
+        7.0,
+        0.75
+      ],
+      "to": [
+        12.0,
+        9.0,
+        0.75
+      ],
+      "faces": {
+        "north": {
+          "texture": "#recess",
+          "uv": [
+            0,
+            11,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        3.0,
+        4.0,
+        1.0
+      ],
+      "to": [
+        13.0,
+        5.0,
+        1.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        3.0,
+        5.0,
+        1.0
+      ],
+      "to": [
+        4.0,
+        12.0,
+        1.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        4.0,
+        11.0,
+        1.0
+      ],
+      "to": [
+        13.0,
+        12.0,
+        1.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        12.0,
+        5.0,
+        1.0
+      ],
+      "to": [
+        13.0,
+        11.0,
+        1.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#steel",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        2.0,
+        2.0,
+        3.0
+      ],
+      "to": [
+        14.0,
+        4.0,
+        3.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        2.0,
+        4.0,
+        3.0
+      ],
+      "to": [
+        3.0,
+        14.0,
+        3.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        3.0,
+        12.0,
+        3.0
+      ],
+      "to": [
+        14.0,
+        14.0,
+        3.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        13.0,
+        4.0,
+        3.0
+      ],
+      "to": [
+        14.0,
+        12.0,
+        3.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        0.0,
+        16.0
+      ],
+      "to": [
+        16.0,
+        16.0,
+        16.0
+      ],
+      "faces": {
+        "south": {
+          "texture": "#armor",
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ]
+        }
+      }
+    }
+  ]
 }
