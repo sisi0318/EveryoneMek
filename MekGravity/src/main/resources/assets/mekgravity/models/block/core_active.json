@@ -2,7 +2,7 @@
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "textures": {
-    "front": "mekgravity:block/core_front",
+    "front": "mekgravity:block/core_front_active",
     "top": "mekgravity:block/core_top",
     "side": "mekgravity:block/core_side",
     "particle": "mekgravity:block/core_side"

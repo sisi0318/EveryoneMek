@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..');
 const sharp = createRequire(path.join(root, 'art/package.json'))('sharp');
 const layouts = JSON.parse(fs.readFileSync(path.join(root, 'art/atlas-layout.json'), 'utf8'));
 const atlases = {
+  core: ['core_front', 'core_top', 'core_side', 'core_front_active'],
   assembled: ['assembled_panel','assembled_frame','assembled_port_input','assembled_port_output'],
   controller: ['controller_front', 'controller_top', 'controller_side', 'controller_front_active'],
   coil: ['coil_front', 'coil_top', 'coil_side', 'coil_front_active'],
@@ -35,6 +36,15 @@ const output = path.join(root, 'src/main/resources/assets/mekgravity/textures/bl
     const labels = `<svg width="768" height="28"><style>text{fill:white;font:13px sans-serif}</style>${names.map((name,i)=>`<text x="${i*192+5}" y="20">${name}</text>`).join('')}</svg>`;
     previews.push({input:Buffer.from(labels),left:0,top:row*220}); row++;
   }
+  const itemOutput = path.join(root, 'src/main/resources/assets/mekgravity/textures/item');
+  fs.mkdirSync(itemOutput, {recursive:true});
+  const pelletSource = path.join(root, 'art/source/dense_fuel_pellet.png');
+  if (!(await sharp(pelletSource).metadata()).hasAlpha) throw new Error('Fuel pellet source must have genuine transparency');
+  const pellet = path.join(itemOutput, 'dense_fuel_pellet.png');
+  // Preserve the generated alpha and silhouette; only resize, with no background removal or repainting.
+  await sharp(pelletSource).resize(16,16,{kernel:'nearest'}).png().toFile(pellet);
+  previews.push({input:await sharp(pellet).resize(192,192,{kernel:'nearest'}).png().toBuffer(),left:0,top:row*220+28});
+  previews.push({input:Buffer.from('<svg width="768" height="28"><text x="5" y="20" fill="white" font-size="13">dense_fuel_pellet</text></svg>'),left:0,top:row*220}); row++;
   await sharp({create:{width:768,height:row*220,channels:4,background:'#24272b'}}).composite(previews).png().toFile(path.join(root,'art/texture-sheet.png'));
-  process.stdout.write('Exported twenty original 16x16 textures.\n');
+  process.stdout.write(`Exported ${Object.keys(atlases).length*4+1} original 16x16 textures.\n`);
 })().catch(e=>{process.stderr.write(e.stack+'\n');process.exitCode=1;});

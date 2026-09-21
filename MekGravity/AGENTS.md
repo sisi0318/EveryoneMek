@@ -4,11 +4,12 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.2，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
+- 0.1.0-alpha.3，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 新默认毛功率2/4/8/16 GFE/t，每丸200 GJ；单口16 GFE/t，默认四输出口合计64 GFE/t，输电独立于发电上限。数字以默认FE/J换算为例。
 - 白灰Mek工业机壳为本模组已确认风格。成型用浅灰装甲/紫色线路，接口红进蓝出；source/assembled.png为内置ImageGen原创图稿。
+- alpha.3用户指出黑色核心与短柱燃料丸不协调：核心改7个不相交长方体的六面护架，使用专用core_front/top/side/front_active；燃料丸用独立透明item/generated图标。不可再借用黑色混凝土或机器外壳贴图。原稿与完整提示词在art/source及art/core-and-fuel-prompts.json。
 
 ## 实现入口
 
@@ -31,6 +32,7 @@
 
 ## 验证
 
+- alpha.3仅资源改动，构建与引用/尺寸/透明通道检查通过；tools/preview_core.cjs按实际JSON立方体及UV生成离线预览，不代替客户端验收。没有重跑无需涉及的服务端测试。
 - 当前8项服务端测试：7项反应堆/物流/迁移回归，加1项六向玻璃边角规则。覆盖无冷却发电、旧Na热钠恢复、成型状态回退、四口缓存输电、FE/long分批与奇数取整、真实线缆/能量立方、保护施工及保存。
 - 默认配置缓存下build runGameTestServer通过。NeoForge加载失败可能返回0，因此任务检查新日志的测试完成标记及本模组配方解析错误。
 - mekanismgenerators:reactor_glass属于Generators。14个配方在游戏内注册由测试检查。

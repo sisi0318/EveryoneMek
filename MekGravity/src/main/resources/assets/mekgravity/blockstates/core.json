@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "active=false": {
       "model": "mekgravity:block/core"
+    },
+    "active=true": {
+      "model": "mekgravity:block/core_active"
     }
   }
 }

@@ -28,14 +28,19 @@ def glass():
         parts=glass_parts(face);elements.extend(parts)
         for i,part in enumerate(parts):write(Path(f'assets/mekgravity/models/block/glass/{face}_{i}.json'),glass_model([part]))
     return glass_model(elements)
-def core():
-    occupied={(x,y,z) for x in range(6) for y in range(6) for z in range(6) if sum((v-2.5)**2 for v in (x,y,z))<=8}
-    directions={'east':(1,0,0),'west':(-1,0,0),'up':(0,1,0),'down':(0,-1,0),'north':(0,0,-1),'south':(0,0,1)}
-    elements=[]
-    for pos in sorted(occupied):
-        exposed={f:{'texture':'#all'} for f,d in directions.items() if tuple(a+b for a,b in zip(pos,d)) not in occupied}
-        if exposed:elements.append({'from':[2+p*2 for p in pos],'to':[4+p*2 for p in pos],'faces':exposed})
-    return {'parent':'minecraft:block/block','textures':{'all':'minecraft:block/black_concrete','particle':'minecraft:block/black_concrete'},'elements':elements}
+def core(active=False):
+    # Compact housing and six raised containment collars. Hidden backs are omitted;
+    # collars touch the housing without intersecting volumes or coplanar visible faces.
+    body=box([3,3,3],[13,13,13],'#side')
+    for face in body['faces'].values():face['uv']=[0,0,16,16]
+    elements=[body]
+    for face,axis,positive,opposite in [('north',2,False,'south'),('south',2,True,'north'),('west',0,False,'east'),('east',0,True,'west'),('down',1,False,'up'),('up',1,True,'down')]:
+        lo=[4,4,4];hi=[12,12,12];lo[axis],hi[axis]=(13,14) if positive else (2,3)
+        collar=box(lo,hi,'#side',(opposite,))
+        for surface in collar['faces'].values():surface['uv']=[0,0,16,2]
+        collar['faces'][face]={'texture':'#top' if axis==1 else '#front','uv':[0,0,16,16]}
+        elements.append(collar)
+    return {'parent':'minecraft:block/block','ambientocclusion':False,'textures':{'front':'mekgravity:block/core_front_active' if active else 'mekgravity:block/core_front','top':'mekgravity:block/core_top','side':'mekgravity:block/core_side','particle':'mekgravity:block/core_side'},'elements':elements}
 write(Path('pack.mcmeta'),{'pack':{'pack_format':34,'description':'Mek Gravity'}})
 write(Path('mekgravity.mixins.json'),{'required':True,'package':'dev.everyonemek.gravity.mixin','compatibilityLevel':'JAVA_21','mixins':['StructureChangeMixin'],'injectors':{'defaultRequire':1}})
 names=['reactor','frame','casing','glass','fuel','coolant','energy','core']+[g+'_coil' for g in ['basic','advanced','elite','ultimate']]
@@ -68,15 +73,19 @@ for name in names:
             texture=({'frame':'assembled_frame','casing':'assembled_panel','fuel':'assembled_port_input'} if assembled else {'frame':'frame','casing':'panel','fuel':'formed_port_input'})[name]
             write(Path(f'assets/mekgravity/models/block/{model}.json'),cube(texture))
         variants={f'formed={str(a).lower()}':{'model':'mekgravity:block/'+name+('_formed' if a else '')} for a in [False,True]}
-    else:write(Path(f'assets/mekgravity/models/block/{name}.json'),glass() if name=='glass' else core())
+    elif name=='core':
+        for active in [False,True]:write(Path('assets/mekgravity/models/block/core'+('_active' if active else '')+'.json'),core(active))
+        variants={f'active={str(active).lower()}':{'model':'mekgravity:block/core'+('_active' if active else '')} for active in [False,True]}
+    else:write(Path(f'assets/mekgravity/models/block/{name}.json'),glass())
     write(Path(f'assets/mekgravity/blockstates/{name}.json'),{'variants':variants})
     model={'parent':'mekgravity:block/'+name}
+    if name=='core':model['display']={'gui':{'rotation':[30,225,0],'translation':[0,0,0],'scale':[0.85,0.85,0.85]},'ground':{'rotation':[0,0,0],'translation':[0,3,0],'scale':[0.5,0.5,0.5]}}
     if name in ['coolant','energy']:model['overrides']=[{'predicate':{'mekgravity:output':1},'model':'mekgravity:block/'+name+'_output'}]
     write(Path(f'assets/mekgravity/models/item/{name}.json'),model)
     components=['mekgravity:reactor_data','mekanism:security','mekanism:owner','mekanism:redstone_control'] if name=='reactor' else ['mekgravity:fuel_stock']
     write(Path(f'data/mekgravity/loot_table/blocks/{name}.json'),{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'mekgravity:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':components}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
 write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'values':['mekgravity:'+n for n in names]})
-write(Path('assets/mekgravity/models/item/dense_fuel_pellet.json'),{'parent':'minecraft:block/block','textures':{'shell':'mekgravity:block/controller_side','top':'mekgravity:block/coil_front','particle':'mekgravity:block/controller_side'},'elements':[box([5,4,5],[11,5,11],'#top',('up',)),box([5,5,5],[11,11,11],'#shell',('up','down')),box([5,11,5],[11,12,11],'#top',('down',))]})
+write(Path('assets/mekgravity/models/item/dense_fuel_pellet.json'),{'parent':'minecraft:item/generated','textures':{'layer0':'mekgravity:item/dense_fuel_pellet'}})
 def recipe(name,pattern,key,count=1):
     used=set(''.join(pattern))-{ ' '};write(Path(f'data/mekgravity/recipe/{name}.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in key.items() if k in used},'result':{'id':'mekgravity:'+name,'count':count}})
 recipe('frame',['SRS','SPS','SRS'],{'S':'mekanism:ingot_steel','R':'mekanism:ingot_refined_obsidian','P':'mekanism:pellet_polonium'},8)
