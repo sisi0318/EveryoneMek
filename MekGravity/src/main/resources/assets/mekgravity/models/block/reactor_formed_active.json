@@ -2,7 +2,7 @@
   "parent": "minecraft:block/orientable",
   "textures": {
     "front": "mekgravity:block/controller_front_active",
-    "top": "mekgravity:block/assembled_frame",
-    "side": "mekgravity:block/assembled_panel"
+    "top": "mekgravity:block/shell_frame_formed",
+    "side": "mekgravity:block/shell_panel_formed"
   }
 }

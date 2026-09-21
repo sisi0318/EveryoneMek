@@ -5,9 +5,9 @@ const root = path.resolve(__dirname, '..');
 const sharp = createRequire(path.join(root, 'art/package.json'))('sharp');
 const dir = path.join(root, 'src/main/resources/assets/mekgravity/textures/block');
 const samples = [
-  ['Formed frame', 'assembled_frame', 'assembled_frame', 'assembled_frame'],
-  ['Formed armor', 'assembled_panel', 'assembled_panel', 'assembled_panel'],
-  ['Formed controller', 'controller_front', 'assembled_frame', 'assembled_panel'],
+  ['Formed frame', 'shell_frame_formed', 'shell_frame_formed', 'shell_frame_formed'],
+  ['Formed armor', 'shell_panel_formed', 'shell_panel_formed', 'shell_panel_formed'],
+  ['Formed controller', 'controller_front', 'shell_frame_formed', 'shell_panel_formed'],
   ['Formed output', 'assembled_port_output', 'assembled_port_output', 'assembled_port_output']
 ];
 (async () => {

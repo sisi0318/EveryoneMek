@@ -1,0 +1,14 @@
+newmtl energy
+Ka 0.27 0.27 0.27
+Kd 1 1 1
+map_Kd #energy
+
+newmtl steel
+Ka 0 0 0
+Kd 1 1 1
+map_Kd #steel
+
+newmtl inner
+Ka 0 0 0
+Kd 1 1 1
+map_Kd #inner

@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.*;
 import net.minecraft.world.phys.*;
 
-/** Bounded, client-only meshes: two rings, six ribbons and twelve moving sparks. No particle/entity spawning. */
+/** One inner energy orbit, six ribbons and twelve sparks around the baked core and metal rings. */
 public final class CoreRenderer implements BlockEntityRenderer<Part> {
     private final WeakHashMap<Part,Fade> effects=new WeakHashMap<>();
     private static final class Fade {
@@ -49,8 +49,7 @@ public final class CoreRenderer implements BlockEntityRenderer<Part> {
         float intensity=fade.value(tick);if(intensity<=0)return;
         float pulse=(float)(.9+.1*Math.sin(tick*.10));var v=buffers.getBuffer(RenderType.lightning());
         pose.pushPose();pose.translate(.5,.5,.5);
-        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(tick%720)*.5F));pose.mulPose(Axis.ZP.rotationDegrees(18));ring(pose,v,.68F,.025F,(int)(190*intensity*pulse));pose.popPose();
-        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(-tick%900)*.4F));pose.mulPose(Axis.ZP.rotationDegrees(72));ring(pose,v,.87F,.018F,(int)(110*intensity*pulse));pose.popPose();
+        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(tick%720)*.5F));pose.mulPose(Axis.ZP.rotationDegrees(18));ring(pose,v,.44F,.016F,(int)(155*intensity*pulse));pose.popPose();
         var matrix=pose.last().pose();
         for(int axis=0;axis<3;axis++)for(int sign:new int[]{-1,1}){
             ribbon(v,matrix,axis,sign*.39F,sign*1.49F,.011F,(int)(65*intensity*pulse),false);

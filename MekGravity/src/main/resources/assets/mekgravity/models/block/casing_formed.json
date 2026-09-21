@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "mekgravity:block/assembled_panel"
+    "all": "mekgravity:block/shell_panel_formed"
   }
 }

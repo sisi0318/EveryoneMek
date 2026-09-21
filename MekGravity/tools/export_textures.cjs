@@ -6,6 +6,8 @@ const root = path.resolve(__dirname, '..');
 const sharp = createRequire(path.join(root, 'art/package.json'))('sharp');
 const layouts = JSON.parse(fs.readFileSync(path.join(root, 'art/atlas-layout.json'), 'utf8'));
 const atlases = {
+  'shell-v2': ['shell_frame','shell_frame_formed','shell_panel','shell_panel_formed'],
+  orb: ['orb_idle','orb_steel','orb_inner','orb_active'],
   core: ['core_front', 'core_top', 'core_side', 'core_front_active'],
   assembled: ['assembled_panel','assembled_frame','assembled_port_input','assembled_port_output'],
   controller: ['controller_front', 'controller_top', 'controller_side', 'controller_front_active'],
