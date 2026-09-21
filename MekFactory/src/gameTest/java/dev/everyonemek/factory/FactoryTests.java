@@ -81,19 +81,19 @@ public final class FactoryTests {
     @GameTest(template="empty",timeoutTicks=100)
     public static void legacyCacheMigratesOnceAndRetainsOverflow(GameTestHelper h){
         var c=formed(h,Grade.BASIC,3);c.enabled=false;var input=port(c,false);var output=port(c,true);
-        c.inputs.items[0]=new ItemStack(Items.IRON_INGOT,64);for(int i=0;i<Buffers.TANKS;i++)c.inputs.fluids[i]=new FluidStack(net.minecraft.world.level.material.Fluids.WATER,20000);
+        c.inputs.items[0]=new ItemStack(Items.IRON_INGOT,64);for(int i=0;i<Buffers.TANKS;i++)c.inputs.fluids[i]=new FluidStack(net.minecraft.world.level.material.Fluids.WATER,Grade.BASIC.capacity+4000);
         c.inputs.chemicals[0]=new ChemicalStack(MekanismChemicals.HYDROGEN,50000);
         c.outputs.items[0]=new ItemStack(Items.GOLD_INGOT,64);c.outputs.fluids[0]=new FluidStack(net.minecraft.world.level.material.Fluids.LAVA,6000);
         h.startSequence().thenWaitUntil(()->check(Arrays.stream(c.inputs.fluids).mapToInt(FluidStack::getAmount).sum()==16000&&!c.outputs.hasContents(),"Legacy goods did not migrate with retained overflow"))
               .thenIdle(10).thenExecute(()->{
                   check(count(input.storage(),Items.IRON_INGOT)==64&&count(output.storage(),Items.GOLD_INGOT)==64,"Repeated migration copied item stock");
-                  check(Arrays.stream(input.storage().fluids).mapToInt(FluidStack::getAmount).sum()==64000&&Arrays.stream(input.storage().chemicals).mapToLong(ChemicalStack::getAmount).sum()==50000&&output.storage().fluids[0].getAmount()==6000,"Migration changed fluid/chemical quantities");
+                  check(Arrays.stream(input.storage().fluids).mapToInt(FluidStack::getAmount).sum()==4*Grade.BASIC.capacity&&Arrays.stream(input.storage().chemicals).mapToLong(ChemicalStack::getAmount).sum()==50000&&output.storage().fluids[0].getAmount()==6000,"Migration changed fluid/chemical quantities");
                   var stack=new ItemStack(Content.CONTROLLERS.get(Grade.BASIC));c.saveToItem(stack,h.getLevel().registryAccess());
                   var retained=new Buffers(c,false);retained.load(stack.get(Content.DATA.get()).getCompound("inputs"),h.getLevel().registryAccess());
                   check(count(retained,Items.IRON_INGOT)==0&&Arrays.stream(retained.fluids).mapToInt(FluidStack::getAmount).sum()==16000,"Controller item copied hatch goods or lost retained legacy fluid");
                   var io=new Ports.FluidPort(input,c.structure.outward(input.getBlockPos()));check(io.drain(16000,IFluidHandler.FluidAction.EXECUTE).getAmount()==16000,"Could not recover input fluid while stopped");
               }).thenWaitUntil(()->check(!c.inputs.hasContents(),"Legacy remainder did not resume after space opened"))
-              .thenExecute(()->check(Arrays.stream(input.storage().fluids).mapToInt(FluidStack::getAmount).sum()==64000,"Legacy retry duplicated or lost fluid")).thenSucceed();
+              .thenExecute(()->check(Arrays.stream(input.storage().fluids).mapToInt(FluidStack::getAmount).sum()==4*Grade.BASIC.capacity,"Legacy retry duplicated or lost fluid")).thenSucceed();
     }
 
     @GameTest(template="empty",timeoutTicks=500)
@@ -350,14 +350,14 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=300)
     public static void smallerOutputPortDrainsPaidBatchInParts(GameTestHelper h){
-        var c=formed(h,Grade.ELITE,6);c.structure.cells.getFirst().getEnergyContainer().setEnergy(1000000000);c.template.setStack(new ItemStack(MekanismBlocks.ENRICHMENT_CHAMBER,64));
+        var c=formed(h,Grade.ELITE,6);c.structure.cells.getFirst().getEnergyContainer().setEnergy(1000000000);c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ULTIMATE,mekanism.common.content.blocktype.FactoryType.ENRICHING),64));
         var recipe=mekanism.common.recipe.MekanismRecipeType.ENRICHING.findFirst(h.getLevel(),r->r.test(new ItemStack(Items.RAW_IRON_BLOCK,64)));
-        check(recipe!=null,"Native raw iron block recipe missing");var result=recipe.getOutput(new ItemStack(Items.RAW_IRON_BLOCK));int total=64*result.getCount();check(total>9*64,"Fixture output does not exceed downgraded capacity");
-        c.inputs.insert(0,new ItemStack(Items.RAW_IRON_BLOCK,64),false);final int[] removed={0};
+        check(recipe!=null,"Native raw iron block recipe missing");var result=recipe.getOutput(new ItemStack(Items.RAW_IRON_BLOCK));int total=512*result.getCount();check(total>9*Grade.BASIC.itemCapacity,"Fixture output does not exceed downgraded capacity");
+        port(c,false).storage().insert(0,new ItemStack(Items.RAW_IRON_BLOCK,512),false);final int[] removed={0};
         h.startSequence().thenIdle(40).thenExecute(()->{
-            check(c.processing.reserved()==64,"Batch did not start");var p=port(c,true);h.getLevel().setBlockAndUpdate(p.getBlockPos(),Content.PORTS.get(Grade.BASIC).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
+            check(c.processing.reserved()==512,"Batch did not start");var p=port(c,true);h.getLevel().setBlockAndUpdate(p.getBlockPos(),Content.PORTS.get(Grade.BASIC).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
         }).thenWaitUntil(()->check(count(c.outputBank(),result.getItem())>0,"Completed batch could not partially fit smaller output"))
-              .thenExecute(()->{removed[0]=count(c.outputBank(),result.getItem());check(!c.processing.jobs.isEmpty(),"Oversized job was lost instead of retained");var bank=c.outputBank();for(int i=0;i<bank.itemSlots();i++)bank.take(i,64,false);})
+              .thenExecute(()->{removed[0]=count(c.outputBank(),result.getItem());check(!c.processing.jobs.isEmpty(),"Oversized job was lost instead of retained");var bank=c.outputBank();for(int i=0;i<bank.itemSlots();i++)bank.take(i,Integer.MAX_VALUE,false);})
               .thenWaitUntil(()->check(c.processing.jobs.isEmpty(),"Remainder did not resume after extraction"))
               .thenExecute(()->{c.enabled=false;check(removed[0]+count(c.outputBank(),result.getItem())==total,"Partial output duplicated or discarded paid products");}).thenSucceed();
     }

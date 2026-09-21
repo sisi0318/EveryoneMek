@@ -26,8 +26,8 @@ public final class Ports {
         public int getSlots(){return bank()==null?0:bank().itemSlots();}
         public ItemStack getStackInSlot(int i){var b=bank();return b==null||i<0||i>=b.itemSlots()?ItemStack.EMPTY:b.items[i].copy();}
         public ItemStack insertItem(int i,ItemStack s,boolean sim){var b=bank();return b==null||output(port)?s:b.insert(i,s,sim);}
-        public ItemStack extractItem(int i,int n,boolean sim){var b=bank();return b==null||!output(port)&&controller(port,side).enabled?ItemStack.EMPTY:b.take(i,n,sim);}
-        public int getSlotLimit(int i){var b=bank();return b==null||i<0||i>=b.itemSlots()?0:i<b.slots()?64:b.items[i].getCount();}
+        public ItemStack extractItem(int i,int n,boolean sim){var b=bank();return b==null||i<0||i>=b.itemSlots()||!output(port)&&controller(port,side).enabled?ItemStack.EMPTY:b.take(i,Math.min(n,b.item(i).getMaxStackSize()),sim);}
+        public int getSlotLimit(int i){var b=bank();return b==null||i<0||i>=b.itemSlots()?0:b.itemLimit(i);}
         public boolean isItemValid(int i,ItemStack s){var b=bank();return b!=null&&!output(port)&&i>=0&&i<b.slots();}
     }
     public record ChemPort(Part port,Direction side) implements IChemicalHandler {
@@ -60,6 +60,18 @@ public final class Ports {
         public long insertEnergy(int i,long n,Action a){var c=c();return c==null||i!=0||output(port)?n:c.energy().insert(n,a,AutomationType.INTERNAL);}
         public long extractEnergy(int i,long n,Action a){return 0; /* Work is the only output consumer in this version. */}
     }
+    /** Private native transit bookkeeping may consume a grouped batch; external extraction remains stack-sized. */
+    private static IItemHandler bulkEjection(Part port,Direction side){
+        var exposed=new ItemPort(port,side);
+        return new IItemHandler(){
+            public int getSlots(){return exposed.getSlots();}
+            public ItemStack getStackInSlot(int i){return exposed.getStackInSlot(i);}
+            public ItemStack insertItem(int i,ItemStack stack,boolean simulate){return stack;}
+            public ItemStack extractItem(int i,int amount,boolean simulate){var bank=exposed.bank();return bank==null||!output(port)?ItemStack.EMPTY:bank.take(i,amount,simulate);}
+            public int getSlotLimit(int i){return exposed.getSlotLimit(i);}
+            public boolean isItemValid(int i,ItemStack stack){return false;}
+        };
+    }
     public static void eject(Controller c){
         if(!c.autoEject||!c.structure.valid())return;
         for(var p:java.util.List.copyOf(c.structure.ports)){
@@ -73,7 +85,7 @@ public final class Ports {
                     if(target!=null){
                         // Native responses debit their slot map after every success. Reuse the request,
                         // including Mek transporter routing, instead of rescanning all slots for each type.
-                        var request=TransitRequest.anyItem(new ItemPort(p,side),Integer.MAX_VALUE);
+                        var request=TransitRequest.anyItem(bulkEjection(p,side),Integer.MAX_VALUE);
                         for(int pass=0;pass<bank.itemSlots()&&!request.isEmpty();pass++){
                             var response=request.eject(p,target,0,t->null);
                             if(response.isEmpty())break;

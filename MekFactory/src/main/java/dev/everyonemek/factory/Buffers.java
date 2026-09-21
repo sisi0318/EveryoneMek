@@ -17,7 +17,11 @@ public final class Buffers implements ResourceBank {
     public int slots(){return hatch==null?(output?owner.structure.outputSlots:owner.structure.inputSlots):hatch.grade().slots;}
     public long capacity(){return hatch==null?(output?owner.structure.outputCapacity:owner.structure.inputCapacity):hatch.grade().capacity;}
     public int itemSlots(){return items.length;}
-    public int itemLimit(int i){return i<slots()?64:items[i].getCount();}
+    public int itemLimit(int i){return i<slots()?(hatch==null?64:hatch.grade().itemCapacity):items[i].getCount();}
+    public int itemLimit(int i,ItemStack stack){
+        if(hatch==null||i>=slots())return ResourceBank.super.itemLimit(i,stack);
+        int limit=itemLimit(i);return stack.isEmpty()?limit:(int)Math.min(limit,(long)stack.getMaxStackSize()*(limit/64));
+    }
     public ItemStack item(int i){return items[i];}
     public void item(int i,ItemStack stack){items[i]=stack;changed();}
     public int fluidTanks(){return TANKS;}
@@ -29,10 +33,10 @@ public final class Buffers implements ResourceBank {
     public ChemicalStack chemical(int i){return chemicals[i];}
     public void chemical(int i,ChemicalStack stack){chemicals[i]=stack;changed();}
     public void changed(){if(hatch!=null)hatch.setChanged();var c=owner!=null?owner:hatch.controller();if(c!=null){c.markForSave();c.inputRevision++;}}
-    public CompoundTag save(HolderLookup.Provider r){var tag=new CompoundTag();var list=new ListTag();for(int i=0;i<items.length;i++)if(!items[i].isEmpty()){var v=new CompoundTag();v.putInt("slot",i);v.put("stack",items[i].save(r));list.add(v);}tag.put("items",list);
+    public CompoundTag save(HolderLookup.Provider r){var tag=new CompoundTag();var list=new ListTag();for(int i=0;i<items.length;i++)if(!items[i].isEmpty()){var v=new CompoundTag();v.putInt("slot",i);v.put("stack",mekanism.api.SerializerHelper.saveOversized(r,items[i]));list.add(v);}tag.put("items",list);
         var f=new ListTag();var c=new ListTag();for(int i=0;i<TANKS;i++){f.add(fluids[i].saveOptional(r));c.add(chemicals[i].saveOptional(r));}tag.put("fluids",f);tag.put("chemicals",c);return tag;}
     public void load(CompoundTag tag,HolderLookup.Provider r){Arrays.fill(items,ItemStack.EMPTY);Arrays.fill(fluids,FluidStack.EMPTY);Arrays.fill(chemicals,ChemicalStack.EMPTY);
-        for(var value:tag.getList("items",Tag.TAG_COMPOUND)){var v=(CompoundTag)value;int i=v.getInt("slot");if(i>=0&&i<items.length)items[i]=ItemStack.parseOptional(r,v.getCompound("stack"));}
+        for(var value:tag.getList("items",Tag.TAG_COMPOUND)){var v=(CompoundTag)value;int i=v.getInt("slot");if(i>=0&&i<items.length)items[i]=mekanism.api.SerializerHelper.parseOversizedOptional(r,v.getCompound("stack"));}
         var f=tag.getList("fluids",Tag.TAG_COMPOUND);var c=tag.getList("chemicals",Tag.TAG_COMPOUND);for(int i=0;i<TANKS;i++){if(i<f.size())fluids[i]=FluidStack.parseOptional(r,f.getCompound(i));if(i<c.size())chemicals[i]=ChemicalStack.parseOptional(r,c.getCompound(i));}
     }
 }

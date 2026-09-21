@@ -7,6 +7,10 @@ import mekanism.client.gui.element.slot.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class WarehouseScreen extends GuiMekanism<WarehouseMenu> {
     public WarehouseScreen(WarehouseMenu menu,Inventory inv,Component title){super(menu,inv,title);imageWidth=176;imageHeight=220;inventoryLabelX=8;inventoryLabelY=126;dynamicSlots=true;}
@@ -30,6 +34,17 @@ public final class WarehouseScreen extends GuiMekanism<WarehouseMenu> {
     }
     @Override public boolean mouseClicked(double x,double y,int button){return menu.awaitingPage||super.mouseClicked(x,y,button);}
     @Override public boolean keyPressed(int key,int scan,int modifiers){return menu.awaitingPage&&key!=org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE||super.keyPressed(key,scan,modifiers);}
+    @Override protected void renderSlotContents(GuiGraphics graphics,ItemStack stack,Slot slot,String countString){
+        if(slot.index<WarehouseMenu.PAGE_SIZE&&countString==null&&stack.getCount()>=1000){
+            int count=stack.getCount();countString=count>=1000000?count/1000000+"M":count/1000+"k";
+        }
+        super.renderSlotContents(graphics,stack,slot,countString);
+    }
+    @Override protected List<Component> getTooltipFromContainerItem(ItemStack stack){
+        var lines=new ArrayList<>(super.getTooltipFromContainerItem(stack));
+        if(hoveredSlot!=null&&hoveredSlot.index<WarehouseMenu.PAGE_SIZE)lines.add(Content.text("warehouse_amount",mekanism.common.util.text.TextUtils.format(stack.getCount()),mekanism.common.util.text.TextUtils.format(hoveredSlot.getMaxStackSize(stack))));
+        return lines;
+    }
     @Override protected void drawForegroundText(GuiGraphics g,int x,int y){super.drawForegroundText(g,x,y);renderTitleText(g);renderInventoryText(g);
         g.drawString(font,Content.text("warehouse_slots",menu.visibleSlots),8,18,titleTextColor(),false);
         if(menu.pageCount>1)g.drawString(font,Content.text("page",menu.page+1,menu.pageCount),64,93,titleTextColor(),false);

@@ -32,13 +32,13 @@ public final class ThroughputTests {
         var chestA=corner.relative(faces.get(0));var liquid=corner.relative(faces.get(1));var gas=corner.relative(faces.get(2));
         var pipeB=b.getBlockPos().relative(c.structure.outward(b.getBlockPos()));var chestB=pipeB.relative(c.structure.outward(b.getBlockPos()));
         h.getLevel().setBlockAndUpdate(pipeB,MekanismBlocks.ULTIMATE_LOGISTICAL_TRANSPORTER.get().defaultBlockState());
-        h.getLevel().setBlockAndUpdate(chestA,Blocks.CHEST.defaultBlockState());h.getLevel().setBlockAndUpdate(chestB,Blocks.CHEST.defaultBlockState());
+        h.getLevel().setBlockAndUpdate(chestA,Blocks.CHEST.defaultBlockState());h.getLevel().setBlockAndUpdate(chestB,MekanismBlocks.ULTIMATE_BIN.get().defaultBlockState());
         h.getLevel().setBlockAndUpdate(liquid,MekanismBlocks.ULTIMATE_FLUID_TANK.get().defaultBlockState());
         h.getLevel().setBlockAndUpdate(gas,MekanismBlocks.ULTIMATE_CHEMICAL_TANK.get().defaultBlockState());
         var tank=(mekanism.common.tile.TileEntityChemicalTank)h.getLevel().getBlockEntity(gas);var tankConfig=tank.getConfig().getConfig(mekanism.common.lib.transmitter.TransmissionType.CHEMICAL);
         for(var side:RelativeSide.values())tankConfig.setDataType(mekanism.common.tile.component.config.DataType.INPUT,side);tankConfig.setEjecting(false);
         for(int i=0;i<8;i++){a.storage().insert(i,new ItemStack(Items.IRON_INGOT,64),false);a.storage().insert(i+8,new ItemStack(Items.GOLD_INGOT,64),false);a.storage().insert(i==7?53:i+16,new ItemStack(Items.DIAMOND,64),false);}
-        for(int i=0;i<8;i++)b.storage().insert(i,new ItemStack(Items.COPPER_INGOT,64),false);
+        b.storage().insert(0,new ItemStack(Items.COPPER_INGOT,5000),false);
         var ca=(ChestBlockEntity)h.getLevel().getBlockEntity(chestA);ca.setItem(0,new ItemStack(Items.IRON_INGOT,7));ca.setChanged();
         a.storage().insertFluid(0,new FluidStack(Fluids.WATER,100000),false);a.storage().insertChem(0,new ChemicalStack(MekanismChemicals.HYDROGEN,500000),false);
         h.startSequence().thenIdle(2).thenExecute(()->check(count(a.storage(),Items.IRON_INGOT)==512&&ca.getItem(0).getCount()==7,"Disabled ejection moved items"))
@@ -52,8 +52,8 @@ public final class ThroughputTests {
                   var chemical=h.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),gas,faces.get(2).getOpposite());check(chemical!=null&&chemical.getChemicalInTank(0).getAmount()==500000,"Chemical was still capped at 64000 or duplicated");
                   c.autoEject=false;
               }).thenWaitUntil(()->{
-                  var cb=(ChestBlockEntity)h.getLevel().getBlockEntity(chestB);int copper=0;for(int i=0;i<cb.getContainerSize();i++)if(cb.getItem(i).is(Items.COPPER_INGOT))copper+=cb.getItem(i).getCount();
-                  check(copper==512,"Bulk request did not reach the chest through a real Mek transporter");
+                  var cb=(mekanism.common.tile.TileEntityBin)h.getLevel().getBlockEntity(chestB);int copper=cb.getBinSlot().getCount();
+                  check(copper==5000,"Oversized transit request did not reach the bin intact");
               }).thenSucceed();
     }
 

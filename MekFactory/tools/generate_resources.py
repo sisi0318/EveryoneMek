@@ -84,6 +84,7 @@ pairs={
  'input_warehouse':('输入仓','Input Warehouse'),'output_warehouse':('输出仓','Output Warehouse'),
  'legacy_stock':('旧版缓存','Legacy Stock'),'legacy_input':('旧版输入缓存','Legacy Input Stock'),'legacy_output':('旧版输出缓存','Legacy Output Stock'),
  'warehouse_slots':('容量：%s 格','Capacity: %s slots'),'page':('%s / %s','%s / %s'),
+ 'warehouse_amount':('数量：%s / %s','Amount: %s / %s'),
  'fluids':('流体','Fluids'),'chemicals':('化学品','Chemicals'),
  'tank_fluid_amount':('%s / %s mB','%s / %s mB'),'tank_chemical_amount':('%s / %s 单位','%s / %s units'),
  'current_recipe':('配方：%s','Recipe: %s'),'no_recipe':('空闲','Idle'),'recipe_progress':('进度：%s','Progress: %s'),

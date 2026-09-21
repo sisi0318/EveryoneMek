@@ -9,9 +9,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.ClickType;
+import java.util.Optional;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.*;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import net.neoforged.neoforge.items.wrapper.RangedWrapper;
 
 /** A warehouse menu owns no inventory; it addresses one hatch, or one explicitly selected legacy bank. */
 public final class WarehouseMenu extends MekanismContainer {
@@ -54,12 +57,23 @@ public final class WarehouseMenu extends MekanismContainer {
                 public boolean isItemValid(int ignored,ItemStack stack){return !output&&!legacy&&index()<stock.slots();}
                 public ItemStack insertItem(int ignored,ItemStack stack,boolean simulate){return output||legacy?stack:stock.insert(index(),stack,simulate);}
                 public ItemStack extractItem(int ignored,int count,boolean simulate){
-                    if(!getLevel().isClientSide)return stock.take(index(),count,simulate);
-                    int n=Math.min(count,displayed.getCount());var result=displayed.copyWithCount(n);if(!simulate)displayed=displayed.copyWithCount(displayed.getCount()-n);return result;
+                    if(!getLevel().isClientSide)return stock.take(index(),Math.min(count,stock.item(index()).getMaxStackSize()),simulate);
+                    int n=Math.min(count,Math.min(displayed.getCount(),displayed.getMaxStackSize()));var result=displayed.copyWithCount(n);if(!simulate)displayed=displayed.copyWithCount(displayed.getCount()-n);return result;
                 }
             };
             addSlot(new SlotItemHandler(handler,0,8+i%9*18,30+i/9*18){
                 @Override public boolean isActive(){return page*PAGE_SIZE+local<visibleSlots;}
+                @Override public int getMaxStackSize(ItemStack stack){int index=page*PAGE_SIZE+local;return legacy||index>=stock.slots()?getItem().getCount():stock.itemLimit(index,stack);}
+                @Override public ItemStack safeInsert(ItemStack stack,int amount){
+                    if(stack.isEmpty()||!mayPlace(stack))return stack;
+                    var old=getItem();if(!old.isEmpty()&&!ItemStack.isSameItemSameComponents(old,stack))return stack;
+                    int moved=Math.min(Math.min(Math.max(0,amount),stack.getCount()),Math.max(0,getMaxStackSize(stack)-old.getCount()));
+                    if(moved>0){setByPlayer(stack.copyWithCount(old.getCount()+moved));stack.shrink(moved);}return stack;
+                }
+                @Override public Optional<ItemStack> tryRemove(int count,int decrement,Player player){
+                    if(!isActive()||!mayPickup(player))return Optional.empty();
+                    var removed=remove(Math.min(count,decrement));return removed.isEmpty()?Optional.empty():Optional.of(removed);
+                }
                 @Override public boolean mayPickup(Player p){return getLevel().isClientSide||canExecute(p);}
                 @Override public boolean mayPlace(ItemStack stack){return (getLevel().isClientSide||canExecute(inv.player))&&super.mayPlace(stack);}
             });
@@ -84,13 +98,50 @@ public final class WarehouseMenu extends MekanismContainer {
         if(id==1||id==2){if(getCarried().isEmpty())page=Math.clamp(page+(id==1?-1:1),0,Math.max(0,(visibleCount()-1)/PAGE_SIZE));pageRevision++;broadcastChanges();return true;}
         return false;
     }
+    /** Large stacks stay in the warehouse. Cursors, hotbars, drops and normal inventories get normal stacks. */
+    @Override public void clicked(int index,int button,ClickType type,Player player){
+        if(!getLevel().isClientSide&&!canExecute(player))return;
+        if(index<0||index>=playerStart){super.clicked(index,button,type,player);return;}
+        var slot=slots.get(index);if(!slot.isActive())return;
+        var stored=slot.getItem();var carried=getCarried();
+        if(stored.isEmpty()||stored.getCount()<=stored.getMaxStackSize()){super.clicked(index,button,type,player);return;}
+        if(type==ClickType.PICKUP&&(button==0||button==1)){
+            if(!slot.mayPickup(player))return;
+            if(carried.isEmpty()){
+                if(stored.isEmpty())return;int size=Math.min(stored.getCount(),stored.getMaxStackSize());
+                var taken=slot.remove(button==0?size:(size+1)/2);setCarried(taken);slot.onTake(player,taken);
+            }else if(slot.mayPlace(carried)){
+                if(stored.isEmpty()||ItemStack.isSameItemSameComponents(stored,carried))setCarried(slot.safeInsert(carried,button==0?carried.getCount():1));
+                else if(stored.getCount()<=stored.getMaxStackSize()&&carried.getCount()<=slot.getMaxStackSize(carried)){setCarried(stored.copy());slot.setByPlayer(carried);}
+            }else if(!stored.isEmpty()&&ItemStack.isSameItemSameComponents(stored,carried)){
+                int room=carried.getMaxStackSize()-carried.getCount();var taken=slot.remove(Math.min(room,button==0?room:1));carried.grow(taken.getCount());setCarried(carried);slot.onTake(player,taken);
+            }
+            return;
+        }
+        if(type==ClickType.SWAP&&(button>=0&&button<9||button==40)){
+            var inventory=player.getInventory();var incoming=inventory.getItem(button);
+            if(stored.isEmpty()){
+                if(slot.mayPlace(incoming))inventory.setItem(button,slot.safeInsert(incoming.copy()));
+            }else if(slot.mayPickup(player)){
+                if(incoming.isEmpty()){var taken=slot.remove(stored.getMaxStackSize());inventory.setItem(button,taken);slot.onTake(player,taken);}
+                else if(slot.mayPlace(incoming)){
+                    if(stored.getCount()<=stored.getMaxStackSize()&&incoming.getCount()<=slot.getMaxStackSize(incoming)){inventory.setItem(button,stored.copy());slot.setByPlayer(incoming);}
+                    else if(ItemStack.isSameItemSameComponents(stored,incoming)&&incoming.getCount()<=Math.max(0,slot.getMaxStackSize(incoming)-(stored.getCount()-stored.getMaxStackSize()))){
+                        var taken=slot.remove(stored.getMaxStackSize());slot.safeInsert(incoming.copy());inventory.setItem(button,taken);slot.onTake(player,taken);
+                    }
+                }
+            }
+            inventory.setChanged();return;
+        }
+        super.clicked(index,button,type,player);
+    }
     @Override public ItemStack quickMoveStack(Player p,int index){
         if(!canExecute(p)||index<0||index>=slots.size())return ItemStack.EMPTY;
-        var slot=slots.get(index);if(!slot.hasItem()||!slot.mayPickup(p))return ItemStack.EMPTY;
+        var slot=slots.get(index);if(!slot.isActive()||!slot.hasItem()||!slot.mayPickup(p))return ItemStack.EMPTY;
         var original=slot.getItem().copy();
-        if(index<playerStart){var left=ItemHandlerHelper.insertItemStacked(new InvWrapper(p.getInventory()),original,false);int moved=original.getCount()-left.getCount();if(moved<=0)return ItemStack.EMPTY;slot.remove(moved);slot.setChanged();return original;}
+        if(index<playerStart){var left=ItemHandlerHelper.insertItemStacked(new RangedWrapper(new InvWrapper(p.getInventory()),0,36),original,false);int moved=original.getCount()-left.getCount();if(moved<=0)return ItemStack.EMPTY;stock.take(page*PAGE_SIZE+index,moved,false);slot.setChanged();return original;}
         if(output||legacy)return ItemStack.EMPTY;
-        var left=original;for(int i=0;i<stock.slots()&&!left.isEmpty();i++)left=stock.insert(i,left,false);
+        var left=original;for(int pass=0;pass<2;pass++)for(int i=0;i<stock.slots()&&!left.isEmpty();i++){if(pass==0?stock.item(i).isEmpty():!stock.item(i).isEmpty())continue;left=stock.insert(i,left,false);}
         if(left.getCount()==original.getCount())return ItemStack.EMPTY;slot.setByPlayer(left);return original;
     }
 

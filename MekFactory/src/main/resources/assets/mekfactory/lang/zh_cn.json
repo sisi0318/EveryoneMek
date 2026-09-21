@@ -25,6 +25,7 @@
   "mekfactory.legacy_output": "旧版输出缓存",
   "mekfactory.warehouse_slots": "容量：%s 格",
   "mekfactory.page": "%s / %s",
+  "mekfactory.warehouse_amount": "数量：%s / %s",
   "mekfactory.fluids": "流体",
   "mekfactory.chemicals": "化学品",
   "mekfactory.tank_fluid_amount": "%s / %s mB",

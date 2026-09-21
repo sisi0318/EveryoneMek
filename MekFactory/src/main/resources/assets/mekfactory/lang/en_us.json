@@ -25,6 +25,7 @@
   "mekfactory.legacy_output": "Legacy Output Stock",
   "mekfactory.warehouse_slots": "Capacity: %s slots",
   "mekfactory.page": "%s / %s",
+  "mekfactory.warehouse_amount": "Amount: %s / %s",
   "mekfactory.fluids": "Fluids",
   "mekfactory.chemicals": "Chemicals",
   "mekfactory.tank_fluid_amount": "%s / %s mB",

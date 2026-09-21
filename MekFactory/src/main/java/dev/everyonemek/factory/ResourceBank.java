@@ -9,6 +9,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 public interface ResourceBank {
     int itemSlots();
     int itemLimit(int slot);
+    default int itemLimit(int slot,ItemStack stack){return stack.isEmpty()?itemLimit(slot):Math.min(itemLimit(slot),stack.getMaxStackSize());}
     ItemStack item(int slot);
     void item(int slot, ItemStack stack);
     int fluidTanks();
@@ -24,7 +25,7 @@ public interface ResourceBank {
         if (stack.isEmpty() || slot < 0 || slot >= itemSlots()) return stack;
         var old = item(slot);
         if (!old.isEmpty() && !ItemStack.isSameItemSameComponents(old, stack)) return stack;
-        int count = Math.min(stack.getCount(), Math.max(0, Math.min(itemLimit(slot), stack.getMaxStackSize()) - old.getCount()));
+        int count = Math.min(stack.getCount(), Math.max(0, itemLimit(slot,stack) - old.getCount()));
         if (count > 0 && !simulate) item(slot, stack.copyWithCount(old.getCount() + count));
         return stack.copyWithCount(stack.getCount() - count);
     }
@@ -75,7 +76,7 @@ public interface ResourceBank {
             for (int pass = 0; pass < 2; pass++) for (int i = 0; i < items.length && left > 0; i++) {
                 var old = items[i]; if (pass == 0 ? old.isEmpty() : !old.isEmpty()) continue;
                 if (!old.isEmpty() && !ItemStack.isSameItemSameComponents(old, stack)) continue;
-                int n = Math.min(left, Math.max(0, Math.min(itemLimit(i), stack.getMaxStackSize()) - old.getCount()));
+                int n = Math.min(left, Math.max(0, itemLimit(i,stack) - old.getCount()));
                 if (n > 0) { items[i] = stack.copyWithCount(old.getCount() + n); left -= n; }
             }
             if (left > 0) return false;

@@ -19,6 +19,7 @@ public final class CombinedBank implements ResourceBank {
     }
     public int itemSlots() { return items.size(); }
     public int itemLimit(int i) { var s = items.get(i); return s.bank.itemLimit(s.index); }
+    public int itemLimit(int i,ItemStack stack) { var s = items.get(i); return s.bank.itemLimit(s.index,stack); }
     public ItemStack item(int i) { var s = items.get(i); return s.bank.item(s.index); }
     public void item(int i, ItemStack stack) { var s = items.get(i); s.bank.item(s.index, stack); }
     public int fluidTanks() { return fluids.size(); }

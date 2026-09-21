@@ -4,7 +4,7 @@
 
 ## 基线与用户偏好
 
-- 0.1.0-alpha.10，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.10.jar`。
+- 0.1.0-alpha.11，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.11.jar`。
 - MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
 - alpha.10 可选支持 Mekanism Extras 1.4.1，公开构建坐标 curse.maven:mekanism-extras-1026040:8677677；本地实际测试 JAR 与 Maven 下载件的 SHA256 一致。生产编译不打包依赖，withExtras=true 才加入测试运行时，extrasJar 可作本地同版覆盖。
 - 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
@@ -31,7 +31,8 @@
 - `PortConfiguration` 按 RelativeSide→世界方向汇总整面全部端口，菜单 40..45 操作实际端口 OUTPUT；混合→全输入、全输入→全输出，角端口关联面同步。菜单 46 控制 Controller.autoEject，factory_data 的 auto_eject 缺省 true。摘要数组仅同步，不序列化第二份设置。
 - InductionAccess.Cell 只保存实际 BE 与 IEnergyContainer 的引用，原 Cell 和 Extras Cell 共用这份视图。结构校验、失效检查与菜单索引比较 cell.tile 的实体身份，不能与包装记录比较；高阶 Provider 的 long 吞吐来自原 tier.getOutput。FactoryModels 追加 Extras 的八种感应方块做成型皮肤包装。
 - `FactoryEnergy` 直接读写原 Cell 实存，以供应器合计共享输入/工作预算，不创建第二个电池。Controller 的 ENERGY persists 关闭。Mek 控制器物品可含默认空 energy 组件，检查其没有非零副本，不应断言组件不存在。
-- 仓 Buffers 保留 54 物品索引，按自身等级开放 9/18/36/54 格；各有 4 流体罐和 4 Chemical 罐，容量仅取本仓等级。Controller.inputs/outputs 的 432 格 Buffers 仅为旧存档兼容，不能作为新仓的共享库存。
+- 仓 Buffers 保留 54 物品索引，按自身等级开放 9/18/36/54 格；各有 4 流体罐和 4 Chemical 罐，容量仅取本仓等级。alpha.11 每格普通物品容量为 512/2048/8192/32768，每罐 64000/256000/1024000/4096000；槽索引不变。itemLimit(slot,stack) 按自身 maxStackSize/64 缩放，EMPTY 查询返回名义容量。CombinedBank 必须转发带 ItemStack 的容量，ResourceBank 插入和成品预检不能再被 min(...,64) 截断。Controller.inputs/outputs 的 432 格 Buffers 仅为旧存档兼容，不能作为新仓的共享库存。
+- Buffers.save/load 使用 Mek SerializerHelper.saveOversized/parseOversizedOptional，格式仍为原 id/count/components，旧普通堆叠可直接读取。普通 ItemStack.save/parseOptional 的数量限制不适合大堆叠；掉落 PORT_DATA 同样走这一格式，不能只修 BE 存档。
 - `ResourceBank` 定义物料事务；`CombinedBank` 只保存各仓槽/罐引用，无资源 NBT。Profiles/RecipePlan 的索引始终对应本次加工使用的同一个 bank：Processing 必须把已建立的 input view 传给 Profile.find(c,inputs)，不能匹配与消费时重新拼装不同的索引顺序。
 - `GroupedInputBank` 把同物品同组件、同流体同组件及同 Chemical 跨仓合并计数，只有输入消耗视图，不接受插入、不存盘。消费从对应原仓依次扣除，剩余量在本次视图中同步。不得只检查单个罐是否够一份配方，否则管道平分 200 为 100+100 会让结晶器停住。
 - `LegacyMigration` 每 5 tick 把旧输入/输出转入相应实际仓，按真实接收量扣减源；超额保留，旧输入余量继续可加工。迁入仓的数据不再保存在主控物品里。旧缓存菜单禁止新插入；不能一复制到多个仓或直接清空旧标签。
@@ -45,6 +46,7 @@
 - `Profiles.register` 只是标准加工族/耗能/条件注册入口，不是额外魔力、热量、概率副产物的完整 API。对原机 tick 的第三方注入不会自动继承，不得宣称所有附属已兼容。
 - `RecipePlan`/`Processing` 预检后预留原料，持久化每批结果和原始工期/能耗，按实际推进扣电。用批次记录，不生成 2048 个世界机器 BE。输入/输出变更触发匹配，未匹配时定期重试。
 - alpha.10 的 processingCyclesPerTick 默认为 4（范围 1..8），MAX_PARALLEL=2048，各级默认 32/128/512/2048。FactoryConfig.loaded 用 performanceRevision 一次性迁移旧默认值；其它配置值不变。Controller 的 parallel_revision 区分旧最大值 512 与升级后的手动 512；不能每次读取都覆盖玩家设置。Processing.tick 内复用同一物料视图推进多个原生步骤，每一步按原耗电付费；FactoryEnergy 按世界 tick 共用供应器预算，不能因步骤加倍重置预算。running 取步骤峰值而非相加，powerUsed 累计实际电费；旧 progress/ticks NBT 不变。
+- alpha.11 ItemPort 公开 extractItem 每次最多返回物品正常 maxStackSize，符合 IItemHandler 约定；自动弹出使用仅内部可见的 bulkEjection 适配器供 TransitRequest 建立/核销批次。不能用公开的限组 handler 去核销已经发出的整批，否则会少扣源；Mek TransporterStack 已采用 oversized 保存格式。
 - Ports.eject 每 tick 批量输出，每个工作步骤之间也清理产物；物品复用一次 TransitRequest，response.useAll 更新源槽映射，每面最多仓槽数次成功响应，满目标立即停止。保持 Mek transporter 专用路由，不使用普通 insertItem 绕过它。流体/Chemical 提供当前整罐量，按真实接收扣源；空仓不查邻居，区块不加载。
 - Job.fitting 先检查整批，放不下才二分；ResourceBank.store 只快照当前配方会产出的资源类型，仍须全部预检后一起提交。
 - 速度/能量升级实时重算在制的有效工期/能耗；已完成批次不重新收费。单 tick 多操作数与工位数分开，不把 2048 次操作显示成 2048/8 工位。PRC 用自己的配方工期。
@@ -58,6 +60,8 @@
 - alpha.9 修复首帧控件闪现：条件 visible/active 必须在控件构造时就按当前菜单设置，再由 tick 动态更新。FactoryScreen、WarehouseScreen、FactoryWindow、PortConfigurationWindow 的匿名控件共用自身 refreshState，不能只在第一次 tick 隐藏默认可见按钮；仓未开放槽框同样处理。
 - WarehouseMenu/Screen：屏幕 176×220，每页 27 格（9×3），槽位 8,30，玩家槽 8,138。直接指向一个 Part.storage；模式变化、部件移除/替换后失效。未成型可手工开仓，但管道仍按完整结构守卫。回收旧缓存用同一菜单类型，目标是 Controller 的历史 bank，禁止插入。
 - WarehouseResourcesWindow 为 176×118，每行四个原生 MEDIUM gauge，数据来自菜单同步数组，容量来自 tankCapacity。只读适配不保存第二份储罐、不发送原生 dropper 包；旧溢出量只限幅绘制高度，不截断实际库存。
+- alpha.11 仓菜单按大堆叠处理：普通数量继续走原点击逻辑，仅超堆叠 PICKUP/SWAP 截取正常一组；tryRemove 允许输出槽部分提取，safeInsert 对容量差做 max(0)，防止旧超额库存反向增加鼠标物品。Shift 通过 RangedWrapper(InvWrapper,0,36) 只填主背包/快捷栏，并按实际接收量直接扣源，不能调用限组的 slot.remove 核销整批，也不能写入盔甲和副手。
+- WarehouseScreen 复用 NeoForge renderSlotContents 的 countString 显示 k/M，hover tooltip 展示精确数量/物品实际单格容量；不重绘整套槽位或修改玩家物品栏的显示。
 - 主控旋转/改尺寸后，旧仓可按原主控权限手工取料；关联主控区块未加载时不强制加载，也不绕过其权限。主控不存在后独立仓可正常开界面。
 - 主控升级/红石/安全与左侧端口配置保持 Mek 组件。独立仓库存不经过主控的真实槽位，不把只读运行信息添加成可取出的菜单槽。
 - Mek 先发送原版 Slot 包，再发送属性包。客户端分页库存必须使用独立显示格接收 Slot 包，不按旧页码写入库存数组；页版本确认前禁止点击。即便拒绝持物翻页也要发送页版本，避免客户端永久等待。
@@ -79,12 +83,13 @@
 - GUI 与放置测试用真实 ServerPlayer + 只接收输出的 EmbeddedChannel；FakePlayer.openMenu 为空，不能据此判断 GUI 不工作。
 - GameTestServer 无 GameProfileCache；测试为唯一临时 UUID 填充 NeoForge UsernameCache 并在 finally 清理，通过测试专用反射访问 protected 方法。不要把该夹具修复放到生产代码。
 - 未运行客户端。2048 工位结构校验不是大型整合包压力测试。JEI/HUD/模型视觉由用户验收。
-- 共 24 项服务端测试；新增实际右键开独立仓→shift 取料、仓间隔离、真实掉落/放置保留三类资源与模式、旧缓冲部分迁移后恢复、不同仓双 Chemical 原料、同种 Chemical 分仓凑足一份结晶配方，以及缺电时主控进度保持。外观和菜单实际渲染仍由用户验收。
+- 共 27 项服务端测试；新增实际右键开独立仓→shift 取料、仓间隔离、真实掉落/放置保留三类资源与模式、旧缓冲部分迁移后恢复、不同仓双 Chemical 原料、同种 Chemical 分仓凑足一份结晶配方，以及缺电时主控进度保持。外观和菜单实际渲染仍由用户验收。
 - alpha.7 增加机器数量/四级原工厂处理线、设置与最低框架限制、实际 10 线耗电与产物、非回转设备拒绝动作 22 的回归。原八线/多线夹具须提供对应机器数量，不能靠旧规则借用框架空位。
 - ThroughputTests 覆盖真实 tick 驱动、多种物品跨可见页出料、既有堆叠补货、第二输出仓经真实 Mek 管道送箱、100,000 mB 水与 500,000 Chemical 输出、双倍工作共享供能预算、辅料转换剩余量及提纯缺氧/重载/续作。原合金配方在本依赖中用铜，不要按旧版铁锭猜测试材料；ChemicalTank 接收侧要明确设 INPUT，默认正面 OUTPUT 不收料。
 - alpha.8 改变状态与升级支持，FactoryAppearance registrar 版本为 4，客户端与服务端需一致。资源检查包含新 menu/PORT_DATA、四档仓 loot 与 item override，以及配方不再消耗低级有库存仓。
 - alpha.10 加入 ExtrasTests：实际 20 种高阶工厂识别、64 无限=1088 工位、共享/机内堆叠升级及电费、创造空电加工、高阶感应数据/菜单/拆装、旧最大值和低限迁移；缺 Extras 时两项专用测试提前结束。无 Extras 与 withExtras=true 的两次服务器运行均通过，CI 也覆盖两者。协议升级为 5。
 - Extras 1.4.1 在没有 mekaf/mekmm 时会输出自身可选 Mixin、loot/recipe 注册缺失日志；本适配不伪造这些注册项。已实现的五类高阶工厂可独立运行。不要把这些上游日志误判为我们可选边界加载失败。
+- alpha.11 增加 BulkStorageTests：3000/32000 数量与自定义组件 NBT/网络/掉落往返，右键半组、热键和 Shift 容量守恒，盔甲/副手不被填入，满箱后余料保留。真实物流用单槽 5000 铜锭经 Mek 管道送入 Bin，另测单仓供应创造无限工厂 17408 次/tick。缩容/旧流体迁移夹具按新容量准备足够溢出的实际数量。协议为 6，有/无 Extras 均验证。
 - alpha.9 只改客户端控件初始状态，执行 build 与 JAR 检查，不重复运行不能覆盖首帧渲染的服务端测试；协议仍为 4，世界/菜单数据格式不变。
 - alpha.5 是客户端与材质修复，执行 build、资源检查、当前 Minecraft 与编译产物的重绘调用核对；不以再跑服务端 GameTest 冒充修复客户端重绘的验证。
 - 使用自身 Wrapper/.gradle-home，可临时使用已有 GRADLE_RO_DEP_CACHE；缓存、参考源码和游戏世界不提交。CI/发布入口已注册 MekFactory。
