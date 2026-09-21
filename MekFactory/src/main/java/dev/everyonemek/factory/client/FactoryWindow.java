@@ -44,7 +44,7 @@ public final class FactoryWindow extends GuiWindow {
         addChild(new MekanismButton(gui(), relativeX + x, relativeY + y, width, 16, label.get(),
               (b, mx, my) -> send((id == 20 || id == 21) && Screen.hasShiftDown() ? id + 3 : id)) {
             { refreshState(); }
-            private void refreshState() { if (id == 20 || id == 21) active = id == 20 ? tile.parallelLimit > 1 : tile.parallelLimit < 512; }
+            private void refreshState() { if (id == 20 || id == 21) active = id == 20 ? tile.parallelLimit > 1 : tile.parallelLimit < FactoryConfig.MAX_PARALLEL; }
             @Override public void tick() { super.tick(); refreshState(); }
             @Override public void updateTooltip(int mx, int my) { if (id == 20 || id == 21) setTooltip(TooltipUtils.create(Content.text("limit_step"))); }
         });

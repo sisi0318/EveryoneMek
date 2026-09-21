@@ -99,6 +99,10 @@ jobs:
         if: matrix.mod.directory == 'OverloadCore'
         run: bash ./gradlew --no-daemon --console=plain --max-workers=2 -PwithGenerators=false -PgameTestDirectory=gametest-without-generators runGameTestServer
 
+      - name: Verify Mek Factory with optional Mekanism Extras
+        if: matrix.mod.directory == 'MekFactory'
+        run: bash ./gradlew --no-daemon --console=plain --max-workers=2 -PwithExtras=true runGameTestServer
+
       - name: Upload mod JAR
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

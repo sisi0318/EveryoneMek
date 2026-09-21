@@ -11,7 +11,7 @@
 - [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻造室与炽炉控制器，机内锻造、四类资源插件、逐级升级，以及炽炉嵌入、电热和端口物流。
 - [Overload Core](OverloadCore/README.md)：科技核心挂坠、Mek 作业诅咒与受控增产、发电／物流限制和随身机具收益。
 - [Botanical Mekanism](Botania/README.md)：仿生花、原生词典与火花、Chemical 魔力加工，以及可选 AE2／多媒体物品互通和原装置控制器。
-- [Mek Factory](MekFactory/README.md)：分级并行矩阵工厂、原机与共享升级、独立输入输出仓、主控运行看板、原感应储能与生存一键搭建。
+- [Mek Factory](MekFactory/README.md)：分级并行矩阵工厂、原机与共享升级、独立输入输出仓、原感应储能，可选支持 Mekanism Extras 高阶工厂与感应部件。
 
 开发接手与新增模组先读 [AGENTS.md](AGENTS.md)，其中提供通用规则、启动清单和各模组开发入口。
 

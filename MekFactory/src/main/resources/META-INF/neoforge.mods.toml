@@ -16,6 +16,12 @@ versionRange="[21.1.241,)"
 ordering="NONE"
 side="BOTH"
 [[dependencies.mekfactory]]
+modId="mekanism_extras"
+type="optional"
+versionRange="[1.4.1,1.5)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.mekfactory]]
 modId="minecraft"
 type="required"
 versionRange="[1.21.1,1.21.2)"

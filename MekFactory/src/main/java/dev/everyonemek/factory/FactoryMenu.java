@@ -55,7 +55,7 @@ public final class FactoryMenu extends MekanismTileContainer<Controller> {
         if(id==2){Construction.preview(tile,(ServerPlayer)p);return true;}
         if(id==3)return Construction.build(tile,(ServerPlayer)p);
         if(id>=10&&id<16)return tile.resize((id-10)/2,id%2==0?-1:1);
-        if(id==20||id==21||id==23||id==24){tile.parallelLimit=Math.clamp(tile.parallelLimit+(id==20||id==23?-1:1)*(id>=23?16:1),1,512);tile.markForSave();return true;}
+        if(id==20||id==21||id==23||id==24){tile.parallelLimit=Math.clamp(tile.parallelLimit+(id==20||id==23?-1:1)*(id>=23?16:1),1,FactoryConfig.MAX_PARALLEL);tile.markForSave();return true;}
         if(id==22&&Profiles.rotary(tile.template.getStack())&&tile.processing.jobs.isEmpty()){tile.rotaryReverse=!tile.rotaryReverse;tile.markForSave();return true;}
         if(id>=40&&id<46)return PortConfiguration.cycleFace(tile,p,mekanism.api.RelativeSide.values()[id-40]);
         if(id==46){tile.autoEject=!tile.autoEject;tile.markForSave();return true;}

@@ -21,7 +21,7 @@ public final class Controller extends TileEntityMekanism {
     public final FactoryStructure structure=new FactoryStructure(this);
     public final Buffers inputs=new Buffers(this,false),outputs=new Buffers(this,true);
     public final Processing processing=new Processing();
-    public int sizeX=3,sizeY=3,sizeZ=3,parallelLimit=512,parallel,running,progress,inputRevision;
+    public int sizeX=3,sizeY=3,sizeZ=3,parallelLimit=FactoryConfig.MAX_PARALLEL,parallel,running,progress,inputRevision;
     public long powerUsed,clientEnergy,clientCapacity;public String status="structure";
     public boolean enabled=true,autoEject=true,rotaryReverse,preview;
     public final int[] portInputs=new int[6],portOutputs=new int[6];
@@ -46,8 +46,9 @@ public final class Controller extends TileEntityMekanism {
         Ports.eject(this);if(level.getGameTime()%5==0)PortConfiguration.refresh(this);setActive(running>0);FactoryAppearance.sync(this);return changed;}
     @Override public void setRemoved(){FactoryAppearance.clear(this);structure.detach();super.setRemoved();}
     public boolean resize(int axis,int delta){if(!processing.jobs.isEmpty())return false;int n=(axis==0?sizeX:axis==1?sizeY:sizeZ)+delta;if(n<3||n>grade().size())return false;structure.detach();if(axis==0)sizeX=n;else if(axis==1)sizeY=n;else sizeZ=n;markForSave();return true;}
-    private CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();t.putInt("x",sizeX);t.putInt("y",sizeY);t.putInt("z",sizeZ);t.putInt("parallel",parallelLimit);t.putBoolean("enabled",enabled);t.putBoolean("auto_eject",autoEject);t.putBoolean("rotary",rotaryReverse);t.put("inputs",inputs.save(r));t.put("outputs",outputs.save(r));t.put("jobs",processing.save(r));return t;}
-    private void read(CompoundTag t,HolderLookup.Provider r){sizeX=Math.clamp(t.getInt("x"),3,11);sizeY=Math.clamp(t.getInt("y"),3,11);sizeZ=Math.clamp(t.getInt("z"),3,11);if(!t.contains("x"))sizeX=sizeY=sizeZ=3;parallelLimit=t.contains("parallel")?Math.clamp(t.getInt("parallel"),1,512):512;enabled=!t.contains("enabled")||t.getBoolean("enabled");autoEject=!t.contains("auto_eject")||t.getBoolean("auto_eject");rotaryReverse=t.getBoolean("rotary");inputs.load(t.getCompound("inputs"),r);outputs.load(t.getCompound("outputs"),r);processing.load(t.getList("jobs",Tag.TAG_COMPOUND),r);structure.invalidate();}
+    private CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();t.putInt("x",sizeX);t.putInt("y",sizeY);t.putInt("z",sizeZ);t.putInt("parallel",parallelLimit);t.putInt("parallel_revision",1);t.putBoolean("enabled",enabled);t.putBoolean("auto_eject",autoEject);t.putBoolean("rotary",rotaryReverse);t.put("inputs",inputs.save(r));t.put("outputs",outputs.save(r));t.put("jobs",processing.save(r));return t;}
+    public static int readParallelLimit(CompoundTag t){int stored=t.contains("parallel")?t.getInt("parallel"):FactoryConfig.MAX_PARALLEL;return !t.contains("parallel_revision")&&stored==512?FactoryConfig.MAX_PARALLEL:Math.clamp(stored,1,FactoryConfig.MAX_PARALLEL);}
+    private void read(CompoundTag t,HolderLookup.Provider r){sizeX=Math.clamp(t.getInt("x"),3,11);sizeY=Math.clamp(t.getInt("y"),3,11);sizeZ=Math.clamp(t.getInt("z"),3,11);if(!t.contains("x"))sizeX=sizeY=sizeZ=3;parallelLimit=readParallelLimit(t);enabled=!t.contains("enabled")||t.getBoolean("enabled");autoEject=!t.contains("auto_eject")||t.getBoolean("auto_eject");rotaryReverse=t.getBoolean("rotary");inputs.load(t.getCompound("inputs"),r);outputs.load(t.getCompound("outputs"),r);processing.load(t.getList("jobs",Tag.TAG_COMPOUND),r);structure.invalidate();}
     @Override public void saveAdditional(CompoundTag t,HolderLookup.Provider r){super.saveAdditional(t,r);t.put("factory",data(r));}
     @Override public void loadAdditional(CompoundTag t,HolderLookup.Provider r){super.loadAdditional(t,r);read(t.getCompound("factory"),r);}
     @Override protected void collectImplicitComponents(DataComponentMap.Builder b){super.collectImplicitComponents(b);b.set(Content.DATA.get(),data(level.registryAccess()));}

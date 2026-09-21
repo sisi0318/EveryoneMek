@@ -131,7 +131,7 @@ public final class FactoryTests {
         var frame=c.structure.at(0,0,0);h.getLevel().setBlockAndUpdate(frame,Blocks.AIR.defaultBlockState());FactoryAppearance.sync(c);
         check(!c.publishedAppearance.formed(),"Broken structure kept assembled appearance");
         h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());check(c.structure.valid(),"Repair did not form");FactoryAppearance.sync(c);
-        check(c.publishedAppearance.formed()&&h.getLevel().getBlockEntity(cell.getBlockPos())==cell&&h.getLevel().getBlockEntity(provider.getBlockPos())==provider&&cell.getEnergyContainer().getEnergy()==123456,"Visual transition replaced or modified original energy storage");
+        check(c.publishedAppearance.formed()&&h.getLevel().getBlockEntity(cell.getBlockPos())==cell.tile()&&h.getLevel().getBlockEntity(provider.getBlockPos())==provider&&cell.getEnergyContainer().getEnergy()==123456,"Visual transition replaced or modified original energy storage");
         h.getLevel().setBlockAndUpdate(c.getBlockPos(),Blocks.AIR.defaultBlockState());check(c.publishedAppearance==null&&cell.getEnergyContainer().getEnergy()==123456,"Removing controller kept a published skin or lost energy");h.succeed();
     }
 
@@ -148,10 +148,10 @@ public final class FactoryTests {
         c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ELITE,mekanism.common.content.blocktype.FactoryType.CRUSHING),64));
         check(Profiles.availableParallel(c)==448,"64 elite factories did not supply 448 lanes");
         c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ULTIMATE,mekanism.common.content.blocktype.FactoryType.CRUSHING),64));
-        check(Profiles.machineParallel(c.template.getStack())==576&&Profiles.availableParallel(c)==512,"Raw lane count or frame cap is incorrect");
-        c.parallelLimit=11;check(Profiles.availableParallel(c)==11,"Player limit was ignored");c.parallelLimit=512;
+        check(Profiles.machineParallel(c.template.getStack())==576&&Profiles.availableParallel(c)==576,"Raw lane count or frame cap is incorrect");
+        c.parallelLimit=11;check(Profiles.availableParallel(c)==11,"Player limit was ignored");c.parallelLimit=FactoryConfig.MAX_PARALLEL;
         var frame=c.structure.at(0,0,0);h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());
-        check(c.structure.valid()&&Profiles.availableParallel(c)==8,"Lowest frame did not cap native lanes");
+        check(c.structure.valid()&&Profiles.availableParallel(c)==Grade.BASIC.parallel(),"Lowest frame did not cap native lanes");
         h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.ULTIMATE).get().defaultBlockState());check(c.structure.valid(),"Restored frame did not form");
         var player=player(h,c.getBlockPos().north());
         try{FactoryMenu.open(player,c,c.getBlockPos());var menu=(FactoryMenu)player.containerMenu;boolean mode=c.rotaryReverse;
@@ -178,7 +178,7 @@ public final class FactoryTests {
         var c=formed(h,Grade.BASIC,4);var cell=c.structure.cells.getFirst();long start=10000000;cell.getEnergyContainer().setEnergy(start);
         c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);
         long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
-        h.startSequence().thenIdle(60).thenExecute(()->{
+        h.startSequence().thenIdle(100/FactoryConfig.PROCESSING_CYCLES.get()).thenExecute(()->{
             check(c.processing.reserved()==8&&count(c.outputBank(),dust)==0,"Processing did not reserve eight real lanes");
             check(c.template.extractItem(1,Action.SIMULATE,AutomationType.MANUAL).isEmpty(),"Running template could be removed");
             var tag=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(tag,h.getLevel().registryAccess());
@@ -290,9 +290,9 @@ public final class FactoryTests {
         check(c.sizeX==3&&c.sizeY==3&&c.sizeZ==3,"New controller did not default to 3 x 3 x 3");
         var plan=Construction.plan(c);check(plan.size()==26,"Compact blueprint exceeded 27 blocks including controller");
         for(var e:plan.entrySet())h.getLevel().setBlockAndUpdate(e.getKey(),e.getValue());
-        check(c.structure.validate()&&c.structure.parallel==512,"Compact tier lost its parallel capacity");
+        check(c.structure.validate()&&c.structure.parallel==Grade.ULTIMATE.parallel(),"Compact tier lost its parallel capacity");
         var frame=c.structure.at(0,0,0);h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());
-        check(c.structure.valid()&&c.structure.parallel==8,"Lowest frame failed to limit compact parallelism");
+        check(c.structure.valid()&&c.structure.parallel==Grade.BASIC.parallel(),"Lowest frame failed to limit compact parallelism");
         h.getLevel().setBlockAndUpdate(frame,Content.FRAMES.get(Grade.ULTIMATE).get().defaultBlockState());check(c.structure.valid(),"Restoring frame did not reform");
         var roof=c.structure.at(1,2,1);var providerState=h.getLevel().getBlockState(roof);var cell=c.structure.cells.getFirst();
         check(cell.getBlockPos().equals(c.structure.at(1,1,1))&&c.structure.providers.getFirst().getBlockPos().equals(roof),"Compact induction positions incorrect");
@@ -326,7 +326,7 @@ public final class FactoryTests {
 
     @GameTest(template="empty",timeoutTicks=120)
     public static void farShellMenuAndLowestFrameTierAreEnforced(GameTestHelper h){
-        var c=formed(h,Grade.ULTIMATE,10);check(c.structure.parallel==512,"Ultimate volume/tier parallel limit incorrect");
+        var c=formed(h,Grade.ULTIMATE,10);check(c.structure.parallel==Grade.ULTIMATE.parallel(),"Ultimate volume/tier parallel limit incorrect");
         var far=c.structure.at(9,9,9);var p=player(h,far);var part=(Part)h.getLevel().getBlockEntity(far);
         try {part.open(p);check(p.distanceToSqr(c.getBlockPos().getCenter())>64&&p.containerMenu instanceof FactoryMenu&&p.containerMenu.stillValid(p),"Menu validity incorrectly used the distant controller");
             h.getLevel().setBlockAndUpdate(far,Content.FRAMES.get(Grade.BASIC).get().defaultBlockState());check(!c.structure.valid()&&c.structure.error.equals("tier"),"Low frame did not limit structure size");
@@ -384,7 +384,7 @@ public final class FactoryTests {
         final int[] fastTicks={0};final long[] fastUsage={0};long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenWaitUntil(()->check(c.getComponent().getUpgrades(Upgrade.SPEED)==8,"Native upgrade installation did not tick"))
               .thenExecute(()->{fastUsage[0]=mekanism.common.util.MekanismUtils.getEnergyPerTick(c,usage);c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
-              .thenIdle(5).thenExecute(()->{check(!c.processing.jobs.isEmpty(),"Upgraded batch did not start");fastTicks[0]=c.processing.jobs.getFirst().progress;c.getComponent().removeUpgrade(Upgrade.SPEED,true);check(c.getComponent().getUpgradeOutputSlot().getCount()==8,"Uninstall lost modules");})
+              .thenIdle(Math.max(1,8/FactoryConfig.PROCESSING_CYCLES.get())).thenExecute(()->{check(!c.processing.jobs.isEmpty(),"Upgraded batch did not start");fastTicks[0]=c.processing.jobs.getFirst().progress;c.getComponent().removeUpgrade(Upgrade.SPEED,true);check(c.getComponent().getUpgradeOutputSlot().getCount()==8,"Uninstall lost modules");})
               .thenIdle(2).thenExecute(()->check(c.processing.jobs.getFirst().ticks==200&&c.processing.jobs.getFirst().energy==usage,"Removed upgrades still influenced reserved work"))
               .thenWaitUntil(()->check(count(c.outputBank(),dust)==8,"Recalculated work did not finish"))
               .thenExecute(()->{c.enabled=false;check(cell.getEnergyContainer().getEnergy()==start-8*(fastUsage[0]*fastTicks[0]+usage*(200-fastTicks[0])),"Upgrade transition charged incorrect energy");}).thenSucceed();

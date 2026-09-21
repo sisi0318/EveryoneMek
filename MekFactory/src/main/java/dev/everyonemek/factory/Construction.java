@@ -37,7 +37,7 @@ public final class Construction {
         for(int x=1;x<c.sizeX-1;x++)for(int y=1;y<c.sizeY-1;y++)for(int z=1;z<c.sizeZ-1;z++){
             var pos=c.structure.at(x,y,z);if(!p.serverLevel().hasChunkAt(pos))return false;
             if(!plan.containsKey(pos)&&!p.serverLevel().getBlockState(pos).isAir()){
-                var be=p.serverLevel().getBlockEntity(pos);if(!(be instanceof mekanism.common.tile.multiblock.TileEntityInductionCell)&&!(be instanceof mekanism.common.tile.multiblock.TileEntityInductionProvider)){
+                var be=p.serverLevel().getBlockEntity(pos);if(!InductionAccess.part(be)){
                     p.displayClientMessage(Content.text("build_blocked",pos.toShortString()),false);return false;
                 }
             }

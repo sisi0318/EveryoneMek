@@ -1,5 +1,7 @@
 package dev.everyonemek.factory;
 import java.util.*;
+import dev.everyonemek.factory.compat.Compat;
+import mekanism.common.content.blocktype.FactoryType;
 import java.util.function.*;
 import mekanism.api.Upgrade;
 import mekanism.api.recipes.*;
@@ -20,9 +22,11 @@ public final class Profiles {
     public static Settings settings(Controller c,int baseTicks,long baseEnergy,boolean exponential,boolean fixed){
         int speed=upgrades(c,Upgrade.SPEED),efficiency=upgrades(c,Upgrade.ENERGY);
         double factor=Math.pow(MekanismConfig.general.maxUpgradeMultiplier.get(),speed/(double)Upgrade.SPEED.getMax());
-        return new Settings(Math.max(1,(int)(baseTicks/factor)),Math.max(1,fixed?baseEnergy:mekanism.api.math.MathUtils.ceilToLong(baseEnergy*Math.pow(MekanismConfig.general.maxUpgradeMultiplier.get(),2*speed/(double)Upgrade.SPEED.getMax()-efficiency/(double)Upgrade.ENERGY.getMax()))),
-              exponential?1<<speed:Math.clamp((int)(factor/baseTicks),1,65536));
+        boolean creative=Compat.creative(c);
+        int operations=exponential?1<<speed:(int)Math.clamp(Math.max(1,factor/baseTicks)*Compat.stackOperations(c),1,65536);
+        return new Settings(creative?1:Math.max(1,(int)(baseTicks/factor)),creative?0:Math.max(1,fixed?baseEnergy:mekanism.api.math.MathUtils.ceilToLong(baseEnergy*Math.pow(MekanismConfig.general.maxUpgradeMultiplier.get(),2*speed/(double)Upgrade.SPEED.getMax()-efficiency/(double)Upgrade.ENERGY.getMax()))),operations);
     }
+    public static int chemicalTicks(Controller c,int baseTicks){return Math.max(1,(int)(baseTicks/Math.pow(MekanismConfig.general.maxUpgradeMultiplier.get(),upgrades(c,Upgrade.SPEED)/(double)Upgrade.SPEED.getMax())));}
     public record Profile(IMekanismRecipeTypeProvider<?,?,?> recipes,Kind kind,int baseTicks,LongSupplier energy,Predicate<Controller> condition) {
         public RecipePlan find(Controller c){return find(c,c.inputBank());}
         public RecipePlan find(Controller c,ResourceBank b){
@@ -93,15 +97,21 @@ public final class Profiles {
         nativeProfile(MekanismBlocks.ELECTROLYTIC_SEPARATOR.get(),MekanismRecipeType.SEPARATING,Kind.SEPARATOR,1);
         nativeProfile(MekanismBlocks.PRESSURIZED_REACTION_CHAMBER.get(),MekanismRecipeType.REACTION,Kind.REACTION,200);
         nativeProfile(MekanismBlocks.ROTARY_CONDENSENTRATOR.get(),MekanismRecipeType.ROTARY,Kind.ROTARY,1);
-        for(var tier:mekanism.common.tier.FactoryTier.values())for(var type:List.of(mekanism.common.content.blocktype.FactoryType.ENRICHING,mekanism.common.content.blocktype.FactoryType.CRUSHING,mekanism.common.content.blocktype.FactoryType.SMELTING,mekanism.common.content.blocktype.FactoryType.INFUSING,mekanism.common.content.blocktype.FactoryType.PURIFYING)){
-            var base=switch(type){case ENRICHING->MekanismBlocks.ENRICHMENT_CHAMBER;case CRUSHING->MekanismBlocks.CRUSHER;case INFUSING->MekanismBlocks.METALLURGIC_INFUSER;case PURIFYING->MekanismBlocks.PURIFICATION_CHAMBER;default->MekanismBlocks.ENERGIZED_SMELTER;};
-            register(BuiltInRegistries.BLOCK.getKey(MekanismBlocks.getFactory(tier,type).get()),PROFILES.get(BuiltInRegistries.BLOCK.getKey(base.get())));
-        }
+        for(var tier:mekanism.common.tier.FactoryTier.values())for(var type:List.of(FactoryType.ENRICHING,FactoryType.CRUSHING,FactoryType.SMELTING,FactoryType.INFUSING,FactoryType.PURIFYING))
+            registerFactoryVariant(MekanismBlocks.getFactory(tier,type).get(),type);
+        Compat.registerFactories();
+    }
+    public static void registerFactoryVariant(Block block,FactoryType type){
+        var base=switch(type){case ENRICHING->MekanismBlocks.ENRICHMENT_CHAMBER;case CRUSHING->MekanismBlocks.CRUSHER;case SMELTING->MekanismBlocks.ENERGIZED_SMELTER;case INFUSING->MekanismBlocks.METALLURGIC_INFUSER;case PURIFYING->MekanismBlocks.PURIFICATION_CHAMBER;default->null;};
+        if(base==null)return;
+        var p=PROFILES.get(BuiltInRegistries.BLOCK.getKey(base.get()));var energy=Attribute.get(block,AttributeEnergy.class);
+        register(BuiltInRegistries.BLOCK.getKey(block),new Profile(p.recipes(),p.kind(),p.baseTicks(),energy==null?p.energy():energy::getUsage,p.condition()));
     }
     public static Profile get(ItemStack stack){initialize();return stack.getItem() instanceof BlockItem block?PROFILES.get(BuiltInRegistries.BLOCK.getKey(block.getBlock())):null;}
     /** A factory contributes its native lanes, not a second speed or energy multiplier. */
     public static int processingLines(ItemStack stack){
         if(stack.isEmpty()||get(stack)==null)return 0;
+        int extra=Compat.factoryLines(stack);if(extra>0)return extra;
         var tier=Attribute.get(((BlockItem)stack.getItem()).getBlock(),AttributeTier.class);
         return tier!=null&&tier.tier() instanceof mekanism.common.tier.FactoryTier factory?factory.processes:1;
     }

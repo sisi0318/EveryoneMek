@@ -9,8 +9,8 @@ public final class FactoryStructure {
     private static final Map<Level,Map<BlockPos,Controller>> OWNERS=new WeakHashMap<>();
     private static final Map<Level,Set<Controller>> CONTROLLERS=new WeakHashMap<>();
     public final Controller owner;
-    public final List<TileEntityInductionCell> cells=new ArrayList<>();
-    public final List<TileEntityInductionProvider> providers=new ArrayList<>();
+    public final List<InductionAccess.Cell> cells=new ArrayList<>();
+    public final List<net.minecraft.world.level.block.entity.BlockEntity> providers=new ArrayList<>();
     public final List<Part> ports=new ArrayList<>();
     private final Set<BlockPos> claimed=new HashSet<>();
     private boolean dirty=true,checking;
@@ -21,9 +21,9 @@ public final class FactoryStructure {
     public FactoryStructure(Controller owner){this.owner=owner;}
     public static Controller inductionController(Level level,BlockPos pos){
         if(level.isClientSide||!level.hasChunkAt(pos))return null;
-        var be=level.getBlockEntity(pos);if(!(be instanceof TileEntityInductionCell)&&!(be instanceof TileEntityInductionProvider))return null;
+        var be=level.getBlockEntity(pos);if(!InductionAccess.part(be))return null;
         var map=OWNERS.get(level);var c=map==null?null:map.get(pos);
-        return c!=null&&!c.isRemoved()&&c.structure.valid()&&(c.structure.cells.contains(be)||c.structure.providers.contains(be))?c:null;
+        return c!=null&&!c.isRemoved()&&c.structure.valid()&&(c.structure.cells.stream().anyMatch(cell->cell.tile()==be)||c.structure.providers.contains(be))?c:null;
     }
     public static void interact(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
         if(event.getEntity().isShiftKeyDown())return;
@@ -48,7 +48,7 @@ public final class FactoryStructure {
     public BlockPos at(int x,int y,int z){return owner.getBlockPos().relative(owner.getDirection().getClockWise(),x-1).above(y-1).relative(owner.getDirection().getOpposite(),z);}
     public boolean contains(BlockPos p){var a=at(0,0,0);var b=at(owner.sizeX-1,owner.sizeY-1,owner.sizeZ-1);return p.getX()>=Math.min(a.getX(),b.getX())&&p.getX()<=Math.max(a.getX(),b.getX())&&p.getY()>=a.getY()&&p.getY()<=b.getY()&&p.getZ()>=Math.min(a.getZ(),b.getZ())&&p.getZ()<=Math.max(a.getZ(),b.getZ());}
     public boolean valid(){if(owner.getLevel()==null||owner.getLevel().isClientSide||owner.isRemoved())return false;if(checking)return false;
-        if(formed){for(var cell:cells)if(!live(cell)){invalidate();break;}for(var provider:providers)if(!live(provider)){invalidate();break;}}
+        if(formed){for(var cell:cells)if(!live(cell.tile())){invalidate();break;}for(var provider:providers)if(!live(provider)){invalidate();break;}}
         return !dirty?formed:validate();}
     private boolean live(net.minecraft.world.level.block.entity.BlockEntity tile){return !tile.isRemoved()&&owner.getLevel().hasChunkAt(tile.getBlockPos())&&owner.getLevel().getBlockEntity(tile.getBlockPos())==tile;}
     public boolean validate(){
@@ -69,7 +69,7 @@ public final class FactoryStructure {
                 if(edges>0){
                     if(pos.equals(owner.getBlockPos()))continue;
                     var be=level.getBlockEntity(pos);
-                    if(be instanceof TileEntityInductionCell||be instanceof TileEntityInductionProvider){if(!addInduction(be,pos))return false;continue;}
+                    if(InductionAccess.part(be)){if(!addInduction(be,pos))return false;continue;}
                     if(!(block instanceof PartBlock p))return fail("shell",pos);
                     if(p.kind==PartBlock.Kind.FRAME){frames++;tier=Math.min(tier,p.grade.ordinal());}
                     if(level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();if(p.kind==PartBlock.Kind.PORT){
@@ -93,8 +93,9 @@ public final class FactoryStructure {
     }
     private boolean addInduction(net.minecraft.world.level.block.entity.BlockEntity tile,BlockPos pos){
         if(tile instanceof mekanism.common.tile.prefab.TileEntityInternalMultiblock internal&&internal.getMultiblock()!=null&&internal.getMultiblock().isFormed())return fail("occupied",pos);
-        if(tile instanceof TileEntityInductionCell cell)cells.add(cell);
-        else if(tile instanceof TileEntityInductionProvider provider){providers.add(provider);transfer=mekanism.api.math.MathUtils.addClamped(transfer,provider.tier.getOutput());}
+        var energy=InductionAccess.cell(tile);long output=InductionAccess.providerOutput(tile);
+        if(energy!=null)cells.add(new InductionAccess.Cell(tile,energy));
+        else if(output>=0){providers.add(tile);transfer=mekanism.api.math.MathUtils.addClamped(transfer,output);}
         else return fail("interior",pos);
         return true;
     }

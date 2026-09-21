@@ -47,7 +47,7 @@ public final class FactoryAppearance {
     }
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        event.registrar("4").playToClient(Snapshot.TYPE, Snapshot.CODEC,
+        event.registrar("5").playToClient(Snapshot.TYPE, Snapshot.CODEC,
               (packet, context) -> context.enqueueWork(() -> clientReceiver.accept(packet)));
     }
 

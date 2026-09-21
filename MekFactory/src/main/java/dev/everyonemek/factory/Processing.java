@@ -1,5 +1,6 @@
 package dev.everyonemek.factory;
 import java.util.*;
+import dev.everyonemek.factory.compat.Compat;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
 import net.minecraft.world.item.ItemStack;
@@ -21,6 +22,7 @@ public final class Processing {
         int fitting(ResourceBank b,int maximum){if(maximum<=0)return 0;if(store(b,maximum,true))return maximum;int lo=0,hi=maximum-1;while(lo<hi){int mid=lo+(hi-lo+1)/2;if(store(b,mid,true))lo=mid;else hi=mid-1;}return lo;}
         boolean deliver(ResourceBank b){int n=fitting(b,units);if(n>0){store(b,n,false);units-=n;}return units==0;}
     }
+    private static int energyLimited(int n,long perUnit,long available){return perUnit==0?n:(int)Math.min(n,available/perUnit);}
     public int reserved(){return jobs.stream().mapToInt(j->j.units).sum();}
     public void tick(Controller c){
         c.running=0;c.powerUsed=0;c.progress=0;c.status="idle";
@@ -45,10 +47,10 @@ public final class Processing {
     private int advance(Controller c,Profiles.Profile profile,ResourceBank inputs,ResourceBank outputs,int limit){
         for(var it=jobs.iterator();it.hasNext();){var j=it.next();if(j.progress>=j.ticks&&j.deliver(outputs)){it.remove();c.markForSave();}}
         int free=Math.max(0,limit-jobs.stream().mapToInt(Job::lanes).sum());String template=c.template.getStack().getItem().toString()+"/"+c.rotaryReverse;
-        if(c.enabled&&free>0&&jobs.size()<512&&c.energy().available()>0&&(failedRevision!=c.inputRevision||!failedTemplate.equals(template)||c.getLevel().getGameTime()%20==0)){
+        if(c.enabled&&free>0&&jobs.size()<512&&(Compat.creative(c)||c.energy().available()>0)&&(failedRevision!=c.inputRevision||!failedTemplate.equals(template)||c.getLevel().getGameTime()%20==0)){
             for(int tries=0;tries<16&&free>0;tries++){
                 var p=profile.find(c,inputs);if(p==null){failedRevision=c.inputRevision;failedTemplate=template;break;}
-                int n=p.available(inputs,(int)Math.min(65536L,(long)free*p.operations));n=(int)Math.min(n,c.energy().available()/p.energy);
+                int n=p.available(inputs,(int)Math.min(65536L,(long)free*p.operations));n=energyLimited(n,p.energy,c.energy().available());
                 n=new Job(p,n).fitting(outputs,n);
                 if(n==0){c.status="output_or_energy";break;}
                 p.consume(inputs,n);var added=new Job(p,n);jobs.add(added);free-=added.lanes();c.markForSave();
@@ -57,11 +59,11 @@ public final class Processing {
         int original=jobs.size(),budget=limit,running=0;var split=new ArrayList<Job>();
         for(int step=0;step<original&&budget>0;step++){
             var j=jobs.get((cursor+step)%original);if(j.progress>=j.ticks){c.status="output";continue;}
-            int n=(int)Math.min(Math.min(j.units,(long)budget*j.operations),c.energy().available()/j.energy);if(n==0){c.status="energy";continue;}
+            int n=energyLimited((int)Math.min(j.units,(long)budget*j.operations),j.energy,c.energy().available());if(n==0){c.status="energy";continue;}
             int chemicalSlot=-1;long chemicalMultiplier=0;
             if(j.chemicalWork!=null){
                 chemicalSlot=j.chemicalWork.slot(inputs);if(chemicalSlot<0){c.status="secondary";continue;}
-                chemicalMultiplier=j.chemicalWork.multiplier(c,j.baseTicks,j.ticks,j.progress);
+                chemicalMultiplier=j.chemicalWork.multiplier(c,j.baseTicks,Profiles.chemicalTicks(c,j.baseTicks),j.progress);
                 long perUnit=j.chemicalWork.amountPerUnit(chemicalMultiplier);
                 if(perUnit>0)n=(int)Math.min(n,inputs.chemical(chemicalSlot).getAmount()/perUnit);
                 if(n==0){c.status="secondary";c.markForSave();continue;}

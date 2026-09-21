@@ -37,7 +37,8 @@ public final class FactoryModels {
         Content.FRAMES.values().forEach(b -> blocks.add(b.get()));
         Content.PORTS.values().forEach(b -> blocks.add(b.get()));
         blocks.add(Content.CASING.get()); blocks.add(Content.GLASS.get());
-        var cells = induction(true); var providers = induction(false); blocks.addAll(cells); blocks.addAll(providers);
+        var cells = new ArrayList<>(induction(true)); var providers = new ArrayList<>(induction(false));
+        cells.addAll(dev.everyonemek.factory.compat.Compat.inductionBlocks(true)); providers.addAll(dev.everyonemek.factory.compat.Compat.inductionBlocks(false)); blocks.addAll(cells); blocks.addAll(providers);
         for (var block : blocks) for (var state : block.getStateDefinition().getPossibleStates()) {
             String name;
             if (block instanceof ControllerBlock) name = "formed_controller_" + Attribute.getFacing(state).getSerializedName() + (active(state) ? "_active" : "");
