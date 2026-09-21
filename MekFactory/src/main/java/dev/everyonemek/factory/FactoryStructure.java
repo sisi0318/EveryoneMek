@@ -11,7 +11,7 @@ public final class FactoryStructure {
     public final Controller owner;
     public final List<InductionAccess.Cell> cells=new ArrayList<>();
     public final List<net.minecraft.world.level.block.entity.BlockEntity> providers=new ArrayList<>();
-    public final List<Part> ports=new ArrayList<>();
+    public final List<Part> ports=new ArrayList<>(),converters=new ArrayList<>();
     private final Set<BlockPos> claimed=new HashSet<>();
     private boolean dirty=true,checking;
     public boolean formed;
@@ -43,7 +43,8 @@ public final class FactoryStructure {
     public static void unload(LevelEvent.Unload event){OWNERS.remove(event.getLevel());CONTROLLERS.remove(event.getLevel());}
     public static void chunkUnload(net.neoforged.neoforge.event.level.ChunkEvent.Unload e){var map=OWNERS.get(e.getLevel());if(map!=null){var affected=new HashSet<Controller>();for(var entry:map.entrySet())if(new net.minecraft.world.level.ChunkPos(entry.getKey()).equals(e.getChunk().getPos()))affected.add(entry.getValue());affected.forEach(c->c.structure.invalidate());}}
     public void invalidate(){boolean was=formed;dirty=true;formed=false;if(was)notifyPorts();}
-    private void notifyPorts(){var level=owner.getLevel();if(level==null||level.isClientSide)return;for(var p:List.copyOf(ports))if(!p.isRemoved()&&level.hasChunkAt(p.getBlockPos())){level.invalidateCapabilities(p.getBlockPos());level.updateNeighborsAt(p.getBlockPos(),p.getBlockState().getBlock());}}
+    private void notifyPorts(){var level=owner.getLevel();if(level==null||level.isClientSide)return;for(var p:storageParts())if(!p.isRemoved()&&level.hasChunkAt(p.getBlockPos())){level.invalidateCapabilities(p.getBlockPos());level.updateNeighborsAt(p.getBlockPos(),p.getBlockState().getBlock());}}
+    private List<Part> storageParts(){var all=new ArrayList<>(ports);all.addAll(converters);return all;}
     public void detach(){var map=OWNERS.get(owner.getLevel());if(map!=null)for(var pos:claimed)map.remove(pos,owner);var known=CONTROLLERS.get(owner.getLevel());if(known!=null)known.remove(owner);claimed.clear();invalidate();}
     public BlockPos at(int x,int y,int z){return owner.getBlockPos().relative(owner.getDirection().getClockWise(),x-1).above(y-1).relative(owner.getDirection().getOpposite(),z);}
     public boolean contains(BlockPos p){var a=at(0,0,0);var b=at(owner.sizeX-1,owner.sizeY-1,owner.sizeZ-1);return p.getX()>=Math.min(a.getX(),b.getX())&&p.getX()<=Math.max(a.getX(),b.getX())&&p.getY()>=a.getY()&&p.getY()<=b.getY()&&p.getZ()>=Math.min(a.getZ(),b.getZ())&&p.getZ()<=Math.max(a.getZ(),b.getZ());}
@@ -53,7 +54,7 @@ public final class FactoryStructure {
     private boolean live(net.minecraft.world.level.block.entity.BlockEntity tile){return !tile.isRemoved()&&owner.getLevel().hasChunkAt(tile.getBlockPos())&&owner.getLevel().getBlockEntity(tile.getBlockPos())==tile;}
     public boolean validate(){
         if(checking||owner.getLevel()==null||owner.getLevel().isClientSide)return false;
-        checking=true;formed=false;dirty=false;cells.clear();providers.clear();ports.clear();parallel=inputSlots=outputSlots=0;inputCapacity=outputCapacity=transfer=0;
+        checking=true;formed=false;dirty=false;cells.clear();providers.clear();ports.clear();converters.clear();parallel=inputSlots=outputSlots=0;inputCapacity=outputCapacity=transfer=0;
         var level=owner.getLevel();var map=OWNERS.computeIfAbsent(level,l->new HashMap<>());
         CONTROLLERS.computeIfAbsent(level,l->new HashSet<>()).add(owner);
         for(var p:claimed)map.remove(p,owner);claimed.clear();
@@ -72,7 +73,7 @@ public final class FactoryStructure {
                     if(InductionAccess.part(be)){if(!addInduction(be,pos))return false;continue;}
                     if(!(block instanceof PartBlock p))return fail("shell",pos);
                     if(p.kind==PartBlock.Kind.FRAME){frames++;tier=Math.min(tier,p.grade.ordinal());}
-                    if(level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();if(p.kind==PartBlock.Kind.PORT){
+                    if(level.getBlockEntity(pos) instanceof Part part){part.master=owner.getBlockPos();part.setChanged();if(part.isConverter())converters.add(part);if(p.kind==PartBlock.Kind.PORT){
                         ports.add(part);if(state.getValue(PartBlock.OUTPUT)){outputs++;outputSlots+=p.grade.slots;outputCapacity+=p.grade.capacity;}
                         else {inputs++;inputSlots+=p.grade.slots;inputCapacity+=p.grade.capacity;}
                     }}else return fail("shell",pos);
@@ -86,6 +87,7 @@ public final class FactoryStructure {
             if(Math.max(owner.sizeX,Math.max(owner.sizeY,owner.sizeZ))>grade.size())return fail("tier",owner.getBlockPos());
             if(inputs==0||outputs==0)return fail("ports",owner.getBlockPos());
             if(inputs>8||outputs>8)return fail("port_limit",owner.getBlockPos());
+            if(converters.size()>8)return fail("converter_limit",owner.getBlockPos());
             if(cells.isEmpty()||providers.isEmpty())return fail("induction",owner.getBlockPos());
             parallel=grade.parallel();
             error="ready";errorPos=null;formed=true;return true;

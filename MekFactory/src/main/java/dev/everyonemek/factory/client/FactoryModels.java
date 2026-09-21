@@ -21,7 +21,7 @@ public final class FactoryModels {
     }
 
     public static void additional(ModelEvent.RegisterAdditional event) {
-        for (var name : List.of("formed_panel", "formed_glass", "formed_port_input", "formed_port_output", "formed_cell", "formed_provider")) event.register(id(name));
+        for (var name : List.of("formed_panel", "formed_glass", "formed_port_input", "formed_port_output", "formed_cell", "formed_provider", "formed_chemical_conversion")) event.register(id(name));
         for (var direction : Direction.Plane.HORIZONTAL) for (var active : new boolean[]{false, true})
             event.register(id("formed_controller_" + direction.getSerializedName() + (active ? "_active" : "")));
     }
@@ -36,6 +36,7 @@ public final class FactoryModels {
         Content.CONTROLLERS.values().forEach(b -> blocks.add(b.get()));
         Content.FRAMES.values().forEach(b -> blocks.add(b.get()));
         Content.PORTS.values().forEach(b -> blocks.add(b.get()));
+        Content.CONVERTERS.values().forEach(b -> blocks.add(b.get()));
         blocks.add(Content.CASING.get()); blocks.add(Content.GLASS.get());
         var cells = new ArrayList<>(induction(true)); var providers = new ArrayList<>(induction(false));
         cells.addAll(dev.everyonemek.factory.compat.Compat.inductionBlocks(true)); providers.addAll(dev.everyonemek.factory.compat.Compat.inductionBlocks(false)); blocks.addAll(cells); blocks.addAll(providers);
@@ -46,6 +47,7 @@ public final class FactoryModels {
                 case FRAME, CASING -> "formed_panel";
                 case GLASS -> "formed_glass";
                 case PORT -> state.getValue(PartBlock.OUTPUT) ? "formed_port_output" : "formed_port_input";
+                case CONVERTER -> "formed_chemical_conversion";
             };
             else name = cells.contains(block) ? "formed_cell" : "formed_provider";
             var location = BlockModelShaper.stateToModelLocation(state);

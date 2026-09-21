@@ -21,7 +21,8 @@ public final class WarehouseMenu extends MekanismContainer {
     public static final int PAGE_SIZE=27;
     public final BlockEntity host;
     public final Buffers stock;
-    public final boolean output,legacy;
+    public final boolean output,legacy,conversion;
+    public int conversionStatus;
     private final BlockPos clicked;
     public int page,visibleSlots,pageCount=1;
     private int pageRevision;
@@ -30,13 +31,14 @@ public final class WarehouseMenu extends MekanismContainer {
     private int playerStart;
 
     public WarehouseMenu(int id,Inventory inv,BlockEntity host,BlockPos clicked,boolean output){
-        super(Content.WAREHOUSE_MENU,id,inv);this.host=host;this.clicked=clicked;this.output=output;legacy=host instanceof Controller;
+        super(Content.WAREHOUSE_MENU,id,inv);this.host=host;this.clicked=clicked;this.output=output;legacy=host instanceof Controller;conversion=host instanceof Part part&&part.isConverter();
         stock=host instanceof Part part?part.storage():output?((Controller)host).outputs:((Controller)host).inputs;
         track(SyncableInt.create(()->page,v->page=v));
         track(SyncableInt.create(this::visibleCount,v->visibleSlots=v));
         track(SyncableInt.create(()->Math.max(1,(visibleCount()+PAGE_SIZE-1)/PAGE_SIZE),v->pageCount=v));
         track(SyncableInt.create(()->pageRevision,v->{pageRevision=v;awaitingPage=false;}));
         track(SyncableLong.create(stock::capacity,v->tankCapacity=v));
+        track(SyncableInt.create(()->conversion?ChemicalConversions.status((Part)host):0,v->conversionStatus=v));
         for(int i=0;i<Buffers.TANKS;i++){final int n=i;
             track(SyncableFluidStack.create(()->stock.fluids[n],v->stock.fluids[n]=v));
             track(SyncableChemicalStack.create(()->stock.chemicals[n],v->stock.chemicals[n]=v));
@@ -54,7 +56,7 @@ public final class WarehouseMenu extends MekanismContainer {
                 public ItemStack getStackInSlot(int ignored){return getLevel().isClientSide?displayed:stock.item(index());}
                 public void setStackInSlot(int ignored,ItemStack value){if(getLevel().isClientSide)displayed=value;else stock.item(index(),value);}
                 public int getSlotLimit(int ignored){return legacy?getStackInSlot(0).getCount():index()<visibleSlots?stock.itemLimit(index()):0;}
-                public boolean isItemValid(int ignored,ItemStack stack){return !output&&!legacy&&index()<stock.slots();}
+                public boolean isItemValid(int ignored,ItemStack stack){return !output&&!legacy&&index()<stock.slots()&&stock.acceptsItem(stack);}
                 public ItemStack insertItem(int ignored,ItemStack stack,boolean simulate){return output||legacy?stack:stock.insert(index(),stack,simulate);}
                 public ItemStack extractItem(int ignored,int count,boolean simulate){
                     if(!getLevel().isClientSide)return stock.take(index(),Math.min(count,stock.item(index()).getMaxStackSize()),simulate);
@@ -88,7 +90,7 @@ public final class WarehouseMenu extends MekanismContainer {
     @Override public boolean stillValid(Player player){
         if(getLevel().isClientSide)return !host.isRemoved();
         if(host.isRemoved()||!getLevel().hasChunkAt(host.getBlockPos())||getLevel().getBlockEntity(host.getBlockPos())!=host)return false;
-        if(host instanceof Part p)return p.isPort()&&p.canOpen(player)&&p.getBlockState().getValue(PartBlock.OUTPUT)==output;
+        if(host instanceof Part p)return p.hasStorage()&&p.canOpen(player)&&p.isOutput()==output;
         return FactoryMenu.access(player,(Controller)host,clicked);
     }
     private boolean canExecute(Player p){return !getLevel().isClientSide&&stillValid(p);}
@@ -150,11 +152,11 @@ public final class WarehouseMenu extends MekanismContainer {
         return new WarehouseMenu(id,inv,host,clicked,output);
     }
     public static void open(Player p,Part part){
-        if(p instanceof ServerPlayer server&&part.isPort()&&part.canOpen(p))open(server,part,part.getBlockPos(),part.getBlockState().getValue(PartBlock.OUTPUT));
+        if(p instanceof ServerPlayer server&&part.hasStorage()&&part.canOpen(p))open(server,part,part.getBlockPos(),part.isOutput());
     }
     public static void openLegacy(Player p,Controller c,BlockPos clicked,boolean output){if(p instanceof ServerPlayer server&&FactoryMenu.access(p,c,clicked))open(server,c,clicked,output);}
     private static void open(ServerPlayer p,BlockEntity host,BlockPos clicked,boolean output){
-        var title=Content.text(host instanceof Controller?(output?"legacy_output":"legacy_input"):(output?"output_warehouse":"input_warehouse"));
+        var title=Content.text(host instanceof Controller?(output?"legacy_output":"legacy_input"):host instanceof Part part&&part.isConverter()?"conversion_warehouse":(output?"output_warehouse":"input_warehouse"));
         p.openMenu(new SimpleMenuProvider((id,inv,player)->new WarehouseMenu(id,inv,host,clicked,output),title),b->{b.writeBlockPos(host.getBlockPos());b.writeBlockPos(clicked);b.writeBoolean(output);});
     }
 }

@@ -27,13 +27,13 @@ public final class Content {
     public static final ContainerTypeRegistryObject<WarehouseMenu> WAREHOUSE_MENU=MENUS.registerMenu("warehouse",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(WarehouseMenu::fromNetwork));
     public static final Map<Grade,BlockRegistryObject<ControllerBlock,ItemBlockTooltip<ControllerBlock>>> CONTROLLERS=new EnumMap<>(Grade.class);
     public static final Map<Grade,TileEntityTypeRegistryObject<Controller>> CONTROLLER_TILES=new EnumMap<>(Grade.class);
-    public static final Map<Grade,BlockRegistryObject<PartBlock,BlockItem>> FRAMES=new EnumMap<>(Grade.class),PORTS=new EnumMap<>(Grade.class);
+    public static final Map<Grade,BlockRegistryObject<PartBlock,BlockItem>> FRAMES=new EnumMap<>(Grade.class),PORTS=new EnumMap<>(Grade.class),CONVERTERS=new EnumMap<>(Grade.class);
     public static final BlockRegistryObject<PartBlock,BlockItem> CASING=BLOCKS.register("casing",()->new PartBlock(PartBlock.Kind.CASING,Grade.BASIC));
     public static final BlockRegistryObject<PartBlock,BlockItem> GLASS=BLOCKS.register("glass",()->new PartBlock(PartBlock.Kind.GLASS,Grade.BASIC));
     private static final DeferredRegister<BlockEntityType<?>> PART_TYPES=DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE,MekFactory.ID);
     public static final java.util.function.Supplier<BlockEntityType<Part>> PART=PART_TYPES.register("part",()->{
         var blocks=new ArrayList<net.minecraft.world.level.block.Block>();blocks.add(CASING.get());blocks.add(GLASS.get());
-        FRAMES.values().forEach(b->blocks.add(b.get()));PORTS.values().forEach(b->blocks.add(b.get()));
+        FRAMES.values().forEach(b->blocks.add(b.get()));PORTS.values().forEach(b->blocks.add(b.get()));CONVERTERS.values().forEach(b->blocks.add(b.get()));
         return BlockEntityType.Builder.of(Part::new,blocks.toArray(net.minecraft.world.level.block.Block[]::new)).build(null);
     });
     private static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(Registries.CREATIVE_MODE_TAB,MekFactory.ID);
@@ -46,9 +46,10 @@ public final class Content {
             CONTROLLERS.put(g,block);CONTROLLER_TILES.put(g,TILES.mekBuilder(block,Controller::new).clientTicker(TileEntityMekanism::tickClient).serverTicker(TileEntityMekanism::tickServer).build());
             FRAMES.put(g,BLOCKS.register(g.id+"_frame",()->new PartBlock(PartBlock.Kind.FRAME,g)));
             PORTS.put(g,BLOCKS.register(g.id+"_port",()->new PartBlock(PartBlock.Kind.PORT,g)));
+            CONVERTERS.put(g,BLOCKS.register(g.id+"_chemical_conversion",()->new PartBlock(PartBlock.Kind.CONVERTER,g)));
         }
         TABS.register("main",()->CreativeModeTab.builder().title(Component.translatable("itemGroup.mekfactory")).icon(()->new ItemStack(CONTROLLERS.get(Grade.BASIC)))
-              .displayItems((p,out)->{for(var g:Grade.values()){out.accept(CONTROLLERS.get(g));out.accept(FRAMES.get(g));out.accept(PORTS.get(g));}out.accept(CASING);out.accept(GLASS);}).build());
+              .displayItems((p,out)->{for(var g:Grade.values()){out.accept(CONTROLLERS.get(g));out.accept(FRAMES.get(g));out.accept(PORTS.get(g));out.accept(CONVERTERS.get(g));}out.accept(CASING);out.accept(GLASS);}).build());
     }
     public static Component text(String key,Object... args){return Component.translatable("mekfactory."+key,args);}
     public static void register(IEventBus bus){COMPONENTS.register(bus);BLOCKS.register(bus);TILES.register(bus);PART_TYPES.register(bus);MENUS.register(bus);TABS.register(bus);}

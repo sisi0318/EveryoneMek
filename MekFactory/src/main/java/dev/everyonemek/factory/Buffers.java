@@ -22,6 +22,8 @@ public final class Buffers implements ResourceBank {
         if(hatch==null||i>=slots())return ResourceBank.super.itemLimit(i,stack);
         int limit=itemLimit(i);return stack.isEmpty()?limit:(int)Math.min(limit,(long)stack.getMaxStackSize()*(limit/64));
     }
+    public boolean acceptsItem(ItemStack stack){return hatch==null||!hatch.isConverter()||ChemicalConversions.accepts(hatch.getLevel(),stack);}
+    @Override public ItemStack insert(int i,ItemStack stack,boolean simulate){return acceptsItem(stack)?ResourceBank.super.insert(i,stack,simulate):stack;}
     public ItemStack item(int i){return items[i];}
     public void item(int i,ItemStack stack){items[i]=stack;changed();}
     public int fluidTanks(){return TANKS;}

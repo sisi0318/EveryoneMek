@@ -12,15 +12,16 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 public final class Ports {
     public static void register(RegisterCapabilitiesEvent e){
-        e.registerBlockEntity(mekanism.common.capabilities.Capabilities.CONFIGURABLE,Content.PART.get(),(p,s)->p.getBlockState().getBlock() instanceof PartBlock b&&b.kind==PartBlock.Kind.PORT?p:null);
+        e.registerBlockEntity(mekanism.common.capabilities.Capabilities.CONFIGURABLE,Content.PART.get(),(p,s)->p.hasStorage()?p:null);
         e.registerBlockEntity(Capabilities.ItemHandler.BLOCK,Content.PART.get(),ItemPort::new);
-        e.registerBlockEntity(Capabilities.FluidHandler.BLOCK,Content.PART.get(),FluidPort::new);
+        e.registerBlockEntity(Capabilities.FluidHandler.BLOCK,Content.PART.get(),(p,s)->p.isConverter()?null:new FluidPort(p,s));
         e.registerBlockEntity(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),Content.PART.get(),ChemPort::new);
-        e.registerBlockEntity(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.block(),Content.PART.get(),PowerPort::new);
-        e.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,Content.PART.get(),(p,s)->new ForgeEnergyIntegration(new PowerPort(p,s)));
+        e.registerBlockEntity(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.block(),Content.PART.get(),(p,s)->p.isPort()?new PowerPort(p,s):null);
+        e.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,Content.PART.get(),(p,s)->p.isPort()?new ForgeEnergyIntegration(new PowerPort(p,s)):null);
     }
-    public static Controller controller(Part p,Direction side){var c=p.controller();if(c==null||side==null||!(p.getBlockState().getBlock() instanceof PartBlock b)||b.kind!=PartBlock.Kind.PORT||!c.structure.valid()||!c.structure.isOutward(p.getBlockPos(),side))return null;return c;}
-    private static boolean output(Part p){return p.getBlockState().getValue(PartBlock.OUTPUT);}
+    public static Controller controller(Part p,Direction side){var c=p.controller();if(c==null||side==null||!p.hasStorage()||!c.structure.valid()||!c.structure.isOutward(p.getBlockPos(),side))return null;return c;}
+    private static boolean output(Part p){return p.isOutput();}
+    private static boolean chemicalOutput(Part p){return p.isConverter()||output(p);}
     public record ItemPort(Part port,Direction side) implements IItemHandler {
         private Buffers bank(){var c=controller(port,side);return c==null?null:port.storage();}
         public int getSlots(){return bank()==null?0:bank().itemSlots();}
@@ -28,7 +29,7 @@ public final class Ports {
         public ItemStack insertItem(int i,ItemStack s,boolean sim){var b=bank();return b==null||output(port)?s:b.insert(i,s,sim);}
         public ItemStack extractItem(int i,int n,boolean sim){var b=bank();return b==null||i<0||i>=b.itemSlots()||!output(port)&&controller(port,side).enabled?ItemStack.EMPTY:b.take(i,Math.min(n,b.item(i).getMaxStackSize()),sim);}
         public int getSlotLimit(int i){var b=bank();return b==null||i<0||i>=b.itemSlots()?0:b.itemLimit(i);}
-        public boolean isItemValid(int i,ItemStack s){var b=bank();return b!=null&&!output(port)&&i>=0&&i<b.slots();}
+        public boolean isItemValid(int i,ItemStack s){var b=bank();return b!=null&&!output(port)&&i>=0&&i<b.slots()&&b.acceptsItem(s);}
     }
     public record ChemPort(Part port,Direction side) implements IChemicalHandler {
         private Buffers bank(){var c=controller(port,side);return c==null?null:port.storage();}
@@ -36,12 +37,12 @@ public final class Ports {
         public ChemicalStack getChemicalInTank(int i){var b=bank();return b==null||i<0||i>=Buffers.TANKS?ChemicalStack.EMPTY:b.chemicals[i].copy();}
         public long getChemicalTankCapacity(int i){var b=bank();return b==null?0:b.capacity();}
         public void setChemicalInTank(int i,ChemicalStack stack){throw new UnsupportedOperationException("Use transactional insertion/extraction");}
-        public boolean isValid(int i,ChemicalStack s){var b=bank();return b!=null&&!output(port)&&!s.isRadioactive()&&i>=0&&i<Buffers.TANKS;}
-        public ChemicalStack insertChemical(int i,ChemicalStack s,Action a){var b=bank();if(b==null||output(port))return s;long n=b.insertChem(i,s,a.simulate());return s.copyWithAmount(s.getAmount()-n);}
-        public ChemicalStack extractChemical(int i,long amount,Action a){var b=bank();if(b==null||(!output(port)&&controller(port,side).enabled)||i<0||i>=Buffers.TANKS||amount<=0)return ChemicalStack.EMPTY;long n=Math.min(amount,b.chemicals[i].getAmount());var result=b.chemicals[i].copyWithAmount(n);if(a.execute()&&n>0){b.chemicals[i]=b.chemicals[i].copyWithAmount(b.chemicals[i].getAmount()-n);b.changed();}return result;}
+        public boolean isValid(int i,ChemicalStack s){var b=bank();return b!=null&&!chemicalOutput(port)&&!s.isRadioactive()&&i>=0&&i<Buffers.TANKS;}
+        public ChemicalStack insertChemical(int i,ChemicalStack s,Action a){var b=bank();if(b==null||chemicalOutput(port))return s;long n=b.insertChem(i,s,a.simulate());return s.copyWithAmount(s.getAmount()-n);}
+        public ChemicalStack extractChemical(int i,long amount,Action a){var b=bank();if(b==null||(!chemicalOutput(port)&&controller(port,side).enabled)||i<0||i>=Buffers.TANKS||amount<=0)return ChemicalStack.EMPTY;long n=Math.min(amount,b.chemicals[i].getAmount());var result=b.chemicals[i].copyWithAmount(n);if(a.execute()&&n>0){b.chemicals[i]=b.chemicals[i].copyWithAmount(b.chemicals[i].getAmount()-n);b.changed();}return result;}
     }
     public record FluidPort(Part port,Direction side) implements IFluidHandler {
-        private Buffers bank(){var c=controller(port,side);return c==null?null:port.storage();}
+        private Buffers bank(){var c=controller(port,side);return c==null||port.isConverter()?null:port.storage();}
         public int getTanks(){return bank()==null?0:Buffers.TANKS;}
         public FluidStack getFluidInTank(int i){var b=bank();return b==null||i<0||i>=Buffers.TANKS?FluidStack.EMPTY:b.fluids[i].copy();}
         public int getTankCapacity(int i){var b=bank();return b==null?0:(int)b.capacity();}
@@ -51,7 +52,7 @@ public final class Ports {
         public FluidStack drain(int n,FluidAction a){var b=bank();if(b==null||(!output(port)&&controller(port,side).enabled)||n<=0)return FluidStack.EMPTY;for(var s:b.fluids)if(!s.isEmpty())return drain(s.copyWithAmount(n),a);return FluidStack.EMPTY;}
     }
     public record PowerPort(Part port,Direction side) implements IStrictEnergyHandler {
-        private Controller c(){return controller(port,side);}
+        private Controller c(){return port.isPort()?controller(port,side):null;}
         public int getEnergyContainerCount(){return c()==null?0:1;}
         public long getEnergy(int i){var c=c();return c==null||i!=0?0:c.energy().getEnergy();}
         public long getMaxEnergy(int i){var c=c();return c==null||i!=0?0:c.energy().getMaxEnergy();}
@@ -109,6 +110,22 @@ public final class Ports {
                         if(accepted>0)source.extractChemical(i,accepted,Action.EXECUTE);
                     }}
                 }
+            }
+        }
+    }
+    /** Export only after processing has finished using its input snapshot for this world tick. */
+    public static void ejectConverters(Controller c){
+        if(!c.autoEject||!c.structure.valid())return;
+        for(var p:java.util.List.copyOf(c.structure.converters))for(var side:Direction.values()){
+            if(controller(p,side)!=c)continue;
+            var next=p.getBlockPos().relative(side);if(!c.getLevel().hasChunkAt(next))continue;
+            if(java.util.Arrays.stream(p.storage().chemicals).allMatch(s->s.isEmpty()))break;
+            var target=c.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),next,side.getOpposite());
+            if(target==null)continue;var source=new ChemPort(p,side);
+            for(int i=0;i<Buffers.TANKS;i++){
+                var offer=source.getChemicalInTank(i);if(offer.isEmpty())continue;
+                long accepted=offer.getAmount()-target.insertChemical(offer.copy(),Action.EXECUTE).getAmount();
+                if(accepted>0)source.extractChemical(i,accepted,Action.EXECUTE);
             }
         }
     }

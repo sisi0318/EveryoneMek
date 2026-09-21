@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "HSH",
+    "ARA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    },
+    "S": {
+      "item": "mekfactory:casing"
+    },
+    "R": {
+      "item": "mekanism:enriched_redstone"
+    }
+  },
+  "result": {
+    "id": "mekfactory:advanced_chemical_conversion",
+    "count": 1
+  }
+}

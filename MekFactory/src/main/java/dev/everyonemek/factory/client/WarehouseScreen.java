@@ -2,6 +2,7 @@ package dev.everyonemek.factory.client;
 
 import dev.everyonemek.factory.*;
 import mekanism.client.gui.GuiMekanism;
+import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.button.MekanismButton;
 import mekanism.client.gui.element.slot.*;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,7 +30,8 @@ public final class WarehouseScreen extends GuiMekanism<WarehouseMenu> {
             private void refreshState(){visible=menu.pageCount>1;active=visible&&!menu.awaitingPage&&menu.getCarried().isEmpty()&&(action==1?menu.page>0:menu.page+1<menu.pageCount);}
             @Override public void tick(){super.tick();refreshState();}
         });}
-        addRenderableWidget(new MekanismButton(this,8,108,76,14,Content.text("fluids"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,false));return true;}));
+        if(menu.conversion)addRenderableWidget(new GuiInnerScreen(this,8,108,76,14,()->List.of(Content.text("conversion_status."+menu.conversionStatus))));
+        else addRenderableWidget(new MekanismButton(this,8,108,76,14,Content.text("fluids"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,false));return true;}));
         addRenderableWidget(new MekanismButton(this,92,108,76,14,Content.text("chemicals"),(b,x,y)->{addWindow(new WarehouseResourcesWindow(this,menu,true));return true;}));
     }
     @Override public boolean mouseClicked(double x,double y,int button){return menu.awaitingPage||super.mouseClicked(x,y,button);}

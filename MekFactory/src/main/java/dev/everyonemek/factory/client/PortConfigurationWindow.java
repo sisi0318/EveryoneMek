@@ -47,19 +47,25 @@ public final class PortConfigurationWindow extends GuiWindow {
         int n = side.ordinal();
         addChild(new BasicColorButton(gui(), relativeX + x, relativeY + y, 22,
               () -> tile.portInputs[n] > 0 ? tile.portOutputs[n] > 0 ? EnumColor.PURPLE : EnumColor.DARK_RED
-                    : tile.portOutputs[n] > 0 ? EnumColor.DARK_BLUE : null,
+                    : tile.portOutputs[n] > 0 ? EnumColor.DARK_BLUE : tile.portConverters[n]>0?EnumColor.PURPLE:null,
               (button, mx, my) -> send(40 + n), (button, mx, my) -> send(40 + n)) {
             { refreshState(); }
             private void refreshState() { active = tile.portInputs[n] + tile.portOutputs[n] > 0; }
             @Override public void tick() { super.tick(); refreshState(); }
+            @Override public boolean isMouseOver(double mx,double my) {
+                // Fixed converters still have a tooltip; the inactive button cannot change their mode.
+                return super.isMouseOver(mx,my)||visible&&tile.portConverters[n]>0&&mx>=getX()&&mx<getX()+getWidth()&&my>=getY()&&my<getY()+getHeight();
+            }
             @Override public void updateTooltip(int mouseX, int mouseY) {
-                setTooltip(TooltipUtils.create(Component.translatable(side.getTranslationKey()),
-                      Content.text("port_counts", tile.portInputs[n], tile.portOutputs[n]), Content.text("port_corner_hint")));
+                var lines=new java.util.ArrayList<Component>();lines.add(Component.translatable(side.getTranslationKey()));
+                lines.add(Content.text("port_counts",tile.portInputs[n],tile.portOutputs[n]));
+                if(tile.portConverters[n]>0)lines.add(Content.text("converter_face",tile.portConverters[n]));
+                lines.add(Content.text("port_corner_hint"));setTooltip(TooltipUtils.create(lines));
             }
             @Override public void drawBackground(GuiGraphics g, int mx, int my, float partialTicks) {
                 super.drawBackground(g, mx, my, partialTicks);
-                if (tile.portInputs[n] + tile.portOutputs[n] > 0) {
-                    GuiUtils.renderItem(g, new ItemStack(Content.PORTS.get(tile.grade())), getRelativeX() + 3, getRelativeY() + 3, 1, font(), null, true);
+                if (tile.portInputs[n] + tile.portOutputs[n] + tile.portConverters[n] > 0) {
+                    GuiUtils.renderItem(g, new ItemStack((tile.portInputs[n]+tile.portOutputs[n]==0?Content.CONVERTERS:Content.PORTS).get(tile.grade())), getRelativeX() + 3, getRelativeY() + 3, 1, font(), null, true);
                 }
             }
         });

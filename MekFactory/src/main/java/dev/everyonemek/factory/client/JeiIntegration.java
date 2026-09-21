@@ -12,5 +12,6 @@ public final class JeiIntegration implements IModPlugin {
     @Override public void registerRecipeCatalysts(IRecipeCatalystRegistration r){if(!MekanismJEI.shouldLoad())return;for(var block:Content.CONTROLLERS.values())r.addRecipeCatalyst(new ItemStack(block),MekanismJEI.recipeType(
           RecipeViewerRecipeType.VANILLA_SMELTING,RecipeViewerRecipeType.ENRICHING,RecipeViewerRecipeType.CRUSHING,RecipeViewerRecipeType.SMELTING,RecipeViewerRecipeType.OXIDIZING,
           RecipeViewerRecipeType.CRYSTALLIZING,RecipeViewerRecipeType.CHEMICAL_INFUSING,RecipeViewerRecipeType.METALLURGIC_INFUSING,RecipeViewerRecipeType.PURIFYING,RecipeViewerRecipeType.WASHING,RecipeViewerRecipeType.SEPARATING,
-          RecipeViewerRecipeType.REACTION,RecipeViewerRecipeType.CONDENSENTRATING,RecipeViewerRecipeType.DECONDENSENTRATING));}
+          RecipeViewerRecipeType.REACTION,RecipeViewerRecipeType.CONDENSENTRATING,RecipeViewerRecipeType.DECONDENSENTRATING));
+        for(var block:Content.CONVERTERS.values())r.addRecipeCatalyst(new ItemStack(block),MekanismJEI.recipeType(RecipeViewerRecipeType.CHEMICAL_CONVERSION));}
 }

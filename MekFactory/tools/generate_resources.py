@@ -8,6 +8,16 @@ def write(p,v):
 def cube(texture):
  return {'parent':'minecraft:block/cube_all','textures':{'all':'mekfactory:block/'+texture}}
 
+def conversion_model(formed=False):
+ # Reuse original red/blue port textures as adjacent half faces. No coincident surfaces or new bitmap.
+ elements=[]
+ for face,axis,position,u_axis in [('north',2,0,0),('south',2,16,0),('west',0,0,2),('east',0,16,2),('down',1,0,0),('up',1,16,0)]:
+  for start,end,texture in [(0,8,'input'),(8,16,'output')]:
+   lo=[0,0,0];hi=[16,16,16];lo[axis]=hi[axis]=position;lo[u_axis]=start;hi[u_axis]=end
+   elements.append({'from':lo,'to':hi,'faces':{face:{'texture':'#'+texture,'cullface':face}}})
+ prefix='formed_' if formed else ''
+ return {'parent':'minecraft:block/block','textures':{'input':'mekfactory:block/'+prefix+'port_input','output':'mekfactory:block/'+prefix+'port_output','particle':'mekfactory:block/'+prefix+'port_input'},'elements':elements}
+
 def window_model(texture):
  # Opaque frame rails leave a genuinely clear window; no fake transparent/checkerboard bitmap.
  elements=[]
@@ -24,6 +34,7 @@ def window_model(texture):
 for name in ['formed_panel','formed_port_input','formed_port_output','formed_cell','formed_provider']:
  write(Path(f'assets/mekfactory/models/block/{name}.json'),cube(name))
 write(Path('assets/mekfactory/models/block/formed_glass.json'),window_model('formed_panel'))
+write(Path('assets/mekfactory/models/block/formed_chemical_conversion.json'),conversion_model(True))
 for facing in ['north','east','south','west']:
  for active in [False,True]:
   suffix='_active' if active else ''
@@ -37,10 +48,10 @@ write(Path('mekfactory.mixins.json'),{'required':True,'package':'dev.everyonemek
 zh={'itemGroup.mekfactory':'并行矩阵工厂'};en={'itemGroup.mekfactory':'Mek Factory'}
 blocks=[]
 for index,g in enumerate(grades):
- for kind in ['controller','frame','port']:
+ for kind in ['controller','frame','port','chemical_conversion']:
   name=g+'_'+kind;blocks.append(name)
-  zh['block.mekfactory.'+name]=zhgrades[index]+{'controller':'并行矩阵工厂','frame':'工厂框架','port':'工厂物料仓'}[kind]
-  en['block.mekfactory.'+name]=g.title()+' '+{'controller':'Parallel Matrix Factory','frame':'Factory Frame','port':'Factory Warehouse'}[kind]
+  zh['block.mekfactory.'+name]=zhgrades[index]+{'controller':'并行矩阵工厂','frame':'工厂框架','port':'工厂物料仓','chemical_conversion':'化学品转换仓'}[kind]
+  en['block.mekfactory.'+name]=g.title()+' '+{'controller':'Parallel Matrix Factory','frame':'Factory Frame','port':'Factory Warehouse','chemical_conversion':'Chemical Conversion Hatch'}[kind]
   if kind=='controller':
    zh['container.mekfactory.'+name]=zh['block.mekfactory.'+name]
    en['container.mekfactory.'+name]=en['block.mekfactory.'+name]
@@ -49,6 +60,9 @@ for index,g in enumerate(grades):
     tex='mekfactory:block/controller_front'+suffix
     write(Path(f'assets/mekfactory/models/block/{name}{suffix}.json'),{'parent':'minecraft:block/orientable','textures':{'front':tex,'side':'mekfactory:block/controller_side','top':'mekfactory:block/controller_top'}})
    variants={f'active={str(a).lower()},facing={d}':{'model':f'mekfactory:block/{name}'+('_active' if a else ''),'y':rot} for a in [False,True] for d,rot in [('north',0),('east',90),('south',180),('west',270)]}
+  elif kind=='chemical_conversion':
+   write(Path(f'assets/mekfactory/models/block/{name}.json'),conversion_model())
+   variants={'':{'model':f'mekfactory:block/{name}'}}
   else:
    write(Path(f'assets/mekfactory/models/block/{name}.json'),cube('frame' if kind=='frame' else 'port_input'))
    variants={'':{'model':f'mekfactory:block/{name}'}}
@@ -64,7 +78,7 @@ for name in blocks:
  item_model={'parent':f'mekfactory:block/{name}'}
  if name.endswith('_port'):item_model['overrides']=[{'predicate':{'mekfactory:output':1},'model':f'mekfactory:block/{name}_output'}]
  write(Path(f'assets/mekfactory/models/item/{name}.json'),item_model)
- components=['mekfactory:factory_data','mekanism:items','mekanism:upgrades','mekanism:security','mekanism:owner','mekanism:redstone_control'] if name.endswith('controller') else ['mekfactory:port_data'] if name.endswith('_port') else []
+ components=['mekfactory:factory_data','mekanism:items','mekanism:upgrades','mekanism:security','mekanism:owner','mekanism:redstone_control'] if name.endswith('controller') else ['mekfactory:port_data'] if name.endswith(('_port','_chemical_conversion')) else []
  functions=[{'function':'minecraft:copy_name','source':'block_entity'},{'function':'minecraft:copy_components','source':'block_entity','include':components}] if components else []
  write(Path(f'data/mekfactory/loot_table/blocks/{name}.json'),{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'mekfactory:'+name,'functions':functions}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
 write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'values':['mekfactory:'+n for n in blocks]})
@@ -80,7 +94,20 @@ for i,g in enumerate(grades):
   if kind=='port':keys['H']={'item':middle if i else 'minecraft:hopper'}
   used=set(''.join(pattern));keys={k:v for k,v in keys.items() if k in used}
   write(Path(f'data/mekfactory/recipe/{g}_{kind}.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':keys,'result':{'id':f'mekfactory:{g}_{kind}','count':4 if kind=='frame' and i==0 else 1}})
+for i,g in enumerate(grades):
+ write(Path(f'data/mekfactory/recipe/{g}_chemical_conversion.json'),{'type':'minecraft:crafting_shaped','pattern':['ACA','HSH','ARA'],'key':{'A':{'item':'mekanism:alloy_'+['infused','reinforced','atomic','atomic'][i]},'C':{'item':'mekanism:'+g+'_control_circuit'},'H':{'item':'minecraft:hopper'},'S':{'item':'mekfactory:casing'},'R':{'item':'mekanism:enriched_redstone'}},'result':{'id':f'mekfactory:{g}_chemical_conversion','count':1}})
 pairs={
+ 'conversion_warehouse':('化学品转换仓','Chemical Conversion Hatch'),
+ 'conversion_hint':('工厂成型并启用后，将辅料转为化学品。','Converts auxiliary items into chemicals in a formed, enabled factory.'),
+ 'conversion_io':('物品输入，化学品输出。','Items in, chemicals out.'),
+ 'converter_face':('转换仓：%s · 固定输入/输出','Converters: %s · Fixed I/O'),
+ 'converter_limit':('最多八个化学品转换仓','Maximum eight chemical conversion hatches'),
+ 'conversion_status.0':('等待工厂成型','Structure required'),
+ 'conversion_status.1':('等待辅料','Awaiting items'),
+ 'conversion_status.2':('正在转换','Converting'),
+ 'conversion_status.3':('化学品已满','Chemical storage full'),
+ 'conversion_status.4':('已停机','Stopped'),
+ 'conversion_status.5':('等待红石','Awaiting redstone'),
  'input_warehouse':('输入仓','Input Warehouse'),'output_warehouse':('输出仓','Output Warehouse'),
  'legacy_stock':('旧版缓存','Legacy Stock'),'legacy_input':('旧版输入缓存','Legacy Input Stock'),'legacy_output':('旧版输出缓存','Legacy Output Stock'),
  'warehouse_slots':('容量：%s 格','Capacity: %s slots'),'page':('%s / %s','%s / %s'),
