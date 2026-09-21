@@ -81,6 +81,9 @@ public final class ExtrasTests {
 
     @GameTest(template="empty",timeoutTicks=60)
     public static void legacyMaximumMigratesWithoutLosingLowerLimitsOrStock(GameTestHelper h){
+        check(FactoryConfig.migratedCycles(0,2)==8&&FactoryConfig.migratedCycles(1,4)==8,"Old default throughput did not upgrade");
+        check(FactoryConfig.migratedCycles(1,2)==2&&FactoryConfig.migratedCycles(1,6)==6,"Migration overwrote a non-default speed");
+        check(FactoryConfig.migratedCycles(2,4)==4&&FactoryConfig.migratedCycles(2,2)==2,"Saved speed was migrated twice");
         var c=formed(h,Grade.BASIC,3);c.enabled=false;c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));c.inputs.insert(0,new ItemStack(Items.DIAMOND,13),false);
         var tag=c.saveWithFullMetadata(h.getLevel().registryAccess());var data=tag.getCompound("factory");data.remove("parallel_revision");data.putInt("parallel",512);
         c.loadWithComponents(tag,h.getLevel().registryAccess());check(c.parallelLimit==FactoryConfig.MAX_PARALLEL&&c.template.getCount()==8&&count(c.inputs,Items.DIAMOND)==13,"Legacy maximum migration lost settings or inventory");

@@ -111,7 +111,7 @@ public final class FactoryTests {
                   c.template.setStack(new ItemStack(MekanismBlocks.CHEMICAL_CRYSTALLIZER));long half=chemical.getAmount()/2;inputs.get(0).storage().insertChem(0,chemical.copyWithAmount(half),false);inputs.get(1).storage().insertChem(0,chemical.copyWithAmount(chemical.getAmount()-half),false);})
               .thenWaitUntil(()->check(count(c.outputBank(),crystal.getItem())==crystal.getCount(),"Two partial hatch tanks could not supply one complete recipe"))
               .thenExecute(()->{check(inputs.get(0).storage().chemicals[0].isEmpty()&&inputs.get(1).storage().chemicals[0].isEmpty(),"Grouped consumption left or duplicated raw chemical");c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));inputs.get(0).storage().insert(0,new ItemStack(Items.IRON_INGOT),false);})
-              .thenIdle(30).thenExecute(()->{
+              .thenIdle(100/FactoryConfig.PROCESSING_CYCLES.get()).thenExecute(()->{
                   var p=player(h,c.getBlockPos().north());
                   try{FactoryMenu.open(p,c,c.getBlockPos());var menu=(FactoryMenu)p.containerMenu;double progress=menu.progressRatio();check(progress>0&&progress<1,"Dashboard did not expose real fractional progress");cell.getEnergyContainer().setEnergy(0);c.processing.tick(c);check(menu.progressRatio()==progress,"Dashboard reset progress when energy ran out");check(menu.slots.size()<50,"Controller still exposes bulk material slots");}finally{close(p);}
               }).thenSucceed();
@@ -161,7 +161,7 @@ public final class FactoryTests {
         c.template.setStack(new ItemStack(MekanismBlocks.getFactory(mekanism.common.tier.FactoryTier.ADVANCED,mekanism.common.content.blocktype.FactoryType.CRUSHING),2));
         port(c,false).storage().insert(0,new ItemStack(Items.IRON_INGOT,20),false);
         long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
-        h.startSequence().thenIdle(30).thenExecute(()->{
+        h.startSequence().thenIdle(100/FactoryConfig.PROCESSING_CYCLES.get()).thenExecute(()->{
             check(c.parallel==10&&c.running==10&&c.processing.reserved()==10,"Two advanced factories did not run exactly ten lanes");
             check(c.powerUsed==usage*10*FactoryConfig.PROCESSING_CYCLES.get()&&c.processing.jobs.getFirst().ticks==200,"Factory tier multiplied speed or discounted energy");
             check(count(c.inputBank(),Items.IRON_INGOT)==10,"Lane allocation consumed the wrong input quantity");c.enabled=false;
@@ -354,7 +354,7 @@ public final class FactoryTests {
         var recipe=mekanism.common.recipe.MekanismRecipeType.ENRICHING.findFirst(h.getLevel(),r->r.test(new ItemStack(Items.RAW_IRON_BLOCK,64)));
         check(recipe!=null,"Native raw iron block recipe missing");var result=recipe.getOutput(new ItemStack(Items.RAW_IRON_BLOCK));int total=512*result.getCount();check(total>9*Grade.BASIC.itemCapacity,"Fixture output does not exceed downgraded capacity");
         port(c,false).storage().insert(0,new ItemStack(Items.RAW_IRON_BLOCK,512),false);final int[] removed={0};
-        h.startSequence().thenIdle(40).thenExecute(()->{
+        h.startSequence().thenIdle(100/FactoryConfig.PROCESSING_CYCLES.get()).thenExecute(()->{
             check(c.processing.reserved()==512,"Batch did not start");var p=port(c,true);h.getLevel().setBlockAndUpdate(p.getBlockPos(),Content.PORTS.get(Grade.BASIC).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
         }).thenWaitUntil(()->check(count(c.outputBank(),result.getItem())>0,"Completed batch could not partially fit smaller output"))
               .thenExecute(()->{removed[0]=count(c.outputBank(),result.getItem());check(!c.processing.jobs.isEmpty(),"Oversized job was lost instead of retained");var bank=c.outputBank();for(int i=0;i<bank.itemSlots();i++)bank.take(i,Integer.MAX_VALUE,false);})
@@ -381,12 +381,12 @@ public final class FactoryTests {
     public static void removingLiveSpeedUpgradesRecalculatesWorkInsteadOfLendingFreeSpeed(GameTestHelper h){
         var c=formed(h,Grade.BASIC,4);var cell=c.structure.cells.getFirst();long start=100000000;cell.getEnergyContainer().setEnergy(start);c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER,8));
         check(c.getComponent().getUpgradeSlot().insertItem(mekanism.common.util.UpgradeUtils.getStack(Upgrade.SPEED,8),Action.EXECUTE,AutomationType.MANUAL).isEmpty(),"Native upgrade input refused modules");
-        final int[] fastTicks={0};final long[] fastUsage={0};long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
+        final long[] fastWork={0},fastUsage={0};long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();var dust=BuiltInRegistries.ITEM.get(ResourceLocation.parse("mekanism:dust_iron"));
         h.startSequence().thenWaitUntil(()->check(c.getComponent().getUpgrades(Upgrade.SPEED)==8,"Native upgrade installation did not tick"))
               .thenExecute(()->{fastUsage[0]=mekanism.common.util.MekanismUtils.getEnergyPerTick(c,usage);c.inputs.insert(0,new ItemStack(Items.IRON_INGOT,8),false);})
-              .thenIdle(Math.max(1,8/FactoryConfig.PROCESSING_CYCLES.get())).thenExecute(()->{check(!c.processing.jobs.isEmpty(),"Upgraded batch did not start");fastTicks[0]=c.processing.jobs.getFirst().progress;c.getComponent().removeUpgrade(Upgrade.SPEED,true);check(c.getComponent().getUpgradeOutputSlot().getCount()==8,"Uninstall lost modules");})
-              .thenIdle(2).thenExecute(()->check(c.processing.jobs.getFirst().ticks==200&&c.processing.jobs.getFirst().energy==usage,"Removed upgrades still influenced reserved work"))
+              .thenIdle(Math.max(1,8/FactoryConfig.PROCESSING_CYCLES.get())).thenExecute(()->{check(!c.processing.jobs.isEmpty(),"Upgraded batch did not start");fastWork[0]=c.processing.jobs.stream().mapToLong(j->(long)j.units*j.progress).sum();check(cell.getEnergyContainer().getEnergy()==start-fastUsage[0]*fastWork[0],"Partial high-speed work charged the wrong energy");c.getComponent().removeUpgrade(Upgrade.SPEED,true);check(c.getComponent().getUpgradeOutputSlot().getCount()==8,"Uninstall lost modules");})
+              .thenIdle(2).thenExecute(()->check(c.processing.jobs.stream().allMatch(j->j.ticks==200&&j.energy==usage),"Removed upgrades still influenced reserved work"))
               .thenWaitUntil(()->check(count(c.outputBank(),dust)==8,"Recalculated work did not finish"))
-              .thenExecute(()->{c.enabled=false;check(cell.getEnergyContainer().getEnergy()==start-8*(fastUsage[0]*fastTicks[0]+usage*(200-fastTicks[0])),"Upgrade transition charged incorrect energy");}).thenSucceed();
+              .thenExecute(()->{c.enabled=false;check(cell.getEnergyContainer().getEnergy()==start-fastUsage[0]*fastWork[0]-usage*(8*200-fastWork[0]),"Upgrade transition charged incorrect energy");}).thenSucceed();
     }
 }

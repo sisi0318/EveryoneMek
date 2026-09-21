@@ -4,7 +4,7 @@
 
 ## 基线与用户偏好
 
-- 0.1.0-alpha.12，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.12.jar`。
+- 0.1.0-alpha.13，`mekfactory`，包 `dev.everyonemek.factory`，JAR `MekFactory-0.1.0-alpha.13.jar`。
 - MC 1.21.1、NeoForge 21.1.241、Mekanism 1.21.1-10.7.19.85、Java 21、Gradle 9.2.1、ModDev 2.0.146。JEI 19.22.1.316 为可选编译接口，不安装也能启动。
 - alpha.10 可选支持 Mekanism Extras 1.4.1，公开构建坐标 curse.maven:mekanism-extras-1026040:8677677；本地实际测试 JAR 与 Maven 下载件的 SHA256 一致。生产编译不打包依赖，withExtras=true 才加入测试运行时，extrasJar 可作本地同版覆盖。
 - 用户要求分级框架控制尺寸/并行、分级通用端口和数量控制物料缓存、原感应元件/供应器控制储能吞吐、GUI 原机/共享升级、整壳开 GUI、一键搭建与统一外观。
@@ -49,6 +49,7 @@
 - `Profiles.register` 只是标准加工族/耗能/条件注册入口，不是额外魔力、热量、概率副产物的完整 API。对原机 tick 的第三方注入不会自动继承，不得宣称所有附属已兼容。
 - `RecipePlan`/`Processing` 预检后预留原料，持久化每批结果和原始工期/能耗，按实际推进扣电。用批次记录，不生成 2048 个世界机器 BE。输入/输出变更触发匹配，未匹配时定期重试。
 - alpha.10 的 processingCyclesPerTick 默认为 4（范围 1..8），MAX_PARALLEL=2048，各级默认 32/128/512/2048。FactoryConfig.loaded 用 performanceRevision 一次性迁移旧默认值；其它配置值不变。Controller 的 parallel_revision 区分旧最大值 512 与升级后的手动 512；不能每次读取都覆盖玩家设置。Processing.tick 内复用同一物料视图推进多个原生步骤，每一步按原耗电付费；FactoryEnergy 按世界 tick 共用供应器预算，不能因步骤加倍重置预算。running 取步骤峰值而非相加，powerUsed 累计实际电费；旧 progress/ticks NBT 不变。
+- alpha.13 按用户要求将 processingCyclesPerTick 默认提高到 8，范围仍为 1..8；PERFORMANCE_REVISION=2，只迁移旧默认 4，revision=0 的旧默认 2 经两步迁到 8。revision=1 的手动 2/6 及 revision=2 的任何设置保留；不能再次迁移并行配置。只增加付费工作步骤，不改变原工期、配方用量、工位数或供应器共享预算。
 - alpha.11 ItemPort 公开 extractItem 每次最多返回物品正常 maxStackSize，符合 IItemHandler 约定；自动弹出使用仅内部可见的 bulkEjection 适配器供 TransitRequest 建立/核销批次。不能用公开的限组 handler 去核销已经发出的整批，否则会少扣源；Mek TransporterStack 已采用 oversized 保存格式。
 - Ports.eject 每 tick 批量输出，每个工作步骤之间也清理产物；物品复用一次 TransitRequest，response.useAll 更新源槽映射，每面最多仓槽数次成功响应，满目标立即停止。保持 Mek transporter 专用路由，不使用普通 insertItem 绕过它。流体/Chemical 提供当前整罐量，按真实接收扣源；空仓不查邻居，区块不加载。
 - Job.fitting 先检查整批，放不下才二分；ResourceBank.store 只快照当前配方会产出的资源类型，仍须全部预检后一起提交。
@@ -95,6 +96,7 @@
 - Extras 1.4.1 在没有 mekaf/mekmm 时会输出自身可选 Mixin、loot/recipe 注册缺失日志；本适配不伪造这些注册项。已实现的五类高阶工厂可独立运行。不要把这些上游日志误判为我们可选边界加载失败。
 - alpha.11 增加 BulkStorageTests：3000/32000 数量与自定义组件 NBT/网络/掉落往返，右键半组、热键和 Shift 容量守恒，盔甲/副手不被填入，满箱后余料保留。真实物流用单槽 5000 铜锭经 Mek 管道送入 Bin，另测单仓供应创造无限工厂 17408 次/tick。缩容/旧流体迁移夹具按新容量准备足够溢出的实际数量。协议为 6，有/无 Extras 均验证。
 - alpha.12 新增 ConversionTests：富集钻石 1→80 后供给真实灌注、主料隔离、满罐保料与模拟无副作用、固定 I/O、真实掉落/放置保存、停机不转及无模板/无电转换、真实加压导管输出与四步加工资源守恒。协议为 7。测试直接改原 ChemicalTank 配置后必须 invalidateCapabilities 并更新邻居，才能刷新已连接导管的接收端缓存；仅改 ConfigInfo 不等于玩家配置操作。角仓放置夹具用水平外侧站位，不能用可能返回 DOWN 的 outward() 将玩家放在落点内，造成自身碰撞阻止放置。
+- alpha.13 复用已有测试核对八步进度/精确电费与共享供应器预算、转换仓先供八步再外送、单仓供给无限工厂 34816 次/tick，以及旧默认/非默认/二次启动的倍率迁移。withExtras=true 环境的 30 项测试通过；未更改可选依赖边界，本次不重复无 Extras 运行。原回归的半程检查按 100/倍率 tick 安排，不能在固定 30～40 tick 后检查尚未完成；高速任务受供应器限制时会拆成不同进度，升级切换电费需按各批 units×progress 求和，不能取第一批进度乘总件数。协议仍为 7，未启动客户端。
 - alpha.9 只改客户端控件初始状态，执行 build 与 JAR 检查，不重复运行不能覆盖首帧渲染的服务端测试；协议仍为 4，世界/菜单数据格式不变。
 - alpha.5 是客户端与材质修复，执行 build、资源检查、当前 Minecraft 与编译产物的重绘调用核对；不以再跑服务端 GameTest 冒充修复客户端重绘的验证。
 - 使用自身 Wrapper/.gradle-home，可临时使用已有 GRADLE_RO_DEP_CACHE；缓存、参考源码和游戏世界不提交。CI/发布入口已注册 MekFactory。

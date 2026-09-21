@@ -50,17 +50,17 @@ public final class ConversionTests {
         check(h.getLevel().getCapability(Capabilities.FluidHandler.BLOCK,module.getBlockPos(),side)==null&&h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,module.getBlockPos(),side)==null,"Converter advertised unrelated fluid or energy input");
         var oxygen=new ChemicalStack(MekanismChemicals.OXYGEN,10000);
         var recipe=MekanismRecipeType.CHEMICAL_INFUSING.findFirst(h.getLevel(),r->!r.isIncomplete()&&!r.getLeftInput().getRepresentations().isEmpty()&&!r.getRightInput().getRepresentations().isEmpty()&&(r.getLeftInput().testType(oxygen)!=r.getRightInput().testType(oxygen)));check(recipe!=null,"No oxygen chemical-infuser fixture");
-        boolean oxygenLeft=recipe.getLeftInput().testType(oxygen);var left=recipe.getLeftInput().getMatchingInstance(oxygenLeft?oxygen:recipe.getLeftInput().getRepresentations().getFirst());var right=recipe.getRightInput().getMatchingInstance(oxygenLeft?recipe.getRightInput().getRepresentations().getFirst():oxygen);var other=oxygenLeft?right:left;long perOxygen=(oxygenLeft?left:right).getAmount();var result=recipe.getOutput(left,right);
+        boolean oxygenLeft=recipe.getLeftInput().testType(oxygen);var left=recipe.getLeftInput().getMatchingInstance(oxygenLeft?oxygen:recipe.getLeftInput().getRepresentations().getFirst());var right=recipe.getRightInput().getMatchingInstance(oxygenLeft?recipe.getRightInput().getRepresentations().getFirst():oxygen);var other=oxygenLeft?right:left;int cycles=FactoryConfig.PROCESSING_CYCLES.get();long perOxygen=(oxygenLeft?left:right).getAmount();var result=recipe.getOutput(left,right);
         h.startSequence().thenIdle(3).thenExecute(()->{check(module.storage().item(0).getCount()==2&&tank.getChemicalTank().isEmpty(),"Stopped converter consumed auxiliaries");c.enabled=true;})
               .thenWaitUntil(()->check(tank.getChemicalTank().getStored()==20,"Tube export: target="+tank.getChemicalTank().getStored()+", source="+amount(module)+", raw="+module.storage().item(0).getCount()+", state="+ChemicalConversions.status(module)+", formed="+c.structure.formed))
               .thenExecute(()->{
                   check(c.template.isEmpty()&&c.structure.cells.getFirst().getEnergyContainer().isEmpty(),"Auxiliary conversion needed a main machine or charged energy");
                   c.template.setStack(new ItemStack(MekanismBlocks.CHEMICAL_INFUSER));c.parallelLimit=1;c.structure.cells.getFirst().getEnergyContainer().setEnergy(1000000);
-                  port(c,false).storage().insertChem(0,other.copyWithAmount(other.getAmount()*4),false);module.storage().insert(0,new ItemStack(Items.FLINT,64),false);
-              }).thenWaitUntil(()->check(tank.getChemicalTank().getStored()==20+640-perOxygen*4,"External export did not preserve internal consumption"))
+                  port(c,false).storage().insertChem(0,other.copyWithAmount(other.getAmount()*cycles),false);module.storage().insert(0,new ItemStack(Items.FLINT,64),false);
+              }).thenWaitUntil(()->check(tank.getChemicalTank().getStored()==20+640-perOxygen*cycles,"External export did not preserve internal consumption"))
               .thenExecute(()->{
                   long made=0;var output=c.outputBank();for(int i=0;i<output.chemicalTanks();i++)if(ChemicalStack.isSameChemical(output.chemical(i),result))made+=output.chemical(i).getAmount();
-                  check(made==result.getAmount()*4,"Export raced the factory's four-step input snapshot");long usage=Attribute.get(MekanismBlocks.CHEMICAL_INFUSER.get(),AttributeEnergy.class).getUsage();check(c.structure.cells.getFirst().getEnergyContainer().getEnergy()==1000000-usage*4,"Chemical sharing charged the wrong work");c.enabled=false;
+                  check(made==result.getAmount()*cycles,"Export raced the factory's full input snapshot");long usage=Attribute.get(MekanismBlocks.CHEMICAL_INFUSER.get(),AttributeEnergy.class).getUsage();check(c.structure.cells.getFirst().getEnergyContainer().getEnergy()==1000000-usage*cycles,"Chemical sharing charged the wrong work");c.enabled=false;
               }).thenSucceed();
     }
 

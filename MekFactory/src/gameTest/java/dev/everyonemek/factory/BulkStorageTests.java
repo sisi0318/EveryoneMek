@@ -69,12 +69,12 @@ public final class BulkStorageTests {
     }
 
     @GameTest(template="empty",timeoutTicks=60)
-    public static void oneHatchFeedsFourCreativeInfiniteFactorySteps(GameTestHelper h){
+    public static void oneHatchFeedsEightCreativeInfiniteFactorySteps(GameTestHelper h){
         if(!Compat.EXTRAS){h.succeed();return;}
         var c=formed(h,Grade.ULTIMATE,3);c.autoEject=false;var template=new ItemStack(ExtraBlocks.getExtraFactory(ExtraFactoryTier.INFINITE,FactoryType.CRUSHING));
         template.set(MekanismDataComponents.UPGRADES,new UpgradeAware(Map.of(ExtraUpgrade.STACK,8,ExtraUpgrade.CREATIVE,1),ItemStack.EMPTY,ItemStack.EMPTY));c.template.setStack(template);
         var input=port(c,false).storage();input.insert(0,new ItemStack(Items.IRON_INGOT,32768),false);input.insert(1,new ItemStack(Items.IRON_INGOT,32768),false);
         c.processing.tick(c);int output=0;var bank=c.outputBank();for(int i=0;i<bank.itemSlots();i++)output+=bank.item(i).getCount();
-        check(output==17*256*4&&count(input,Items.IRON_INGOT)==65536-output&&c.running==17&&c.powerUsed==0,"One upgraded warehouse still bottlenecked the four-step creative factory");c.enabled=false;h.succeed();
+        check(output==17*256*8&&count(input,Items.IRON_INGOT)==65536-output&&c.running==17&&c.powerUsed==0,"One upgraded warehouse bottlenecked the eight-step creative factory");c.enabled=false;h.succeed();
     }
 }

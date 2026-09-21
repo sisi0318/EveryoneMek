@@ -61,9 +61,9 @@ public final class ThroughputTests {
     public static void acceleratedWorkPaysEveryStepAndKeepsOneProviderBudget(GameTestHelper h){
         var c=formed(h,Grade.BASIC,3);c.template.setStack(new ItemStack(MekanismBlocks.CRUSHER));var cell=c.structure.cells.getFirst();cell.getEnergyContainer().setEnergy(1000000);
         port(c,false).storage().insert(0,new ItemStack(Items.IRON_INGOT,2),false);long usage=Attribute.get(MekanismBlocks.CRUSHER.get(),AttributeEnergy.class).getUsage();
-        int cycles=FactoryConfig.PROCESSING_CYCLES.get();check(cycles==4,"Default processing speed is not quadrupled");
-        c.processing.tick(c);check(c.processing.jobs.getFirst().progress==cycles&&c.powerUsed==usage*cycles&&c.running==1,"Two work steps did not pay twice, or UI counted parallel twice");
-        check(cell.getEnergyContainer().getEnergy()==1000000-usage*cycles,"Double work energy mismatch");
+        int cycles=FactoryConfig.PROCESSING_CYCLES.get();check(cycles==8,"Default processing speed did not upgrade to eight steps");
+        c.processing.tick(c);check(c.processing.jobs.getFirst().progress==8&&c.powerUsed==usage*8&&c.running==1,"Eight work steps did not pay for exact progress, or UI multiplied parallel");
+        check(cell.getEnergyContainer().getEnergy()==1000000-usage*8,"Eight-step energy mismatch");
         c.enabled=false;long before=cell.getEnergyContainer().getEnergy();c.structure.transfer=usage*(cycles+1);c.processing.tick(c);
         check(c.processing.jobs.getFirst().progress==cycles+1&&c.powerUsed==usage&&cell.getEnergyContainer().getEnergy()==before-usage,"Repeated work steps bypassed this tick's provider budget");
         var original=c.processing.save(h.getLevel().registryAccess());c.processing.load(original,h.getLevel().registryAccess());check(c.processing.jobs.getFirst().progress==cycles+1,"Native progress changed on reload");h.succeed();
