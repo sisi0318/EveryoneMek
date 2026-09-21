@@ -6,7 +6,7 @@ modId="mekgravity"
 version="${version}"
 displayName="Mek Gravity"
 authors="EveryoneMek"
-description='''Gravitational containment reactors with material fuel and closed-loop sodium cooling.'''
+description='''Gravitational containment reactors with material fuel, powered containment and high-throughput energy ports.'''
 [[mixins]]
 config="mekgravity.mixins.json"
 [[dependencies.mekgravity]]

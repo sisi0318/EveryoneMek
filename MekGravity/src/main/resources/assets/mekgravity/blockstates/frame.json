@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "formed=false": {
       "model": "mekgravity:block/frame"
+    },
+    "formed=true": {
+      "model": "mekgravity:block/frame_formed"
     }
   }
 }

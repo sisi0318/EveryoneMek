@@ -1,10 +1,16 @@
 {
   "variants": {
-    "output=false": {
+    "formed=false,output=false": {
       "model": "mekgravity:block/energy"
     },
-    "output=true": {
+    "formed=false,output=true": {
       "model": "mekgravity:block/energy_output"
+    },
+    "formed=true,output=false": {
+      "model": "mekgravity:block/energy_formed"
+    },
+    "formed=true,output=true": {
+      "model": "mekgravity:block/energy_formed_output"
     }
   }
 }

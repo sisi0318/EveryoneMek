@@ -1,10 +1,16 @@
 {
   "variants": {
-    "output=false": {
+    "formed=false,output=false": {
       "model": "mekgravity:block/coolant"
     },
-    "output=true": {
+    "formed=false,output=true": {
       "model": "mekgravity:block/coolant_output"
+    },
+    "formed=true,output=false": {
+      "model": "mekgravity:block/coolant_formed"
+    },
+    "formed=true,output=true": {
+      "model": "mekgravity:block/coolant_formed_output"
     }
   }
 }

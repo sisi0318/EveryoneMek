@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..');
 const sharp = createRequire(path.join(root, 'art/package.json'))('sharp');
 const layouts = JSON.parse(fs.readFileSync(path.join(root, 'art/atlas-layout.json'), 'utf8'));
 const atlases = {
+  assembled: ['assembled_panel','assembled_frame','assembled_port_input','assembled_port_output'],
   controller: ['controller_front', 'controller_top', 'controller_side', 'controller_front_active'],
   coil: ['coil_front', 'coil_top', 'coil_side', 'coil_front_active'],
   structure: ['frame', 'panel', 'cell', 'provider'],
@@ -35,5 +36,5 @@ const output = path.join(root, 'src/main/resources/assets/mekgravity/textures/bl
     previews.push({input:Buffer.from(labels),left:0,top:row*220}); row++;
   }
   await sharp({create:{width:768,height:row*220,channels:4,background:'#24272b'}}).composite(previews).png().toFile(path.join(root,'art/texture-sheet.png'));
-  process.stdout.write('Exported sixteen original 16x16 textures.\n');
+  process.stdout.write('Exported twenty original 16x16 textures.\n');
 })().catch(e=>{process.stderr.write(e.stack+'\n');process.exitCode=1;});

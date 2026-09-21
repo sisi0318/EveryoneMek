@@ -32,7 +32,7 @@ public final class Ports {
         public ChemicalStack getChemicalInTank(int i){var c=c();return c==null||i!=0?ChemicalStack.EMPTY:(part.output()?c.hot:c.cold).copy();}
         public long getChemicalTankCapacity(int i){var c=c();return c==null||i!=0?0:c.tankCapacity();}
         public void setChemicalInTank(int i,ChemicalStack s){throw new UnsupportedOperationException("Use transactional insertion and extraction");}
-        public boolean isValid(int i,ChemicalStack s){return c()!=null&&i==0&&!part.output()&&s.is(MekanismChemicals.SODIUM)&&!s.isRadioactive();}
+        public boolean isValid(int i,ChemicalStack s){return false;} // Retired coolant ports only recover existing stock.
         public ChemicalStack insertChemical(int i,ChemicalStack s,Action a){var c=c();if(c==null||!isValid(i,s)||!c.cold.isEmpty()&&!ChemicalStack.isSameChemical(c.cold,s))return s;
             long n=Math.min(s.getAmount(),Math.max(0,c.tankCapacity()-c.cold.getAmount()));if(n>0&&a.execute()){c.cold=s.copyWithAmount(c.cold.getAmount()+n);c.markForSave();}return s.copyWithAmount(s.getAmount()-n);
         }
@@ -50,6 +50,24 @@ public final class Ports {
         public long insertEnergy(int i,long n,Action a){var c=c();if(c==null||i!=0||n<=0||part.output())return n;part.clock();long accepted=c.accept(Math.min(n,Math.max(0,ReactorConfig.PORT_RATE.get()-part.inputUsed)),a.simulate());if(a.execute())part.inputUsed+=accepted;return n-accepted;}
         public long extractEnergy(int i,long n,Action a){var c=c();if(c==null||i!=0||n<=0||!part.output())return 0;part.clock();long taken=c.extract(Math.min(n,Math.max(0,ReactorConfig.PORT_RATE.get()-part.outputUsed)),a.simulate());if(a.execute())part.outputUsed+=taken;return taken;}
     }
+    // Some long handlers bridge to FE internally, so both paths must allow more than one accepted chunk.
+    static void emit(Energy source,IStrictEnergyHandler target){
+        for(int pass=0;pass<64;pass++){
+            long offer=source.extractEnergy(0,Long.MAX_VALUE,Action.SIMULATE);if(offer<=0)break;
+            long accepted=offer-target.insertEnergy(offer,Action.EXECUTE);
+            if(accepted<=0)break;
+            if(source.extractEnergy(0,accepted,Action.EXECUTE)!=accepted)throw new IllegalStateException("Energy output changed during transfer");
+        }
+    }
+    static void emit(Energy source,net.neoforged.neoforge.energy.IEnergyStorage target){
+        var bridge=new ForgeEnergyIntegration(source);
+        for(int pass=0;pass<64;pass++){
+            int offer=bridge.extractEnergy(Integer.MAX_VALUE,true);if(offer<=0)break;
+            int aligned=bridge.extractEnergy(target.receiveEnergy(offer,true),true);if(aligned<=0)break;
+            int accepted=target.receiveEnergy(aligned,false);if(accepted<=0)break;
+            if(bridge.extractEnergy(accepted,false)!=accepted)throw new IllegalStateException("FE output changed during transfer");
+        }
+    }
     public static void eject(Controller c){if(!c.autoEject||!c.structure.valid())return;
         for(var p:java.util.List.copyOf(c.structure.ports))if(p.output())for(var side:Direction.values()){
             if(controller(p,side)!=c)continue;var next=p.getBlockPos().relative(side);if(!c.getLevel().hasChunkAt(next))continue;
@@ -58,8 +76,8 @@ public final class Ports {
             }else if(p.kind()==PartBlock.Kind.ENERGY){
                 var source=new Energy(p,side);long offer=source.extractEnergy(0,Long.MAX_VALUE,Action.SIMULATE);if(offer<=0)continue;
                 var target=c.getLevel().getCapability(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.block(),next,side.getOpposite());
-                if(target!=null){long accepted=offer-target.insertEnergy(offer,Action.EXECUTE);if(accepted>0)source.extractEnergy(0,accepted,Action.EXECUTE);}
-                else {var fe=c.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,next,side.getOpposite());if(fe!=null){var bridge=new ForgeEnergyIntegration(source);int accepted=fe.receiveEnergy(bridge.extractEnergy(Integer.MAX_VALUE,true),false);if(accepted>0)bridge.extractEnergy(accepted,false);}}
+                if(target!=null)emit(source,target);
+                else {var fe=c.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,next,side.getOpposite());if(fe!=null)emit(source,fe);}
             }
         }
     }

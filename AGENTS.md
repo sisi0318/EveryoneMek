@@ -22,7 +22,7 @@
 
 - [Botania](Botania/AGENTS.md)：仿生花、魔力加工、原生火花接入与旧存档兼容。
 - [MekFactory](MekFactory/AGENTS.md)：分级并行工厂、独立物料仓、原感应储能、在制持久化与一键施工。
-- [MekGravity](MekGravity/AGENTS.md)：引力堆结构、燃料能量预算、钠闭路冷却与共享发电端口。
+- [MekGravity](MekGravity/AGENTS.md)：引力堆结构、燃料能量预算、约束场外观与共享发电端口。
 
 ### 新模组启动
 

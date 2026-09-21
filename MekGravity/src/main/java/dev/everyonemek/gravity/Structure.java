@@ -8,7 +8,7 @@ public final class Structure {
     private final Set<BlockPos> claimed=new HashSet<>();
     public final Controller owner;
     public final List<Part> ports=new ArrayList<>(),fuelHatches=new ArrayList<>(),coils=new ArrayList<>();
-    public Part core;public boolean formed;private boolean dirty=true,checking;
+    public Part core;public boolean formed;public int energyInputs,energyOutputs;private boolean dirty=true,checking;
     public Grade grade=Grade.BASIC;public String error="structure";public BlockPos errorPos;
     public Structure(Controller owner){this.owner=owner;}
     public BlockPos at(int x,int y,int z){return owner.getBlockPos().relative(owner.getDirection().getClockWise(),x-3).above(y-1).relative(owner.getDirection().getOpposite(),z);}
@@ -18,16 +18,15 @@ public final class Structure {
     public static void unload(LevelEvent.Unload e){OWNERS.remove(e.getLevel());}
     public static void chunkUnload(ChunkEvent.Unload e){var map=OWNERS.get(e.getLevel());if(map!=null){var cs=new HashSet<Controller>();for(var entry:map.entrySet())if(new net.minecraft.world.level.ChunkPos(entry.getKey()).equals(e.getChunk().getPos()))cs.add(entry.getValue());cs.forEach(c->c.structure.invalidate());}}
     private void notifyPorts(){var l=owner.getLevel();if(l==null||l.isClientSide)return;for(var p:List.copyOf(ports))if(!p.isRemoved()&&l.hasChunkAt(p.getBlockPos())){l.invalidateCapabilities(p.getBlockPos());l.updateNeighborsAt(p.getBlockPos(),p.getBlockState().getBlock());}}
-    public void invalidate(){boolean was=formed;dirty=true;formed=false;if(was){activity(false);notifyPorts();}}
+    public void invalidate(){boolean was=formed;dirty=true;formed=false;if(was){activity(false);appearance(false);notifyPorts();}}
     public void detach(){var map=OWNERS.get(owner.getLevel());if(map!=null)for(var p:claimed)map.remove(p,owner);claimed.clear();invalidate();}
     public boolean valid(){if(owner.getLevel()==null||owner.getLevel().isClientSide||owner.isRemoved()||checking)return false;return dirty?validate():formed;}
     private boolean fail(String error,BlockPos pos){this.error=error;errorPos=pos;return false;}
     public static boolean coilPosition(int x,int y,int z){return (x==1||x==5)&&y==3&&z==3||(y==1||y==5)&&x==3&&z==3||(z==1||z==5)&&x==3&&y==3;}
     public boolean validate(){
         if(checking||owner.getLevel()==null||owner.isRemoved())return false;
-        checking=true;dirty=false;formed=false;ports.clear();fuelHatches.clear();coils.clear();core=null;grade=Grade.ULTIMATE;
+        checking=true;dirty=false;formed=false;ports.clear();fuelHatches.clear();coils.clear();core=null;grade=Grade.ULTIMATE;energyInputs=energyOutputs=0;
         var l=owner.getLevel();var map=OWNERS.computeIfAbsent(l,k->new HashMap<>());for(var p:claimed)map.remove(p,owner);claimed.clear();
-        int cold=0,hot=0,excitation=0,outputs=0;
         try {
             for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){
                 var pos=at(x,y,z);if(!l.hasChunkAt(pos))return fail("unloaded",pos);
@@ -42,20 +41,28 @@ public final class Structure {
                 else if(edges==1){
                     if(kind==PartBlock.Kind.CORE||kind==PartBlock.Kind.COIL)return fail("shell",pos);
                     if(kind==PartBlock.Kind.FUEL){ports.add(p);fuelHatches.add(p);}
-                    if(kind==PartBlock.Kind.COOLANT){ports.add(p);if(p.output())hot++;else cold++;}
-                    if(kind==PartBlock.Kind.ENERGY){ports.add(p);if(p.output())outputs++;else excitation++;}
+                    if(kind==PartBlock.Kind.COOLANT)ports.add(p); // Existing coolant buffers remain recoverable.
+                    if(kind==PartBlock.Kind.ENERGY){ports.add(p);if(p.output())energyOutputs++;else energyInputs++;}
                 }else if(x==3&&y==3&&z==3){if(kind!=PartBlock.Kind.CORE)return fail("core",pos);core=p;}
                 else {if(kind!=PartBlock.Kind.COIL)return fail("coil",pos);var facing=state.getValue(PartBlock.FACING);if(!pos.relative(facing,2).equals(at(3,3,3)))return fail("coil_facing",pos);coils.add(p);var g=((PartBlock)state.getBlock()).grade;if(g.ordinal()<grade.ordinal())grade=g;}
                 if(!owner.getBlockPos().equals(p.master)){p.master=owner.getBlockPos();p.setChanged();}
             }
             if(fuelHatches.isEmpty())return fail("fuel_port",owner.getBlockPos());
-            if(cold==0)return fail("cold_port",owner.getBlockPos());
-            if(hot==0)return fail("hot_port",owner.getBlockPos());
-            if(excitation==0)return fail("excitation_port",owner.getBlockPos());
-            if(outputs==0)return fail("output_port",owner.getBlockPos());
+            if(energyInputs==0)return fail("excitation_port",owner.getBlockPos());
+            if(energyOutputs==0)return fail("output_port",owner.getBlockPos());
             if(fuelHatches.size()>8||ports.size()>32)return fail("port_limit",owner.getBlockPos());
             error="ready";errorPos=null;formed=true;return true;
-        }finally{checking=false;if(formed)notifyPorts();}
+        }finally{checking=false;appearance(formed);if(formed)notifyPorts();}
+    }
+    private void appearance(boolean assembled){
+        var l=owner.getLevel();if(l==null||l.isClientSide)return;
+        // Include previously linked parts after a reload or failed validation, without touching another reactor.
+        for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){
+            var pos=at(x,y,z);if(!l.hasChunkAt(pos))continue;
+            var tile=l.getBlockEntity(pos);boolean ours=tile==owner||tile instanceof Part p&&owner.getBlockPos().equals(p.master);
+            var state=l.getBlockState(pos);
+            if(ours&&state.hasProperty(PartBlock.FORMED)&&state.getValue(PartBlock.FORMED)!=assembled)l.setBlock(pos,state.setValue(PartBlock.FORMED,assembled),2);
+        }
     }
     public void activity(boolean active){var all=new ArrayList<>(coils);if(core!=null)all.add(core);var l=owner.getLevel();if(l==null||l.isClientSide)return;
         for(var p:all)if(!p.isRemoved()&&l.hasChunkAt(p.getBlockPos())&&l.getBlockEntity(p.getBlockPos())==p&&p.getBlockState().getValue(PartBlock.ACTIVE)!=active)l.setBlock(p.getBlockPos(),p.getBlockState().setValue(PartBlock.ACTIVE,active),2);

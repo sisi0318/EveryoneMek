@@ -4,7 +4,7 @@
 <g font-family="Microsoft YaHei, sans-serif">
 <rect x="0" y="0" width="1600" height="1070" fill="#20262d" />
 <text x="32" y="43" fill="#dee5ec" font-size="29" text-anchor="start" >引力约束反应堆 · 7 × 7 × 7</text>
-<text x="32" y="77" fill="#aebcc8" font-size="19" text-anchor="start" >每层从上往下看 · 图上方为主控正面 · 第 1 层为底部 · 结构草案 v1</text>
+<text x="32" y="77" fill="#aebcc8" font-size="19" text-anchor="start" >每层从上往下看 · 图上方为主控正面 · 第 1 层为底部 · alpha.2 默认布局</text>
 <rect x="32" y="106" width="367" height="440" fill="#29313b" />
 <text x="50" y="139" fill="#dee5ec" font-size="23" text-anchor="start" >第 1 层 · 底板</text>
 <text x="217" y="171" fill="#aebcc8" font-size="15" text-anchor="middle" >正面</text>
@@ -139,8 +139,8 @@
 <text x="686" y="254" fill="#e5e9ee" font-size="20" text-anchor="middle" >·</text>
 <rect x="707" y="228" width="38" height="38" fill="#668891" />
 <text x="726" y="254" fill="#18212b" font-size="20" text-anchor="middle" >玻</text>
-<rect x="467" y="268" width="38" height="38" fill="#6db4d2" />
-<text x="486" y="294" fill="#18212b" font-size="20" text-anchor="middle" >冷</text>
+<rect x="467" y="268" width="38" height="38" fill="#668891" />
+<text x="486" y="294" fill="#18212b" font-size="20" text-anchor="middle" >玻</text>
 <rect x="507" y="268" width="38" height="38" fill="#30373f" />
 <text x="526" y="294" fill="#e5e9ee" font-size="20" text-anchor="middle" >·</text>
 <rect x="547" y="268" width="38" height="38" fill="#30373f" />
@@ -167,8 +167,8 @@
 <text x="686" y="334" fill="#e5e9ee" font-size="20" text-anchor="middle" >·</text>
 <rect x="707" y="308" width="38" height="38" fill="#668891" />
 <text x="726" y="334" fill="#18212b" font-size="20" text-anchor="middle" >玻</text>
-<rect x="467" y="348" width="38" height="38" fill="#d49969" />
-<text x="486" y="374" fill="#18212b" font-size="20" text-anchor="middle" >热</text>
+<rect x="467" y="348" width="38" height="38" fill="#668891" />
+<text x="486" y="374" fill="#18212b" font-size="20" text-anchor="middle" >玻</text>
 <rect x="507" y="348" width="38" height="38" fill="#30373f" />
 <text x="526" y="374" fill="#e5e9ee" font-size="20" text-anchor="middle" >·</text>
 <rect x="547" y="348" width="38" height="38" fill="#30373f" />
@@ -736,7 +736,7 @@
 <text x="1550" y="666" fill="#dee5ec" font-size="17" text-anchor="end" >50</text>
 <rect x="1229" y="679" width="18" height="18" fill="#668891" />
 <text x="1257" y="695" fill="#dee5ec" font-size="17" text-anchor="start" >反应堆玻璃</text>
-<text x="1550" y="695" fill="#dee5ec" font-size="17" text-anchor="end" >91</text>
+<text x="1550" y="695" fill="#dee5ec" font-size="17" text-anchor="end" >93</text>
 <rect x="1229" y="708" width="18" height="18" fill="#61c49f" />
 <text x="1257" y="724" fill="#dee5ec" font-size="17" text-anchor="start" >主控制器</text>
 <text x="1550" y="724" fill="#dee5ec" font-size="17" text-anchor="end" >1</text>
@@ -746,23 +746,17 @@
 <rect x="1229" y="766" width="18" height="18" fill="#d2b471" />
 <text x="1257" y="782" fill="#dee5ec" font-size="17" text-anchor="start" >励磁输入口</text>
 <text x="1550" y="782" fill="#dee5ec" font-size="17" text-anchor="end" >1</text>
-<rect x="1229" y="795" width="18" height="18" fill="#6db4d2" />
-<text x="1257" y="811" fill="#dee5ec" font-size="17" text-anchor="start" >冷却输入口</text>
-<text x="1550" y="811" fill="#dee5ec" font-size="17" text-anchor="end" >1</text>
-<rect x="1229" y="824" width="18" height="18" fill="#d49969" />
-<text x="1257" y="840" fill="#dee5ec" font-size="17" text-anchor="start" >热钠输出口</text>
-<text x="1550" y="840" fill="#dee5ec" font-size="17" text-anchor="end" >1</text>
-<rect x="1229" y="853" width="18" height="18" fill="#7b9ae0" />
-<text x="1257" y="869" fill="#dee5ec" font-size="17" text-anchor="start" >发电输出口</text>
-<text x="1550" y="869" fill="#dee5ec" font-size="17" text-anchor="end" >4</text>
-<rect x="1229" y="882" width="18" height="18" fill="#a795c7" />
-<text x="1257" y="898" fill="#dee5ec" font-size="17" text-anchor="start" >约束线圈</text>
-<text x="1550" y="898" fill="#dee5ec" font-size="17" text-anchor="end" >6</text>
-<rect x="1229" y="911" width="18" height="18" fill="#a580dc" />
-<text x="1257" y="927" fill="#dee5ec" font-size="17" text-anchor="start" >引力核心</text>
-<text x="1550" y="927" fill="#dee5ec" font-size="17" text-anchor="end" >1</text>
-<rect x="1229" y="940" width="18" height="18" fill="#30373f" />
-<text x="1257" y="956" fill="#dee5ec" font-size="17" text-anchor="start" >留空</text>
-<text x="1550" y="956" fill="#dee5ec" font-size="17" text-anchor="end" >118</text>
+<rect x="1229" y="795" width="18" height="18" fill="#7b9ae0" />
+<text x="1257" y="811" fill="#dee5ec" font-size="17" text-anchor="start" >发电输出口</text>
+<text x="1550" y="811" fill="#dee5ec" font-size="17" text-anchor="end" >4</text>
+<rect x="1229" y="824" width="18" height="18" fill="#a795c7" />
+<text x="1257" y="840" fill="#dee5ec" font-size="17" text-anchor="start" >约束线圈</text>
+<text x="1550" y="840" fill="#dee5ec" font-size="17" text-anchor="end" >6</text>
+<rect x="1229" y="853" width="18" height="18" fill="#a580dc" />
+<text x="1257" y="869" fill="#dee5ec" font-size="17" text-anchor="start" >引力核心</text>
+<text x="1550" y="869" fill="#dee5ec" font-size="17" text-anchor="end" >1</text>
+<rect x="1229" y="882" width="18" height="18" fill="#30373f" />
+<text x="1257" y="898" fill="#dee5ec" font-size="17" text-anchor="start" >留空</text>
+<text x="1550" y="898" fill="#dee5ec" font-size="17" text-anchor="end" >118</text>
 <text x="32" y="1043" fill="#aebcc8" font-size="18" text-anchor="start" >线圈等级可更换，六组取最低等级。默认布局含 4 个发电口；图示为设计，不是游戏内成型验证。</text>
 </g></svg>

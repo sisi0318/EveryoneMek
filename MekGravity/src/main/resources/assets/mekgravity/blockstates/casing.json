@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "formed=false": {
       "model": "mekgravity:block/casing"
+    },
+    "formed=true": {
+      "model": "mekgravity:block/casing_formed"
     }
   }
 }

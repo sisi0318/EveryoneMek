@@ -4,6 +4,10 @@
 
 [结构与视觉设计包](gravity-reactor/README.md) · [交互看板](gravity-reactor/design-board.html) · [七层搭建图](gravity-reactor/layers.svg)
 
+## 最新修订
+
+alpha.2按用户反馈取消强制钠冷却；默认功率与燃料能值提高4倍，单口16 GFE/t，缓存输出不再受发电功率限制。玻璃连接、成型皮肤和核心特效已经接入。下面保留最初设计背景，当前安装与玩法以MekGravity/README.md为准。
+
 ## 定位与参考
 
 接在 Mek 聚变供电和 SPS 之后，为高并行工厂、大规模合成提供集中电源。推荐名称为“引力约束反应堆”，简称“引力堆”。核心玩法是建立约束场、供给致密物质、处理冷却回路和调节负载。

@@ -48,7 +48,7 @@ public final class Content {
         for(var kind:PartBlock.Kind.values())if(kind!=PartBlock.Kind.COIL)PARTS.put(kind,BLOCKS.register(kind.id(),()->new PartBlock(kind,Grade.BASIC)));
         for(var g:Grade.values())COILS.put(g,BLOCKS.register(g.id()+"_coil",()->new PartBlock(PartBlock.Kind.COIL,g)));
         TABS.register("main",()->CreativeModeTab.builder().title(Component.translatable("itemGroup.mekgravity")).icon(()->new ItemStack(CONTROLLER))
-              .displayItems((p,out)->{out.accept(CONTROLLER);PARTS.values().forEach(out::accept);COILS.values().forEach(out::accept);out.accept(PELLET.get());}).build());
+              .displayItems((p,out)->{out.accept(CONTROLLER);PARTS.entrySet().stream().filter(e->e.getKey()!=PartBlock.Kind.COOLANT).forEach(e->out.accept(e.getValue()));COILS.values().forEach(out::accept);out.accept(PELLET.get());}).build());
     }
     public static Component text(String key,Object... args){return Component.translatable("mekgravity."+key,args);}
     public static void register(IEventBus b){COMPONENTS.register(b);BLOCKS.register(b);TILES.register(b);PART_TYPES.register(b);MENUS.register(b);ITEMS.register(b);RECIPES.register(b);SERIALIZERS.register(b);TABS.register(b);}

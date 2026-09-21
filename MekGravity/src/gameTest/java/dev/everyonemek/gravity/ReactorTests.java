@@ -23,7 +23,7 @@ public final class ReactorTests {
     static Controller formed(GameTestHelper h){var c=create(h);for(var e:Construction.plan(c).entrySet())h.getLevel().setBlockAndUpdate(e.getKey(),e.getValue());check(c.structure.validate(),"Structure: "+c.structure.error+" at "+c.structure.errorPos);c.autoEject=false;return c;}
     static Part port(Controller c,PartBlock.Kind kind,boolean output){return c.structure.ports.stream().filter(p->p.kind()==kind&&p.output()==output).findFirst().orElseThrow();}
     static Direction side(Controller c,Part p){return Arrays.stream(Direction.values()).filter(d->c.structure.outward(p.getBlockPos(),d)).findFirst().orElseThrow();}
-    static void supply(Controller c,int count){c.stored=c.startup()+c.reserve();c.cold=new ChemicalStack(MekanismChemicals.SODIUM,1000000);c.structure.fuelHatches.getFirst().inventory.setStackInSlot(0,new ItemStack(Content.PELLET.get(),count));c.enabled=true;}
+    static void supply(Controller c,int count){c.stored=c.startup()+c.reserve();c.structure.fuelHatches.getFirst().inventory.setStackInSlot(0,new ItemStack(Content.PELLET.get(),count));c.enabled=true;}
     static ServerPlayer player(GameTestHelper h,BlockPos pos){
         var p=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),"gravity-test"),net.minecraft.server.level.ClientInformation.createDefault());
         var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND){private final io.netty.channel.embedded.EmbeddedChannel channel=new io.netty.channel.embedded.EmbeddedChannel();@Override public io.netty.channel.Channel channel(){return channel;}};
@@ -42,43 +42,69 @@ public final class ReactorTests {
     static void close(ServerPlayer p){try{p.closeContainer();p.serverLevel().removePlayerImmediately(p,Entity.RemovalReason.DISCARDED);p.connection.getConnection().channel().close();}finally{username(p,false);}}
 
     @GameTest(template="empty",timeoutTicks=80)
-    public static void fuelHeatStartupAndReloadConserveResources(GameTestHelper h){
-        var c=formed(h);supply(c,3);var recipe=FuelRecipe.find(h.getLevel(),new ItemStack(Content.PELLET.get()));check(recipe!=null,"Data fuel recipe not registered");
-        long initialCold=c.cold.getAmount(),cost=c.startup();c.react();
-        check(c.ignited&&c.gross>0&&c.stored==c.reserve()+c.gross-c.selfUse,"Startup or gross/net energy wrong");
-        check(recipe.energy()-c.fuelRemaining==c.gross+c.heatSpent,"Cooling heat duplicated fuel energy");
-        check(c.hot.is(MekanismChemicals.SUPERHEATED_SODIUM)&&initialCold-c.cold.getAmount()==c.hot.getAmount(),"Sodium conversion lost matter");
-        long stored=c.stored,remaining=c.fuelRemaining,cold=c.cold.getAmount(),hot=c.hot.getAmount();var tag=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(tag,h.getLevel().registryAccess());
-        check(c.stored==stored&&c.fuelRemaining==remaining&&c.cold.getAmount()==cold&&c.hot.getAmount()==hot&&c.ignited,"Reload reset the paid fuel or field");
+    public static void fuelStartupAndReloadWorkWithoutCoolant(GameTestHelper h){
+        var c=formed(h);supply(c,3);var recipe=FuelRecipe.find(h.getLevel(),new ItemStack(Content.PELLET.get()));check(recipe!=null&&recipe.energy()==200000000000L,"Default fuel value did not increase");
+        check(c.structure.ports.stream().noneMatch(p->p.kind()==PartBlock.Kind.COOLANT),"Blueprint still requires coolant ports");
+        c.react();check(c.ignited&&c.gross>0&&c.stored==c.reserve()+c.gross-c.selfUse,"Startup or gross/net energy wrong");
+        check(recipe.energy()-c.fuelRemaining==c.gross&&c.cold.isEmpty()&&c.hot.isEmpty(),"Generation still consumed coolant or duplicated fuel energy");
+        long stored=c.stored,remaining=c.fuelRemaining;var tag=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(tag,h.getLevel().registryAccess());
+        check(c.stored==stored&&c.fuelRemaining==remaining&&c.ignited,"Reload reset paid fuel or ignition");
         c.enabled=false;c.react();check(c.stored==stored&&c.fuelRemaining==remaining&&c.gross==0,"Stopped reactor consumed fuel");c.enabled=true;c.react();
-        check(c.stored==stored+c.gross-c.selfUse&&remaining-c.fuelRemaining==c.gross+c.heatSpent,"Restart charged startup twice or repeated fuel");
-        var drop=Block.getDrops(c.getBlockState(),h.getLevel(),c.getBlockPos(),c).getFirst();check(drop.has(Content.DATA.get())&&drop.get(Content.DATA.get()).getLong("energy")==c.stored,"Controller drop lost stored resources");
-        check(cost>0&&c.structure.fuelHatches.getFirst().inventory.getStackInSlot(0).getCount()==2,"A reaction consumed more than one pellet");c.enabled=false;h.succeed();
+        check(c.stored==stored+c.gross-c.selfUse&&remaining-c.fuelRemaining==c.gross,"Restart charged startup twice or repeated fuel");
+        var drop=Block.getDrops(c.getBlockState(),h.getLevel(),c.getBlockPos(),c).getFirst();check(drop.has(Content.DATA.get())&&drop.get(Content.DATA.get()).getLong("energy")==c.stored,"Controller drop lost resources");
+        check(c.structure.fuelHatches.getFirst().inventory.getStackInSlot(0).getCount()==2,"Partial reaction consumed more than one pellet");c.enabled=false;h.succeed();
     }
+
     @GameTest(template="empty",timeoutTicks=80)
-    public static void starvationAndCachedPortsStopImmediately(GameTestHelper h){
-        var c=formed(h);supply(c,2);var input=port(c,PartBlock.Kind.COOLANT,false);var face=side(c,input);var chemicals=h.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),input.getBlockPos(),face);
-        long power=c.stored;c.cold=ChemicalStack.EMPTY;c.react();check(!c.ignited&&c.stored==power&&c.fuelRemaining==0,"Missing sodium consumed startup or fuel");
-        var sodium=new ChemicalStack(MekanismChemicals.SODIUM,1000000);check(chemicals.insertChemical(sodium,Action.SIMULATE).isEmpty()&&c.cold.isEmpty(),"Simulated sodium insertion mutated state");chemicals.insertChemical(sodium,Action.EXECUTE);
-        c.hot=new ChemicalStack(MekanismChemicals.SUPERHEATED_SODIUM,c.tankCapacity());c.react();check(c.stored==power&&c.fuelRemaining==0&&c.status.equals("hot_blocked"),"Blocked cooling consumed fuel");
-        c.hot=ChemicalStack.EMPTY;c.react();long fuel=c.fuelRemaining;c.stored=c.capacity();c.react();check(c.gross==0&&c.fuelRemaining==fuel,"Full energy buffer kept burning fuel");
-        var frame=c.structure.at(0,0,0);var original=h.getLevel().getBlockState(frame);h.getLevel().setBlockAndUpdate(frame,Blocks.AIR.defaultBlockState());
-        check(chemicals.getChemicalTanks()==0&&!chemicals.insertChemical(sodium,Action.EXECUTE).isEmpty(),"Broken structure retained cached transfer");c.react();check(c.fuelRemaining==fuel,"Broken reactor consumed fuel");
-        h.getLevel().setBlockAndUpdate(frame,original);check(c.structure.valid()&&chemicals.getChemicalTanks()==1,"Repair did not restore transfer");c.enabled=false;h.succeed();
+    public static void starvationAndAppearanceFollowRealStructure(GameTestHelper h){
+        var c=formed(h);check(c.getBlockState().getValue(PartBlock.FORMED),"Controller did not adopt assembled appearance");
+        var input=port(c,PartBlock.Kind.ENERGY,false);var energy=h.getLevel().getCapability(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.block(),input.getBlockPos(),side(c,input));
+        c.stored=c.startup()+c.reserve();c.enabled=true;long power=c.stored;c.react();check(!c.ignited&&c.stored==power&&c.fuelRemaining==0,"Missing fuel consumed startup energy");
+        supply(c,2);c.react();long fuel=c.fuelRemaining;c.stored=c.capacity();c.react();check(c.gross==0&&c.fuelRemaining==fuel,"Full buffer kept burning fuel");
+        var frame=c.structure.at(0,0,0);var original=h.getLevel().getBlockState(frame);check(original.getValue(PartBlock.FORMED),"Frame did not adopt assembled appearance");
+        h.getLevel().setBlockAndUpdate(frame,Blocks.AIR.defaultBlockState());
+        check(energy.getEnergyContainerCount()==0&&energy.insertEnergy(1000,Action.EXECUTE)==1000,"Broken structure retained cached transfer");
+        check(!c.getBlockState().getValue(PartBlock.FORMED)&&!input.getBlockState().getValue(PartBlock.FORMED),"Broken structure kept assembled appearance");c.react();check(c.fuelRemaining==fuel,"Broken reactor consumed fuel");
+        h.getLevel().setBlockAndUpdate(frame,original.setValue(PartBlock.FORMED,false));check(c.structure.valid()&&energy.getEnergyContainerCount()==1&&input.getBlockState().getValue(PartBlock.FORMED),"Repair did not restore transfer and appearance");
+        c.enabled=false;h.succeed();
     }
+
     @GameTest(template="empty",timeoutTicks=80)
-    public static void fourEnergyPortsShareLongBudgetAndProtectReserve(GameTestHelper h){
+    public static void fourEnergyPortsDischargeFasterThanGeneration(GameTestHelper h){
+        check(ReactorConfig.upgradedPortRate(0,2500000000L)==40000000000L&&ReactorConfig.upgradedPortRate(1,2500000000L)==2500000000L,"Port migration repeated or did not apply");
+        check(ReactorConfig.upgradedPower(0,0,1250000000L)==5000000000L&&ReactorConfig.upgradedPower(0,0,12345L)==12345L,"Power migration lost custom settings");
         var c=formed(h);for(var coil:List.copyOf(c.structure.coils))h.getLevel().setBlockAndUpdate(coil.getBlockPos(),Content.COILS.get(Grade.ULTIMATE).get().defaultBlockState().setValue(PartBlock.FACING,coil.getBlockState().getValue(PartBlock.FACING)));
-        check(c.structure.valid()&&c.structure.grade==Grade.ULTIMATE,"Six high tier coils did not upgrade");c.ignited=true;c.stored=c.reserve()+c.structure.grade.power();
-        long initial=c.stored,total=0;for(var p:c.structure.ports)if(p.kind()==PartBlock.Kind.ENERGY&&p.output()){
+        check(c.structure.valid()&&c.structure.grade==Grade.ULTIMATE,"Six high tier coils did not upgrade");c.ignited=true;c.stored=c.reserve()+c.outputLimit();
+        long initial=c.stored,total=0;check(c.outputLimit()>c.structure.grade.power(),"Stored output is still capped by generation");
+        for(var p:c.structure.ports)if(p.kind()==PartBlock.Kind.ENERGY&&p.output()){
             var handler=h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,p.getBlockPos(),side(c,p));check(handler.receiveEnergy(100,false)==0,"Output port accepted power");
-            check(handler.extractEnergy(Integer.MAX_VALUE,true)>0&&c.stored==initial-total,"Energy simulation mutated the buffer");
-            int fe=handler.extractEnergy(Integer.MAX_VALUE,false);long joules=(long)mekanism.common.util.UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertFrom(fe);total+=joules;
-            check(handler.extractEnergy(Integer.MAX_VALUE,false)==0,"The same port bypassed its tick budget");
+            check(handler.extractEnergy(Integer.MAX_VALUE,true)>0&&c.stored==initial-total,"Simulation mutated the buffer");
+            long before=c.stored;for(int pass=0;pass<16;pass++)if(handler.extractEnergy(Integer.MAX_VALUE,false)==0)break;
+            check(before-c.stored==ReactorConfig.PORT_RATE.get(),"Single port failed to use its full 16 GFE budget");total+=before-c.stored;
+            check(handler.extractEnergy(Integer.MAX_VALUE,false)==0,"Same port bypassed its tick budget");
         }
-        check(total==c.structure.grade.power()&&total>Integer.MAX_VALUE&&c.stored==c.reserve(),"Multiple ports duplicated energy, overflowed int, or drained reserve");
+        check(total==c.outputLimit()&&total>Integer.MAX_VALUE&&c.stored==c.reserve(),"Ports duplicated energy, overflowed int, or drained reserve");
         var lowest=c.structure.coils.getFirst();h.getLevel().setBlockAndUpdate(lowest.getBlockPos(),Content.COILS.get(Grade.BASIC).get().defaultBlockState().setValue(PartBlock.FACING,lowest.getBlockState().getValue(PartBlock.FACING)));check(c.structure.valid()&&c.structure.grade==Grade.BASIC,"Lowest coil tier ignored");h.succeed();
     }
+    @GameTest(template="empty",timeoutTicks=80)
+    public static void activeEjectionSplitsIntTransfersWithoutRoundingLoss(GameTestHelper h){
+        var c=formed(h);c.ignited=true;long rate=ReactorConfig.PORT_RATE.get();c.stored=c.reserve()+rate;
+        var outputs=c.structure.ports.stream().filter(p->p.kind()==PartBlock.Kind.ENERGY&&p.output()).toList();var first=outputs.getFirst();long[] delivered={0,0};
+        var target=new net.neoforged.neoforge.energy.IEnergyStorage(){
+            public int receiveEnergy(int n,boolean sim){int accepted=Math.min(n,600000001);if(!sim){delivered[0]+=accepted;delivered[1]++;}return accepted;}
+            public int extractEnergy(int n,boolean sim){return 0;}public int getEnergyStored(){return (int)Math.min(Integer.MAX_VALUE,delivered[0]);}public int getMaxEnergyStored(){return Integer.MAX_VALUE;}public boolean canExtract(){return false;}public boolean canReceive(){return true;}
+        };
+        Ports.emit(new Ports.Energy(first,side(c,first)),target);
+        check(delivered[0]==(long)mekanism.common.util.UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertTo(rate)&&delivered[1]>1&&c.stored==c.reserve(),"FE chunking was capped at one call or lost fractional energy");
+        var second=outputs.get(1);c.stored=c.reserve()+rate;long[] received={0,0};
+        var strict=new mekanism.api.energy.IStrictEnergyHandler(){
+            public int getEnergyContainerCount(){return 1;}public long getEnergy(int i){return received[0];}public long getMaxEnergy(int i){return rate;}public long getNeededEnergy(int i){return rate-received[0];}public void setEnergy(int i,long n){throw new UnsupportedOperationException();}
+            public long insertEnergy(int i,long n,Action a){long accepted=Math.min(n,Math.min(3000000000L,rate-received[0]));if(a.execute()){received[0]+=accepted;received[1]++;}return n-accepted;}public long extractEnergy(int i,long n,Action a){return 0;}
+        };
+        Ports.emit(new Ports.Energy(second,side(c,second)),strict);
+        check(received[0]==rate&&received[1]>1&&c.stored==c.reserve(),"A long-to-int adapter throttled automatic output");h.succeed();
+    }
+
     @GameTest(template="empty",timeoutTicks=140)
     public static void actualCableChargesAndOutputPortFeedsNativeCube(GameTestHelper h){
         var c=formed(h);var input=port(c,PartBlock.Kind.ENERGY,false);var side=side(c,input);var cubePos=input.getBlockPos().relative(side,2);
@@ -111,8 +137,14 @@ public final class ReactorTests {
         }finally{close(p);}h.succeed();
     }
     @GameTest(template="empty",timeoutTicks=180)
-    public static void nativeBoilerRecoversReactorHotSodium(GameTestHelper h){
-        var c=formed(h);supply(c,1);c.react();c.enabled=false;c.autoEject=true;long supplied=c.hot.getAmount();check(supplied>0,"No reactor sodium produced");
+    public static void legacyCoolantRemainsRecoverableWithoutAffectingGeneration(GameTestHelper h){
+        var c=formed(h);supply(c,1);
+        h.getLevel().setBlockAndUpdate(c.structure.at(0,1,2),Content.PARTS.get(PartBlock.Kind.COOLANT).get().defaultBlockState());h.getLevel().setBlockAndUpdate(c.structure.at(0,1,4),Content.PARTS.get(PartBlock.Kind.COOLANT).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));check(c.structure.valid(),"Legacy ports no longer form");
+        c.cold=new ChemicalStack(MekanismChemicals.SODIUM,1200);c.hot=new ChemicalStack(MekanismChemicals.SUPERHEATED_SODIUM,1000);
+        var saved=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(saved,h.getLevel().registryAccess());c.react();check(c.gross>0&&c.cold.getAmount()==1200&&c.hot.getAmount()==1000,"Legacy buffer changed during no-coolant generation");
+        c.enabled=false;c.autoEject=true;long supplied=c.hot.getAmount();var coldPort=port(c,PartBlock.Kind.COOLANT,false);var recovery=new Ports.Chemicals(coldPort,side(c,coldPort));
+        check(recovery.insertChemical(0,new ChemicalStack(MekanismChemicals.SODIUM,1),Action.EXECUTE).getAmount()==1,"Retired port accepted new coolant");
+        check(recovery.extractChemical(0,1200,Action.SIMULATE).getAmount()==1200&&c.cold.getAmount()==1200,"Legacy recovery simulation changed stock");check(recovery.extractChemical(0,1200,Action.EXECUTE).getAmount()==1200&&c.cold.isEmpty(),"Legacy cold buffer could not be recovered");
         var hotPort=port(c,PartBlock.Kind.COOLANT,true);var exit=side(c,hotPort);var valvePos=hotPort.getBlockPos().relative(exit,2);var base=valvePos.offset(-2,-1,-1);
         for(int x=0;x<3;x++)for(int y=0;y<5;y++)for(int z=0;z<3;z++)if(x==0||x==2||y==0||y==4||z==0||z==2)h.getLevel().setBlockAndUpdate(base.offset(x,y,z),MekanismBlocks.BOILER_CASING.get().defaultBlockState());
         h.getLevel().setBlockAndUpdate(base.offset(1,1,1),MekanismBlocks.SUPERHEATING_ELEMENT.get().defaultBlockState());h.getLevel().setBlockAndUpdate(base.offset(1,2,1),MekanismBlocks.PRESSURE_DISPERSER.get().defaultBlockState());h.getLevel().setBlockAndUpdate(valvePos,MekanismBlocks.BOILER_VALVE.get().defaultBlockState());

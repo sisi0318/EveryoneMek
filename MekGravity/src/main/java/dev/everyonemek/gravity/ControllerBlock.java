@@ -9,7 +9,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 public final class ControllerBlock extends BlockTile<Controller,Machine<Controller>> {
-    public ControllerBlock(Machine<Controller> type){super(type,p->p.strength(5,15));}
+    public ControllerBlock(Machine<Controller> type){super(type,p->p.strength(5,15));registerDefaultState(defaultBlockState().setValue(PartBlock.FORMED,false));}
+    @Override protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<net.minecraft.world.level.block.Block,BlockState> b){super.createBlockStateDefinition(b);b.add(PartBlock.FORMED);}
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player p,InteractionHand hand,BlockHitResult hit){
         if(p.isShiftKeyDown())return super.useItemOn(stack,state,level,pos,p,hand,hit);
         if(level.getBlockEntity(pos) instanceof Controller c)ReactorMenu.open(p,c,pos);return ItemInteractionResult.sidedSuccess(level.isClientSide);

@@ -1,0 +1,29 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "ambientocclusion": false,
+  "textures": {
+    "all": "mekgravity:block/frame",
+    "particle": "mekgravity:block/frame"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        1,
+        15
+      ],
+      "to": [
+        0,
+        15,
+        16
+      ],
+      "faces": {
+        "west": {
+          "texture": "#all",
+          "cullface": "west"
+        }
+      }
+    }
+  ]
+}

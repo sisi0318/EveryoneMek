@@ -19,8 +19,8 @@ for y in range(size):
             cell.update(overrides.get((x, y, z), {}))
             cells.append(cell)
 counts = Counter(c["kind"] for c in cells)
-assert counts == Counter(frame=68, casing=50, glass=91, controller=1, fuel=1,
-                         excitation=1, cold=1, hot=1, output=4, coil=6, core=1, air=118)
+assert counts == Counter(frame=68, casing=50, glass=93, controller=1, fuel=1,
+                         excitation=1, output=4, coil=6, core=1, air=118)
 lookup = {tuple(c["pos"]): c for c in cells}
 vectors = dict(left=(-1,0,0), right=(1,0,0), front=(0,0,-1), back=(0,0,1), up=(0,1,0), down=(0,-1,0))
 for b in spec["blocks"]:
@@ -49,7 +49,7 @@ svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1070" viewB
        '<title id="title">引力约束反应堆：七层搭建图</title>',
        '<desc id="desc">每层均从顶部向下看，上边为主控正面。225 个方块，118 格留空。线圈箭头朝向核心。</desc>',
        '<g font-family="Microsoft YaHei, sans-serif">', rect(0,0,1600,1070,"#20262d"), text(32,43,"引力约束反应堆 · 7 × 7 × 7",font_size=29),
-       text(32,77,"每层从上往下看 · 图上方为主控正面 · 第 1 层为底部 · 结构草案 v1",color="#aebcc8",font_size=19)]
+       text(32,77,"每层从上往下看 · 图上方为主控正面 · 第 1 层为底部 · alpha.2 默认布局",color="#aebcc8",font_size=19)]
 for layer in range(7):
     ox, oy = 32 + layer % 4 * 393, 106 + layer // 4 * 465
     svg += [rect(ox,oy,367,440,"#29313b"), text(ox+18,oy+33,f"第 {layer+1} 层 · {titles[layer]}",font_size=23), text(ox+185,oy+65,"正面",font_size=15,anchor="middle",color="#aebcc8")]
@@ -120,4 +120,4 @@ template=(ROOT/"board.template.html").read_text(encoding="utf-8")
 board=template.replace("__DATA__",json.dumps(dict(spec=spec,cells=cells,counts=dict(counts),titles=titles),ensure_ascii=False)).replace("__MAIN_UI__",main).replace("__FUEL_UI__",fuel)
 assert all(token not in board for token in ("__DATA__","__MAIN_UI__","__FUEL_UI__"))
 (ROOT/"design-board.html").write_text(board,encoding="utf-8")
-print("Design verified: 343 cells, 225 blocks, 118 air; all 6 coils face the core across an air gap; all 9 shell devices face out.")
+print("Design verified: 343 cells, 225 blocks, 118 air; all 6 coils face the core across an air gap; all 7 shell devices face out.")

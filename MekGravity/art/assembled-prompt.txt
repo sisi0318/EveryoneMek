@@ -1,0 +1,11 @@
+Tool: built-in image_gen
+Original generation, saved as source/assembled.png.
+
+Use case: stylized-concept. Asset type: original runtime Minecraft texture atlas for assembled-state structural blocks of the Mek Gravity reactor.
+Create a perfectly flat opaque square 2x2 texture atlas, four exactly equal squares with no margins or dividers, no words, no perspective. Each square must have the simplicity of a true 16x16 coarse Minecraft pixel tile: large solid-color pixels, no tiny details, no gradients or bloom.
+Follow Mekanism induction-casing style: mostly pale neutral gray industrial steel, charcoal recessed mechanical connections, crisp restrained gray bevels. This is the ASSEMBLED reactor skin; it should look more engineered and connected than a plain loose white cube, while remaining clearly Mekanism-like. Neutral pale metal is at least 80% of the visible area. No wood, gold, fantasy symbols, circular runes, decorative flowers, holograms, or glossy photorealism.
+Upper left: assembled armor panel. A broad pale-gray plate, modest stepped gray border, one horizontal CHARCOAL recessed track crossing the middle, with a narrow muted VIOLET conductor centered in it. Keep the track at least two large pixel cells high and its purple segment at least two cells wide so it survives 16x16 export.
+Upper right: assembled structural frame face. Pale steel with a straight vertical charcoal spine, a small violet rectangular conductor at its center, a few chunky darker gray corner bolts. Same pale palette and restrained functional violet accent as the first tile.
+Lower left: assembled INPUT connector. Pale steel plate with one square charcoal socket at center, clearly RED large status cells on the left and right, a small muted violet conductor above or below the socket. Red indicators must remain distinct at 16x16.
+Lower right: assembled OUTPUT connector. EXACTLY the same geometry as the lower-left input connector, but the two side status cells are BLUE rather than red. Retain the small muted violet conductor.
+All tile boundaries fully opaque, edge to edge. Exact equal 2x2 arrangement. Runtime-ready coarse pixel silhouettes; no pseudo transparency checkerboard and no extra panels.

@@ -1,0 +1,29 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "ambientocclusion": false,
+  "textures": {
+    "all": "mekgravity:block/frame",
+    "particle": "mekgravity:block/frame"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        15,
+        0
+      ],
+      "to": [
+        1,
+        16,
+        0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#all",
+          "cullface": "north"
+        }
+      }
+    }
+  ]
+}

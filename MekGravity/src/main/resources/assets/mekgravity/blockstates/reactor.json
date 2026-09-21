@@ -1,35 +1,67 @@
 {
   "variants": {
-    "active=false,facing=north": {
+    "active=false,facing=north,formed=false": {
       "model": "mekgravity:block/reactor",
       "y": 0
     },
-    "active=false,facing=east": {
+    "active=false,facing=east,formed=false": {
       "model": "mekgravity:block/reactor",
       "y": 90
     },
-    "active=false,facing=south": {
+    "active=false,facing=south,formed=false": {
       "model": "mekgravity:block/reactor",
       "y": 180
     },
-    "active=false,facing=west": {
+    "active=false,facing=west,formed=false": {
       "model": "mekgravity:block/reactor",
       "y": 270
     },
-    "active=true,facing=north": {
+    "active=true,facing=north,formed=false": {
       "model": "mekgravity:block/reactor_active",
       "y": 0
     },
-    "active=true,facing=east": {
+    "active=true,facing=east,formed=false": {
       "model": "mekgravity:block/reactor_active",
       "y": 90
     },
-    "active=true,facing=south": {
+    "active=true,facing=south,formed=false": {
       "model": "mekgravity:block/reactor_active",
       "y": 180
     },
-    "active=true,facing=west": {
+    "active=true,facing=west,formed=false": {
       "model": "mekgravity:block/reactor_active",
+      "y": 270
+    },
+    "active=false,facing=north,formed=true": {
+      "model": "mekgravity:block/reactor_formed",
+      "y": 0
+    },
+    "active=false,facing=east,formed=true": {
+      "model": "mekgravity:block/reactor_formed",
+      "y": 90
+    },
+    "active=false,facing=south,formed=true": {
+      "model": "mekgravity:block/reactor_formed",
+      "y": 180
+    },
+    "active=false,facing=west,formed=true": {
+      "model": "mekgravity:block/reactor_formed",
+      "y": 270
+    },
+    "active=true,facing=north,formed=true": {
+      "model": "mekgravity:block/reactor_formed_active",
+      "y": 0
+    },
+    "active=true,facing=east,formed=true": {
+      "model": "mekgravity:block/reactor_formed_active",
+      "y": 90
+    },
+    "active=true,facing=south,formed=true": {
+      "model": "mekgravity:block/reactor_formed_active",
+      "y": 180
+    },
+    "active=true,facing=west,formed=true": {
+      "model": "mekgravity:block/reactor_formed_active",
       "y": 270
     }
   }

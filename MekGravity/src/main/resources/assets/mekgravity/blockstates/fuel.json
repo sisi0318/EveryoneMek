@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "formed=false": {
       "model": "mekgravity:block/fuel"
+    },
+    "formed=true": {
+      "model": "mekgravity:block/fuel_formed"
     }
   }
 }

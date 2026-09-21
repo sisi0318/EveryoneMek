@@ -8,11 +8,12 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.*;
 import net.minecraft.world.item.ItemStack;
 public final class ReactorMenu extends MekanismTileContainer<Controller> {
-    private static final java.util.List<String> STATES=java.util.List.of("structure","unloaded","occupied","shell","frame","interior","core","coil","coil_facing","ports","port_limit","ready","stopped","redstone","fuel_missing","cold_missing","hot_blocked","charging","reserve_low","full","coolant_invalid","output_limited","cold_limited","running","startup_config","fuel_port","cold_port","hot_port","excitation_port","output_port");
-    private BlockPos clicked;public BlockPos errorPos;public int grade,coils,outputs;public boolean formed;public long capacity,startup,reserve,tankCapacity;
+    private static final java.util.List<String> STATES=java.util.List.of("structure","unloaded","occupied","shell","frame","interior","core","coil","coil_facing","ports","port_limit","ready","stopped","redstone","fuel_missing","cold_missing","hot_blocked","charging","reserve_low","full","coolant_invalid","output_limited","cold_limited","running","startup_config","fuel_port","cold_port","hot_port","excitation_port","output_port","fuel_limited");
+    private BlockPos clicked;public BlockPos errorPos;public int grade,coils,outputs;public boolean formed;public long capacity,startup,reserve,tankCapacity,inputLimit,outputLimit;
     public ReactorMenu(int id,Inventory inv,Controller c,BlockPos clicked){super(Content.MENU,id,inv,c);this.clicked=clicked;
         track(SyncableBoolean.create(()->c.structure.formed,v->formed=v));track(SyncableInt.create(()->c.structure.grade.ordinal(),v->grade=v));track(SyncableInt.create(()->c.structure.coils.size(),v->coils=v));track(SyncableInt.create(()->(int)c.structure.ports.stream().filter(p->p.kind()==PartBlock.Kind.ENERGY&&p.output()).count(),v->outputs=v));
         track(SyncableLong.create(c::capacity,v->capacity=v));track(SyncableLong.create(c::startup,v->startup=v));track(SyncableLong.create(c::reserve,v->reserve=v));track(SyncableLong.create(c::tankCapacity,v->tankCapacity=v));
+        track(SyncableLong.create(c::inputLimit,v->inputLimit=v));track(SyncableLong.create(c::outputLimit,v->outputLimit=v));
         track(SyncableLong.create(()->c.structure.errorPos==null?Long.MIN_VALUE:c.structure.errorPos.asLong(),v->errorPos=v==Long.MIN_VALUE?null:BlockPos.of(v)));
         track(SyncableInt.create(()->Math.max(0,STATES.indexOf(c.status)),v->c.status=STATES.get(Math.clamp(v,0,STATES.size()-1))));
     }

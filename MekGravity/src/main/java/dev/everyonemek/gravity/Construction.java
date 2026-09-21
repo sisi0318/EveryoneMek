@@ -26,8 +26,6 @@ public final class Construction {
         }
         result.put(c.structure.at(1,1,0),Content.PARTS.get(PartBlock.Kind.FUEL).get().defaultBlockState());
         result.put(c.structure.at(5,1,0),Content.PARTS.get(PartBlock.Kind.ENERGY).get().defaultBlockState());
-        result.put(c.structure.at(0,1,2),Content.PARTS.get(PartBlock.Kind.COOLANT).get().defaultBlockState());
-        result.put(c.structure.at(0,1,4),Content.PARTS.get(PartBlock.Kind.COOLANT).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
         for(int x:new int[]{1,2,4,5})result.put(c.structure.at(x,1,6),Content.PARTS.get(PartBlock.Kind.ENERGY).get().defaultBlockState().setValue(PartBlock.OUTPUT,true));
         return result;
     }

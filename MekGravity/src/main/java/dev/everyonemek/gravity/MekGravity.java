@@ -9,7 +9,7 @@ public final class MekGravity {
     public static final String ID="mekgravity";
     public MekGravity(IEventBus bus,ModContainer container){
         container.registerConfig(ModConfig.Type.SERVER,ReactorConfig.SPEC);
-        Content.register(bus);bus.addListener(Ports::register);
+        Content.register(bus);bus.addListener(Ports::register);bus.addListener(ReactorConfig::loaded);
         NeoForge.EVENT_BUS.addListener(Structure::unload);NeoForge.EVENT_BUS.addListener(Structure::chunkUnload);
     }
 }
