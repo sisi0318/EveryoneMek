@@ -1,0 +1,40 @@
+{
+  "name": "引力约束反应堆",
+  "revision": 1,
+  "status": "结构与视觉草案，未实现",
+  "size": 7,
+  "coordinates": "零起点：X 从左到右，Y 从下到上，Z 从主控正面到背面。玩家分层图显示为第 1～7 层。",
+  "shell": "至少两个坐标位于边界时为框架；底顶面内部为外壳；其余侧面为玻璃。",
+  "kinds": {
+    "frame": {"label": "反应堆框架", "mark": "框", "color": "#909da9"},
+    "casing": {"label": "反应堆外壳", "mark": "壳", "color": "#c8cdd3"},
+    "glass": {"label": "反应堆玻璃", "mark": "玻", "color": "#668891"},
+    "controller": {"label": "主控制器", "mark": "控", "color": "#61c49f"},
+    "fuel": {"label": "燃料仓", "mark": "料", "color": "#c88a79"},
+    "excitation": {"label": "励磁输入口", "mark": "励", "color": "#d2b471"},
+    "cold": {"label": "冷却输入口", "mark": "冷", "color": "#6db4d2"},
+    "hot": {"label": "热钠输出口", "mark": "热", "color": "#d49969"},
+    "output": {"label": "发电输出口", "mark": "电", "color": "#7b9ae0"},
+    "coil": {"label": "约束线圈", "mark": "圈", "color": "#a795c7"},
+    "core": {"label": "引力核心", "mark": "核", "color": "#a580dc"},
+    "air": {"label": "留空", "mark": "·", "color": "#30373f"}
+  },
+  "blocks": [
+    {"kind": "controller", "pos": [3, 1, 0], "face": "front"},
+    {"kind": "fuel", "pos": [1, 1, 0], "face": "front"},
+    {"kind": "excitation", "pos": [5, 1, 0], "face": "front"},
+    {"kind": "cold", "pos": [0, 1, 2], "face": "left"},
+    {"kind": "hot", "pos": [0, 1, 4], "face": "left"},
+    {"kind": "output", "pos": [1, 1, 6], "face": "back"},
+    {"kind": "output", "pos": [2, 1, 6], "face": "back"},
+    {"kind": "output", "pos": [4, 1, 6], "face": "back"},
+    {"kind": "output", "pos": [5, 1, 6], "face": "back"},
+    {"kind": "coil", "pos": [1, 3, 3], "face": "right"},
+    {"kind": "coil", "pos": [5, 3, 3], "face": "left"},
+    {"kind": "coil", "pos": [3, 3, 1], "face": "back"},
+    {"kind": "coil", "pos": [3, 3, 5], "face": "front"},
+    {"kind": "coil", "pos": [3, 1, 3], "face": "up"},
+    {"kind": "coil", "pos": [3, 5, 3], "face": "down"},
+    {"kind": "core", "pos": [3, 3, 3]}
+  ]
+}

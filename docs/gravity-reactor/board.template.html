@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>引力约束反应堆 · 结构与视觉设计</title>
+<style>
+:root{color-scheme:dark;--bg:#20262d;--panel:#29313a;--text:#e4e9ee;--sub:#b0bdc9;--line:#46505c;--selected:#e6ebef;--selected-text:#20262d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "Microsoft YaHei",sans-serif}button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #bda2e1;outline-offset:3px}button:disabled{opacity:.45;cursor:default}
+header,main,footer{max-width:1180px;margin:auto;padding:24px 28px}header{padding-bottom:12px}h1{font-size:27px;font-weight:600;margin:0 0 4px}h2{font-size:20px;font-weight:500;margin:0 0 16px}p{margin:0 0 16px}.sub{color:var(--sub)}.eyebrow{font-size:13px;letter-spacing:.09em;color:var(--sub)}nav,.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}nav{padding-top:18px;border-bottom:1px solid var(--line)}.nav-button{border:0;border-bottom:3px solid transparent;background:none;color:var(--sub);padding:11px 20px}.nav-button[aria-selected=true]{color:var(--text);border-color:#b9c8d3}.button,select{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:6px 14px;border-radius:3px}.button[aria-pressed=true]{background:var(--selected);color:var(--selected-text);border-color:var(--selected)}[hidden]{display:none!important}.concept{display:block;width:100%;max-height:72vh;object-fit:contain;background:#30343b}.caption{margin-top:14px;color:var(--sub);font-size:14px}.split{display:grid;grid-template-columns:minmax(360px,1fr) minmax(265px,.68fr);gap:35px}.layer-header{display:flex;justify-content:space-between;align-items:baseline;margin-top:21px}.layer-header h2{margin:0}.grid-frame{max-width:510px}.front{color:var(--sub);font-size:14px;text-align:center;margin:8px 0}.layer-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.cell{aspect-ratio:1;border:2px solid transparent;color:#17212c;font-size:20px;min-width:0;position:relative;padding:0}.cell[data-kind=air]{color:#96a5b4}.cell[aria-pressed=true]{border-color:white;outline:2px solid #20262d;outline-offset:-5px}.cell:hover{filter:brightness(1.12)}.cell-label{font-size:14px;display:block}.detail{min-height:72px;padding-top:18px}.detail strong{font-weight:500}.detail .sub{font-size:14px}.legend{background:var(--panel);padding:20px}.material-row{display:grid;grid-template-columns:23px 1fr auto;align-items:center;gap:9px;padding:6px 0}.material-row.selected{color:white;font-weight:600}.swatch{width:17px;height:17px}.count{font-variant-numeric:tabular-nums;color:var(--sub)}.legend-total{border-top:1px solid var(--line);margin-top:13px;padding-top:13px}.links{margin-top:20px}a{color:#b8d7ea;text-underline-offset:3px}
+.ui-toolbar{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}.game-stage{background:#171e20;min-height:660px;padding:26px 20px 20px;display:flex;align-items:flex-start;justify-content:center;position:relative;overflow:hidden}.game-stage:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 62px,#ffffff04 63px 65px);pointer-events:none}.game-host{width:590px;max-width:100%;position:relative}.game-svg{display:block;width:100%;filter:drop-shadow(4px 5px 0 #0007)}.game-svg text{pointer-events:none}.game-button{cursor:pointer}.game-button:hover{filter:brightness(1.14)}.game-button:focus{outline:none;filter:brightness(1.25)}#fuel-host{max-width:480px}.overlay-shade{position:absolute;inset:0;background:#0005;display:flex;align-items:flex-start;justify-content:center;padding-top:75px}.game-window{background:#c6c6c6;color:#414141;border:4px solid;border-color:#fff #555 #555 #fff;box-shadow:0 0 0 2px #161616,3px 4px 0 #0006;width:365px;max-width:90%;padding:12px 18px 18px;font-size:16px;line-height:1.5}.game-window h3{font-size:18px;font-weight:400;text-align:center;margin:0 0 20px}.game-window dl{margin:0 0 20px}.game-window dt{margin-top:12px;font-size:14px}.game-window dd{margin:0;color:#222;font-variant-numeric:tabular-nums}.game-window button{display:block;background:#8d8d8d;color:#fff;border:3px solid;border-color:#e8e8e8 #414141 #414141 #e8e8e8;width:100%;padding:3px}.game-window input{width:100%;margin:12px 0}.ui-note{margin-top:13px;font-size:14px;color:var(--sub)}footer{font-size:13px;color:var(--sub);padding-top:5px}footer span{padding-right:16px}
+@media(max-width:760px){header,main,footer{padding-left:17px;padding-right:17px}h1{font-size:23px}.split{grid-template-columns:1fr}.grid-frame{margin:auto;width:100%}.legend{padding:16px}.game-stage{min-height:0;padding:22px 0}.game-window{width:300px;font-size:14px}.overlay-shade{padding-top:50px}.nav-button{padding:10px 14px}.cell{font-size:17px}.toolbar{gap:5px}.toolbar .button{padding:6px 10px}}
+@media(prefers-reduced-motion:no-preference){.nav-button,.button{transition:background .12s,border-color .12s}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">MEK · 后期发电 / 视觉草案 v1</div><h1>引力约束反应堆</h1><p class="sub">7 × 7 × 7 · 六向约束 · 正常模式自动降载</p>
+<nav role="tablist" aria-label="设计内容">
+<button class="nav-button" id="tab-concept" role="tab" aria-controls="panel-concept" aria-selected="true">整机外观</button>
+<button class="nav-button" id="tab-layers" role="tab" aria-controls="panel-layers" aria-selected="false">分层搭建</button>
+<button class="nav-button" id="tab-ui" role="tab" aria-controls="panel-ui" aria-selected="false">界面草图</button>
+</nav></header>
+<main>
+<section id="panel-concept" role="tabpanel" aria-labelledby="tab-concept">
+<img class="concept" src="source/concept-v1.png" alt="原创引力堆剖视概念：浅灰框架与玻璃，六向线圈围绕暗色核心和紫色细环">
+<p class="caption">剖视概念图。正面玻璃与部分顶盖为展示内腔而省略，实际结构需要封闭；方块数量、端口与线圈位置以分层搭建图为准。</p>
+</section>
+<section id="panel-layers" role="tabpanel" aria-labelledby="tab-layers" hidden>
+<div class="toolbar" id="layer-controls" aria-label="选择层数"></div>
+<div class="split"><div>
+<div class="layer-header"><h2 id="layer-title"></h2><span class="sub" id="layer-count"></span></div>
+<div class="grid-frame"><div class="front">正面 · 主控方向</div><div class="layer-grid" id="layer-grid" aria-label="该层方块位置"></div><div class="front">背面</div></div>
+<div class="detail" id="cell-detail" aria-live="polite">选择一个格子，查看部件与朝向。</div>
+</div><aside><div class="legend"><h2>默认布局用料</h2><div id="materials"></div><div class="legend-total">225 个方块 · 118 格留空</div></div>
+<p class="caption">第 1 层为底部。每层从上往下看；左右保持与面向主控时一致。线圈箭头指向核心，竖直方向用“向上 / 向下”标明。</p>
+<div class="links"><a href="layers.svg" target="_blank">查看七层总图</a></div></aside></div>
+</section>
+<section id="panel-ui" role="tabpanel" aria-labelledby="tab-ui" hidden>
+<div class="ui-toolbar"><div class="toolbar" aria-label="界面类型"><button class="button" id="show-main" aria-pressed="true">主控制器</button><button class="button" id="show-fuel" aria-pressed="false">燃料仓</button></div>
+<label id="state-picker">显示状态 <select id="game-state"><option value="running">运行正常</option><option value="cooling">冷却不足</option><option value="blocked">输出受限</option><option value="stopped">已停机</option></select></label></div>
+<div class="game-stage"><div class="game-host" id="main-host">__MAIN_UI__<div class="overlay-shade" id="game-overlay" hidden><div class="game-window" role="dialog" aria-modal="true" aria-labelledby="window-title"><h3 id="window-title"></h3><div id="window-body"></div><button id="window-close">关闭</button></div></div></div><div class="game-host" id="fuel-host" hidden>__FUEL_UI__</div></div>
+<p class="ui-note">界面草图，数值为演示。左侧可展开能量、冷却和结构窗口；负载与停机按钮可预览操作。侧栏图标暂用文字标记，物品槽为布局示意。</p>
+</section>
+</main>
+<footer><span>结构与视觉设计，尚未实现</span><a href="../MEK_GRAVITY_REACTOR_DESIGN.md">完整机制提案</a></footer>
+<script>
+'use strict';
+const data=__DATA__;
+const $=id=>document.getElementById(id);
+const marks={left:'←',right:'→',front:'↑',back:'↓',up:'向上',down:'向下'};
+const directions={left:'向左',right:'向右',front:'朝主控正面',back:'朝背面',up:'向上',down:'向下'};
+let layer=3,selected=null,load=100;
+const tabButtons=[...document.querySelectorAll('.nav-button')];
+function selectTab(button){for(const b of tabButtons){const on=b===button;b.setAttribute('aria-selected',String(on));$(b.getAttribute('aria-controls')).hidden=!on;}}
+tabButtons.forEach((b,i)=>{b.addEventListener('click',()=>selectTab(b));b.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const next=tabButtons[(i+(e.key==='ArrowRight'?1:2))%3];selectTab(next);next.focus();}});});
+const layerButtons=[];
+for(let y=0;y<7;y++){const b=document.createElement('button');b.className='button';b.textContent=`第 ${y+1} 层`;b.addEventListener('click',()=>{layer=y;selected=null;renderLayer();});$('layer-controls').append(b);layerButtons.push(b);}
+for(const [key,kind] of Object.entries(data.spec.kinds)){const row=document.createElement('div');row.className='material-row';row.dataset.kind=key;const color=document.createElement('span');color.className='swatch';color.style.background=kind.color;const label=document.createElement('span');label.textContent=kind.label;const count=document.createElement('span');count.className='count';count.textContent=data.counts[key];row.append(color,label,count);$('materials').append(row);}
+function renderLayer(){
+ layerButtons.forEach((b,y)=>b.setAttribute('aria-pressed',String(y===layer)));
+ $('layer-title').textContent=`第 ${layer+1} 层 · ${data.titles[layer]}`;
+ const these=data.cells.filter(c=>c.pos[1]===layer);$('layer-count').textContent=`${these.filter(c=>c.kind!=='air').length} 个方块`;
+ $('layer-grid').replaceChildren();
+ for(const c of these){const k=data.spec.kinds[c.kind],b=document.createElement('button');b.className='cell';b.dataset.kind=c.kind;b.style.background=k.color;b.textContent=c.kind==='coil'?marks[c.face]:k.mark;if(c.kind==='coil'&&(c.face==='up'||c.face==='down'))b.classList.add('cell-label');b.setAttribute('aria-label',`第 ${c.pos[0]+1} 列，前数第 ${c.pos[2]+1} 格：${k.label}${c.face?'，'+directions[c.face]:''}`);b.setAttribute('aria-pressed',String(selected===c));b.addEventListener('click',()=>{selected=c;renderLayer();});$('layer-grid').append(b);}
+ document.querySelectorAll('.material-row').forEach(e=>e.classList.toggle('selected',!!selected&&e.dataset.kind===selected.kind));
+ if(!selected){$('cell-detail').textContent='选择一个格子，查看部件与朝向。';return;}
+ const title=document.createElement('strong');title.textContent=data.spec.kinds[selected.kind].label;
+ const detail=document.createElement('div');detail.className='sub';detail.textContent=`第 ${layer+1} 层 · 第 ${selected.pos[0]+1} 列 · 前数第 ${selected.pos[2]+1} 格${selected.face?' · '+directions[selected.face]:''}`;
+ $('cell-detail').replaceChildren(title,detail);
+}
+renderLayer();
+function selectUI(fuel){$('main-host').hidden=fuel;$('fuel-host').hidden=!fuel;$('state-picker').hidden=fuel;$('show-main').setAttribute('aria-pressed',String(!fuel));$('show-fuel').setAttribute('aria-pressed',String(fuel));$('game-overlay').hidden=true;}
+$('show-main').addEventListener('click',()=>selectUI(false));$('show-fuel').addEventListener('click',()=>selectUI(true));
+function values(){const state=$('game-state').value;let actualLoad=load;if(state==='cooling')actualLoad=Math.min(load,20);if(state==='blocked')actualLoad=Math.min(load,10);if(state==='stopped')actualLoad=0;const gross=actualLoad*10,net=gross*.98;return {state,actualLoad,gross,net,out:state==='blocked'?Math.min(80,net):net};}
+function updateGame(){const v=values(),statuses={running:'运行正常',cooling:'冷却不足，已降载',blocked:'外部输电受限',stopped:'已停机'};$('game-status').textContent=statuses[v.state];$('game-status').setAttribute('fill',v.state==='cooling'||v.state==='blocked'?'#f0ba5c':'#35f2ac');$('game-generation').textContent=`净发电：${v.net.toFixed(0)} MFE/t`;$('game-output').textContent=`实际输出：${v.out.toFixed(0)} MFE/t`;$('game-stability').textContent=`约束稳定度：${v.state==='stopped'?'—':v.state==='cooling'?'92%':'99%'}`;for(const [action,label] of [['load',`负载上限 ${load}%`],['power',v.state==='stopped'?'启动':'停机']]){const button=document.querySelector(`[data-action=${action}]`);button.querySelector('text').textContent=label;button.setAttribute('aria-label',label);}}
+$('game-state').addEventListener('change',updateGame);
+function openWindow(action){const v=values();let title='',rows=[];
+ if(action==='energy'){title='能量明细';rows=[['毛发电',`${v.gross} MFE/t`],['约束场自耗',`${(v.gross*.02).toFixed(0)} MFE/t`],['净发电',`${v.net.toFixed(0)} MFE/t`],['实际输出',`${v.out.toFixed(0)} MFE/t`]];}
+ if(action==='cooling'){title='冷却回路';rows=[['钠输入',v.state==='cooling'?'供给不足':'供给正常'],['过热钠输出','通畅'],['当前动作',v.state==='cooling'?'已降低燃料供给':'按负载调节']];}
+ if(action==='structure'){title='结构设置';rows=[['尺寸','7 × 7 × 7'],['约束线圈','6 / 6 · 高级'],['发电口','4 个'],['预览与搭建','正式实现时显示缺件位置与清单']];}
+ if(action==='safety'){title='访问权限';rows=[['访问范围','私人'],['共享','由主控统一设置']];}
+ if(action==='redstone'){title='红石控制';rows=[['模式','忽略红石'],['保护','自动降载开启']];}
+ $('window-title').textContent=title;const dl=document.createElement('dl');for(const [label,value] of rows){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dl.append(dt,dd);}$('window-body').replaceChildren(dl);$('game-overlay').hidden=false;$('window-close').focus();
+}
+let lastAction=null;
+function act(action){lastAction=document.querySelector(`[data-action=${action}]`);if(action==='power'){$('game-state').value=$('game-state').value==='stopped'?'running':'stopped';updateGame();return;}if(action==='load'){load=load===100?25:load+25;updateGame();return;}openWindow(action);}
+document.querySelectorAll('[data-action]').forEach(el=>{el.addEventListener('click',()=>act(el.dataset.action));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act(el.dataset.action);}});});
+function closeWindow(){$('game-overlay').hidden=true;if(lastAction)lastAction.focus();}
+$('window-close').addEventListener('click',closeWindow);$('game-overlay').addEventListener('click',e=>{if(e.target===$('game-overlay'))closeWindow();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('game-overlay').hidden)closeWindow();});updateGame();
+</script>
+</body></html>
