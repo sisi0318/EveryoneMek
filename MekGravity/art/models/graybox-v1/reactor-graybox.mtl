@@ -1,0 +1,35 @@
+newmtl armor
+Kd 0.72 0.72 0.72
+d 1
+
+newmtl steel
+Kd 0.48 0.48 0.48
+d 1
+
+newmtl edge
+Kd 0.82 0.82 0.82
+d 1
+
+newmtl graphite
+Kd 0.17 0.17 0.17
+d 1
+
+newmtl recess
+Kd 0.075 0.075 0.075
+d 1
+
+newmtl lamp
+Kd 0.68 0.68 0.68
+d 1
+
+newmtl energy
+Kd 0.19 0.19 0.19
+d 1
+
+newmtl orbit
+Kd 0.7 0.7 0.7
+d 1
+
+newmtl glass
+Kd 0.55 0.58 0.6
+d 0.13

@@ -13,6 +13,8 @@
 
 ## 实现入口
 
+- 用户在2026-09-22要求先按最早概念做整机建模。当前交付为art/models/graybox-v1三维审查稿，未接入游戏、未升JAR版本；不能把灰模变化写成alpha.4已实现。generate_graybox.py输出OBJ/MTL/assembly.json/scene.js与自包含ZIP；index.html/viewer.js/viewer.css为预览源。保留部件锚点与93个逻辑玻璃位置，连续窗仅在灰模合并；发射头外伸0.25格，后续接入需核对选择框和渲染边界。
+- 灰模预览使用原生WebGL2，不依赖CDN/第三方3D库；支持完整/剖切/内腔、爆炸、灰模/分色、线框、旋转平移缩放与射线选择。点击默认穿过玻璃，Alt点击可选窗面。OBJ单位为方块，不是像素，八接头/60段框架/六发射器/核心仍基于7×7×7结构。
 - Content注册主控、7种部件和4级线圈；旧COOLANT保留ID与合成供回收，只从创造列表隐藏。MachineBuilder默认有升级属性；移除AttributeUpgradeSupport禁用升级，不能调用空withSupportedUpgrades。
 - Controller只持有真实能量、启动状态、反应余量以及旧冷/热钠缓存；燃料仓各有18格原物品，不能复制保存在主控里。冷却库存不再影响发电，也不接收新钠。
 - FuelRecipe是matter_fuel数据配方，energy单位J。反应余量按投入时预算保存，配方变更不重算已付费存量。2%自耗从毛发电扣除；不再另扣冷却热量。

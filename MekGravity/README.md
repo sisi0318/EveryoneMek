@@ -10,6 +10,8 @@
 
 JAR：`build/libs/MekGravity-0.1.0-alpha.4.jar`。
 
+下一版外观已进入[整机三维灰模](art/models/graybox-v1/index.html)审查：可旋转、剖切、爆炸分解并选择部件，提供[OBJ建模包](art/models/graybox-v1/reactor-graybox-v1.zip)。此稿先确认轮廓与比例，尚未接入游戏；当前JAR仍为alpha.4。
+
 ## 建造与使用
 
 1. 放下主控，下面预留一层空间，左右各三格、背后六格留空。

@@ -2,6 +2,8 @@
 
 外观沿用已确认的浅灰 Mek 工业机壳、深色工作区和少量紫色指示灯。
 
+最新工作是[整机三维灰模](models/graybox-v1/README.md)：原生WebGL可旋转预览与可编辑OBJ、语义部件数据。此阶段直接制作几何，没有重新生成贴图；尚未写入运行模型。
+
 - `concept-v1.png`：用户批准方向的整机剖视概念，只作设计参考。
 - `source/controller.png`、`source/coil.png`：本次由内置 image_gen 原创生成的2×2图集；完整提示词见 `prompts.json`。
 - `source/structure.png`、`source/ports.png`：复用 MekFactory 的原创图稿，未复制上游 Mek 贴图。

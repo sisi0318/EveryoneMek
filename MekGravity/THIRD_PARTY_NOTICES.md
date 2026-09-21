@@ -9,4 +9,5 @@
 - `art/source/core.png` 与 `art/source/dense_fuel_pellet.png` 为内置 image_gen 原创核心图集和透明燃料图标，提示词在 art/core-and-fuel-prompts.json。导出仅分面和最近邻缩放，未复制上游物品素材。
 - `art/source/orb.png` 与 `art/source/shell-v2.png` 为内置 image_gen 原创能量核材质和简洁机壳图集，提示词在art/orb-and-shell-prompts.json。OBJ球体/金属环由本项目core_mesh.py原创生成，使用NeoForge自带模型加载器，未复制第三方模型。
 - 科幻灵感与来源见设计提案。未使用影视作品的模型、标识、角色或配乐。
+- `art/models/graybox-v1`为本项目原创整机几何与原生WebGL预览；OBJ/MTL/JSON由tools/generate_graybox.py生成，无第三方模型或3D引擎。concept-reference.png是既有原创concept-v1.png的可离线查看副本。
 - Gradle Wrapper 文件来自项目使用的标准 Gradle Wrapper 发行流程。
