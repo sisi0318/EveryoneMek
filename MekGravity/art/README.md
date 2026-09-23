@@ -33,3 +33,5 @@ alpha.4新增内置image_gen原稿 `source/shell-v2.png`、`source/orb.png` 与�
 alpha.5运行模型入口为 `tools/runtime_geometry.py`，由 `tools/generate_resources.py` 调用。矩形体先做外表面合并，去除内部面和覆盖面；立柱/转角/面板/发射器/接口分别导出，不能再用cube_all模型替换已批准的形体。ModelShapes.java也由源数据生成，用于线圈外伸部位的选择及碰撞。材质使用shell_panel、orb_steel、orb_inner及已有指示灯区域，通过UV选择；没有脚本重绘位图。
 
 成型窗框使用实体边角模型，透明窗面通过NeoForge原生面颜色引用Minecraft白色混凝土贴图；没有导出、修改或复制原版位图。`node tools/preview_runtime_parts.cjs` 生成 `runtime-parts-preview.png`。SVG预览中的亚像素裁切补偿只修正离线投影接缝，不改变游戏几何。
+
+alpha.7将原core.obj按energy/ring_0/ring_1分成三个运行网格，直接保留原顶点、面和UV，不重新绘制贴图。世界核心由BER绘制；物品继续用完整静态OBJ。内核自转和轻微呼吸、双环反转，外加固定数量的光弧/束流/光点。`tools/generate_motion_preview.py`从三个运行OBJ生成 `models/core-motion-v1/mesh.js`，同目录HTML/JS预览复现运动参数，使用简化着色，不是Minecraft截图。

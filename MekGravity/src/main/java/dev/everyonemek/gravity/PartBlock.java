@@ -19,7 +19,7 @@ public final class PartBlock extends BaseEntityBlock {
     public PartBlock(Kind kind,Grade grade){super(Properties.of().strength(5,15).noOcclusion());this.kind=kind;this.grade=grade;registerDefaultState(stateDefinition.any().setValue(OUTPUT,false).setValue(ACTIVE,false).setValue(FORMED,false).setValue(FACING,Direction.NORTH));}
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return simpleCodec(p->new PartBlock(kind,grade));}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(OUTPUT,ACTIVE,FACING,FORMED);}
-    @Override public RenderShape getRenderShape(BlockState s){return RenderShape.MODEL;}
+    @Override public RenderShape getRenderShape(BlockState s){return kind==Kind.CORE?RenderShape.ENTITYBLOCK_ANIMATED:RenderShape.MODEL;}
     @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState s,net.minecraft.world.level.BlockGetter level,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){return kind==Kind.COIL?ModelShapes.coil(s.getValue(FACING)):super.getShape(s,level,pos,context);}
     @Override protected net.minecraft.world.phys.shapes.VoxelShape getCollisionShape(BlockState s,net.minecraft.world.level.BlockGetter level,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){return kind==Kind.COIL?ModelShapes.coil(s.getValue(FACING)):super.getCollisionShape(s,level,pos,context);}
     @Override protected boolean skipRendering(BlockState state,BlockState adjacent,Direction side){return kind==Kind.GLASS&&adjacent.is(this)||super.skipRendering(state,adjacent,side);}

@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.6，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
+- 0.1.0-alpha.7，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -28,8 +28,10 @@
 - StructureChangeMixin忽略active/formed及非线圈Part的装饰朝向变化，避免重组循环；线圈朝向、主控方向、端口OUTPUT及真实方块变化仍会失效。失效时同时清理旧claimed位置，避免转动主控后旧范围残留成型皮肤；失败校验和重载也清理已关联核心/线圈ACTIVE。
 - GlassConnections读取26邻格，仅按方块类型连接，忽略active/facing/formed；每面4边+4角，对角缺格保留内角。ConnectedGlassModel按ModelData选择不可变预烘焙quad列表，物品模型保留完整外框，无CTM依赖。
 - 玻璃未成型沿用48个glass边角子模型；成型用54个window子模型（6方向×8边角+1窗面），方向与GlassConnections的面内坐标一致。窗框为solid，窗面为translucent，BakedModel覆写getRenderTypes并缓存256种组合，不在逐帧拼接列表；窗面颜色用21.1.241 neoforge_data/ExtraFaceData，引用原版white_concrete而未复制位图。MC LevelRenderer.blockChanged重建±1格，覆盖对角变化。
-- tools/core_mesh.py生成原生neoforge:obj核心：128个球面面片与两环192个面片，MTL纹理用#energy/#steel/#inner引用模型材质。ObjLoader/ObjModel已按21.1.241源码核对，Ka只给能量体最低亮度；金属环正常受光。自动面裁除关闭，item与block使用同一个OBJ，避免背面或物品不可见。
-- CoreRenderer只绘制核心上的1道细光环、6条束流、12个汇聚光点，固定预算、16tick启停渐变；静态金属双环由OBJ绘制。弱引用记录过渡，不生成实体或按帧spawn粒子；渲染包围盒覆盖束流。
+- tools/core_mesh.py生成原生neoforge:obj核心：128个球面面片与两环各96面片，MTL用#energy/#steel/#inner引用已有材质。完整core.obj保留物品图标；core_energy/core_ring_0/core_ring_1三个OBJ严格复制相应分组，球体另有active材质变体。ModelEvent.RegisterAdditional注册4个模型，资源重载后通过ModelManager取新烘焙模型。
+- alpha.7核心世界RenderShape为ENTITYBLOCK_ANIMATED，CoreRenderer每次绘制球体与双环（停机也显示），不再叠加静态方块核心。球体自转/浮动/呼吸，双环反向转动；1道细光环+2段追逐弧、6束流、18个光点，固定预算且不spawn实体。现有渲染包围盒覆盖运动与束流，远处走原生BER距离裁剪。
+- CoreMotion仅为客户端持有的平滑状态（弱引用表），以世界tick+partial积分，解析指数平滑消除帧率差异，暂停不动，停机衰减为零。不循环截断相位，避免周期跳变；传给float角度前做360度取余。
+- Part.visualLoad由Structure.activity按gross/额定功率取0～100推导。只发一字节visual_load更新标签，连续变化每10tick最多一次、零/非零切换立即发送；getUpdateTag覆盖新客户端进入区块。handleUpdateTag和onDataPacket显式只读取此键，不走loadAdditional，避免清空库存/master；不写入NBT、DATA或STOCK。非核心不发效果包，客户端不扫世界查询主控。
 - ReactorMenu/Screen为230×244，玩家槽35,159，库存标签34,146；主信息区8,28,194,60，余量条y106，按钮y122。主页面无钠仪表。启动前显示已充/所需量，能量窗显示实际吞吐与上限。
 - 截图中的仪表重叠源于MEDIUM实际34×60而非16宽；STANDARD实际18×60，需计入overlay外框2像素。未来任何仪表排布按控件真实尺寸，不靠名称猜测。
 - 缓存回收窗口只在旧cold/hot非空时显示；停机后可从输入模式口抽冷钠，输出模式口取热钠。主控与燃料仓NBT、物品DATA/STOCK均保留资源。框架/线圈不附加无用STOCK。
@@ -38,6 +40,7 @@
 
 ## 验证
 
+- alpha.7构建与11项GameTest通过，CoreAnimationTests验证真实结构负载/启停/拆坏、效果标签不持久化且不覆盖库存，以及20/60/144 FPS相位一致/暂停/停止。三个拆分OBJ与完整核心的坐标、面序、UV逐项相同；运动径向间隔检查通过。art/models/core-motion-v1为可离线操作的Canvas简化着色预览，非游戏画面。
 - alpha.6构建与10项服务端测试通过。既有fuelStartupAndReloadWorkWithoutCoolant追加600次终极稳态反应的单丸耗尽/下一丸衔接/能量守恒检查，模拟测试接收器收集缓冲增加量，不宣称这些循环是600个真实服务端tick；旧短余量保存校验不做倍率迁移。
 - alpha.5构建与10项服务端测试通过，新增四种主控朝向下的角色分配/重载/损坏修复/真实线圈转向及主控转向残留清理，以及六向鼻部OUTLINE/COLLIDER世界射线。原8项发电/输电/物流/保存/玻璃回归继续通过。
 - 资源检查覆盖所有保存状态组合恰好命中一个模型、33张16×16贴图、54个成型窗模型及非重叠外表面。model_preview.cjs投影原生JSON/OBJ，preview_runtime_parts.cjs和preview_reactor.cjs检查部件与整机；不能当作客户端视觉验收。

@@ -33,6 +33,10 @@ def glass():
 def core(active=False):
     return {'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/core.obj','mtl_override':'mekgravity:models/block/core_active.mtl' if active else 'mekgravity:models/block/core.mtl','automatic_culling':False,'shade_quads':True,'emissive_ambient':True,'flip_v':False,'ambientocclusion':False,'textures':{'energy':'mekgravity:block/orb_active' if active else 'mekgravity:block/orb_idle','steel':'mekgravity:block/orb_steel','inner':'mekgravity:block/orb_inner','particle':'mekgravity:block/orb_idle'}}
 generate_core(ROOT)
+for part in ['energy','ring_0','ring_1']:
+    for active in ([False,True] if part=='energy' else [False]):
+        model=core(active);model['model']='mekgravity:models/block/core_'+part+'.obj'
+        write(Path('assets/mekgravity/models/block/core_'+part+('_active' if active else '')+'.json'),model)
 generate_shapes()
 for face in faces:
     for part in range(8):write(Path(f'assets/mekgravity/models/block/window/{face}_{part}.json'),assembled_glass(face,part))

@@ -77,5 +77,7 @@ public final class Structure {
     }
     public void activity(boolean active){var all=new ArrayList<>(coils);if(core!=null)all.add(core);var l=owner.getLevel();if(l==null||l.isClientSide)return;
         for(var p:all)if(!p.isRemoved()&&l.hasChunkAt(p.getBlockPos())&&l.getBlockEntity(p.getBlockPos())==p&&p.getBlockState().getValue(PartBlock.ACTIVE)!=active)l.setBlock(p.getBlockPos(),p.getBlockState().setValue(PartBlock.ACTIVE,active),2);
+        if(core!=null&&!core.isRemoved()&&l.hasChunkAt(core.getBlockPos())&&l.getBlockEntity(core.getBlockPos())==core)
+            core.updateVisualLoad(active?(int)Math.clamp(Math.round(owner.gross*100D/Math.max(1,grade.power())),1,100):0);
     }
 }

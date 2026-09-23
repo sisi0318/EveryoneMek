@@ -10,6 +10,23 @@ public final class Part extends BlockEntity implements mekanism.api.IConfigurabl
     public BlockPos master;
     private long ioTick=Long.MIN_VALUE;
     public long inputUsed,outputUsed;
+    private int visualLoad,sentVisualLoad;
+    private long visualSentAt=Long.MIN_VALUE;
+    public int visualLoad(){return visualLoad;}
+    public void updateVisualLoad(int percent){
+        if(kind()!=PartBlock.Kind.CORE||level==null||level.isClientSide)return;
+        visualLoad=Math.clamp(percent,0,100);
+        long now=level.getGameTime();boolean edge=(sentVisualLoad==0)!=(visualLoad==0);
+        if(visualLoad!=sentVisualLoad&&(edge||visualSentAt==Long.MIN_VALUE||now-visualSentAt>=10)){
+            sentVisualLoad=visualLoad;visualSentAt=now;
+            // Just a compact effect snapshot for tracking clients, never the fuel/energy inventory.
+            level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
+        }
+    }
+    @Override public CompoundTag getUpdateTag(HolderLookup.Provider r){var tag=new CompoundTag();if(kind()==PartBlock.Kind.CORE)tag.putByte("visual_load",(byte)visualLoad);return tag;}
+    @Override public net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket(){return kind()==PartBlock.Kind.CORE?net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this):null;}
+    @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider r){if(kind()==PartBlock.Kind.CORE)visualLoad=Math.clamp(tag.getByte("visual_load"),0,100);}
+    @Override public void onDataPacket(net.minecraft.network.Connection connection,net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket packet,HolderLookup.Provider r){handleUpdateTag(packet.getTag(),r);}
     public void clock(){if(level.getGameTime()!=ioTick){ioTick=level.getGameTime();inputUsed=outputUsed=0;}}
     public final ItemStackHandler inventory=new ItemStackHandler(18){
         @Override public boolean isItemValid(int i,ItemStack s){return kind()==PartBlock.Kind.FUEL&&FuelRecipe.find(level,s)!=null;}
