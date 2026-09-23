@@ -43,7 +43,8 @@ public final class ReactorTests {
 
     @GameTest(template="empty",timeoutTicks=80)
     public static void fuelStartupAndReloadWorkWithoutCoolant(GameTestHelper h){
-        var c=formed(h);supply(c,3);var recipe=FuelRecipe.find(h.getLevel(),new ItemStack(Content.PELLET.get()));check(recipe!=null&&recipe.energy()==200000000000L,"Default fuel value did not increase");
+        var c=formed(h);supply(c,3);var recipe=FuelRecipe.find(h.getLevel(),new ItemStack(Content.PELLET.get()));check(recipe!=null&&recipe.energy()==24_000_000_000_000L,"Dense fuel is not using the long-life recipe");
+        for(var grade:Grade.values())check(recipe.energy()/(5_000_000_000L<<grade.ordinal())==4_800L>>grade.ordinal(),"Incorrect full-load pellet lifetime: "+grade);
         check(c.structure.ports.stream().noneMatch(p->p.kind()==PartBlock.Kind.COOLANT),"Blueprint still requires coolant ports");
         c.react();check(c.ignited&&c.gross>0&&c.stored==c.reserve()+c.gross-c.selfUse,"Startup or gross/net energy wrong");
         check(recipe.energy()-c.fuelRemaining==c.gross&&c.cold.isEmpty()&&c.hot.isEmpty(),"Generation still consumed coolant or duplicated fuel energy");
@@ -52,7 +53,23 @@ public final class ReactorTests {
         c.enabled=false;c.react();check(c.stored==stored&&c.fuelRemaining==remaining&&c.gross==0,"Stopped reactor consumed fuel");c.enabled=true;c.react();
         check(c.stored==stored+c.gross-c.selfUse&&remaining-c.fuelRemaining==c.gross,"Restart charged startup twice or repeated fuel");
         var drop=Block.getDrops(c.getBlockState(),h.getLevel(),c.getBlockPos(),c).getFirst();check(drop.has(Content.DATA.get())&&drop.get(Content.DATA.get()).getLong("energy")==c.stored,"Controller drop lost resources");
-        check(c.structure.fuelHatches.getFirst().inventory.getStackInSlot(0).getCount()==2,"Partial reaction consumed more than one pellet");c.enabled=false;h.succeed();
+        check(c.structure.fuelHatches.getFirst().inventory.getStackInSlot(0).getCount()==2,"Partial reaction consumed more than one pellet");
+        // Old prepaid joules stay exact; an update must not turn a partially burned pellet into a full new pellet.
+        c.fuelRemaining=123_456_789L;c.fuelTotal=200_000_000_000L;tag=c.saveWithFullMetadata(h.getLevel().registryAccess());c.loadWithComponents(tag,h.getLevel().registryAccess());
+        check(c.fuelRemaining==123_456_789L,"Legacy reaction reserve was rescaled");
+        for(var coil:List.copyOf(c.structure.coils))h.getLevel().setBlockAndUpdate(coil.getBlockPos(),Content.COILS.get(Grade.ULTIMATE).get().defaultBlockState().setValue(PartBlock.FACING,coil.getBlockState().getValue(PartBlock.FACING)));
+        check(c.structure.valid(),"Ultimate endurance fixture did not form");
+        c.fuelRemaining=c.fuelTotal=0;c.enabled=c.ignited=true;c.gross=c.structure.grade.power();
+        var hatch=c.structure.fuelHatches.getFirst();hatch.inventory.setStackInSlot(0,new ItemStack(Content.PELLET.get(),2));
+        long net=0,self=0,steps=recipe.energy()/c.structure.grade.power();
+        // Simulate uninterrupted demand by collecting each step's buffer increase into this test sink.
+        for(long step=0;step<steps;step++){
+            c.stored=c.reserve();c.react();net+=c.stored-c.reserve();self+=c.selfUse;
+            check(c.gross==c.structure.grade.power()&&hatch.inventory.getStackInSlot(0).getCount()==1,"A full-load pellet ended early at step "+step);
+        }
+        check(steps==600&&c.fuelRemaining==0&&net+self==recipe.energy(),"Long-life pellet did not conserve its 600-step energy budget");
+        c.stored=c.reserve();c.react();check(hatch.inventory.getStackInSlot(0).isEmpty()&&c.fuelRemaining==recipe.energy()-c.gross,"Next pellet did not begin after the first ended");
+        c.enabled=false;h.succeed();
     }
 
     @GameTest(template="empty",timeoutTicks=80)

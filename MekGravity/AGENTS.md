@@ -4,10 +4,11 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.5，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
+- 0.1.0-alpha.6，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
-- 新默认毛功率2/4/8/16 GFE/t，每丸200 GJ；单口16 GFE/t，默认四输出口合计64 GFE/t，输电独立于发电上限。数字以默认FE/J换算为例。
+- 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
+- 2026-09-23用户说“UI没变”实际指机器外观；只读检查测试目录和启动日志确认仍加载alpha.4。alpha.5才接入整机几何；此类反馈先核对实际JAR/日志，不擅改操作界面或重复重做模型。更新需退出游戏替换旧JAR并重启，不能仅F3+T。
 - 白灰Mek工业机壳为本模组已确认风格。alpha.4用户指出条纹重复、核心像小机器，确认悬浮深紫能量核与少量金属环；框架和外壳用shell-v2图稿的简洁白灰面，成型仅紫灰角标。不能恢复黑紫长条纹或方形核心外壳。
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
@@ -37,6 +38,7 @@
 
 ## 验证
 
+- alpha.6构建与10项服务端测试通过。既有fuelStartupAndReloadWorkWithoutCoolant追加600次终极稳态反应的单丸耗尽/下一丸衔接/能量守恒检查，模拟测试接收器收集缓冲增加量，不宣称这些循环是600个真实服务端tick；旧短余量保存校验不做倍率迁移。
 - alpha.5构建与10项服务端测试通过，新增四种主控朝向下的角色分配/重载/损坏修复/真实线圈转向及主控转向残留清理，以及六向鼻部OUTLINE/COLLIDER世界射线。原8项发电/输电/物流/保存/玻璃回归继续通过。
 - 资源检查覆盖所有保存状态组合恰好命中一个模型、33张16×16贴图、54个成型窗模型及非重叠外表面。model_preview.cjs投影原生JSON/OBJ，preview_runtime_parts.cjs和preview_reactor.cjs检查部件与整机；不能当作客户端视觉验收。
 - 默认配置缓存下build runGameTestServer通过。NeoForge加载失败可能返回0，因此任务检查新日志的测试完成标记及本模组配方解析错误。
