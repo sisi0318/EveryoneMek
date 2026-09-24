@@ -92,6 +92,6 @@ public final class SolarStructure {
     }
     public void activity(boolean active){var l=owner.getLevel();if(l==null||l.isClientSide)return;
         for(var p:parts)if(!p.isRemoved()&&l.hasChunkAt(p.getBlockPos())&&l.getBlockEntity(p.getBlockPos())==p){var s=p.getBlockState();if(s.getValue(SolarBlock.ACTIVE)!=active)l.setBlock(p.getBlockPos(),s.setValue(SolarBlock.ACTIVE,active),2);}
-        if(seed!=null&&!seed.isRemoved()&&l.hasChunkAt(seed.getBlockPos()))seed.visual(active?(int)Math.clamp(Math.round(owner.gross*100D/Math.max(1,power())),1,100):0);
+        if(seed!=null&&!seed.isRemoved()&&l.hasChunkAt(seed.getBlockPos()))seed.visual(active?(int)Math.clamp(Math.round(owner.gross*100D/Math.max(1,power())),1,100):0,owner.isCoreHot());
     }
 }

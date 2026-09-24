@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.11，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.12，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,10 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.12 SolarController.isCoreHot将历史启动付费ignited与实际热态区分：enabled、ignited、formed且gross>0/剩余预算/允许续料的可用燃料满足时热；满缓存/红石暂停保持，停机/耗尽/拆坏停止。SolarHeat每5tick局部查询LivingEntity，身体AABB到核心中心距离4/3/2/1.25分区，伤害2/4/8分别20/10/5tick，预警私发actionbar+pling且同级40tick限频。UUID暴露计时仅内存，不持久化，不保存实体引用或加载区块。
+- 新stellar_heat数据伤害在generate_solar_resources.py生成，is_fire/bypasses_cooldown/bypasses_shield/no_knockback标签使周期热伤不被10tick受击无敌吞掉，保持护甲/抗火/事件/不死保护流程，hurt成功才点火。创造仅预警、旁观忽略，server config含开关和倍率；不直接改血、不处理掉落物。
+- SolarPart热态hot与visual只在seed更新包同步，不能写入STOCK或调用loadAdditional清空库存。SolarRenderer分别平滑热态体积与实际负载运动；满缓存热态球半径仍1.25，场线调用SolarField.emit额外size参数以免藏进球内，熄火后正常收束。
 
 - alpha.11 SolarField为无世界访问的纯Java轨迹生成器，SolarRenderer消费其带宽度/颜色/alpha/halo的线段；外层三环半径1.65/1.81/1.97随核心缩放，六条弯曲极向场线、两束聚束光与四向采能流。光带偏移取view×direction并处理平行退化；使用当前依赖原RenderType.lightning的POSITION_COLOR、SRC_ALPHA/ONE混合。实际最大640 quads，包围盒沿用seed.inflate(4)，不改通信、资源或服务器tick。
 - tools/ExportSolarField.java直接运行已编译的SolarField/CoreMotion，检查1200个phase/strength组合、边界/预算与平滑启停，输出build/solar-field-frames.json；tools/preview_solar_field.cjs投影真实轨迹和原生太阳/聚束器模型。产物art/solar-field-preview.png为静态离线三帧，不可宣称游戏截图。
@@ -53,6 +57,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.12共20项服务端测试通过。SolarHeatTests通过真实ServerPlayer数据包观察预警/限频/创造无伤与热态重载、关机/耗尽/拆坏；真实Cow验证距离、周期灼伤、着火和抗火保护，GameTestListener在通过/失败时都清理实体。ReactorTests.player新增包观察者重载，原调用保留。特效导出再检查240组全尺寸低负载热态待机。
 
 - alpha.11构建、特效轨迹检查与离线预览通过，无服务端行为改动，不重复跑18项GameTest。使用JDK21执行 `java --class-path build/classes/java/main tools/ExportSolarField.java build/solar-field-frames.json`，再用现有Node/Sharp执行 `tools/preview_solar_field.cjs`；build目录快照不提交。
 

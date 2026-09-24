@@ -194,5 +194,10 @@
   "item.mekgravity.stellar_fuel_preform": "Stellar Fuel Preform",
   "item.mekgravity.stellar_fuel": "Sealed Stellar Fuel",
   "item.mekgravity.stellar_fuel_capsule": "Residual Stellar Fuel Capsule",
-  "mekgravity.solar.load_duration": "At set load: %sh %sm %ss"
+  "mekgravity.solar.load_duration": "At set load: %sh %sm %ss",
+  "mekgravity.solar.heat_warning": "Warning: stellar core is still hot. Keep your distance.",
+  "mekgravity.solar.heat_burning": "Scorching heat! Move away from the stellar core!",
+  "mekgravity.solar.heat_contact": "DANGER: stellar contact! Retreat immediately!",
+  "death.attack.mekgravity.stellar_heat": "%1$s was consumed by stellar heat",
+  "death.attack.mekgravity.stellar_heat.player": "%1$s was consumed by stellar heat while fleeing %2$s"
 }

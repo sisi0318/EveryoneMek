@@ -25,11 +25,14 @@ public final class ReactorTests {
     static Direction side(Controller c,Part p){return Arrays.stream(Direction.values()).filter(d->c.structure.outward(p.getBlockPos(),d)).findFirst().orElseThrow();}
     static void supply(Controller c,int count){c.stored=c.startup()+c.reserve();c.structure.fuelHatches.getFirst().inventory.setStackInSlot(0,new ItemStack(Content.PELLET.get(),count));c.enabled=true;}
     static ServerPlayer player(GameTestHelper h,BlockPos pos){
+        return player(h,pos,packet->{});
+    }
+    static ServerPlayer player(GameTestHelper h,BlockPos pos,java.util.function.Consumer<net.minecraft.network.protocol.Packet<?>> observer){
         var p=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),"gravity-test"),net.minecraft.server.level.ClientInformation.createDefault());
         var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND){private final io.netty.channel.embedded.EmbeddedChannel channel=new io.netty.channel.embedded.EmbeddedChannel();@Override public io.netty.channel.Channel channel(){return channel;}};
         p.connection=new net.minecraft.server.network.ServerGamePacketListenerImpl(p.server,connection,p,net.minecraft.server.network.CommonListenerCookie.createInitial(p.getGameProfile(),false)){
-            @Override public void send(net.minecraft.network.protocol.Packet<?> packet){}
-            @Override public void send(net.minecraft.network.protocol.Packet<?> packet,net.minecraft.network.PacketSendListener callback){}
+            @Override public void send(net.minecraft.network.protocol.Packet<?> packet){observer.accept(packet);}
+            @Override public void send(net.minecraft.network.protocol.Packet<?> packet,net.minecraft.network.PacketSendListener callback){observer.accept(packet);}
         };
         username(p,true);
         p.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);h.getLevel().addNewPlayer(p);p.setPos(pos.getCenter());return p;

@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 public final class SolarController extends TileEntityMekanism {
     public final SolarStructure structure=new SolarStructure(this);
+    private final SolarHeat heat=new SolarHeat(this);
     public long stored,fuelRemaining,fuelTotal,gross,selfUse,lastOutput,lastInput;
     public boolean enabled,ignited,autoEject=true,automatic=true,refill=true;
     public int load=100;public String status="structure";
@@ -28,6 +29,8 @@ public final class SolarController extends TileEntityMekanism {
     public long accept(long n,boolean simulate){if(n<=0||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,capacity()-stored),Math.max(0,inputLimit()-received)));if(!simulate&&take>0){stored+=take;received+=take;markForSave();}return take;}
     public long extract(long n,boolean simulate){if(n<=0||!ignited||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,stored-reserve()),Math.max(0,outputLimit()-exported)));if(!simulate&&take>0){stored-=take;exported+=take;markForSave();}return take;}
     public boolean fuelAvailable(){if(fuelRemaining>0)return true;for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var fuel=SolarFuelRecipe.fuel(level,stack);if(fuel!=null&&stack.getCount()>=fuel.count())return true;}return false;}
+    // "ignited" remembers the paid startup charge; it is not proof that a stopped core is hot.
+    public boolean isCoreHot(){return enabled&&ignited&&structure.formed&&(gross>0||fuelRemaining>0||refill&&fuelAvailable());}
     private boolean chargeFuel(){if(fuelRemaining>0)return true;if(!refill)return false;
         for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var fuel=SolarFuelRecipe.fuel(level,stack);if(fuel==null||stack.getCount()<fuel.count())continue;
             hatch.inventory.extractItem(i,fuel.count(),false);fuelRemaining=fuel.remaining();fuelTotal=fuel.total();markForSave();return true;}
@@ -60,7 +63,7 @@ public final class SolarController extends TileEntityMekanism {
     // ceil(20 * net / 19), without the overflowing multiplication. Callers bound net by
     // the configured per-tick generation limit, never by the entire stored fuel budget.
     private static long fuelForNet(long net){return net+net/19+(net%19==0?0:1);}
-    @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();clock();react();SolarPorts.eject(this);if(exported>0)lastOutput=exported;if(received>0)lastInput=received;structure.activity(gross>0);setActive(gross>0);
+    @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();clock();react();SolarPorts.eject(this);if(exported>0)lastOutput=exported;if(received>0)lastInput=received;structure.activity(gross>0);setActive(gross>0);heat.tick();
         int alarm=structure.formed&&!fuelAvailable()?15:0;if(alarm!=lastAlarm){lastAlarm=alarm;for(var hatch:structure.fuelHatches)if(!hatch.isRemoved()&&level.hasChunkAt(hatch.getBlockPos()))level.updateNeighbourForOutputSignal(hatch.getBlockPos(),hatch.getBlockState().getBlock());}return changed;}
     @Override public void onLoad(){super.onLoad();structure.watch();structure.invalidate();}
     @Override public void setRemoved(){structure.detach();super.setRemoved();}

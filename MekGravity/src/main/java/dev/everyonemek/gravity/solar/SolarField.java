@@ -26,8 +26,11 @@ public final class SolarField {
     }
     private static void line(Ribbons out,Point a,Point b,double width,int rgb,double alpha,boolean halo){out.add(a,b,width,rgb,(int)Math.clamp(alpha,0,255),halo);}
     public static void emit(double phase,float strength,Ribbons out){
+        emit(phase,strength,.2+.8*strength,out);
+    }
+    public static void emit(double phase,float strength,double size,Ribbons out){
         if(strength<=.002F)return;
-        double size=.2+.8*strength,pulse=.86+.14*Math.sin(phase*.075);
+        double pulse=.86+.14*Math.sin(phase*.075);
         // An open cage outside the photosphere. Each band precesses independently;
         // the bright moving sector makes motion visible even on a sunny background.
         for(int ring=0;ring<3;ring++){
