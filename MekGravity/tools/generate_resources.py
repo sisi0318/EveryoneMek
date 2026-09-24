@@ -31,7 +31,7 @@ def glass():
         for i,part in enumerate(parts):write(Path(f'assets/mekgravity/models/block/glass/{face}_{i}.json'),glass_model([part]))
     return glass_model(elements)
 def core(active=False):
-    return {'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/core.obj','mtl_override':'mekgravity:models/block/core_active.mtl' if active else 'mekgravity:models/block/core.mtl','automatic_culling':False,'shade_quads':True,'emissive_ambient':True,'flip_v':False,'ambientocclusion':False,'textures':{'energy':'mekgravity:block/orb_active' if active else 'mekgravity:block/orb_idle','steel':'mekgravity:block/orb_steel','inner':'mekgravity:block/orb_inner','particle':'mekgravity:block/orb_idle'}}
+    return {'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/core.obj','mtl_override':'mekgravity:models/block/core_active.mtl' if active else 'mekgravity:models/block/core.mtl','automatic_culling':False,'shade_quads':True,'emissive_ambient':True,'flip_v':False,'ambientocclusion':False,'textures':{'energy':'mekgravity:block/orb_active' if active else 'mekgravity:block/orb_idle','steel':'mekgravity:block/orb_steel','inner':'mekgravity:block/orb_inner','particle':'mekgravity:block/gravity_surface_particle'}}
 generate_core(ROOT)
 for part in ['energy','ring_0','ring_1']:
     for active in ([False,True] if part=='energy' else [False]):
@@ -84,7 +84,11 @@ for name in names:
     else:write(Path(f'assets/mekgravity/models/block/{name}.json'),glass())
     write(Path(f'assets/mekgravity/blockstates/{name}.json'),{'variants':variants})
     model={'parent':'mekgravity:block/'+name}
-    if name=='core':model['display']={'gui':{'rotation':[30,225,0],'translation':[0,0,0],'scale':[0.62,0.62,0.62]},'ground':{'rotation':[0,0,0],'translation':[0,3,0],'scale':[0.4,0.4,0.4]}}
+    if name=='core':
+        model={'parent':'builtin/entity','gui_light':'front','textures':{'particle':'mekgravity:block/gravity_surface_particle'},'display':{
+            'gui':{'rotation':[30,225,0],'scale':[.62,.62,.62]},'ground':{'translation':[0,3,0],'scale':[.4,.4,.4]},
+            'firstperson_righthand':{'translation':[0,2,0],'scale':[.65,.65,.65]},'firstperson_lefthand':{'translation':[0,2,0],'scale':[.65,.65,.65]},
+            'thirdperson_righthand':{'translation':[0,2,0],'scale':[.45,.45,.45]},'thirdperson_lefthand':{'translation':[0,2,0],'scale':[.45,.45,.45]},'fixed':{'scale':[.6,.6,.6]}}}
     if name in ['coolant','energy']:model['overrides']=[{'predicate':{'mekgravity:output':1},'model':'mekgravity:block/'+name+'_output'}]
     write(Path(f'assets/mekgravity/models/item/{name}.json'),model)
     components=['mekgravity:reactor_data','mekanism:security','mekanism:owner','mekanism:redstone_control'] if name=='reactor' else ['mekgravity:fuel_stock']

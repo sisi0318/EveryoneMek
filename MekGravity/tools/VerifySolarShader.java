@@ -92,8 +92,8 @@ public class VerifySolarShader {
             for(double distance:new double[]{0,16,40}){int count=upload(mesh(distance,0,1,0));matrix("ModelViewMat",new Matrix4f().translate(0,0,(float)-distance));glViewport(0,0,WIDTH,HEIGHT);for(int i=0;i<5;i++){glClear(GL_DEPTH_BUFFER_BIT);glDrawElements(GL_TRIANGLES,count,GL_UNSIGNED_INT,0L);}glFinish();
                 int timer=glGenQueries();glBeginQuery(GL_TIME_ELAPSED,timer);for(int i=0;i<100;i++){glClear(GL_DEPTH_BUFFER_BIT);glDrawElements(GL_TRIANGLES,count,GL_UNSIGNED_INT,0L);}glEndQuery(GL_TIME_ELAPSED);long ns=glGetQueryObjecti64(timer,GL_QUERY_RESULT);glDeleteQueries(timer);System.out.printf(Locale.ROOT,"LOD %.0f: %d quads, %.3f ms/draw in 640px offscreen benchmark%n",distance,count/6,ns/100_000_000D);}
             if(glGetError()!=GL_NO_ERROR)throw new AssertionError("OpenGL error");
-            if(!gravity){
-                // Bake a 16px particle tile directly with the actual stellar fragment shader.
+            {
+                // Bake a 16px particle tile directly with the currently selected surface shader.
                 // A front-surface patch fills the viewport, so no background pixels enter the atlas.
                 var tile=BufferUtils.createByteBuffer(4*28);float nx=.4F,ny=.4F,nz=(float)java.lang.Math.sqrt(1-2*.16);
                 for(float[] xy:new float[][]{{-1,-1},{1,-1},{1,1},{-1,1}}){
@@ -103,7 +103,7 @@ public class VerifySolarShader {
                 }tile.flip();int count=upload(tile);matrix("ModelViewMat",new Matrix4f());matrix("ProjMat",new Matrix4f().ortho(-1,1,-1,1,.1F,10));glViewport(0,0,16,16);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);glDrawElements(GL_TRIANGLES,count,GL_UNSIGNED_INT,0L);
                 var bytes=BufferUtils.createByteBuffer(16*16*4);glReadPixels(0,0,16,16,GL_RGBA,GL_UNSIGNED_BYTE,bytes);var image=new BufferedImage(16,16,BufferedImage.TYPE_INT_ARGB);
                 for(int y=0;y<16;y++)for(int x=0;x<16;x++){int i=(y*16+x)*4;image.setRGB(x,15-y,0xFF000000|(bytes.get(i)&255)<<16|(bytes.get(i+1)&255)<<8|bytes.get(i+2)&255);}
-                ImageIO.write(image,"png",root.resolve("src/main/resources/assets/mekgravity/textures/block/stellar_surface_particle.png").toFile());
+                ImageIO.write(image,"png",root.resolve("src/main/resources/assets/mekgravity/textures/block/"+(gravity?"gravity":"stellar")+"_surface_particle.png").toFile());
             }
             System.out.println("PASS: real GLSL150 compile/link/relink, animated/thermal pixels, depth occlusion, batched independent stars, three closed LOD meshes.");
             glDeleteBuffers(ebo);glDeleteBuffers(vbo);glDeleteVertexArrays(vao);glDeleteProgram(program);glDeleteShader(vertex);glDeleteShader(fragment);

@@ -1,15 +1,14 @@
 {
-  "parent": "mekgravity:block/core",
+  "parent": "builtin/entity",
+  "gui_light": "front",
+  "textures": {
+    "particle": "mekgravity:block/gravity_surface_particle"
+  },
   "display": {
     "gui": {
       "rotation": [
         30,
         225,
-        0
-      ],
-      "translation": [
-        0,
-        0,
         0
       ],
       "scale": [
@@ -19,11 +18,6 @@
       ]
     },
     "ground": {
-      "rotation": [
-        0,
-        0,
-        0
-      ],
       "translation": [
         0,
         3,
@@ -33,6 +27,61 @@
         0.4,
         0.4,
         0.4
+      ]
+    },
+    "firstperson_righthand": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "firstperson_lefthand": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "thirdperson_righthand": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.45,
+        0.45,
+        0.45
+      ]
+    },
+    "thirdperson_lefthand": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.45,
+        0.45,
+        0.45
+      ]
+    },
+    "fixed": {
+      "scale": [
+        0.6,
+        0.6,
+        0.6
       ]
     }
   }

@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.16，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.17，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.17 GravityCoreItemRenderer通过原RegisterClientExtensionsEvent注册core，模型builtin/entity；CoreRenderer.drawCore由世界和物品共用，接收BlockState而不创建虚拟Part。GUI距离参数6经drawGravity除.3后使用384面球体，加双环192面，所有显示场景保留双环反向转动，物品不画六向世界光束。静态OBJ仍供shader失败回退。
+- core及其所有静态子模型particle统一指向gravity_surface_particle.png，生成器generate_resources.py同时维护物品display和粒子引用。VerifySolarShader.java带gravity参数会直接用gravity_surface.fsh烘焙16×16粒子图；原stellar路径仍正常。总运行PNG41张，没有改已有40张。实际世界发电和库存逻辑未变。
 
 - 资源总生成器generate_resources.py也必须写入client=[SolarWarningMixin]，不能只修改已生成mixins.json；否则下一次美术资源生成会撤掉用户的色散警告。
 - alpha.16双引力环由GravityRingShader使用gravity_ring.vsh/.fsh绘制，GravityRingMesh.java由core_mesh.py从与原OBJ相同的顶点/UV提取生成，不手改；9float布局pos3/normal3/u/v/inner。两环96+96quads，UV0携带u和各自flow相位，Color携带负载/内表面/v；默认原模型仍供物品及shader失败回退。
@@ -75,6 +78,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.17构建、gravity shader真实OpenGL编译/多核心/冷热/遮挡验证及紫色粒子烘焙通过；新粒子16×16/不透明/233色，物品七种显示context、CoreRenderer共用入口及JAR引用检查通过。纯客户端变更不重复21项服务端测试，没有启动游戏客户端。
 
 - alpha.16构建与VerifyFieldShaders隐藏GL验证通过：两shader实际编译/链接、运行/停机/移动像素差、实体深度遮挡、透明场深度不写。GravityRingMesh逐顶点与core_ring_0/1.obj一致、闭合边、96面/环；粒子16×16/不透明/正常颜色，物品builtin/entity及扩展注册契约检查。本次纯渲染，不重复21项服务器测试，游戏视觉由用户验收。
 

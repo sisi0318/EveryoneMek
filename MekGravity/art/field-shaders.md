@@ -20,3 +20,9 @@ java -Djava.awt.headless=true --class-path <classpath> tools/VerifySolarShader.j
 第一项验证真实环与场GLSL、深度和运行状态并输出 `build/field-shader-check/` 预览；第二项继续验证球面，同时重新导出运行粒子PNG。所有窗口均隐藏，不启动Minecraft；测试工具/世界/日志不打包。
 
 `gravity-ring-shader-preview.png`与`stellar-field-shader-preview.png`是实际shader离屏输出，分别只显示两环和场，方便检查，不是游戏截图。客户端加载完整模组后的视觉仍由用户验收。
+
+## alpha.17 引力核心物品补齐
+
+`GravityCoreItemRenderer`复用世界`CoreRenderer.drawCore`，引力核球面与双环都使用当前shader。物品模型由总资源生成器设为builtin/entity并完整定义七种显示变换；球体和两环居中后动画，不显示世界中的六向束流。
+
+执行 `VerifySolarShader.java . gravity` 会使用当前gravity_surface.fsh输出 `gravity_surface_particle.png`，方法与恒星粒子相同：16×16视口直接GPU渲染，非后期重绘。core/core_active及所有静态子模型的particle均由总生成器同步更新。

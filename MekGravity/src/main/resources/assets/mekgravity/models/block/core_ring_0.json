@@ -12,6 +12,6 @@
     "energy": "mekgravity:block/orb_idle",
     "steel": "mekgravity:block/orb_steel",
     "inner": "mekgravity:block/orb_inner",
-    "particle": "mekgravity:block/orb_idle"
+    "particle": "mekgravity:block/gravity_surface_particle"
   }
 }
