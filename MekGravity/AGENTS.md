@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.10，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.11，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.11 SolarField为无世界访问的纯Java轨迹生成器，SolarRenderer消费其带宽度/颜色/alpha/halo的线段；外层三环半径1.65/1.81/1.97随核心缩放，六条弯曲极向场线、两束聚束光与四向采能流。光带偏移取view×direction并处理平行退化；使用当前依赖原RenderType.lightning的POSITION_COLOR、SRC_ALPHA/ONE混合。实际最大640 quads，包围盒沿用seed.inflate(4)，不改通信、资源或服务器tick。
+- tools/ExportSolarField.java直接运行已编译的SolarField/CoreMotion，检查1200个phase/strength组合、边界/预算与平滑启停，输出build/solar-field-frames.json；tools/preview_solar_field.cjs投影真实轨迹和原生太阳/聚束器模型。产物art/solar-field-preview.png为静态离线三帧，不可宣称游戏截图。
 
 - alpha.9太阳WATCHERS与OWNERS分离：完整621格监听独立于遇到首个缺件即终止的所有权扫描。onLoad/区块load/unload登记或失效，detach清理监听；无20tick轮询。placement与refreshLayout使用同一布局派生朝向/segment，刷新匹配部件不覆盖其他存活主控的部件，不修改OUTPUT/库存。SolarConstruction材料数与坐标分隔符写入UTF-8语言生成器；Python读取源码须显式encoding，默认GBK会把“×”“·”变成“脳”“路”。
 - alpha.9 tools/solar_rings.py沿原24个周界节点生成6类连续斜接梁，冠架增加交叉、直梁、T接头；SolarLayout的segment/facing、OBJ与art/solar-beam-states.json来自同一生成逻辑。环和冠架方块状态覆盖保存中的全部segment/方向。energy保留runtime_geometry原红蓝lamp，不能再被太阳贴图覆盖；内凹＋／－同时作为形状标识，SolarClient的物品output getter仍读STOCK。
@@ -50,6 +53,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.11构建、特效轨迹检查与离线预览通过，无服务端行为改动，不重复跑18项GameTest。使用JDK21执行 `java --class-path build/classes/java/main tools/ExportSolarField.java build/solar-field-frames.json`，再用现有Node/Sharp执行 `tools/preview_solar_field.cjs`；build目录快照不提交。
 
 - alpha.10构建与18项服务端测试通过。solarFillsPastHalfCapacityAndResumesWithoutWastingFuel复现50%可用缓存无负载升载、50/80/99%额定功率，枚举自动开/关最后1～40 J取整与自耗守恒，再通过真实端口抽能、控制器tick补满/待机。无需重复长时燃料测试；现有144000步预算回归继续覆盖总预算。
 

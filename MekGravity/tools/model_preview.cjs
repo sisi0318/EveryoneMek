@@ -67,7 +67,7 @@ async function render(file,panels,width,height){
     const triangles=[];
     for(const instance of panel.instances){
       const transform=instance.transform||((p)=>p);
-      for(const tri of model(instance.name)){
+      for(const tri of instance.triangles||model(instance.name)){
         const p=tri.p.map(transform),normal=cross(sub(p[1],p[0]),sub(p[2],p[0]));
         if(dot(normal,eye)<=1e-9)continue;
         const depth=p.reduce((s,v)=>s+dot(v,eye),0)/3;
@@ -78,6 +78,9 @@ async function render(file,panels,width,height){
     triangles.sort((a,b)=>a.depth-b.depth);
     for(const tri of triangles){
       const p=tri.p.map(([x,y,z])=>[panel.x+(x-z)*panel.scale,panel.y+((x+z)*elevation-y)*panel.scale]);
+      if(tri.color){
+        const [r,g,b,a]=tri.color;body+=`<polygon points="${p.map(q=>q.join(',')).join(' ')}" fill="rgb(${r},${g},${b})" fill-opacity="${a/255}" style="mix-blend-mode:screen"/>`;continue;
+      }
       const [a,b,c]=tri.uv,d=sub(b,a),e=sub(c,a),det=d[0]*e[1]-d[1]*e[0];if(Math.abs(det)<1e-12)continue;
       const q=sub(p[1],p[0]),r=sub(p[2],p[0]);
       const A=(q[0]*e[1]-r[0]*d[1])/det,B=(q[1]*e[1]-r[1]*d[1])/det,C=(r[0]*d[0]-q[0]*e[0])/det,D=(r[1]*d[0]-q[1]*e[0])/det;
