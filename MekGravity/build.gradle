@@ -26,7 +26,7 @@ dependencies {
     compileOnly 'mezz.jei:jei-1.21.1-common-api:19.22.1.316'
 }
 tasks.named('check') { dependsOn 'compileGameTestJava' }
-tasks.named('jar', Jar) { from('LICENSE') }
+tasks.named('jar', Jar) { from('LICENSE'); from('THIRD_PARTY_NOTICES.md') }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 def resourceProperties = [version: project.version.toString()]
 tasks.named('processResources', ProcessResources) {

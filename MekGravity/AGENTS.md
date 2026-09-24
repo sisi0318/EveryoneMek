@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.13，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.14，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.14恒星警告字体复用同仓库OverloadCore独立ChromaticTooltipText风格，参考作者huige233。client/ChromaticWarningText保留署名、斜体/红蓝叠影/轻微抖动，警告不做逐字等待。必须用FormattedCharSequence覆盖叠影Style色，且Font将alpha<4视为不透明，淡出小于4的叠影应跳过。
+- SolarWarningMixin仅放mixins配置client，WrapOperation包裹Gui.renderOverlayMessage内唯一GuiGraphics.drawStringWithBackdrop(Font,Component,int,int,int,int):int，只匹配heat_warning/heat_burning/heat_contact三个翻译键。复用原HUD变换与alpha、按斜体宽度重新居中，窄屏缩放，原文字背景选项保留；其他消息original.call，无新网络包或独立HUD计时。THIRD_PARTY_NOTICES随JAR打包，不新增OverloadCore依赖。
 
 - alpha.13球面不再把一张16px图包住整圈经度；solar_surface.py将六个16×16网格球化，贴图密度均匀且两极无汇聚点。photosphere-v2.png为内置image_gen原创双格图集，atlas-layout.json保存1774×887及两格裁剪范围。export_textures.cjs按names.length处理图集格数，39张运行PNG仍是真16×16，检查旧37张哈希未变。
 - 太阳预览改用tools/raster_preview.cjs对原生模型做逐像素最近邻采样与深度测试，避免SVG画序把隐藏三角形叠在球面上；归一化正交轴避免球看成椭圆。新旧球面比较工具preview_solar_surface.cjs只在预览中重建旧32×16经纬网格，不参与游戏。未引入shader或修改客户端渲染流程。
@@ -60,6 +63,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.14构建、javap核对当前1.21.1发布件的renderOverlayMessage调用及WrapOperation描述符、client配置与JAR归属检查通过；新增字体不改变服务器，无需重复20项GameTest，实际观感由用户验收。
 
 - alpha.13构建与资源/几何检查通过：1536个面朝外、各焊接边恰好两面共用、顶点半径1.25、UV和径向法线有效、39张16×16PNG、旧37张像素哈希一致。已看近景前后对比、整机与三个动态时刻预览。本次仅模型/资源修改，不重复20项服务端测试，客户端由用户验收。
 

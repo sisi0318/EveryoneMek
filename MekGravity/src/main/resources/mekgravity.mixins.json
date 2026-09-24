@@ -5,6 +5,9 @@
   "mixins": [
     "StructureChangeMixin"
   ],
+  "client": [
+    "SolarWarningMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

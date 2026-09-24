@@ -2,6 +2,8 @@
 
 本项目原创代码采用仓库 MIT 许可证。
 
+- 恒星高温警告字体复用本仓库 OverloadCore 的独立色散实现；斜体、红蓝错位叠影与轻微抖动参考用户提供的 **huige233** 的 `com.huige233.autism_and_insomnia.client.DreamJournalClientTooltipComponent.styleGlitchRGB`。作者署名保留在 `client/ChromaticWarningText.java`；未分发原作者源码，原模组及 OverloadCore 均不是依赖。
+
 - 运行依赖 Mekanism / Mekanism Generators 10.7.19.85，未打包其 JAR、源码或贴图。通过公开类型、资源路径和能力接口集成。
 - JEI 为可选编译接口，未打包其实现。
 - 项目骨架、构建工具和部分基础适配参考本仓库 MekFactory；这些内容同属 EveryoneMek 的 MIT 代码。
