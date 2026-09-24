@@ -1,0 +1,11 @@
+Tool: built-in image_gen
+Source: art/source/photosphere-v2.png
+Two equal panels, left dormant and right active. Export to photosphere_idle/active, each 16x16.
+No bitmap repainting, blur, color remapping or upscaled runtime textures. Original solar.png remains for collector faces, machine lamps and fuel items.
+
+Use case: stylized-concept. Production asset: ORIGINAL Minecraft miniature stellar photosphere textures.
+Create a flat opaque WIDE 2:1 atlas with exactly TWO equal SQUARE tiles side by side, no separator, margins, labels, shading, perspective or depicted sphere. Each tile has the simplicity of a TRUE 16 by 16 crisp pixel-art texture. This will be mechanically reduced to 16x16 per tile and mapped repeatedly onto a round miniature sun.
+LEFT tile: warm dormant photosphere, luminous warm amber-orange, narrow color range approximately #e87727 to #fba448.
+RIGHT tile: active photosphere, luminous honey-gold and golden-orange, narrow color range approximately #f7a12d to #ffcf69, sparse lighter warm-yellow accents.
+Both show the SAME gentle organic granulation and softly turning convection pattern, made of small connected 1-2-cell shapes. Keep the surface mostly a continuous calm warm base, with small low-contrast ripples and granules distributed evenly. No large isolated dark islands, no giant white/yellow blobs, no checkered or striped bands, no stone or lava cracks, no black or brown, no fiery flame shapes, no sunspots, no gem/crystal facets. Not photographic and no fine noise. Crisp solid color pixel cells, no blur, smooth gradients or bloom.
+The pattern should tile seamlessly in both axes. Keep the edges visually quiet, with the same midtone base continuing naturally on all four edges; do not draw a border. The main requirement is a refined, coherent, less coarse surface, with substantially LESS brightness contrast than a typical Minecraft lava texture. No machinery. No symbols or text.

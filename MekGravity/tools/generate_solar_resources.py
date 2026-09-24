@@ -3,6 +3,7 @@ import json,math
 from pathlib import Path
 from runtime_geometry import block_model
 import solar_rings
+import solar_surface
 ROOT=Path(__file__).resolve().parents[1];RES=ROOT/'src/main/resources'
 def write(name,data):
     p=RES/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
@@ -91,20 +92,8 @@ public final class SolarLayout {
         components=['mekgravity:solar_data','mekanism:security','mekanism:owner','mekanism:redstone_control'] if kind=='controller' else ['mekgravity:solar_stock']
         write(f'data/mekgravity/loot_table/blocks/solar_{name}.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'mekgravity:solar_'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':components}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     tags=json.loads((RES/'data/minecraft/tags/block/mineable/pickaxe.json').read_text());tags['values']=sorted(set(tags['values']+['mekgravity:solar_'+n for n in names]));write('data/minecraft/tags/block/mineable/pickaxe.json',tags)
-    # New dense solar surface: sphere radius 1.25 block, 32x16 bands, in block-local coordinates.
-    obj=['# Original miniature stellar surface','mtllib sun.mtl'];index=0
-    def point(u,v):return [.5+1.25*math.sin(v*math.pi)*math.cos(u*math.tau),.5+1.25*math.cos(v*math.pi),.5+1.25*math.sin(v*math.pi)*math.sin(u*math.tau)]
-    obj+=['o photosphere','usemtl surface']
-    for row in range(16):
-        for col in range(32):
-            u,U,v,V=col/32,(col+1)/32,row/16,(row+1)/16
-            uv=[(u,v),(U,v),(U,V),(u,V)] if row not in [0,15] else [((u+U)/2,v),(U,V),(u,V)] if row==0 else [(u,v),(U,v),((u+U)/2,V)]
-            points=[point(*p) for p in uv];a,b,c=points[:3];ab=[b[i]-a[i] for i in range(3)];ac=[c[i]-a[i] for i in range(3)];cross=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]]
-            if sum(cross[i]*(a[i]-.5) for i in range(3))<0:points.reverse();uv.reverse()
-            for p,t in zip(points,uv):obj+=['v '+' '.join(f'{x:.7f}' for x in p),'vt '+' '.join(f'{x:.7f}' for x in t)]
-            obj.append('f '+' '.join(f'{i}/{i}' for i in range(index+1,index+len(uv)+1)));index+=len(uv)
-    p=RES/'assets/mekgravity/models/block/solar';p.mkdir(parents=True,exist_ok=True);(p/'sun.obj').write_text('\n'.join(obj)+'\n',encoding='utf-8');(p/'sun.mtl').write_text('newmtl surface\nKa 1 1 1\nKd 1 1 1\nmap_Kd #surface\n',encoding='utf-8')
-    for active in [False,True]:model('sun_active' if active else 'sun_idle',{'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/solar/sun.obj','mtl_override':'mekgravity:models/block/solar/sun.mtl','automatic_culling':False,'shade_quads':False,'emissive_ambient':True,'textures':{'surface':'mekgravity:block/sun_active' if active else 'mekgravity:block/sun_idle','particle':'mekgravity:block/sun_idle'}})
+    solar_surface.generate(RES)
+    for active in [False,True]:model('sun_active' if active else 'sun_idle',{'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/solar/sun.obj','mtl_override':'mekgravity:models/block/solar/sun.mtl','automatic_culling':False,'shade_quads':False,'emissive_ambient':True,'textures':{'surface':'mekgravity:block/photosphere_active' if active else 'mekgravity:block/photosphere_idle','particle':'mekgravity:block/photosphere_idle'}})
     for name in ['compressed_stellar_matter','stellar_fuel_preform','stellar_fuel','stellar_fuel_capsule']:
         m=mechanical([box([4,4,4],[12,12,12],'#lamp'),box([3,6,3],[13,10,13],'#steel',[0,0,16,4])]);m['display']={'gui':{'rotation':[25,225,0],'scale':[.9,.9,.9]},'ground':{'translation':[0,3,0],'scale':[.5,.5,.5]}};write('assets/mekgravity/models/item/'+name+'.json',m)
     def recipe(name,pattern,key,count=1):write('data/mekgravity/recipe/'+name+'.json',{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'id':'mekgravity:'+name,'count':count}})

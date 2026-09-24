@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..');
 const sharp = createRequire(path.join(root, 'art/package.json'))('sharp');
 const layouts = JSON.parse(fs.readFileSync(path.join(root, 'art/atlas-layout.json'), 'utf8'));
 const atlases = {
+  'photosphere-v2': ['photosphere_idle','photosphere_active'],
   solar: ['sun_idle','sun_active','sun_collector','sun_collector_active'],
   'shell-v2': ['shell_frame','shell_frame_formed','shell_panel','shell_panel_formed'],
   orb: ['orb_idle','orb_steel','orb_inner','orb_active'],
@@ -25,9 +26,9 @@ const output = path.join(root, 'src/main/resources/assets/mekgravity/textures/bl
     const source = path.join(root, 'art/source', `${atlas}.png`);
     const meta = await sharp(source).metadata();
     const layout = layouts[atlas];
-    if (meta.width !== layout.width || meta.height !== layout.height || layout.panels.length !== 4)
+    if (meta.width !== layout.width || meta.height !== layout.height || layout.panels.length !== names.length)
       throw new Error(`${atlas}: source dimensions differ from reviewed atlas-layout.json`);
-    for (let i=0;i<4;i++) {
+    for (let i=0;i<names.length;i++) {
       const dest = path.join(output, names[i] + '.png');
       // Reviewed visible face bounds remove generator padding without repainting pixels.
       const [left, top, width, height] = layout.panels[i];
@@ -49,5 +50,5 @@ const output = path.join(root, 'src/main/resources/assets/mekgravity/textures/bl
   previews.push({input:await sharp(pellet).resize(192,192,{kernel:'nearest'}).png().toBuffer(),left:0,top:row*220+28});
   previews.push({input:Buffer.from('<svg width="768" height="28"><text x="5" y="20" fill="white" font-size="13">dense_fuel_pellet</text></svg>'),left:0,top:row*220}); row++;
   await sharp({create:{width:768,height:row*220,channels:4,background:'#24272b'}}).composite(previews).png().toFile(path.join(root,'art/texture-sheet.png'));
-  process.stdout.write(`Exported ${Object.keys(atlases).length*4+1} original 16x16 textures.\n`);
+  process.stdout.write(`Exported ${Object.values(atlases).reduce((n,a)=>n+a.length,0)+1} original 16x16 textures.\n`);
 })().catch(e=>{process.stderr.write(e.stack+'\n');process.exitCode=1;});

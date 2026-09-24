@@ -1,6 +1,6 @@
 // Project the actual runtime parts from the checked 9x9x9 layout. Dynamic effects are not a game screenshot.
 const fs=require('node:fs'),path=require('node:path');
-const {render,root}=require('./model_preview.cjs');
+const {render,root}=require('./raster_preview.cjs');
 const plan=JSON.parse(fs.readFileSync(path.join(root,'art/solar-design/layout.json'),'utf8'));
 const beams=JSON.parse(fs.readFileSync(path.join(root,'art/solar-beam-states.json'),'utf8'));
 const turn=([x,y,z],face)=>{
@@ -22,7 +22,7 @@ for(const p of plan.blocks){
   }});
 }
 (async()=>{
-  await render('solar-runtime-preview.png',[{label:'Miniature sun - runtime geometry / static preview',labelX:24,x:560,y:520,scale:53,elevation:.2,instances}],1140,820);
+  await render('solar-runtime-preview.png',[{label:'Miniature sun - runtime geometry / static preview',labelX:24,x:560,y:560,scale:44,elevation:.2,instances}],1140,820);
   await render('solar-ports-preview.png',['energy','energy_output'].map((name,i)=>({
     label:i?'Output (-)':'Input (+)',x:200+i*340,y:230,scale:150,
     instances:[{name:'solar/'+name,transform:([x,y,z])=>[1-x,y,1-z]}]

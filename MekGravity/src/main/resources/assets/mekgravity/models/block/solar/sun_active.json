@@ -7,7 +7,7 @@
   "shade_quads": false,
   "emissive_ambient": true,
   "textures": {
-    "surface": "mekgravity:block/sun_active",
-    "particle": "mekgravity:block/sun_idle"
+    "surface": "mekgravity:block/photosphere_active",
+    "particle": "mekgravity:block/photosphere_idle"
   }
 }

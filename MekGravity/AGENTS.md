@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.12，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.13，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.13球面不再把一张16px图包住整圈经度；solar_surface.py将六个16×16网格球化，贴图密度均匀且两极无汇聚点。photosphere-v2.png为内置image_gen原创双格图集，atlas-layout.json保存1774×887及两格裁剪范围。export_textures.cjs按names.length处理图集格数，39张运行PNG仍是真16×16，检查旧37张哈希未变。
+- 太阳预览改用tools/raster_preview.cjs对原生模型做逐像素最近邻采样与深度测试，避免SVG画序把隐藏三角形叠在球面上；归一化正交轴避免球看成椭圆。新旧球面比较工具preview_solar_surface.cjs只在预览中重建旧32×16经纬网格，不参与游戏。未引入shader或修改客户端渲染流程。
 
 - alpha.12 SolarController.isCoreHot将历史启动付费ignited与实际热态区分：enabled、ignited、formed且gross>0/剩余预算/允许续料的可用燃料满足时热；满缓存/红石暂停保持，停机/耗尽/拆坏停止。SolarHeat每5tick局部查询LivingEntity，身体AABB到核心中心距离4/3/2/1.25分区，伤害2/4/8分别20/10/5tick，预警私发actionbar+pling且同级40tick限频。UUID暴露计时仅内存，不持久化，不保存实体引用或加载区块。
 - 新stellar_heat数据伤害在generate_solar_resources.py生成，is_fire/bypasses_cooldown/bypasses_shield/no_knockback标签使周期热伤不被10tick受击无敌吞掉，保持护甲/抗火/事件/不死保护流程，hurt成功才点火。创造仅预警、旁观忽略，server config含开关和倍率；不直接改血、不处理掉落物。
@@ -30,7 +33,7 @@
 - solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器真实转向必须触发；alpha.9采能翼朝向属于布局派生状态，旧片也自动纠正。
 - SolarController只保存储电、当前单份燃料余量/总量、点火和设置；fuel仓是SolarPart自己的18格ItemStackHandler。SolarFuelRecipe独立上限10^18 J，不批量将64份相乘。STOCK/DATA/FUEL_DATA三种组件分别处理仓、主控、残余胶囊。SolarMenu按实际点击部件距离校验而非只按主控，远端柱子也可打开。SolarPorts保留共享+单口tick额度、模拟无资源变化、停止后取料、真实自动弹出。
 - SolarConfig独立mekgravity-solar-server.toml（J）。alpha.10取消原50%目标与80%提前停机：两种模式均向实际容量补满；automatic额外按上一tick真实exported净能量快速升载，关闭时使用常规升载。净可容纳量与毛燃料不能直接取min：net=fuel-ceil(fuel/20)，需反算fuel=net+ceil(net/19)，只对小于当tick产量的净余量反算，禁止乘20导致溢出。满缓存不收费、不取下一份燃料；最后单份残余仍保持预算守恒。SolarScreen续航用菜单同步power×load/100，标明设定负载，不再除瞬时gross。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新。
-- 太阳资源入口generate_solar_resources.py由generate_resources.py统一调用，生成模型/配方/语言/布局Java。新sun.obj为半径1.25的32×16表面；四张solar图集PNG均16×16，原稿及提示词在art。SolarRenderer只绘制seed，使用CoreMotion，日珥/日冕/向外光点固定网格预算，不spawn实体。聚束器使用共享ModelShapes鼻部选择框。
+- 太阳资源入口generate_solar_resources.py由generate_resources.py统一调用，生成模型/配方/语言/布局Java。alpha.13的sun.obj由tools/solar_surface.py生成六面球化表面，每面16×16细分共1536个四边形，径向法线、半径1.25不变。旧solar图集仍供采能翼/灯光/燃料；新photosphere-v2为两格横向图集，photosphere_idle/active独立用于球面，均16×16。原稿及提示词在art。SolarRenderer只绘制seed，使用CoreMotion，日珥/日冕/向外光点固定网格预算，不spawn实体。聚束器使用共享ModelShapes鼻部选择框。
 - 原PRC制备：燃料坯+8000mB D-T化学品+1000mB水，1200tick/200额外J；现发布件升级组件入口为getComponent()，不是getUpgradeComponent()。测试用速度8以覆盖实际完整制备，时长由原Mek倍率计算，不假设每级2倍。
 - 用户在2026-09-22确认art/models/graybox-v1灰模，alpha.5已接入。tools/runtime_geometry.py从批准的assembly.json提取几何，移除内部/覆盖面并合并共面矩形，再使用现有原创16×16贴图分配UV；不改灰模比例、不用满面机器纹理遮盖几何。generate_resources.py生成运行JSON与ModelShapes.java，不能只改单个生成文件。
 - AssemblyAppearance复用已有FACING：成型框架UP为立柱、EAST为世界X横梁、NORTH为世界Z横梁、DOWN为对称接头；面板朝内、玻璃和接口朝外。COIL的FACING是实际瞄准，不能被外观代码改写。Shape只为外伸线圈新增，来自同一源几何；六方向实际level.clip(OUTLINE/COLLIDER)回归覆盖0.25格鼻部。
@@ -57,6 +60,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.13构建与资源/几何检查通过：1536个面朝外、各焊接边恰好两面共用、顶点半径1.25、UV和径向法线有效、39张16×16PNG、旧37张像素哈希一致。已看近景前后对比、整机与三个动态时刻预览。本次仅模型/资源修改，不重复20项服务端测试，客户端由用户验收。
 
 - alpha.12共20项服务端测试通过。SolarHeatTests通过真实ServerPlayer数据包观察预警/限频/创造无伤与热态重载、关机/耗尽/拆坏；真实Cow验证距离、周期灼伤、着火和抗火保护，GameTestListener在通过/失败时都清理实体。ReactorTests.player新增包观察者重载，原调用保留。特效导出再检查240组全尺寸低负载热态待机。
 
