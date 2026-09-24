@@ -76,4 +76,20 @@ public final class SolarHeatTests {
             for(int i=0;i<mobs.size();i++)check(mobs.get(i).getHealth()==stopped[i],"Extinguished core continued dealing heat damage");
         }).thenSucceed();
     }
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void stellarInnerCoreDealsLethalDamageOnlyInsideItsCenter(GameTestHelper h){
+        var c=hot(h);var center=c.structure.seed.getBlockPos().getCenter();var entities=new ArrayList<Cow>();
+        cleanup(h,()->{try{c.enabled=false;}finally{entities.forEach(Entity::discard);}});
+        for(double x:new double[]{.1,1.2,-.1}){
+            var cow=EntityType.COW.create(h.getLevel());cow.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200);cow.setHealth(200);cow.setNoAi(true);cow.setNoGravity(true);cow.noPhysics=true;cow.setPos(center.add(x,-.7,0));h.getLevel().addFreshEntity(cow);entities.add(cow);
+        }
+        entities.getLast().addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE,100));
+        check(c.structure.seed.getBlockState().getCollisionShape(h.getLevel(),c.structure.seed.getBlockPos()).isEmpty(),"Invisible solid cube prevented core contact");
+        h.startSequence().thenIdle(6).thenExecute(()->{
+            check(!entities.getFirst().isAlive(),"Inner core did not kill a 200-health unprotected entity on contact");
+            check(entities.get(1).isAlive()&&entities.get(1).getHealth()>180,"Lethal center damage escaped into the outer photosphere");
+            check(entities.getLast().getHealth()==200,"Inner core bypassed normal fire resistance");
+            c.enabled=false;entities.getLast().removeEffect(MobEffects.FIRE_RESISTANCE);entities.getLast().clearFire();
+        }).thenIdle(6).thenExecute(()->check(entities.getLast().getHealth()==200,"Cold inner core remained lethal")).thenSucceed();
+    }
 }

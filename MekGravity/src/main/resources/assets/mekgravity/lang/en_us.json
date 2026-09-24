@@ -199,5 +199,6 @@
   "mekgravity.solar.heat_burning": "Scorching heat! Move away from the stellar core!",
   "mekgravity.solar.heat_contact": "DANGER: stellar contact! Retreat immediately!",
   "death.attack.mekgravity.stellar_heat": "%1$s was consumed by stellar heat",
-  "death.attack.mekgravity.stellar_heat.player": "%1$s was consumed by stellar heat while fleeing %2$s"
+  "death.attack.mekgravity.stellar_heat.player": "%1$s was consumed by stellar heat while fleeing %2$s",
+  "mekgravity.solar.heat_core": "LETHAL CORE CONTACT! Stellar core incineration!"
 }

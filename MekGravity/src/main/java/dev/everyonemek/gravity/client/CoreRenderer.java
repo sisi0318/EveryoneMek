@@ -59,15 +59,17 @@ public final class CoreRenderer implements BlockEntityRenderer<Part> {
         motion.update(tick,working?.25+.75*p.visualLoad()/100D:0);
         float intensity=motion.strength();double phase=motion.phase();
         float pulse=(float)(.86+.14*Math.sin(phase*.13));
+        double distance=Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().distanceTo(p.getBlockPos().getCenter());
         pose.pushPose();pose.translate(.5,.5,.5);
         // The core body replaces the baked block entirely, including when stopped; no static ghost mesh.
         pose.pushPose();pose.translate(0,Math.sin(phase*.055)*.035*intensity,0);
         pose.mulPose(Axis.YP.rotationDegrees((float)(phase*.55%360)));pose.mulPose(Axis.XP.rotationDegrees((float)Math.sin(phase*.018)*9*intensity));
         float size=1+(float)Math.sin(phase*.09)*.022F*intensity;pose.scale(size,size,size);
-        drawModel(p,intensity>.035F?ENERGY_ACTIVE:ENERGY,pose,buffers,intensity>.035F?LightTexture.FULL_BRIGHT:light,overlay);pose.popPose();
+        if(!dev.everyonemek.gravity.solar.SolarShader.drawGravity(pose,buffers,phase,intensity,distance))drawModel(p,intensity>.035F?ENERGY_ACTIVE:ENERGY,pose,buffers,intensity>.035F?LightTexture.FULL_BRIGHT:light,overlay);pose.popPose();
         pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(phase*1.2%360)));drawModel(p,INNER,pose,buffers,light,overlay);pose.popPose();
         pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(-phase*1.6%360)));drawModel(p,OUTER,pose,buffers,light,overlay);pose.popPose();
-        if(intensity>.001F){
+        if(intensity>.001F&&distance<32){
+            intensity*=(float)Math.clamp((32-distance)/8,0,1);
             var v=buffers.getBuffer(RenderType.lightning());
             pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(phase*.65%360)));pose.mulPose(Axis.ZP.rotationDegrees(18));
             arc(pose,v,.435F,.012F,0,Math.PI*2,48,(int)(130*intensity*pulse));

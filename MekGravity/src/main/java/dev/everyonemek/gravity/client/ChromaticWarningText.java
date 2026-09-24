@@ -21,7 +21,7 @@ public final class ChromaticWarningText {
     public static boolean matches(Component message){
         if(!(message.getContents() instanceof TranslatableContents text))return false;
         return switch(text.getKey()){
-            case "mekgravity.solar.heat_warning","mekgravity.solar.heat_burning","mekgravity.solar.heat_contact"->true;
+            case "mekgravity.solar.heat_warning","mekgravity.solar.heat_burning","mekgravity.solar.heat_contact","mekgravity.solar.heat_core"->true;
             default->false;
         };
     }

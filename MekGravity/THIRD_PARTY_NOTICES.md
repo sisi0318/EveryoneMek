@@ -15,3 +15,5 @@
 - alpha.5运行几何从上述原创assembly.json导出并复用现有原创贴图。成型窗面通过资源路径引用Minecraft原版white_concrete，未复制其PNG；透明颜色使用NeoForge原生ExtraFaceData能力。
 - Gradle Wrapper 文件来自项目使用的标准 Gradle Wrapper 发行流程。
 - alpha.8微缩太阳表面/采能翼图集`art/source/solar.png`由内置image_gen原创生成，提示词为`art/solar-runtime-prompt.txt`。三维机架与太阳球面由本项目生成器制作，部分结构复用同仓库原创材质/几何，未复制第三方模型。
+
+- alpha.15的恒星／引力核心shader与球化LOD网格为本项目原创代码。通过Minecraft原生资源路径引入fog.glsl，不将其副本放进JAR；独立验证工具使用已有LWJGL/JOML依赖，其JAR、GPU日志和隐藏窗口预览工具不随模组打包。

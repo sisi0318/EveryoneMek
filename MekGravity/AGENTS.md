@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.14，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.15，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,12 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.15追加太阳最内核CORE_RADIUS=.45，zone5默认CORE_CONTACT_DAMAGE=1000000（独立配置stellarCoreContactDamage，仍乘全局灼伤倍率），外层zone4半径1.25保持8点。新增heat_core翻译与色散匹配。seed碰撞为空、选择框保留，避免隐形实体立方挡住玩家进入中心；伤害仍走原hurt与is_fire等标签，禁止直接setHealth/discard，正常抗火与保命机制可拦截。每5tick扫描，中心检测≤0.25s。
+
+- alpha.15用户明确要求使用.vsh/.fsh替换方格表面并优化性能；世界胚核现由SolarShader+SolarSphereMesh+shaders/core/stellar_surface.*绘制，原sun.obj仅为物品和shader加载失败回退。shader源手写，JSON描述由generate_solar_resources.py维护，无新位图。球半径仍1.25。
+- SolarClient的RegisterShadersEvent使用ResourceLocation构造ShaderInstance，只在成功回调保存实例。RenderType用POSITION_TEX_COLOR_NORMAL，单次opaque、CULL、LEQUAL、写颜色/深度。RGB编码原单位球方向、A编码热态，UV0编码cos/sin相位，Normal为Pose变换后的径向法线；不能直接设置逐核心uniform后延迟批绘，否则多核心状态串用。Java每draw复用两个Vector3f，网格12/8/4细分在类初始化生成（864/384/96面）。16/40格LOD切换，40～48格淡出场线。
+- GLSL150程序纹理最多4次固定3D值噪声、0纹理采样，远处或子像素细节省略第4次；原生fog.glsl与ColorModulator正常使用。gravity_surface.fsh复用core_convection.glsl和stellar_surface.vsh，CoreRenderer的能量体使用drawGravity按0.3缩放至原半径0.375，LOD距离除0.3按屏幕尺寸降档，外金属环继续原模型。引力环光效24～32格淡出。不引入全屏后处理或raymarch，不自行绑定额外FBO。真实OpenGL预览工具仅在隐藏窗口验证，不启动用户游戏。
 
 - alpha.14恒星警告字体复用同仓库OverloadCore独立ChromaticTooltipText风格，参考作者huige233。client/ChromaticWarningText保留署名、斜体/红蓝叠影/轻微抖动，警告不做逐字等待。必须用FormattedCharSequence覆盖叠影Style色，且Font将alpha<4视为不透明，淡出小于4的叠影应跳过。
 - SolarWarningMixin仅放mixins配置client，WrapOperation包裹Gui.renderOverlayMessage内唯一GuiGraphics.drawStringWithBackdrop(Font,Component,int,int,int,int):int，只匹配heat_warning/heat_burning/heat_contact三个翻译键。复用原HUD变换与alpha、按斜体宽度重新居中，窄屏缩放，原文字背景选项保留；其他消息original.call，无新网络包或独立HUD计时。THIRD_PARTY_NOTICES随JAR打包，不新增OverloadCore依赖。
@@ -63,6 +69,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.15构建及tools/VerifySolarShader.java隐藏OpenGL工具通过。测试读取真实.vsh/.fsh并展开当前MC fog.glsl，在GLSL150编译/链接/重链接、同一buffer两星独立热态/相位、冷热及流动像素、深度遮挡、3档闭合面/法线/半径。GPU计时为640×640离屏特定显卡结果，不等于游戏帧率；运行需编译main classes、现有LWJGL3.3.3及JOML1.10.5和平台natives classpath，输出build/shader-check。增加中心伤害后已运行21项服务端GameTest通过，无客户端游戏验收。
 
 - alpha.14构建、javap核对当前1.21.1发布件的renderOverlayMessage调用及WrapOperation描述符、client配置与JAR归属检查通过；新增字体不改变服务器，无需重复20项GameTest，实际观感由用户验收。
 

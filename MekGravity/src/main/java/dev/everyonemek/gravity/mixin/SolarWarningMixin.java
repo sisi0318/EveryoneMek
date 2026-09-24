@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/** Replace only the three stellar heat messages at the native actionbar draw call. */
+/** Replace only the stellar heat warning messages at the native actionbar draw call. */
 @Mixin(Gui.class)
 public abstract class SolarWarningMixin {
     @WrapOperation(method="renderOverlayMessage",at=@At(value="INVOKE",target="Lnet/minecraft/client/gui/GuiGraphics;drawStringWithBackdrop(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIII)I"))
