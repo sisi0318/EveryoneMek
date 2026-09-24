@@ -193,5 +193,6 @@
   "item.mekgravity.compressed_stellar_matter": "压缩恒星物质",
   "item.mekgravity.stellar_fuel_preform": "恒星燃料坯",
   "item.mekgravity.stellar_fuel": "封装恒星燃料",
-  "item.mekgravity.stellar_fuel_capsule": "残余恒星燃料胶囊"
+  "item.mekgravity.stellar_fuel_capsule": "残余恒星燃料胶囊",
+  "mekgravity.solar.load_duration": "设定负载续航 %s时 %s分 %s秒"
 }

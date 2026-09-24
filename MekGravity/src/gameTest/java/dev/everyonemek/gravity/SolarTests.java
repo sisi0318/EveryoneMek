@@ -52,6 +52,32 @@ public final class SolarTests {
         check(energy.extractEnergy(0,Long.MAX_VALUE,Action.EXECUTE)==SolarConfig.PORT_RATE.get()&&energy.extractEnergy(0,Long.MAX_VALUE,Action.EXECUTE)==0,"Per-port solar limit bypassed");
         h.getLevel().setBlockAndUpdate(c.structure.at(1,1,1),Blocks.AIR.defaultBlockState());check(!c.structure.valid()&&energy.getEnergyContainerCount()==0,"Broken solar kept capability access");c.enabled=false;h.succeed();
     }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void solarFillsPastHalfCapacityAndResumesWithoutWastingFuel(GameTestHelper h){var c=formed(h);
+        c.enabled=c.ignited=true;c.automatic=true;c.fuelRemaining=c.fuelTotal=SolarFuelRecipe.find(h.getLevel(),new ItemStack(SolarContent.FUEL.get())).energy();long power=c.structure.power(),net=power-power/20;
+        // Reproduce the screenshot's old 50% usable-buffer equilibrium, with no external load.
+        c.stored=c.reserve()+(c.capacity()-c.reserve())/2;
+        for(int i=0;i<20;i++)c.react();check(c.gross==power,"Solar throttled at half capacity instead of reaching set load");
+        for(int percent:List.of(50,80,99)){c.stored=c.capacity()/100*percent;long before=c.stored,fuel=c.fuelRemaining;c.react();
+            check(c.gross==power&&c.stored-before==net&&fuel-c.fuelRemaining==power,"Early throttling or energy loss at "+percent+"% capacity");}
+        for(boolean automatic:List.of(true,false)){c.automatic=automatic;
+            // Cover all integer rounding residues at the last joules, including the old 1 J/t tail.
+            for(int room=1;room<=40;room++){c.gross=power;c.stored=c.capacity()-room;long fuel=c.fuelRemaining;c.react();
+                check(c.stored==c.capacity()&&fuel-c.fuelRemaining==room+c.selfUse,"Final fill failed to conserve net energy for room="+room);
+                fuel=c.fuelRemaining;c.react();check(c.gross==0&&c.fuelRemaining==fuel,"Full buffer consumed fuel");
+            }
+        }
+        c.automatic=true;c.stored=c.capacity();c.react();long fuel=c.fuelRemaining;
+        var out=c.structure.ports.stream().filter(p->p.kind()==SolarBlock.Kind.ENERGY&&p.output()).findFirst().orElseThrow();var handler=new SolarPorts.Energy(out,side(c,out));
+        check(handler.extractEnergy(0,net,Action.SIMULATE)==net&&c.stored==c.capacity(),"Full-buffer output simulation mutated energy");
+        check(handler.extractEnergy(0,net,Action.EXECUTE)==net,"Could not drain the full solar through its real port");
+        h.startSequence().thenIdle(2).thenExecute(()->{
+            check(c.stored==c.capacity(),"Automatic mode did not promptly refill after real energy extraction");
+            check(fuel-c.fuelRemaining==power,"Refill did not exactly pay the exported energy and self-use");
+        }).thenIdle(2).thenExecute(()->{
+            check(c.stored==c.capacity()&&c.gross==0&&fuel-c.fuelRemaining==power,"Full solar failed to stay idle without fuel drain");c.enabled=false;
+        }).thenSucceed();
+    }
     @GameTest(template="empty",timeoutTicks=200)
     public static void solarBuildRespectsProtectionAndFeedsNativeCube(GameTestHelper h){var c=create(h);var p=ReactorTests.player(h,c.getBlockPos().north());var plan=SolarConstruction.plan(c);var counts=new HashMap<Item,Integer>();plan.values().forEach(s->counts.merge(s.getBlock().asItem(),1,Integer::sum));counts.forEach((item,n)->p.getInventory().add(new ItemStack(item,n)));
         var blocked=plan.keySet().stream().skip(4).findFirst().orElseThrow();java.util.function.Consumer<BlockEvent.EntityPlaceEvent> deny=e->{if(e.getEntity()==p&&e.getPos().equals(blocked))e.setCanceled(true);};NeoForge.EVENT_BUS.addListener(deny);

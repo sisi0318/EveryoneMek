@@ -193,5 +193,6 @@
   "item.mekgravity.compressed_stellar_matter": "Compressed Stellar Matter",
   "item.mekgravity.stellar_fuel_preform": "Stellar Fuel Preform",
   "item.mekgravity.stellar_fuel": "Sealed Stellar Fuel",
-  "item.mekgravity.stellar_fuel_capsule": "Residual Stellar Fuel Capsule"
+  "item.mekgravity.stellar_fuel_capsule": "Residual Stellar Fuel Capsule",
+  "mekgravity.solar.load_duration": "At set load: %sh %sm %ss"
 }

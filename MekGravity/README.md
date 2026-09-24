@@ -1,16 +1,16 @@
 # Mek Gravity · 引力约束反应堆
 
-**0.1.0-alpha.9** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.10** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 一台 7×7×7 后期多方块发电机。六组线圈约束引力核心，持续消耗致密燃料丸；电力维持约束，**不再需要钠冷却**。
 
-alpha.8已新增第二台发电装置：[人造微缩太阳使用说明](SOLAR_README.md)。9×9×9结构，长效恒星燃料、四组采能翼、自动调载和残余燃料回收已可用。alpha.9修复材料清单乱码、红蓝能量口标识与及时刷新，采能翼自动朝内，约束环改为连续细梁。下方仍为原引力堆说明；[太阳设计](SOLAR_DESIGN.md)和[追加候选](SOLAR_EXPANSIONS.md)中未列为已完成的扩展会逐步补充。
+alpha.8已新增第二台发电装置：[人造微缩太阳使用说明](SOLAR_README.md)。9×9×9结构，长效恒星燃料、四组采能翼、自动调载和残余燃料回收已可用。alpha.9修复材料清单乱码、红蓝能量口标识与及时刷新，采能翼自动朝内，约束环改为连续细梁。alpha.10修复太阳在半缓存提前降载的问题，充满才停耗料，续航按设定负载估算。下方仍为原引力堆说明；[太阳设计](SOLAR_DESIGN.md)和[追加候选](SOLAR_EXPANSIONS.md)中未列为已完成的扩展会逐步补充。
 
 ## 安装
 
 客户端和服务端安装同一版本的本模组、**Mekanism 1.21.1-10.7.19.85** 与同版本 **Mekanism Generators**。JEI 可选，不要求安装 MekFactory 或 Extras。
 
-JAR：`build/libs/MekGravity-0.1.0-alpha.9.jar`。
+JAR：`build/libs/MekGravity-0.1.0-alpha.10.jar`。
 
 升级时先退出游戏，用新版JAR替换mods内的旧版，目录中只保留一个MekGravity。立体框架、阶梯式线圈和内嵌观察窗从alpha.5开始提供，alpha.8包含这些模型；仍加载alpha.4时不会看到新造型。客户端和服务端一起更新，已有引力堆无需重建，微缩太阳另行建造。
 

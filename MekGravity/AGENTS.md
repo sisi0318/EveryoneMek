@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.9，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.10，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -22,7 +22,7 @@
 - alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。耀斑、日冕加工、批量升级、CC和自定义告警/调载阈值仍未实现。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
 - solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器真实转向必须触发；alpha.9采能翼朝向属于布局派生状态，旧片也自动纠正。
 - SolarController只保存储电、当前单份燃料余量/总量、点火和设置；fuel仓是SolarPart自己的18格ItemStackHandler。SolarFuelRecipe独立上限10^18 J，不批量将64份相乘。STOCK/DATA/FUEL_DATA三种组件分别处理仓、主控、残余胶囊。SolarMenu按实际点击部件距离校验而非只按主控，远端柱子也可打开。SolarPorts保留共享+单口tick额度、模拟无资源变化、停止后取料、真实自动弹出。
-- SolarConfig独立mekgravity-solar-server.toml（J）。自动调载固定25%低段积极补能，参考实际出电与50%目标缓冲，中高段降载、80%以上待机；并非完整可调滞回控制器。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新，避免吞掉下一份燃料时瞬时错误信号。
+- SolarConfig独立mekgravity-solar-server.toml（J）。alpha.10取消原50%目标与80%提前停机：两种模式均向实际容量补满；automatic额外按上一tick真实exported净能量快速升载，关闭时使用常规升载。净可容纳量与毛燃料不能直接取min：net=fuel-ceil(fuel/20)，需反算fuel=net+ceil(net/19)，只对小于当tick产量的净余量反算，禁止乘20导致溢出。满缓存不收费、不取下一份燃料；最后单份残余仍保持预算守恒。SolarScreen续航用菜单同步power×load/100，标明设定负载，不再除瞬时gross。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新。
 - 太阳资源入口generate_solar_resources.py由generate_resources.py统一调用，生成模型/配方/语言/布局Java。新sun.obj为半径1.25的32×16表面；四张solar图集PNG均16×16，原稿及提示词在art。SolarRenderer只绘制seed，使用CoreMotion，日珥/日冕/向外光点固定网格预算，不spawn实体。聚束器使用共享ModelShapes鼻部选择框。
 - 原PRC制备：燃料坯+8000mB D-T化学品+1000mB水，1200tick/200额外J；现发布件升级组件入口为getComponent()，不是getUpgradeComponent()。测试用速度8以覆盖实际完整制备，时长由原Mek倍率计算，不假设每级2倍。
 - 用户在2026-09-22确认art/models/graybox-v1灰模，alpha.5已接入。tools/runtime_geometry.py从批准的assembly.json提取几何，移除内部/覆盖面并合并共面矩形，再使用现有原创16×16贴图分配UV；不改灰模比例、不用满面机器纹理遮盖几何。generate_resources.py生成运行JSON与ModelShapes.java，不能只改单个生成文件。
@@ -50,6 +50,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.10构建与18项服务端测试通过。solarFillsPastHalfCapacityAndResumesWithoutWastingFuel复现50%可用缓存无负载升载、50/80/99%额定功率，枚举自动开/关最后1～40 J取整与自耗守恒，再通过真实端口抽能、控制器tick补满/待机。无需重复长时燃料测试；现有144000步预算回归继续覆盖总预算。
 
 - alpha.9构建与17项服务端测试通过。新增真实BlockItem.useOn在四种主控朝向和±89°俯仰放置全部翼片；不调用validate的真实tick验证未成型远端片刷新与补齐/拆坏外观；原Mek配置器切换真实handler，再掉落/重放验证OUTPUT组件和方向。模型资源状态穷举与细梁共享端点检查通过；没有客户端验收。
 

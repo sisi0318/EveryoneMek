@@ -17,14 +17,14 @@ public final class SolarController extends TileEntityMekanism {
     public long stored,fuelRemaining,fuelTotal,gross,selfUse,lastOutput,lastInput;
     public boolean enabled,ignited,autoEject=true,automatic=true,refill=true;
     public int load=100;public String status="structure";
-    private long ioTick=Long.MIN_VALUE,exported,received;private double demand;private int lastAlarm=-1;
+    private long ioTick=Long.MIN_VALUE,exported,received;private int lastAlarm=-1;
     public SolarController(BlockPos pos,BlockState state){super(SolarContent.CONTROLLER,pos,state);}
     @Override protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener){return EnergyContainerHelper.forSide(facingSupplier).build();}
     @Override public boolean persists(ContainerType<?,?,?> type){return type!=ContainerType.ENERGY&&super.persists(type);}
     public boolean access(Player p){return !isRemoved()&&p.level()==level&&mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(p,level,worldPosition,this);}
     public long capacity(){return SolarConfig.CAPACITY.get();}public long reserve(){return Math.min(capacity(),SolarConfig.RESERVE.get());}public long startup(){return SolarConfig.STARTUP.get();}
     public long inputLimit(){return structure.formed?SolarConfig.PORT_RATE.get()*structure.inputs:0;}public long outputLimit(){return structure.formed?SolarConfig.PORT_RATE.get()*structure.outputs:0;}
-    public void clock(){long now=level.getGameTime();if(ioTick!=now){lastOutput=exported;lastInput=received;demand=demand*.9+exported*.1;exported=received=0;ioTick=now;}}
+    public void clock(){long now=level.getGameTime();if(ioTick!=now){lastOutput=exported;lastInput=received;exported=received=0;ioTick=now;}}
     public long accept(long n,boolean simulate){if(n<=0||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,capacity()-stored),Math.max(0,inputLimit()-received)));if(!simulate&&take>0){stored+=take;received+=take;markForSave();}return take;}
     public long extract(long n,boolean simulate){if(n<=0||!ignited||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,stored-reserve()),Math.max(0,outputLimit()-exported)));if(!simulate&&take>0){stored-=take;exported+=take;markForSave();}return take;}
     public boolean fuelAvailable(){if(fuelRemaining>0)return true;for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var fuel=SolarFuelRecipe.fuel(level,stack);if(fuel!=null&&stack.getCount()>=fuel.count())return true;}return false;}
@@ -44,21 +44,22 @@ public final class SolarController extends TileEntityMekanism {
         if(!ignited){if(stored<startup()+reserve()){status="charging";return;}stored-=startup();ignited=true;markForSave();}
         if(stored<reserve()){status="reserve_low";return;}
         long limit=structure.power()*load/100,room=Math.max(0,capacity()-stored);if(room<=0){status="full";return;}
-        long target=limit;
-        if(automatic){
-            long usable=Math.max(1,capacity()-reserve());double fraction=Math.clamp((stored-reserve())/(double)usable,0,1);
-            // Feed-forward actual output with a refill band. At high charge, pause rather than waste fuel.
-            if(fraction>=.8){status="standby";return;}
-            double correction=Math.max(0,.5-fraction)*usable/40D;
-            if(fraction<.25)target=limit;else target=(long)Math.min(limit,(demand+correction)/.95);
-            if(target<100){status="standby";return;}
-        }
-        long requested=Math.min(target,previous+Math.max(1,structure.power()/20));
-        long amount=Math.min(requested,room);if(amount<=0){status="full";return;}
+        long requested=Math.min(limit,previous+Math.max(1,structure.power()/20));
+        // Always refill toward actual capacity. Automatic mode can also respond immediately
+        // to real exported energy, instead of ramping up again after every full-buffer pause.
+        if(automatic)requested=Math.max(requested,fuelForNet(Math.min(Math.max(0,lastOutput),netEnergy(limit))));
+        // Capacity is NET energy, fuel is GROSS energy. Using room directly as fuel causes
+        // an asymptotic tail and eventually burns 1 J/t forever without filling the last joule.
+        long amount=netEnergy(requested)>room?fuelForNet(room):requested;
+        if(netEnergy(amount)<=0){status="limited";return;}
         if(!chargeFuel()){status=refill?"fuel_missing":"refill_off";return;}
         gross=Math.min(amount,fuelRemaining);selfUse=gross/20+(gross%20==0?0:1);fuelRemaining-=gross;stored+=gross-selfUse;
         if(fuelRemaining==0)fuelTotal=0;status=gross<requested?"limited":"running";markForSave();
     }
+    private static long netEnergy(long fuel){return fuel-fuel/20-(fuel%20==0?0:1);}
+    // ceil(20 * net / 19), without the overflowing multiplication. Callers bound net by
+    // the configured per-tick generation limit, never by the entire stored fuel budget.
+    private static long fuelForNet(long net){return net+net/19+(net%19==0?0:1);}
     @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();clock();react();SolarPorts.eject(this);if(exported>0)lastOutput=exported;if(received>0)lastInput=received;structure.activity(gross>0);setActive(gross>0);
         int alarm=structure.formed&&!fuelAvailable()?15:0;if(alarm!=lastAlarm){lastAlarm=alarm;for(var hatch:structure.fuelHatches)if(!hatch.isRemoved()&&level.hasChunkAt(hatch.getBlockPos()))level.updateNeighbourForOutputSignal(hatch.getBlockPos(),hatch.getBlockState().getBlock());}return changed;}
     @Override public void onLoad(){super.onLoad();structure.watch();structure.invalidate();}
