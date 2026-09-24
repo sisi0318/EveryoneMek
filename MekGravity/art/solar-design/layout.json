@@ -1831,25 +1831,27 @@
     }
   ],
   "proposal": {
+    "revision": 2,
     "gross_fe_per_tick": [
-      32000000000,
-      64000000000,
-      128000000000,
-      256000000000
+      256000000000,
+      512000000000,
+      1024000000000,
+      2048000000000
     ],
     "self_use_percent": 5,
-    "fuel_joules": 46080000000000000,
+    "fuel_joules": 737280000000000000,
     "full_load_seconds": [
+      57600,
       28800,
       14400,
-      7200,
-      3600
+      7200
     ],
     "joules_per_fe": 2.5,
     "ticks_per_second": 20,
-    "startup_fe": 8000000000000,
-    "reserve_fe": 256000000000,
-    "buffer_fe": 16000000000000,
-    "fe_per_output_port_per_tick": 64000000000
+    "startup_fe": 64000000000000,
+    "reserve_fe": 2048000000000,
+    "buffer_fe": 1024000000000000,
+    "fe_per_output_port_per_tick": 1024000000000,
+    "recipe_max_joules": 1000000000000000000
   }
 }

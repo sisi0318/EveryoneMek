@@ -50,11 +50,16 @@ kinds={
  'ignition':('点火口','入','#bb7770'),'output':('发电口','出','#748fb4')}
 layout={'name':'人造微缩太阳','status':'设计提案，尚未实现','size':[9,9,9],'origin':'正面左下角，零基坐标，向上为Y、向后为Z',
  'fuel_mode':'投放长效恒星燃料；用户已选择此玩法','counts':dict(counts),'total_blocks':len(parts),'air':729-len(parts),
- 'blocks':list(parts.values()),'proposal':{'gross_fe_per_tick':[32_000_000_000,64_000_000_000,128_000_000_000,256_000_000_000],
- 'self_use_percent':5,'fuel_joules':46_080_000_000_000_000,'full_load_seconds':[28800,14400,7200,3600],
- 'joules_per_fe':2.5,'ticks_per_second':20,'startup_fe':8_000_000_000_000,'reserve_fe':256_000_000_000,
- 'buffer_fe':16_000_000_000_000,'fe_per_output_port_per_tick':64_000_000_000}}
+ 'blocks':list(parts.values()),'proposal':{'revision':2,'gross_fe_per_tick':[256_000_000_000,512_000_000_000,1_024_000_000_000,2_048_000_000_000],
+ 'self_use_percent':5,'fuel_joules':737_280_000_000_000_000,'full_load_seconds':[57600,28800,14400,7200],
+ 'joules_per_fe':2.5,'ticks_per_second':20,'startup_fe':64_000_000_000_000,'reserve_fe':2_048_000_000_000,
+ 'buffer_fe':1_024_000_000_000_000,'fe_per_output_port_per_tick':1_024_000_000_000,'recipe_max_joules':1_000_000_000_000_000_000}}
 for rate,seconds in zip(layout['proposal']['gross_fe_per_tick'],layout['proposal']['full_load_seconds']):assert rate*5//2*seconds*20==layout['proposal']['fuel_joules']
+proposal=layout['proposal']
+assert proposal['fuel_joules']<=proposal['recipe_max_joules']<2**63-1
+assert proposal['startup_fe']+proposal['reserve_fe']<proposal['buffer_fe']
+assert proposal['buffer_fe']*5//2<2**63-1
+assert proposal['fe_per_output_port_per_tick']*counts['output']>=max(proposal['gross_fe_per_tick'])*95//100
 (OUT/'layout.json').write_text(json.dumps(layout,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 
 svg=['<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="1170" viewBox="0 0 1060 1170">',
