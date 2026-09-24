@@ -2,6 +2,8 @@
 
 外观沿用已确认的浅灰 Mek 工业机壳、深色工作区和少量紫色指示灯。
 
+alpha.8新增微缩太阳：`source/solar.png`为内置image_gen原创图集，提示词见`solar-runtime-prompt.txt`；四格依次为余辉表面、工作表面、静止采能面、工作采能面，导出为4张真正16×16贴图。`generate_solar_resources.py`创建9格装置三维资源、32×16太阳球面OBJ及采能翼分片模型；`preview_solar.cjs`从运行模型投影`solar-runtime-preview.png`。含旧资产共37张运行PNG，原稿与预览不进入JAR。
+
 用户确认的[整机三维灰模](models/graybox-v1/README.md)已在alpha.5接入游戏。保留原生WebGL预览、可编辑OBJ与语义部件数据；运行模型由同一份assembly.json导出，并复用现有原创16×16材质，不再生成整块机壳图替代立体结构。
 
 - `concept-v1.png`：用户批准方向的整机剖视概念，只作设计参考。

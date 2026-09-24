@@ -6,7 +6,7 @@ modId="mekgravity"
 version="${version}"
 displayName="Mek Gravity"
 authors="EveryoneMek"
-description='''Gravitational containment reactors with material fuel, powered containment and high-throughput energy ports.'''
+description='''Gravitational reactors and artificial miniature suns with long-life fuel, powered containment and high-throughput energy ports.'''
 [[mixins]]
 config="mekgravity.mixins.json"
 [[dependencies.mekgravity]]

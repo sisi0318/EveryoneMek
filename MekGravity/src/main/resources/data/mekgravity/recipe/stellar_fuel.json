@@ -1,0 +1,21 @@
+{
+  "type": "mekanism:reaction",
+  "item_input": {
+    "count": 1,
+    "item": "mekgravity:stellar_fuel_preform"
+  },
+  "fluid_input": {
+    "amount": 1000,
+    "tag": "minecraft:water"
+  },
+  "chemical_input": {
+    "amount": 8000,
+    "chemical": "mekanismgenerators:fusion_fuel"
+  },
+  "item_output": {
+    "count": 1,
+    "id": "mekgravity:stellar_fuel"
+  },
+  "duration": 1200,
+  "energy_required": 200
+}

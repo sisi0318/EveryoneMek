@@ -128,3 +128,6 @@ for direction,z in [('north','北'),('south','南'),('east','东'),('west','西'
 for key,(z,e) in pairs.items():zh['mekgravity.'+key]=z;en['mekgravity.'+key]=e
 write(Path('assets/mekgravity/lang/zh_cn.json'),zh);write(Path('assets/mekgravity/lang/en_us.json'),en)
 print('Generated gravity reactor block, recipe, loot and language resources.')
+
+from generate_solar_resources import build as build_solar
+build_solar()

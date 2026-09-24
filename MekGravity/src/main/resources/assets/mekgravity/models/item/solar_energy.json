@@ -1,0 +1,11 @@
+{
+  "parent": "mekgravity:block/solar/energy",
+  "overrides": [
+    {
+      "predicate": {
+        "mekgravity:output": 1
+      },
+      "model": "mekgravity:block/solar/energy_output"
+    }
+  ]
+}

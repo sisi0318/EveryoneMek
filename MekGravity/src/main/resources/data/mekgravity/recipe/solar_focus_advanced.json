@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "B": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "C": {
+      "item": "mekgravity:solar_focus_basic"
+    }
+  },
+  "result": {
+    "id": "mekgravity:solar_focus_advanced",
+    "count": 1
+  }
+}

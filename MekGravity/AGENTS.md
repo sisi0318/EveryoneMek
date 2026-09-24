@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.7，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。
+- 0.1.0-alpha.8，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -14,9 +14,14 @@
 
 ## 实现入口
 
-- 2026-09-24用户要求在本模组设计“人造微缩太阳”，选择投放长效恒星燃料后又要求提高数值。SOLAR_DESIGN.md及art/solar-design仍为未实现的提案；修订建议256/512/1024/2048 GFE/t和16/8/4/2小时，单份737.28 PJ，缓存1.024 PFE、单口1.024 TFE/t。用户确认的是长效路线与提高数值方向，具体值仍是实现基准建议。不得改回持续氘氚进料，氘氚可用于制备。
+- 2026-09-24用户要求开始实现微缩太阳并逐步补全。alpha.8已接入基础版，行为以SOLAR_README.md为准；SOLAR_DESIGN.md/SOLAR_EXPANSIONS.md包含未完成候选，不能全部宣称可用。实际默认256/512/1024/2048 GFE/t、16/8/4/2小时、单份737.28 PJ，缓存1.024 PFE、单口1.024 TFE/t额度。长效成品燃料供料，氘氚只用于制备。
 - 微缩太阳核对经验：Generators化学品ID使用mekanismgenerators命名空间；加压反应室MAX_FLUID/MAX_GAS均10,000。现有FuelRecipe上限1 PJ，太阳737.28 PJ需独立stellar_fuel与单配方10^18 J上限、long安全乘加；64份总预算会溢出，保持物品库存与单份预算分离。原Ports的64次int FE分批理论上限约137.44 GFE/t/口，不能冒称满足1.024 TFE/t；优先原生long并有界FE回退。现有7格Structure/Controller/Ports也不能直接套9格结构。
-- SOLAR_EXPANSIONS.md为用户询问追加功能后的未确认候选：按需调载25/80%阈值、残余燃料胶囊回收、诊断/告警及视觉反馈优先；后续耀斑模块30秒125%升载、每单位毛电额外15%燃料、60秒恢复（终极额外291.84 TFE净电、额外1.344 PJ燃料），日冕加工仓共享最多20%净采能、整组升级和可选CC遥测。既有接口已允许高速放缓存，不能再做低于普通输出能力的冗余“缓存爆发按钮”。不可视为已实现或已确认；本轮不改基础功率/220块蓝图/JAR。胶囊回收与主控预算原子转移，不携带点火资格；日冕材料不能成为首台太阳的前置循环。
+- alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。耀斑、日冕加工、批量升级、CC和自定义告警/调载阈值仍未实现。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
+- solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器/采能翼真实转向必须触发。
+- SolarController只保存储电、当前单份燃料余量/总量、点火和设置；fuel仓是SolarPart自己的18格ItemStackHandler。SolarFuelRecipe独立上限10^18 J，不批量将64份相乘。STOCK/DATA/FUEL_DATA三种组件分别处理仓、主控、残余胶囊。SolarMenu按实际点击部件距离校验而非只按主控，远端柱子也可打开。SolarPorts保留共享+单口tick额度、模拟无资源变化、停止后取料、真实自动弹出。
+- SolarConfig独立mekgravity-solar-server.toml（J）。自动调载固定25%低段积极补能，参考实际出电与50%目标缓冲，中高段降载、80%以上待机；并非完整可调滞回控制器。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新，避免吞掉下一份燃料时瞬时错误信号。
+- 太阳资源入口generate_solar_resources.py由generate_resources.py统一调用，生成模型/配方/语言/布局Java。新sun.obj为半径1.25的32×16表面；四张solar图集PNG均16×16，原稿及提示词在art。SolarRenderer只绘制seed，使用CoreMotion，日珥/日冕/向外光点固定网格预算，不spawn实体。聚束器使用共享ModelShapes鼻部选择框。
+- 原PRC制备：燃料坯+8000mB D-T化学品+1000mB水，1200tick/200额外J；现发布件升级组件入口为getComponent()，不是getUpgradeComponent()。测试用速度8以覆盖实际完整制备，时长由原Mek倍率计算，不假设每级2倍。
 - 用户在2026-09-22确认art/models/graybox-v1灰模，alpha.5已接入。tools/runtime_geometry.py从批准的assembly.json提取几何，移除内部/覆盖面并合并共面矩形，再使用现有原创16×16贴图分配UV；不改灰模比例、不用满面机器纹理遮盖几何。generate_resources.py生成运行JSON与ModelShapes.java，不能只改单个生成文件。
 - AssemblyAppearance复用已有FACING：成型框架UP为立柱、EAST为世界X横梁、NORTH为世界Z横梁、DOWN为对称接头；面板朝内、玻璃和接口朝外。COIL的FACING是实际瞄准，不能被外观代码改写。Shape只为外伸线圈新增，来自同一源几何；六方向实际level.clip(OUTLINE/COLLIDER)回归覆盖0.25格鼻部。
 - 灰模文件和ZIP保留可编辑模型，不直接进入JAR。generate_graybox.py输出OBJ/MTL/assembly.json/scene.js；保留93个逻辑玻璃锚点。游戏仍逐块保存/掉落，不能把合并的预览玻璃当成库存实体。
@@ -43,6 +48,7 @@
 
 ## 验证
 
+- alpha.8共15项服务端测试通过，SolarTests新增4项：两小时144000次稳态预算计算/64份库存不溢出、胶囊原子回收和重载、四翼等级/满缓存暂停恢复/旧能力失效、保护施工扣料/远端菜单/原能量立方，以及原加压反应室真实tick制备。未运行客户端；无界面测试与离线预览不替代模型/UI验收。
 - alpha.7构建与11项GameTest通过，CoreAnimationTests验证真实结构负载/启停/拆坏、效果标签不持久化且不覆盖库存，以及20/60/144 FPS相位一致/暂停/停止。三个拆分OBJ与完整核心的坐标、面序、UV逐项相同；运动径向间隔检查通过。art/models/core-motion-v1为可离线操作的Canvas简化着色预览，非游戏画面。
 - alpha.6构建与10项服务端测试通过。既有fuelStartupAndReloadWorkWithoutCoolant追加600次终极稳态反应的单丸耗尽/下一丸衔接/能量守恒检查，模拟测试接收器收集缓冲增加量，不宣称这些循环是600个真实服务端tick；旧短余量保存校验不做倍率迁移。
 - alpha.5构建与10项服务端测试通过，新增四种主控朝向下的角色分配/重载/损坏修复/真实线圈转向及主控转向残留清理，以及六向鼻部OUTLINE/COLLIDER世界射线。原8项发电/输电/物流/保存/玻璃回归继续通过。

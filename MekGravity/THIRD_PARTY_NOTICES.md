@@ -12,3 +12,4 @@
 - `art/models/graybox-v1`为本项目原创整机几何与原生WebGL预览；OBJ/MTL/JSON由tools/generate_graybox.py生成，无第三方模型或3D引擎。concept-reference.png是既有原创concept-v1.png的可离线查看副本。
 - alpha.5运行几何从上述原创assembly.json导出并复用现有原创贴图。成型窗面通过资源路径引用Minecraft原版white_concrete，未复制其PNG；透明颜色使用NeoForge原生ExtraFaceData能力。
 - Gradle Wrapper 文件来自项目使用的标准 Gradle Wrapper 发行流程。
+- alpha.8微缩太阳表面/采能翼图集`art/source/solar.png`由内置image_gen原创生成，提示词为`art/solar-runtime-prompt.txt`。三维机架与太阳球面由本项目生成器制作，部分结构复用同仓库原创材质/几何，未复制第三方模型。

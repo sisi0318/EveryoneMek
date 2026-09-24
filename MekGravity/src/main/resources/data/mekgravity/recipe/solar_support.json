@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BAB",
+    "BCB",
+    "BAB"
+  ],
+  "key": {
+    "B": {
+      "item": "mekgravity:solar_base"
+    },
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:ultimate_induction_provider"
+    }
+  },
+  "result": {
+    "id": "mekgravity:solar_support",
+    "count": 4
+  }
+}

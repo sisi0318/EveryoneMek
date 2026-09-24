@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "CHC",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:pellet_antimatter"
+    },
+    "C": {
+      "item": "mekgravity:compressed_stellar_matter"
+    },
+    "H": {
+      "item": "mekanism:hdpe_sheet"
+    }
+  },
+  "result": {
+    "id": "mekgravity:stellar_fuel_preform",
+    "count": 1
+  }
+}

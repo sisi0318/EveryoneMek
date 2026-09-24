@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "ROR",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "R": {
+      "item": "mekanism:ingot_refined_obsidian"
+    },
+    "O": {
+      "item": "mekanism:ingot_osmium"
+    }
+  },
+  "result": {
+    "id": "mekgravity:solar_base",
+    "count": 8
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "PPP",
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "mekgravity:dense_fuel_pellet"
+    }
+  },
+  "result": {
+    "id": "mekgravity:compressed_stellar_matter",
+    "count": 1
+  }
+}

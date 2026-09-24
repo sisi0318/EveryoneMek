@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "B": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "C": {
+      "item": "mekgravity:ultimate_coil"
+    }
+  },
+  "result": {
+    "id": "mekgravity:solar_ring_basic",
+    "count": 4
+  }
+}

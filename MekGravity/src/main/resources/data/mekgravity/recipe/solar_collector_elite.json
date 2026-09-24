@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "B": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "C": {
+      "item": "mekgravity:solar_collector_advanced"
+    }
+  },
+  "result": {
+    "id": "mekgravity:solar_collector_elite",
+    "count": 1
+  }
+}

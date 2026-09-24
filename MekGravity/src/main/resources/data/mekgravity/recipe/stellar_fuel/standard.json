@@ -1,0 +1,8 @@
+{
+  "type": "mekgravity:stellar_fuel",
+  "ingredient": {
+    "item": "mekgravity:stellar_fuel"
+  },
+  "count": 1,
+  "energy": 737280000000000000
+}

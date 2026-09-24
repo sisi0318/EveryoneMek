@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "": {
+      "model": "mekgravity:block/solar/support",
+      "x": 0,
+      "y": 0
+    }
+  }
+}

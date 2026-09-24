@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,output=false": {
+      "model": "mekgravity:block/solar/energy",
+      "x": 0,
+      "y": 0
+    },
+    "facing=east,output=false": {
+      "model": "mekgravity:block/solar/energy",
+      "x": 0,
+      "y": 90
+    },
+    "facing=south,output=false": {
+      "model": "mekgravity:block/solar/energy",
+      "x": 0,
+      "y": 180
+    },
+    "facing=west,output=false": {
+      "model": "mekgravity:block/solar/energy",
+      "x": 0,
+      "y": 270
+    },
+    "facing=up,output=false": {
+      "model": "mekgravity:block/solar/energy",
+      "x": 270,
+      "y": 0
+    },
+    "facing=down,output=false": {
+      "model": "mekgravity:block/solar/energy",
+      "x": 90,
+      "y": 0
+    },
+    "facing=north,output=true": {
+      "model": "mekgravity:block/solar/energy_output",
+      "x": 0,
+      "y": 0
+    },
+    "facing=east,output=true": {
+      "model": "mekgravity:block/solar/energy_output",
+      "x": 0,
+      "y": 90
+    },
+    "facing=south,output=true": {
+      "model": "mekgravity:block/solar/energy_output",
+      "x": 0,
+      "y": 180
+    },
+    "facing=west,output=true": {
+      "model": "mekgravity:block/solar/energy_output",
+      "x": 0,
+      "y": 270
+    },
+    "facing=up,output=true": {
+      "model": "mekgravity:block/solar/energy_output",
+      "x": 270,
+      "y": 0
+    },
+    "facing=down,output=true": {
+      "model": "mekgravity:block/solar/energy_output",
+      "x": 90,
+      "y": 0
+    }
+  }
+}

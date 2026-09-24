@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,active=false": {
+      "model": "mekgravity:block/solar/focus_basic",
+      "x": 0,
+      "y": 0
+    },
+    "facing=east,active=false": {
+      "model": "mekgravity:block/solar/focus_basic",
+      "x": 0,
+      "y": 90
+    },
+    "facing=south,active=false": {
+      "model": "mekgravity:block/solar/focus_basic",
+      "x": 0,
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "mekgravity:block/solar/focus_basic",
+      "x": 0,
+      "y": 270
+    },
+    "facing=up,active=false": {
+      "model": "mekgravity:block/solar/focus_basic",
+      "x": 270,
+      "y": 0
+    },
+    "facing=down,active=false": {
+      "model": "mekgravity:block/solar/focus_basic",
+      "x": 90,
+      "y": 0
+    },
+    "facing=north,active=true": {
+      "model": "mekgravity:block/solar/focus_basic_active",
+      "x": 0,
+      "y": 0
+    },
+    "facing=east,active=true": {
+      "model": "mekgravity:block/solar/focus_basic_active",
+      "x": 0,
+      "y": 90
+    },
+    "facing=south,active=true": {
+      "model": "mekgravity:block/solar/focus_basic_active",
+      "x": 0,
+      "y": 180
+    },
+    "facing=west,active=true": {
+      "model": "mekgravity:block/solar/focus_basic_active",
+      "x": 0,
+      "y": 270
+    },
+    "facing=up,active=true": {
+      "model": "mekgravity:block/solar/focus_basic_active",
+      "x": 270,
+      "y": 0
+    },
+    "facing=down,active=true": {
+      "model": "mekgravity:block/solar/focus_basic_active",
+      "x": 90,
+      "y": 0
+    }
+  }
+}

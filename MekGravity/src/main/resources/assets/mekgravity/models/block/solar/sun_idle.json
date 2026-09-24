@@ -1,0 +1,13 @@
+{
+  "parent": "minecraft:block/block",
+  "loader": "neoforge:obj",
+  "model": "mekgravity:models/block/solar/sun.obj",
+  "mtl_override": "mekgravity:models/block/solar/sun.mtl",
+  "automatic_culling": false,
+  "shade_quads": false,
+  "emissive_ambient": true,
+  "textures": {
+    "surface": "mekgravity:block/sun_idle",
+    "particle": "mekgravity:block/sun_idle"
+  }
+}

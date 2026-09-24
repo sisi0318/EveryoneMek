@@ -1,0 +1,14 @@
+{
+  "variants": {
+    "active=false": {
+      "model": "mekgravity:block/solar/ring_advanced",
+      "x": 0,
+      "y": 0
+    },
+    "active=true": {
+      "model": "mekgravity:block/solar/ring_advanced_active",
+      "x": 0,
+      "y": 0
+    }
+  }
+}

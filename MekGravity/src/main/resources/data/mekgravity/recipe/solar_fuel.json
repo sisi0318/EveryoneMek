@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BAB",
+    "BCB",
+    "BAB"
+  ],
+  "key": {
+    "B": {
+      "item": "mekgravity:solar_base"
+    },
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "minecraft:hopper"
+    }
+  },
+  "result": {
+    "id": "mekgravity:solar_fuel",
+    "count": 1
+  }
+}
