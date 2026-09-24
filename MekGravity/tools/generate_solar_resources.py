@@ -64,7 +64,7 @@ public final class SolarLayout {
                         variants[f'segment={segment},active={str(active).lower()},facing={face}']={'model':'mekgravity:block/solar/'+sub,'y':ry}
             item={'parent':'mekgravity:block/solar/'+kind+'_2'}
         elif kind=='seed':
-            variants={'':{'model':'mekgravity:block/solar/sun_idle'}};item={'parent':'mekgravity:block/solar/sun_idle','display':{'gui':{'rotation':[25,225,0],'translation':[0,0,0],'scale':[.28,.28,.28]},'ground':{'translation':[0,3,0],'scale':[.2,.2,.2]}}}
+            variants={'':{'model':'mekgravity:block/solar/sun_idle'}};item={'parent':'builtin/entity','gui_light':'front','textures':{'particle':'mekgravity:block/stellar_surface_particle'},'display':{'gui':{'rotation':[0,0,0],'translation':[0,0,0],'scale':[.9,.9,.9]},'ground':{'translation':[0,3,0],'scale':[.5,.5,.5]},'firstperson_righthand':{'rotation':[0,0,0],'translation':[0,2,0],'scale':[.7,.7,.7]},'firstperson_lefthand':{'rotation':[0,0,0],'translation':[0,2,0],'scale':[.7,.7,.7]},'thirdperson_righthand':{'translation':[0,2,0],'scale':[.5,.5,.5]},'thirdperson_lefthand':{'translation':[0,2,0],'scale':[.5,.5,.5]},'fixed':{'scale':[.7,.7,.7]}}}
         else:
             for active in ([False,True] if kind in ['ring','focus','controller'] else [False]):
                 for output in ([False,True] if kind=='energy' else [False]):
@@ -100,8 +100,13 @@ public final class SolarLayout {
     write('assets/mekgravity/shaders/core/stellar_surface.json',shader)
     shader['fragment']='mekgravity:gravity_surface'
     write('assets/mekgravity/shaders/core/gravity_surface.json',shader)
+    shader['vertex']=shader['fragment']='mekgravity:gravity_ring'
+    write('assets/mekgravity/shaders/core/gravity_ring.json',shader)
+    shader['vertex']=shader['fragment']='mekgravity:stellar_field'
+    shader['uniforms']=[u for u in shader['uniforms'] if u['name']!='FogColor']
+    write('assets/mekgravity/shaders/core/stellar_field.json',shader)
     solar_surface.generate(RES)
-    for active in [False,True]:model('sun_active' if active else 'sun_idle',{'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/solar/sun.obj','mtl_override':'mekgravity:models/block/solar/sun.mtl','automatic_culling':False,'shade_quads':False,'emissive_ambient':True,'textures':{'surface':'mekgravity:block/photosphere_active' if active else 'mekgravity:block/photosphere_idle','particle':'mekgravity:block/photosphere_idle'}})
+    for active in [False,True]:model('sun_active' if active else 'sun_idle',{'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/solar/sun.obj','mtl_override':'mekgravity:models/block/solar/sun.mtl','automatic_culling':False,'shade_quads':False,'emissive_ambient':True,'textures':{'surface':'mekgravity:block/photosphere_active' if active else 'mekgravity:block/photosphere_idle','particle':'mekgravity:block/stellar_surface_particle'}})
     for name in ['compressed_stellar_matter','stellar_fuel_preform','stellar_fuel','stellar_fuel_capsule']:
         m=mechanical([box([4,4,4],[12,12,12],'#lamp'),box([3,6,3],[13,10,13],'#steel',[0,0,16,4])]);m['display']={'gui':{'rotation':[25,225,0],'scale':[.9,.9,.9]},'ground':{'translation':[0,3,0],'scale':[.5,.5,.5]}};write('assets/mekgravity/models/item/'+name+'.json',m)
     def recipe(name,pattern,key,count=1):write('data/mekgravity/recipe/'+name+'.json',{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'id':'mekgravity:'+name,'count':count}})

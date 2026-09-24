@@ -8,6 +8,6 @@
   "emissive_ambient": true,
   "textures": {
     "surface": "mekgravity:block/photosphere_active",
-    "particle": "mekgravity:block/photosphere_idle"
+    "particle": "mekgravity:block/stellar_surface_particle"
   }
 }

@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.15，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.16，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,12 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- 资源总生成器generate_resources.py也必须写入client=[SolarWarningMixin]，不能只修改已生成mixins.json；否则下一次美术资源生成会撤掉用户的色散警告。
+- alpha.16双引力环由GravityRingShader使用gravity_ring.vsh/.fsh绘制，GravityRingMesh.java由core_mesh.py从与原OBJ相同的顶点/UV提取生成，不手改；9float布局pos3/normal3/u/v/inner。两环96+96quads，UV0携带u和各自flow相位，Color携带负载/内表面/v；默认原模型仍供物品及shader失败回退。
+- SolarFieldShader用POSITION_TEX_COLOR与stellar_field.vsh/.fsh，一段光带一个quad，横坐标±1或±3做柔边，纵向dot(position)-phase驱动明暗；同原轨迹430quads（旧双层640），加法混合、LEQUAL、COLOR_WRITE、不写深度，避免透明外晕遮掉后面的亮线。注册沿用SolarClient的客户端shader事件。
+- SolarSeedItemRenderer通过net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent绑定solar_seed，模型parent=builtin/entity，手持/GUI/展示框/掉落物走同SolarShader，不复制虚拟BE或游戏资源。先撤销原ItemRenderer的-.5中心偏移再缩放.34，GUI使用中等384面，其余近距864面；资源重载后fallback模型重新从ModelManager获取。
+- solar_seed命中/破坏粒子由sun_idle/active模型particle指向stellar_surface_particle.png；VerifySolarShader在16×16视口用真实stellar_surface shader渲染正面区块直接导出，无背景/后续重绘。JSON引用由generate_solar_resources.py维护，原39张贴图保留，总40张。修改球面shader色彩时按art/field-shaders.md重新烘焙。
 
 - alpha.15追加太阳最内核CORE_RADIUS=.45，zone5默认CORE_CONTACT_DAMAGE=1000000（独立配置stellarCoreContactDamage，仍乘全局灼伤倍率），外层zone4半径1.25保持8点。新增heat_core翻译与色散匹配。seed碰撞为空、选择框保留，避免隐形实体立方挡住玩家进入中心；伤害仍走原hurt与is_fire等标签，禁止直接setHealth/discard，正常抗火与保命机制可拦截。每5tick扫描，中心检测≤0.25s。
 
@@ -69,6 +75,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.16构建与VerifyFieldShaders隐藏GL验证通过：两shader实际编译/链接、运行/停机/移动像素差、实体深度遮挡、透明场深度不写。GravityRingMesh逐顶点与core_ring_0/1.obj一致、闭合边、96面/环；粒子16×16/不透明/正常颜色，物品builtin/entity及扩展注册契约检查。本次纯渲染，不重复21项服务器测试，游戏视觉由用户验收。
 
 - alpha.15构建及tools/VerifySolarShader.java隐藏OpenGL工具通过。测试读取真实.vsh/.fsh并展开当前MC fog.glsl，在GLSL150编译/链接/重链接、同一buffer两星独立热态/相位、冷热及流动像素、深度遮挡、3档闭合面/法线/半径。GPU计时为640×640离屏特定显卡结果，不等于游戏帧率；运行需编译main classes、现有LWJGL3.3.3及JOML1.10.5和平台natives classpath，输出build/shader-check。增加中心伤害后已运行21项服务端GameTest通过，无客户端游戏验收。
 

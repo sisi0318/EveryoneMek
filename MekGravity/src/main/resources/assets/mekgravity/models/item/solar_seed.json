@@ -1,10 +1,14 @@
 {
-  "parent": "mekgravity:block/solar/sun_idle",
+  "parent": "builtin/entity",
+  "gui_light": "front",
+  "textures": {
+    "particle": "mekgravity:block/stellar_surface_particle"
+  },
   "display": {
     "gui": {
       "rotation": [
-        25,
-        225,
+        0,
+        0,
         0
       ],
       "translation": [
@@ -13,9 +17,9 @@
         0
       ],
       "scale": [
-        0.28,
-        0.28,
-        0.28
+        0.9,
+        0.9,
+        0.9
       ]
     },
     "ground": {
@@ -25,9 +29,74 @@
         0
       ],
       "scale": [
-        0.2,
-        0.2,
-        0.2
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "thirdperson_righthand": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "thirdperson_lefthand": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "fixed": {
+      "scale": [
+        0.7,
+        0.7,
+        0.7
       ]
     }
   }

@@ -38,9 +38,11 @@ public final class SolarRenderer implements BlockEntityRenderer<SolarPart> {
         if(!SolarShader.draw(pose,buffers,phase,m.heat.strength(),distance)){
             pose.translate(-.5,-.5,-.5);mc.getBlockRenderer().getModelRenderer().renderModel(pose.last(),buffers.getBuffer(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS)),p.getBlockState(),mc.getModelManager().getModel(strength>.05?ACTIVE:IDLE),1,1,1,LightTexture.FULL_BRIGHT,overlay,ModelData.EMPTY,null);
         }pose.popPose();
-        if(strength>.002&&distance<48){var v=buffers.getBuffer(RenderType.lightning());
+        if(strength>.002&&distance<48){
             float fieldStrength=strength*(float)Math.clamp((48-distance)/8,0,1);
-            SolarField.emit(phase,fieldStrength,size,(a,b,width,rgb,alpha,halo)->{if(halo)strip(v,pose,camera,a,b,width*3,rgb,alpha/5);strip(v,pose,camera,a,b,width,rgb,alpha);});}
+            if(!SolarFieldShader.draw(pose,buffers,camera,phase,fieldStrength,size)){
+                var v=buffers.getBuffer(RenderType.lightning());SolarField.emit(phase,fieldStrength,size,(a,b,width,rgb,alpha,halo)->{if(halo)strip(v,pose,camera,a,b,width*3,rgb,alpha/5);strip(v,pose,camera,a,b,width,rgb,alpha);});
+            }}
         pose.popPose();
     }
 }

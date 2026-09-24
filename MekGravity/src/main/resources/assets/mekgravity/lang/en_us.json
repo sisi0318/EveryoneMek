@@ -168,6 +168,11 @@
   "mekgravity.solar.stellar_fuel": "Stellar Fuel",
   "mekgravity.solar.fuel_energy": "Fuel energy: %s",
   "mekgravity.solar.fuel_budget_hint": "Supplies stellar reaction and containment",
+  "mekgravity.solar.heat_core": "LETHAL CORE CONTACT! Stellar core incineration!",
+  "mekgravity.solar.heat_warning": "Warning: stellar core is still hot. Keep your distance.",
+  "mekgravity.solar.heat_burning": "Scorching heat! Move away from the stellar core!",
+  "mekgravity.solar.heat_contact": "DANGER: stellar contact! Retreat immediately!",
+  "mekgravity.solar.load_duration": "At set load: %sh %sm %ss",
   "mekgravity.solar.build_at": "%s · %s",
   "mekgravity.solar.material_count": "%s × %s",
   "block.mekgravity.solar_base": "Stellar Base",
@@ -194,11 +199,6 @@
   "item.mekgravity.stellar_fuel_preform": "Stellar Fuel Preform",
   "item.mekgravity.stellar_fuel": "Sealed Stellar Fuel",
   "item.mekgravity.stellar_fuel_capsule": "Residual Stellar Fuel Capsule",
-  "mekgravity.solar.load_duration": "At set load: %sh %sm %ss",
-  "mekgravity.solar.heat_warning": "Warning: stellar core is still hot. Keep your distance.",
-  "mekgravity.solar.heat_burning": "Scorching heat! Move away from the stellar core!",
-  "mekgravity.solar.heat_contact": "DANGER: stellar contact! Retreat immediately!",
   "death.attack.mekgravity.stellar_heat": "%1$s was consumed by stellar heat",
-  "death.attack.mekgravity.stellar_heat.player": "%1$s was consumed by stellar heat while fleeing %2$s",
-  "mekgravity.solar.heat_core": "LETHAL CORE CONTACT! Stellar core incineration!"
+  "death.attack.mekgravity.stellar_heat.player": "%1$s was consumed by stellar heat while fleeing %2$s"
 }

@@ -42,7 +42,7 @@ for face in faces:
     for part in range(8):write(Path(f'assets/mekgravity/models/block/window/{face}_{part}.json'),assembled_glass(face,part))
     write(Path(f'assets/mekgravity/models/block/window/{face}_pane.json'),assembled_glass(face))
 write(Path('pack.mcmeta'),{'pack':{'pack_format':34,'description':'Mek Gravity'}})
-write(Path('mekgravity.mixins.json'),{'required':True,'package':'dev.everyonemek.gravity.mixin','compatibilityLevel':'JAVA_21','mixins':['StructureChangeMixin'],'injectors':{'defaultRequire':1}})
+write(Path('mekgravity.mixins.json'),{'required':True,'package':'dev.everyonemek.gravity.mixin','compatibilityLevel':'JAVA_21','mixins':['StructureChangeMixin'],'client':['SolarWarningMixin'],'injectors':{'defaultRequire':1}})
 names=['reactor','frame','casing','glass','fuel','coolant','energy','core']+[g+'_coil' for g in ['basic','advanced','elite','ultimate']]
 for name in names:
     variants={'':{'model':'mekgravity:block/'+name}}

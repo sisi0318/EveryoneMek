@@ -66,8 +66,8 @@ public final class CoreRenderer implements BlockEntityRenderer<Part> {
         pose.mulPose(Axis.YP.rotationDegrees((float)(phase*.55%360)));pose.mulPose(Axis.XP.rotationDegrees((float)Math.sin(phase*.018)*9*intensity));
         float size=1+(float)Math.sin(phase*.09)*.022F*intensity;pose.scale(size,size,size);
         if(!dev.everyonemek.gravity.solar.SolarShader.drawGravity(pose,buffers,phase,intensity,distance))drawModel(p,intensity>.035F?ENERGY_ACTIVE:ENERGY,pose,buffers,intensity>.035F?LightTexture.FULL_BRIGHT:light,overlay);pose.popPose();
-        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(phase*1.2%360)));drawModel(p,INNER,pose,buffers,light,overlay);pose.popPose();
-        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(-phase*1.6%360)));drawModel(p,OUTER,pose,buffers,light,overlay);pose.popPose();
+        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(phase*1.2%360)));if(!GravityRingShader.draw(0,pose,buffers,phase,intensity))drawModel(p,INNER,pose,buffers,light,overlay);pose.popPose();
+        pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(-phase*1.6%360)));if(!GravityRingShader.draw(1,pose,buffers,phase,intensity))drawModel(p,OUTER,pose,buffers,light,overlay);pose.popPose();
         if(intensity>.001F&&distance<32){
             intensity*=(float)Math.clamp((32-distance)/8,0,1);
             var v=buffers.getBuffer(RenderType.lightning());

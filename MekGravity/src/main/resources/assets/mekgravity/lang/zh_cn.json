@@ -168,6 +168,11 @@
   "mekgravity.solar.stellar_fuel": "恒星燃料",
   "mekgravity.solar.fuel_energy": "燃料能量：%s",
   "mekgravity.solar.fuel_budget_hint": "供给恒星反应与约束场",
+  "mekgravity.solar.heat_core": "致命核心接触！恒星内核正在吞噬你",
+  "mekgravity.solar.heat_warning": "警告：恒星尚未熄火，请保持距离",
+  "mekgravity.solar.heat_burning": "高温灼伤！立即远离恒星胚核",
+  "mekgravity.solar.heat_contact": "危险：已接触恒星！立即撤离",
+  "mekgravity.solar.load_duration": "设定负载续航 %s时 %s分 %s秒",
   "mekgravity.solar.build_at": "%s · %s",
   "mekgravity.solar.material_count": "%s × %s",
   "block.mekgravity.solar_base": "恒星基座",
@@ -194,11 +199,6 @@
   "item.mekgravity.stellar_fuel_preform": "恒星燃料坯",
   "item.mekgravity.stellar_fuel": "封装恒星燃料",
   "item.mekgravity.stellar_fuel_capsule": "残余恒星燃料胶囊",
-  "mekgravity.solar.load_duration": "设定负载续航 %s时 %s分 %s秒",
-  "mekgravity.solar.heat_warning": "警告：恒星尚未熄火，请保持距离",
-  "mekgravity.solar.heat_burning": "高温灼伤！立即远离恒星胚核",
-  "mekgravity.solar.heat_contact": "危险：已接触恒星！立即撤离",
   "death.attack.mekgravity.stellar_heat": "%1$s 被恒星胚核的热浪吞没了",
-  "death.attack.mekgravity.stellar_heat.player": "%1$s 在躲避 %2$s 时被恒星热浪吞没了",
-  "mekgravity.solar.heat_core": "致命核心接触！恒星内核正在吞噬你"
+  "death.attack.mekgravity.stellar_heat.player": "%1$s 在躲避 %2$s 时被恒星热浪吞没了"
 }
