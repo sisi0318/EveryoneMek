@@ -16,6 +16,7 @@
 
 - 2026-09-24用户要求在本模组设计“人造微缩太阳”，选择投放长效恒星燃料后又要求提高数值。SOLAR_DESIGN.md及art/solar-design仍为未实现的提案；修订建议256/512/1024/2048 GFE/t和16/8/4/2小时，单份737.28 PJ，缓存1.024 PFE、单口1.024 TFE/t。用户确认的是长效路线与提高数值方向，具体值仍是实现基准建议。不得改回持续氘氚进料，氘氚可用于制备。
 - 微缩太阳核对经验：Generators化学品ID使用mekanismgenerators命名空间；加压反应室MAX_FLUID/MAX_GAS均10,000。现有FuelRecipe上限1 PJ，太阳737.28 PJ需独立stellar_fuel与单配方10^18 J上限、long安全乘加；64份总预算会溢出，保持物品库存与单份预算分离。原Ports的64次int FE分批理论上限约137.44 GFE/t/口，不能冒称满足1.024 TFE/t；优先原生long并有界FE回退。现有7格Structure/Controller/Ports也不能直接套9格结构。
+- SOLAR_EXPANSIONS.md为用户询问追加功能后的未确认候选：按需调载25/80%阈值、残余燃料胶囊回收、诊断/告警及视觉反馈优先；后续耀斑模块30秒125%升载、每单位毛电额外15%燃料、60秒恢复（终极额外291.84 TFE净电、额外1.344 PJ燃料），日冕加工仓共享最多20%净采能、整组升级和可选CC遥测。既有接口已允许高速放缓存，不能再做低于普通输出能力的冗余“缓存爆发按钮”。不可视为已实现或已确认；本轮不改基础功率/220块蓝图/JAR。胶囊回收与主控预算原子转移，不携带点火资格；日冕材料不能成为首台太阳的前置循环。
 - 用户在2026-09-22确认art/models/graybox-v1灰模，alpha.5已接入。tools/runtime_geometry.py从批准的assembly.json提取几何，移除内部/覆盖面并合并共面矩形，再使用现有原创16×16贴图分配UV；不改灰模比例、不用满面机器纹理遮盖几何。generate_resources.py生成运行JSON与ModelShapes.java，不能只改单个生成文件。
 - AssemblyAppearance复用已有FACING：成型框架UP为立柱、EAST为世界X横梁、NORTH为世界Z横梁、DOWN为对称接头；面板朝内、玻璃和接口朝外。COIL的FACING是实际瞄准，不能被外观代码改写。Shape只为外伸线圈新增，来自同一源几何；六方向实际level.clip(OUTLINE/COLLIDER)回归覆盖0.25格鼻部。
 - 灰模文件和ZIP保留可编辑模型，不直接进入JAR。generate_graybox.py输出OBJ/MTL/assembly.json/scene.js；保留93个逻辑玻璃锚点。游戏仍逐块保存/掉落，不能把合并的预览玻璃当成库存实体。
