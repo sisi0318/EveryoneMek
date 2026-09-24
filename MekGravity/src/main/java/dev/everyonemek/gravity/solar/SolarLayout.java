@@ -229,5 +229,46 @@ new Slot(8,1,5,SolarBlock.Kind.ENERGY,Direction.EAST,true));
  static{for(var slot:SLOTS)INDEX.put(slot.x()*81+slot.y()*9+slot.z(),slot);}
  public static Slot get(int x,int y,int z){return INDEX.get(x*81+y*9+z);}
  public static boolean footprint(int x,int z){return Math.abs(x-4)+Math.abs(z-4)<=6;}
+ private static int[] ringState(int x,int z){return switch(x*9+z){
+  case 2 -> new int[]{0,0,0};
+  case 3 -> new int[]{1,1,0};
+  case 4 -> new int[]{2,8,0};
+  case 5 -> new int[]{3,3,0};
+  case 6 -> new int[]{4,4,0};
+  case 10 -> new int[]{5,5,0};
+  case 13 -> new int[]{7,7,0};
+  case 16 -> new int[]{5,5,3};
+  case 18 -> new int[]{4,4,1};
+  case 22 -> new int[]{7,7,0};
+  case 26 -> new int[]{0,0,3};
+  case 27 -> new int[]{3,3,1};
+  case 31 -> new int[]{7,7,0};
+  case 35 -> new int[]{1,1,3};
+  case 36 -> new int[]{2,8,1};
+  case 37 -> new int[]{7,7,1};
+  case 38 -> new int[]{7,7,1};
+  case 39 -> new int[]{7,7,1};
+  case 40 -> new int[]{6,6,0};
+  case 41 -> new int[]{7,7,1};
+  case 42 -> new int[]{7,7,1};
+  case 43 -> new int[]{7,7,1};
+  case 44 -> new int[]{2,8,3};
+  case 45 -> new int[]{1,1,1};
+  case 49 -> new int[]{7,7,0};
+  case 53 -> new int[]{3,3,3};
+  case 54 -> new int[]{0,0,1};
+  case 58 -> new int[]{7,7,0};
+  case 62 -> new int[]{4,4,3};
+  case 64 -> new int[]{5,5,1};
+  case 67 -> new int[]{7,7,0};
+  case 70 -> new int[]{5,5,2};
+  case 74 -> new int[]{4,4,2};
+  case 75 -> new int[]{3,3,2};
+  case 76 -> new int[]{2,8,2};
+  case 77 -> new int[]{1,1,2};
+  case 78 -> new int[]{0,0,2};
+  default -> new int[]{2,7,0};};}
+ public static int ringSegment(int x,int z,boolean crown){return ringState(x,z)[crown?1:0];}
+ public static Direction ringFacing(int x,int z,boolean crown){return switch(ringState(x,z)[2]){case 1->Direction.EAST;case 2->Direction.SOUTH;case 3->Direction.WEST;default->Direction.NORTH;};}
  private SolarLayout(){}
 }

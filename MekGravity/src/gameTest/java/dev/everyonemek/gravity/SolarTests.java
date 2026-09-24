@@ -80,4 +80,56 @@ public final class SolarTests {
         h.startSequence().thenWaitUntil(()->check(machine.getInventorySlots(null).stream().anyMatch(s->s.getStack().is(SolarContent.FUEL.get())),"Native PRC pending: "+machine.getOperatingTicks()+"/"+machine.getTicksRequired()+", energy "+machine.getEnergyContainer().getEnergy()+", recipe "+(machine.getRecipe(0)!=null)))
           .thenExecute(()->{check(input.isEmpty()&&machine.inputFluidTank.isEmpty()&&machine.inputGasTank.isEmpty(),"Native fuel recipe consumed incorrect ingredient quantities");h.getLevel().setBlockAndUpdate(pos,Blocks.AIR.defaultBlockState());}).thenSucceed();
     }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void solarCollectorsSnapAtEveryRotationAndRefreshIncompleteLayouts(GameTestHelper h){
+        SolarController current=null;
+        for(var facing:List.of(Direction.NORTH,Direction.EAST,Direction.SOUTH,Direction.WEST)){
+            var c=create(h);h.getLevel().setBlockAndUpdate(c.getBlockPos(),Attribute.setFacing(c.getBlockState(),facing));c=(SolarController)h.getLevel().getBlockEntity(c.getBlockPos());
+            check(!c.structure.valid(),"Empty solar unexpectedly formed");var p=ReactorTests.player(h,c.getBlockPos().above(12));
+            try{
+                for(var slot:SolarLayout.SLOTS)if(slot.kind()==SolarBlock.Kind.COLLECTOR){var pos=c.structure.at(slot.x(),slot.y(),slot.z());
+                    p.setPos(pos.above(2).getCenter());p.setXRot(slot.y()%2==0?89:-89);p.setYRot(137);p.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(SolarContent.block(SolarBlock.Kind.COLLECTOR,0).get()));
+                    p.getMainHandItem().useOn(new net.minecraft.world.item.context.UseOnContext(p,InteractionHand.MAIN_HAND,new net.minecraft.world.phys.BlockHitResult(pos.getCenter(),Direction.UP,pos,false)));
+                    var state=h.getLevel().getBlockState(pos);check(state.getBlock() instanceof SolarBlock,"Real collector placement failed");
+                    check(state.getValue(SolarBlock.FACING)==c.structure.direction(slot.face()),"Collector used player pitch instead of its wing position");
+                    check(state==c.structure.layoutState(state,slot),"Collector segment was not assigned on placement");
+                }
+                var outside=c.getBlockPos().above(12);p.setPos(outside.above(2).getCenter());p.setXRot(89);p.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(SolarContent.block(SolarBlock.Kind.COLLECTOR,0).get()));
+                p.getMainHandItem().useOn(new net.minecraft.world.item.context.UseOnContext(p,InteractionHand.MAIN_HAND,new net.minecraft.world.phys.BlockHitResult(outside.getCenter(),Direction.UP,outside,false)));
+                check(h.getLevel().getBlockState(outside).getValue(SolarBlock.FACING).getAxis().isHorizontal(),"Standalone collector tilted vertically");h.getLevel().setBlockAndUpdate(outside,Blocks.AIR.defaultBlockState());
+            }finally{ReactorTests.close(p);}
+            if(facing!=Direction.WEST){for(var pos:SolarConstruction.plan(c).keySet())h.getLevel().setBlockAndUpdate(pos,Blocks.AIR.defaultBlockState());h.getLevel().setBlockAndUpdate(c.getBlockPos(),Blocks.AIR.defaultBlockState());}else current=c;
+        }
+        var c=current;var far=c.structure.at(8,3,4);var missing=c.structure.at(0,0,2);
+        // No manual validate() after these changes: real controller ticks must refresh even
+        // while an earlier, unrelated missing base stops the structure scan.
+        h.getLevel().setBlockAndUpdate(far,Blocks.AIR.defaultBlockState());check(!c.structure.valid(),"Unfinished sun formed");
+        h.getLevel().setBlockAndUpdate(far,SolarContent.block(SolarBlock.Kind.COLLECTOR,0).get().defaultBlockState().setValue(SolarBlock.FACING,Direction.UP));
+        h.startSequence().thenIdle(2).thenExecute(()->{
+            var part=(SolarPart)h.getLevel().getBlockEntity(far);check(c.getBlockPos().equals(part.master)&&part.getBlockState().getValue(SolarBlock.FACING).getAxis().isHorizontal(),"Unwatched far wing waited for periodic rescan");
+            SolarConstruction.plan(c).forEach((pos,state)->{if(!pos.equals(missing))h.getLevel().setBlockAndUpdate(pos,state);});
+        }).thenIdle(2).thenExecute(()->{
+            check(!c.structure.formed,"Missing base accepted");h.getLevel().setBlockAndUpdate(missing,SolarContent.block(SolarBlock.Kind.BASE,0).get().defaultBlockState());
+        }).thenIdle(2).thenExecute(()->{
+            check(c.structure.formed,"Last block did not form on the next controller tick");
+            for(var part:c.structure.parts)check(part.getBlockState().getValue(SolarBlock.FORMED),"Part appearance lagged behind formation");
+            h.getLevel().setBlockAndUpdate(missing,Blocks.AIR.defaultBlockState());check(!c.structure.formed,"Broken solar appearance was not invalidated immediately");
+        }).thenSucceed();
+    }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void solarPortConfiguratorKeepsModeThroughDropAndPlacement(GameTestHelper h){var c=formed(h);var p=ReactorTests.player(h,c.getBlockPos().north());
+        try{
+            var port=c.structure.ports.stream().filter(part->part.kind()==SolarBlock.Kind.ENERGY&&part.output()).findFirst().orElseThrow();var pos=port.getBlockPos();var face=side(c,port);var cached=new SolarPorts.Energy(port,face);
+            c.ignited=true;c.stored=c.reserve()+1_000_000;p.setPos(pos.relative(face).getCenter());p.setShiftKeyDown(true);var tool=new ItemStack(MekanismItems.CONFIGURATOR.get());p.setItemInHand(InteractionHand.MAIN_HAND,tool);
+            p.gameMode.useItemOn(p,h.getLevel(),tool,InteractionHand.MAIN_HAND,new net.minecraft.world.phys.BlockHitResult(pos.getCenter(),face,pos,false));
+            check(!port.output()&&cached.extractEnergy(0,100,Action.EXECUTE)==0,"Native configurator did not change the real solar output to input");
+            check(cached.insertEnergy(0,100,Action.EXECUTE)==0,"Reconfigured port failed to accept energy");
+            p.gameMode.useItemOn(p,h.getLevel(),tool,InteractionHand.MAIN_HAND,new net.minecraft.world.phys.BlockHitResult(pos.getCenter(),face,pos,false));
+            check(port.output()&&cached.extractEnergy(0,100,Action.EXECUTE)==100,"Port output state and real transfer disagreed");
+            var drop=net.minecraft.world.level.block.Block.getDrops(port.getBlockState(),h.getLevel(),pos,port).getFirst();check(drop.get(SolarContent.STOCK.get()).getBoolean("output"),"Output item lost its mode/model property");
+            h.getLevel().setBlockAndUpdate(pos,Blocks.AIR.defaultBlockState());p.setShiftKeyDown(false);p.setItemInHand(InteractionHand.MAIN_HAND,drop);
+            drop.useOn(new net.minecraft.world.item.context.UseOnContext(p,InteractionHand.MAIN_HAND,new net.minecraft.world.phys.BlockHitResult(pos.getCenter(),Direction.UP,pos,false)));
+            var restored=(SolarPart)h.getLevel().getBlockEntity(pos);check(restored!=null&&restored.output()&&restored.getBlockState().getValue(SolarBlock.FACING)==face&&c.structure.valid(),"Dropped port did not restore mode, appearance and outward connection");
+        }finally{c.enabled=false;ReactorTests.close(p);}h.succeed();
+    }
 }

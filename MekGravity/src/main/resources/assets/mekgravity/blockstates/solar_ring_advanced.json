@@ -1,13 +1,435 @@
 {
   "variants": {
-    "active=false": {
-      "model": "mekgravity:block/solar/ring_advanced",
-      "x": 0,
+    "segment=0,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_0",
       "y": 0
     },
-    "active=true": {
-      "model": "mekgravity:block/solar/ring_advanced_active",
-      "x": 0,
+    "segment=0,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_0",
+      "y": 90
+    },
+    "segment=0,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_0",
+      "y": 180
+    },
+    "segment=0,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_0",
+      "y": 270
+    },
+    "segment=0,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_0",
+      "y": 0
+    },
+    "segment=0,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_0",
+      "y": 0
+    },
+    "segment=0,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_0_active",
+      "y": 0
+    },
+    "segment=0,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_0_active",
+      "y": 90
+    },
+    "segment=0,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_0_active",
+      "y": 180
+    },
+    "segment=0,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_0_active",
+      "y": 270
+    },
+    "segment=0,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_0_active",
+      "y": 0
+    },
+    "segment=0,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_0_active",
+      "y": 0
+    },
+    "segment=1,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_1",
+      "y": 0
+    },
+    "segment=1,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_1",
+      "y": 90
+    },
+    "segment=1,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_1",
+      "y": 180
+    },
+    "segment=1,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_1",
+      "y": 270
+    },
+    "segment=1,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_1",
+      "y": 0
+    },
+    "segment=1,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_1",
+      "y": 0
+    },
+    "segment=1,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_1_active",
+      "y": 0
+    },
+    "segment=1,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_1_active",
+      "y": 90
+    },
+    "segment=1,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_1_active",
+      "y": 180
+    },
+    "segment=1,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_1_active",
+      "y": 270
+    },
+    "segment=1,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_1_active",
+      "y": 0
+    },
+    "segment=1,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_1_active",
+      "y": 0
+    },
+    "segment=2,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_2",
+      "y": 0
+    },
+    "segment=2,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_2",
+      "y": 90
+    },
+    "segment=2,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_2",
+      "y": 180
+    },
+    "segment=2,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_2",
+      "y": 270
+    },
+    "segment=2,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_2",
+      "y": 0
+    },
+    "segment=2,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_2",
+      "y": 0
+    },
+    "segment=2,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_2_active",
+      "y": 0
+    },
+    "segment=2,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_2_active",
+      "y": 90
+    },
+    "segment=2,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_2_active",
+      "y": 180
+    },
+    "segment=2,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_2_active",
+      "y": 270
+    },
+    "segment=2,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_2_active",
+      "y": 0
+    },
+    "segment=2,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_2_active",
+      "y": 0
+    },
+    "segment=3,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_3",
+      "y": 0
+    },
+    "segment=3,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_3",
+      "y": 90
+    },
+    "segment=3,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_3",
+      "y": 180
+    },
+    "segment=3,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_3",
+      "y": 270
+    },
+    "segment=3,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_3",
+      "y": 0
+    },
+    "segment=3,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_3",
+      "y": 0
+    },
+    "segment=3,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_3_active",
+      "y": 0
+    },
+    "segment=3,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_3_active",
+      "y": 90
+    },
+    "segment=3,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_3_active",
+      "y": 180
+    },
+    "segment=3,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_3_active",
+      "y": 270
+    },
+    "segment=3,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_3_active",
+      "y": 0
+    },
+    "segment=3,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_3_active",
+      "y": 0
+    },
+    "segment=4,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_4",
+      "y": 0
+    },
+    "segment=4,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_4",
+      "y": 90
+    },
+    "segment=4,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_4",
+      "y": 180
+    },
+    "segment=4,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_4",
+      "y": 270
+    },
+    "segment=4,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_4",
+      "y": 0
+    },
+    "segment=4,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_4",
+      "y": 0
+    },
+    "segment=4,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_4_active",
+      "y": 0
+    },
+    "segment=4,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_4_active",
+      "y": 90
+    },
+    "segment=4,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_4_active",
+      "y": 180
+    },
+    "segment=4,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_4_active",
+      "y": 270
+    },
+    "segment=4,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_4_active",
+      "y": 0
+    },
+    "segment=4,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_4_active",
+      "y": 0
+    },
+    "segment=5,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_5",
+      "y": 0
+    },
+    "segment=5,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_5",
+      "y": 90
+    },
+    "segment=5,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_5",
+      "y": 180
+    },
+    "segment=5,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_5",
+      "y": 270
+    },
+    "segment=5,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_5",
+      "y": 0
+    },
+    "segment=5,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_5",
+      "y": 0
+    },
+    "segment=5,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_5_active",
+      "y": 0
+    },
+    "segment=5,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_5_active",
+      "y": 90
+    },
+    "segment=5,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_5_active",
+      "y": 180
+    },
+    "segment=5,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_5_active",
+      "y": 270
+    },
+    "segment=5,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_5_active",
+      "y": 0
+    },
+    "segment=5,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_5_active",
+      "y": 0
+    },
+    "segment=6,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_6",
+      "y": 0
+    },
+    "segment=6,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_6",
+      "y": 90
+    },
+    "segment=6,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_6",
+      "y": 180
+    },
+    "segment=6,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_6",
+      "y": 270
+    },
+    "segment=6,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_6",
+      "y": 0
+    },
+    "segment=6,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_6",
+      "y": 0
+    },
+    "segment=6,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_6_active",
+      "y": 0
+    },
+    "segment=6,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_6_active",
+      "y": 90
+    },
+    "segment=6,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_6_active",
+      "y": 180
+    },
+    "segment=6,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_6_active",
+      "y": 270
+    },
+    "segment=6,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_6_active",
+      "y": 0
+    },
+    "segment=6,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_6_active",
+      "y": 0
+    },
+    "segment=7,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_7",
+      "y": 0
+    },
+    "segment=7,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_7",
+      "y": 90
+    },
+    "segment=7,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_7",
+      "y": 180
+    },
+    "segment=7,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_7",
+      "y": 270
+    },
+    "segment=7,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_7",
+      "y": 0
+    },
+    "segment=7,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_7",
+      "y": 0
+    },
+    "segment=7,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_7_active",
+      "y": 0
+    },
+    "segment=7,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_7_active",
+      "y": 90
+    },
+    "segment=7,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_7_active",
+      "y": 180
+    },
+    "segment=7,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_7_active",
+      "y": 270
+    },
+    "segment=7,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_7_active",
+      "y": 0
+    },
+    "segment=7,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_7_active",
+      "y": 0
+    },
+    "segment=8,active=false,facing=north": {
+      "model": "mekgravity:block/solar/ring_8",
+      "y": 0
+    },
+    "segment=8,active=false,facing=east": {
+      "model": "mekgravity:block/solar/ring_8",
+      "y": 90
+    },
+    "segment=8,active=false,facing=south": {
+      "model": "mekgravity:block/solar/ring_8",
+      "y": 180
+    },
+    "segment=8,active=false,facing=west": {
+      "model": "mekgravity:block/solar/ring_8",
+      "y": 270
+    },
+    "segment=8,active=false,facing=up": {
+      "model": "mekgravity:block/solar/ring_8",
+      "y": 0
+    },
+    "segment=8,active=false,facing=down": {
+      "model": "mekgravity:block/solar/ring_8",
+      "y": 0
+    },
+    "segment=8,active=true,facing=north": {
+      "model": "mekgravity:block/solar/ring_8_active",
+      "y": 0
+    },
+    "segment=8,active=true,facing=east": {
+      "model": "mekgravity:block/solar/ring_8_active",
+      "y": 90
+    },
+    "segment=8,active=true,facing=south": {
+      "model": "mekgravity:block/solar/ring_8_active",
+      "y": 180
+    },
+    "segment=8,active=true,facing=west": {
+      "model": "mekgravity:block/solar/ring_8_active",
+      "y": 270
+    },
+    "segment=8,active=true,facing=up": {
+      "model": "mekgravity:block/solar/ring_8_active",
+      "y": 0
+    },
+    "segment=8,active=true,facing=down": {
+      "model": "mekgravity:block/solar/ring_8_active",
       "y": 0
     }
   }

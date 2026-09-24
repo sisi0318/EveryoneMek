@@ -2,6 +2,7 @@
 import json,math
 from pathlib import Path
 from runtime_geometry import block_model
+import solar_rings
 ROOT=Path(__file__).resolve().parents[1];RES=ROOT/'src/main/resources'
 def write(name,data):
     p=RES/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
@@ -25,6 +26,7 @@ def build():
     for b in plan['blocks']:
         k=b['kind'];kind='null' if k=='controller' else 'SolarBlock.Kind.'+('ENERGY' if k in ['ignition','output'] else k.upper())
         x,y,z=b['pos'];entries.append(f'new Slot({x},{y},{z},{kind},Direction.{b.get("face","north").upper()},{str(k=="output").lower()})')
+    solar_rings.generate(RES,ROOT/'art')
     source='''package dev.everyonemek.gravity.solar;
 import java.util.*;
 import net.minecraft.core.Direction;
@@ -37,7 +39,7 @@ public final class SolarLayout {
  static{for(var slot:SLOTS)INDEX.put(slot.x()*81+slot.y()*9+slot.z(),slot);}
  public static Slot get(int x,int y,int z){return INDEX.get(x*81+y*9+z);}
  public static boolean footprint(int x,int z){return Math.abs(x-4)+Math.abs(z-4)<=6;}
- private SolarLayout(){}
+'''+solar_rings.java_mapping()+''' private SolarLayout(){}
 }
 '''
     (ROOT/'src/main/java/dev/everyonemek/gravity/solar/SolarLayout.java').write_text(source,encoding='utf-8',newline='\n')
@@ -51,6 +53,15 @@ public final class SolarLayout {
                     sub=f'collector_{segment}'+('_active' if active else '');model(sub,collector(segment,active))
                     for face,rx,ry in normals:variants[f'segment={segment},active={str(active).lower()},facing={face}']={'model':'mekgravity:block/solar/'+sub,'x':rx,'y':ry}
             item={'parent':'mekgravity:block/solar/collector_4'}
+        elif kind in ['ring','crown']:
+            for segment in range(9):
+                mesh=segment if kind=='crown' or segment<6 else 2
+                for active in [False,True]:
+                    sub=f'{kind}_{segment}'+('_active' if active else '')
+                    model(sub,solar_rings.model(mesh,kind=='crown',active))
+                    for face,rx,ry in normals:
+                        variants[f'segment={segment},active={str(active).lower()},facing={face}']={'model':'mekgravity:block/solar/'+sub,'y':ry}
+            item={'parent':'mekgravity:block/solar/'+kind+'_2'}
         elif kind=='seed':
             variants={'':{'model':'mekgravity:block/solar/sun_idle'}};item={'parent':'mekgravity:block/solar/sun_idle','display':{'gui':{'rotation':[25,225,0],'translation':[0,0,0],'scale':[.28,.28,.28]},'ground':{'translation':[0,3,0],'scale':[.2,.2,.2]}}}
         else:
@@ -59,12 +70,16 @@ public final class SolarLayout {
                     sub=name+('_active' if active else '')+('_output' if output else '')
                     if kind in ['focus','controller','fuel','energy']:
                         m=block_model({'focus':'coil','controller':'controller','fuel':'fuel','energy':'excitation'}[kind],active,output if kind=='energy' else None)
-                        m['textures']['lamp']='mekgravity:block/sun_active' if active else 'mekgravity:block/sun_idle'
+                        if kind=='focus':m['textures']['lamp']='mekgravity:block/sun_active' if active else 'mekgravity:block/sun_idle'
+                        if kind=='energy':
+                            # Keep original red/blue port materials and add a recessed + / - symbol.
+                            marks=[([6.5,7.5,-.8],[9.5,8.5,-.6])]
+                            if not output:marks += [([7.5,6.5,-.8],[8.5,7.5,-.6]),([7.5,8.5,-.8],[8.5,9.5,-.6])]
+                            for a,b in marks:
+                                mark=box(a,b,'#lamp',[4,7,5,8] if output else [3,7,4,8])
+                                for f in mark['faces'].values():f['neoforge_data']={'block_light':12,'ambient_occlusion':False}
+                                m['elements'].append(mark)
                     elif kind=='support':m=block_model('frame')
-                    elif kind in ['ring','crown']:
-                        e=[box([0,4,0],[16,10,16],'#dark',[0,0,16,10]),box([0,10,0],[16,12,16],'#steel',[0,0,16,4]),box([0,2,0],[16,4,16],'#shell',[3,3,13,13])]
-                        if kind=='ring':e.append(box([2,12,7],[14,12.5,9],'#lamp',[8,0,9,1]))
-                        m=mechanical(e);m['textures']['lamp']='mekgravity:block/sun_active' if active else 'mekgravity:block/sun_idle'
                     else:m=mechanical([box([0,0,0],[16,12,16],'#dark',[0,0,16,10]),box([0,12,0],[16,16,16],'#shell',[3,3,13,13])])
                     model(sub,m)
                     for face,rx,ry in (normals[:4] if kind=='controller' else normals if kind in ['focus','energy','fuel'] else [('',0,0)]):
@@ -103,6 +118,8 @@ public final class SolarLayout {
         for i,tier in enumerate(tiers):recipe('solar_'+kind+'_'+tier,['ABA','BCB','ABA'],{'A':'mekanism:alloy_atomic','B':'mekanism:'+tier+'_control_circuit','C':center if i==0 else 'mekgravity:solar_'+kind+'_'+tiers[i-1]},4 if kind in ['ring','collector'] and i==0 else 1)
     z={'tab':'人造微缩太阳','unlinked':'尚未接入微缩太阳','structure':'等待结构成型','component':'部件缺失或位置错误','facing':'聚束器或采能翼朝向错误','wing_mixed':'同一组采能翼需要相同等级','energy_ports':'至少保留一个输入口和一个输出口','ready':'结构完整','stopped':'已停机','redstone':'等待红石信号','startup_config':'点火电量超过缓存容量','fuel_missing':'缺少恒星燃料','refill_off':'自动续料已关闭','charging':'等待点火充能','reserve_low':'约束备用电不足','full':'储能已满','standby':'余辉待机','limited':'供能受限','running':'恒星稳定运行','occupied':'部件属于其他微缩太阳','unloaded':'结构所在区块未加载','interior':'反应空间需要留空','fuel_title':'恒星燃料仓','fuel_hint':'放入封装恒星燃料或残余燃料胶囊。','capsule_left':'剩余燃料：%s%%','recovered':'剩余燃料已封装','recover_failed':'请先停机，并留出一个空背包格','paused':'反应已暂停','remaining_time':'剩余 %s小时 %s分 %s秒','net_label':'净发电','output_label':'实际输出','fuel_reserve':'恒星燃料余量','charging_amount':'充能：%s / %s','stop':'停机','ignite':'点火','load':'采能负载 %s%%','page_0':'供能情况','page_1':'结构与采能翼','page_2':'燃料与调载','page_3':'采能负载','auto_on':'自动调载：开','auto_off':'自动调载：关','refill_on':'自动续料：开','refill_off_button':'自动续料：关','recover':'回收剩余燃料','size':'尺寸：9 × 9 × 9','constraint':'约束上限：%s/t','collector':'采能上限：%s/t','unknown':'未完成','wing_0':'左翼：%s','wing_1':'右翼：%s','wing_2':'前翼：%s','wing_3':'后翼：%s','stellar_fuel':'恒星燃料','fuel_energy':'燃料能量：%s','fuel_budget_hint':'供给恒星反应与约束场'}
     en={'tab':'Artificial Miniature Sun','unlinked':'Not connected to a miniature sun','structure':'Structure incomplete','component':'Missing or misplaced component','facing':'Aim the focus or collector inward','wing_mixed':'Each collector wing needs one tier','energy_ports':'An input and an output port are required','ready':'Structure formed','stopped':'Stopped','redstone':'Waiting for redstone','startup_config':'Startup exceeds buffer capacity','fuel_missing':'Stellar fuel required','refill_off':'Automatic refuelling is off','charging':'Waiting for ignition power','reserve_low':'Containment reserve low','full':'Energy buffer full','standby':'Ember standby','limited':'Generation limited','running':'Star stable','occupied':'Component belongs to another sun','unloaded':'Structure chunk not loaded','interior':'Clear the reaction space','fuel_title':'Stellar Fuel Hatch','fuel_hint':'Insert sealed stellar fuel or a residual capsule.','capsule_left':'Fuel remaining: %s%%','recovered':'Residual fuel sealed','recover_failed':'Stop the sun and leave an empty inventory slot','paused':'Reaction paused','remaining_time':'Remaining %sh %sm %ss','net_label':'Net generation','output_label':'Actual output','fuel_reserve':'Stellar fuel reserve','charging_amount':'Charging: %s / %s','stop':'Stop','ignite':'Ignite','load':'Load limit %s%%','page_0':'Power','page_1':'Structure and Collectors','page_2':'Fuel and Load','page_3':'Load Limit','auto_on':'Automatic load: On','auto_off':'Automatic load: Off','refill_on':'Auto-refuel: On','refill_off_button':'Auto-refuel: Off','recover':'Recover remaining fuel','size':'Size: 9 x 9 x 9','constraint':'Containment limit: %s/t','collector':'Collector limit: %s/t','unknown':'Incomplete','wing_0':'Left wing: %s','wing_1':'Right wing: %s','wing_2':'Front wing: %s','wing_3':'Back wing: %s','stellar_fuel':'Stellar Fuel','fuel_energy':'Fuel energy: %s','fuel_budget_hint':'Supplies stellar reaction and containment'}
+    z.update({'build_at':'%s · %s','material_count':'%s × %s','facing':'聚束器需要朝向恒星胚核'})
+    en.update({'build_at':'%s · %s','material_count':'%s × %s','facing':'Aim the focus at the stellar seed'})
     labels={'base':('恒星基座','Stellar Base'),'support':('恒星支撑柱','Stellar Support'),'crown':('恒星冠架','Stellar Crown'),'seed':('恒星胚核','Stellar Seed'),'fuel':('恒星燃料仓','Stellar Fuel Hatch'),'energy':('恒星能量接口','Stellar Energy Port'),'controller':('恒星约束器','Stellar Containment Controller'),'ring':('恒星约束环','Stellar Containment Ring'),'focus':('恒星聚束器','Stellar Focus'),'collector':('日冕采能翼','Coronal Collector')}
     for lang,words,i in [('zh_cn',z,0),('en_us',en,1)]:
         p=RES/f'assets/mekgravity/lang/{lang}.json';d=json.loads(p.read_text(encoding='utf-8'));d.update({'mekgravity.solar.'+k:v for k,v in words.items()})

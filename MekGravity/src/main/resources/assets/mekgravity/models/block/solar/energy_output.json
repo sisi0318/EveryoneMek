@@ -7,7 +7,7 @@
     "steel": "mekgravity:block/orb_steel",
     "graphite": "mekgravity:block/orb_inner",
     "recess": "mekgravity:block/orb_inner",
-    "lamp": "mekgravity:block/sun_idle",
+    "lamp": "mekgravity:block/assembled_port_output",
     "orbit": "mekgravity:block/assembled_port_output",
     "particle": "mekgravity:block/shell_panel"
   },
@@ -953,6 +953,98 @@
             13,
             13
           ]
+        }
+      }
+    },
+    {
+      "from": [
+        6.5,
+        7.5,
+        -0.8
+      ],
+      "to": [
+        9.5,
+        8.5,
+        -0.6
+      ],
+      "faces": {
+        "up": {
+          "texture": "#lamp",
+          "uv": [
+            4,
+            7,
+            5,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        },
+        "down": {
+          "texture": "#lamp",
+          "uv": [
+            4,
+            7,
+            5,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        },
+        "north": {
+          "texture": "#lamp",
+          "uv": [
+            4,
+            7,
+            5,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        },
+        "south": {
+          "texture": "#lamp",
+          "uv": [
+            4,
+            7,
+            5,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        },
+        "east": {
+          "texture": "#lamp",
+          "uv": [
+            4,
+            7,
+            5,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
+        },
+        "west": {
+          "texture": "#lamp",
+          "uv": [
+            4,
+            7,
+            5,
+            8
+          ],
+          "neoforge_data": {
+            "block_light": 12,
+            "ambient_occlusion": false
+          }
         }
       }
     }

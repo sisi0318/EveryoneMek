@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:block/block",
+  "loader": "neoforge:obj",
+  "model": "mekgravity:models/block/solar/crown_0.obj",
+  "mtl_override": "mekgravity:models/block/solar/beam_active.mtl",
+  "automatic_culling": false,
+  "shade_quads": true,
+  "emissive_ambient": true,
+  "textures": {
+    "steel": "mekgravity:block/orb_steel",
+    "dark": "mekgravity:block/orb_inner",
+    "lamp": "mekgravity:block/sun_active",
+    "particle": "mekgravity:block/orb_steel"
+  }
+}

@@ -14,12 +14,12 @@ import net.minecraft.world.phys.BlockHitResult;
 public final class SolarConstruction {
     public static Map<BlockPos,BlockState> plan(SolarController c){
         var result=new LinkedHashMap<BlockPos,BlockState>();
-        for(var slot:SolarLayout.SLOTS){if(slot.kind()==null)continue;var state=SolarContent.block(slot.kind(),0).get().defaultBlockState().setValue(SolarBlock.FACING,c.structure.direction(slot.face())).setValue(SolarBlock.OUTPUT,slot.output());result.put(c.structure.at(slot.x(),slot.y(),slot.z()),state);}
+        for(var slot:SolarLayout.SLOTS){if(slot.kind()==null)continue;var state=SolarContent.block(slot.kind(),0).get().defaultBlockState().setValue(SolarBlock.FACING,c.structure.direction(slot.face())).setValue(SolarBlock.OUTPUT,slot.output());result.put(c.structure.at(slot.x(),slot.y(),slot.z()),c.structure.layoutState(state,slot));}
         return result;
     }
-    public static void preview(SolarController c,ServerPlayer p){c.structure.valid();if(!c.structure.formed&&c.structure.errorPos!=null)p.displayClientMessage(dev.everyonemek.gravity.Content.text("structure").copy().append(" 路 "+c.structure.errorPos.toShortString()),false);var plan=plan(c);if(plan.isEmpty()){p.displayClientMessage(dev.everyonemek.gravity.Content.text("build_small"),false);return;}var needed=new LinkedHashMap<Item,Integer>();int shown=0;
+    public static void preview(SolarController c,ServerPlayer p){c.structure.valid();if(!c.structure.formed&&c.structure.errorPos!=null)p.displayClientMessage(SolarContent.text("build_at",SolarContent.text(c.structure.error),c.structure.errorPos.toShortString()),false);var plan=plan(c);if(plan.isEmpty()){p.displayClientMessage(dev.everyonemek.gravity.Content.text("build_small"),false);return;}var needed=new LinkedHashMap<Item,Integer>();int shown=0;
         for(var e:plan.entrySet()){if(!p.serverLevel().hasChunkAt(e.getKey()))continue;if(matches(p.serverLevel().getBlockState(e.getKey()),e.getValue()))continue;needed.merge(e.getValue().getBlock().asItem(),1,Integer::sum);if(shown++<256){var v=e.getKey().getCenter();p.serverLevel().sendParticles(p,ParticleTypes.END_ROD,true,v.x,v.y,v.z,1,0,0,0,0);}}
-        if(needed.isEmpty())p.displayClientMessage(dev.everyonemek.gravity.Content.text(c.structure.formed?"build_complete":"adjust_parts"),false);else needed.forEach((item,n)->p.displayClientMessage(item.getDescription().copy().append(" 脳 "+n),false));
+        if(needed.isEmpty())p.displayClientMessage(dev.everyonemek.gravity.Content.text(c.structure.formed?"build_complete":"adjust_parts"),false);else needed.forEach((item,n)->p.displayClientMessage(SolarContent.text("material_count",item.getDescription(),n),false));
     }
     public static boolean build(SolarController c,ServerPlayer p){if(!c.access(p)||c.enabled)return false;var plan=plan(c);if(plan.isEmpty())return false;var needed=new HashMap<Item,Integer>();
         for(int x=0;x<9;x++)for(int y=0;y<9;y++)for(int z=0;z<9;z++){

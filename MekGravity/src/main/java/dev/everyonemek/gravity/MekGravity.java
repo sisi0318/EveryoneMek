@@ -12,7 +12,7 @@ public final class MekGravity {
         Content.register(bus);bus.addListener(Ports::register);bus.addListener(ReactorConfig::loaded);
         container.registerConfig(ModConfig.Type.SERVER,dev.everyonemek.gravity.solar.SolarConfig.SPEC,"mekgravity-solar-server.toml");
         dev.everyonemek.gravity.solar.SolarContent.register(bus);bus.addListener(dev.everyonemek.gravity.solar.SolarPorts::register);
-        NeoForge.EVENT_BUS.addListener(dev.everyonemek.gravity.solar.SolarStructure::unload);NeoForge.EVENT_BUS.addListener(dev.everyonemek.gravity.solar.SolarStructure::chunkUnload);
+        NeoForge.EVENT_BUS.addListener(dev.everyonemek.gravity.solar.SolarStructure::unload);NeoForge.EVENT_BUS.addListener(dev.everyonemek.gravity.solar.SolarStructure::chunkUnload);NeoForge.EVENT_BUS.addListener(dev.everyonemek.gravity.solar.SolarStructure::chunkLoad);
         NeoForge.EVENT_BUS.addListener(Structure::unload);NeoForge.EVENT_BUS.addListener(Structure::chunkUnload);
     }
 }

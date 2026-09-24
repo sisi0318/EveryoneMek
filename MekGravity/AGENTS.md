@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.8，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.9，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -14,10 +14,13 @@
 
 ## 实现入口
 
+- alpha.9太阳WATCHERS与OWNERS分离：完整621格监听独立于遇到首个缺件即终止的所有权扫描。onLoad/区块load/unload登记或失效，detach清理监听；无20tick轮询。placement与refreshLayout使用同一布局派生朝向/segment，刷新匹配部件不覆盖其他存活主控的部件，不修改OUTPUT/库存。SolarConstruction材料数与坐标分隔符写入UTF-8语言生成器；Python读取源码须显式encoding，默认GBK会把“×”“·”变成“脳”“路”。
+- alpha.9 tools/solar_rings.py沿原24个周界节点生成6类连续斜接梁，冠架增加交叉、直梁、T接头；SolarLayout的segment/facing、OBJ与art/solar-beam-states.json来自同一生成逻辑。环和冠架方块状态覆盖保存中的全部segment/方向。energy保留runtime_geometry原红蓝lamp，不能再被太阳贴图覆盖；内凹＋／－同时作为形状标识，SolarClient的物品output getter仍读STOCK。
+
 - 2026-09-24用户要求开始实现微缩太阳并逐步补全。alpha.8已接入基础版，行为以SOLAR_README.md为准；SOLAR_DESIGN.md/SOLAR_EXPANSIONS.md包含未完成候选，不能全部宣称可用。实际默认256/512/1024/2048 GFE/t、16/8/4/2小时、单份737.28 PJ，缓存1.024 PFE、单口1.024 TFE/t额度。长效成品燃料供料，氘氚只用于制备。
 - 微缩太阳核对经验：Generators化学品ID使用mekanismgenerators命名空间；加压反应室MAX_FLUID/MAX_GAS均10,000。现有FuelRecipe上限1 PJ，太阳737.28 PJ需独立stellar_fuel与单配方10^18 J上限、long安全乘加；64份总预算会溢出，保持物品库存与单份预算分离。原Ports的64次int FE分批理论上限约137.44 GFE/t/口，不能冒称满足1.024 TFE/t；优先原生long并有界FE回退。现有7格Structure/Controller/Ports也不能直接套9格结构。
 - alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。耀斑、日冕加工、批量升级、CC和自定义告警/调载阈值仍未实现。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
-- solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器/采能翼真实转向必须触发。
+- solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器真实转向必须触发；alpha.9采能翼朝向属于布局派生状态，旧片也自动纠正。
 - SolarController只保存储电、当前单份燃料余量/总量、点火和设置；fuel仓是SolarPart自己的18格ItemStackHandler。SolarFuelRecipe独立上限10^18 J，不批量将64份相乘。STOCK/DATA/FUEL_DATA三种组件分别处理仓、主控、残余胶囊。SolarMenu按实际点击部件距离校验而非只按主控，远端柱子也可打开。SolarPorts保留共享+单口tick额度、模拟无资源变化、停止后取料、真实自动弹出。
 - SolarConfig独立mekgravity-solar-server.toml（J）。自动调载固定25%低段积极补能，参考实际出电与50%目标缓冲，中高段降载、80%以上待机；并非完整可调滞回控制器。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新，避免吞掉下一份燃料时瞬时错误信号。
 - 太阳资源入口generate_solar_resources.py由generate_resources.py统一调用，生成模型/配方/语言/布局Java。新sun.obj为半径1.25的32×16表面；四张solar图集PNG均16×16，原稿及提示词在art。SolarRenderer只绘制seed，使用CoreMotion，日珥/日冕/向外光点固定网格预算，不spawn实体。聚束器使用共享ModelShapes鼻部选择框。
@@ -47,6 +50,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.9构建与17项服务端测试通过。新增真实BlockItem.useOn在四种主控朝向和±89°俯仰放置全部翼片；不调用validate的真实tick验证未成型远端片刷新与补齐/拆坏外观；原Mek配置器切换真实handler，再掉落/重放验证OUTPUT组件和方向。模型资源状态穷举与细梁共享端点检查通过；没有客户端验收。
 
 - alpha.8共15项服务端测试通过，SolarTests新增4项：两小时144000次稳态预算计算/64份库存不溢出、胶囊原子回收和重载、四翼等级/满缓存暂停恢复/旧能力失效、保护施工扣料/远端菜单/原能量立方，以及原加压反应室真实tick制备。未运行客户端；无界面测试与离线预览不替代模型/UI验收。
 - alpha.7构建与11项GameTest通过，CoreAnimationTests验证真实结构负载/启停/拆坏、效果标签不持久化且不覆盖库存，以及20/60/144 FPS相位一致/暂停/停止。三个拆分OBJ与完整核心的坐标、面序、UV逐项相同；运动径向间隔检查通过。art/models/core-motion-v1为可离线操作的Canvas简化着色预览，非游戏画面。

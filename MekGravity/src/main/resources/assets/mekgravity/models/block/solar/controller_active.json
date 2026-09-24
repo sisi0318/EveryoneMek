@@ -7,7 +7,7 @@
     "steel": "mekgravity:block/orb_steel",
     "graphite": "mekgravity:block/orb_inner",
     "recess": "mekgravity:block/orb_inner",
-    "lamp": "mekgravity:block/sun_active",
+    "lamp": "mekgravity:block/controller_front_active",
     "orbit": "mekgravity:block/orb_active",
     "particle": "mekgravity:block/shell_panel"
   },

@@ -1,0 +1,372 @@
+{
+  "0,3": {
+    "ring": [
+      1,
+      "north"
+    ],
+    "crown": [
+      1,
+      "north"
+    ]
+  },
+  "0,2": {
+    "ring": [
+      0,
+      "north"
+    ],
+    "crown": [
+      0,
+      "north"
+    ]
+  },
+  "1,1": {
+    "ring": [
+      5,
+      "north"
+    ],
+    "crown": [
+      5,
+      "north"
+    ]
+  },
+  "2,0": {
+    "ring": [
+      4,
+      "east"
+    ],
+    "crown": [
+      4,
+      "east"
+    ]
+  },
+  "3,0": {
+    "ring": [
+      3,
+      "east"
+    ],
+    "crown": [
+      3,
+      "east"
+    ]
+  },
+  "4,0": {
+    "ring": [
+      2,
+      "east"
+    ],
+    "crown": [
+      8,
+      "east"
+    ]
+  },
+  "5,0": {
+    "ring": [
+      1,
+      "east"
+    ],
+    "crown": [
+      1,
+      "east"
+    ]
+  },
+  "6,0": {
+    "ring": [
+      0,
+      "east"
+    ],
+    "crown": [
+      0,
+      "east"
+    ]
+  },
+  "7,1": {
+    "ring": [
+      5,
+      "east"
+    ],
+    "crown": [
+      5,
+      "east"
+    ]
+  },
+  "8,2": {
+    "ring": [
+      4,
+      "south"
+    ],
+    "crown": [
+      4,
+      "south"
+    ]
+  },
+  "8,3": {
+    "ring": [
+      3,
+      "south"
+    ],
+    "crown": [
+      3,
+      "south"
+    ]
+  },
+  "8,4": {
+    "ring": [
+      2,
+      "south"
+    ],
+    "crown": [
+      8,
+      "south"
+    ]
+  },
+  "8,5": {
+    "ring": [
+      1,
+      "south"
+    ],
+    "crown": [
+      1,
+      "south"
+    ]
+  },
+  "8,6": {
+    "ring": [
+      0,
+      "south"
+    ],
+    "crown": [
+      0,
+      "south"
+    ]
+  },
+  "7,7": {
+    "ring": [
+      5,
+      "south"
+    ],
+    "crown": [
+      5,
+      "south"
+    ]
+  },
+  "6,8": {
+    "ring": [
+      4,
+      "west"
+    ],
+    "crown": [
+      4,
+      "west"
+    ]
+  },
+  "5,8": {
+    "ring": [
+      3,
+      "west"
+    ],
+    "crown": [
+      3,
+      "west"
+    ]
+  },
+  "4,8": {
+    "ring": [
+      2,
+      "west"
+    ],
+    "crown": [
+      8,
+      "west"
+    ]
+  },
+  "3,8": {
+    "ring": [
+      1,
+      "west"
+    ],
+    "crown": [
+      1,
+      "west"
+    ]
+  },
+  "2,8": {
+    "ring": [
+      0,
+      "west"
+    ],
+    "crown": [
+      0,
+      "west"
+    ]
+  },
+  "1,7": {
+    "ring": [
+      5,
+      "west"
+    ],
+    "crown": [
+      5,
+      "west"
+    ]
+  },
+  "0,6": {
+    "ring": [
+      4,
+      "north"
+    ],
+    "crown": [
+      4,
+      "north"
+    ]
+  },
+  "0,5": {
+    "ring": [
+      3,
+      "north"
+    ],
+    "crown": [
+      3,
+      "north"
+    ]
+  },
+  "0,4": {
+    "ring": [
+      2,
+      "north"
+    ],
+    "crown": [
+      8,
+      "north"
+    ]
+  },
+  "4,1": {
+    "ring": [
+      7,
+      "east"
+    ],
+    "crown": [
+      7,
+      "east"
+    ]
+  },
+  "4,2": {
+    "ring": [
+      7,
+      "east"
+    ],
+    "crown": [
+      7,
+      "east"
+    ]
+  },
+  "4,3": {
+    "ring": [
+      7,
+      "east"
+    ],
+    "crown": [
+      7,
+      "east"
+    ]
+  },
+  "4,4": {
+    "ring": [
+      6,
+      "north"
+    ],
+    "crown": [
+      6,
+      "north"
+    ]
+  },
+  "4,5": {
+    "ring": [
+      7,
+      "east"
+    ],
+    "crown": [
+      7,
+      "east"
+    ]
+  },
+  "4,6": {
+    "ring": [
+      7,
+      "east"
+    ],
+    "crown": [
+      7,
+      "east"
+    ]
+  },
+  "4,7": {
+    "ring": [
+      7,
+      "east"
+    ],
+    "crown": [
+      7,
+      "east"
+    ]
+  },
+  "1,4": {
+    "ring": [
+      7,
+      "north"
+    ],
+    "crown": [
+      7,
+      "north"
+    ]
+  },
+  "2,4": {
+    "ring": [
+      7,
+      "north"
+    ],
+    "crown": [
+      7,
+      "north"
+    ]
+  },
+  "3,4": {
+    "ring": [
+      7,
+      "north"
+    ],
+    "crown": [
+      7,
+      "north"
+    ]
+  },
+  "5,4": {
+    "ring": [
+      7,
+      "north"
+    ],
+    "crown": [
+      7,
+      "north"
+    ]
+  },
+  "6,4": {
+    "ring": [
+      7,
+      "north"
+    ],
+    "crown": [
+      7,
+      "north"
+    ]
+  },
+  "7,4": {
+    "ring": [
+      7,
+      "north"
+    ],
+    "crown": [
+      7,
+      "north"
+    ]
+  }
+}

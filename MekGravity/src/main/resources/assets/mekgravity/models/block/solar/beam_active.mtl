@@ -1,0 +1,14 @@
+newmtl steel
+Ka 0 0 0
+Kd 1 1 1
+map_Kd #steel
+
+newmtl dark
+Ka 0 0 0
+Kd 1 1 1
+map_Kd #dark
+
+newmtl lamp
+Ka 0.8 0.8 0.8
+Kd 1 1 1
+map_Kd #lamp
