@@ -20,7 +20,7 @@ public final class SolarSeedItemRenderer extends BlockEntityWithoutLevelRenderer
         @Override public BlockEntityWithoutLevelRenderer getCustomRenderer(){if(renderer==null)renderer=new SolarSeedItemRenderer();return renderer;}
     },SolarContent.block(SolarBlock.Kind.SEED,0).asItem());}
     @Override public void renderByItem(ItemStack stack,ItemDisplayContext context,PoseStack pose,MultiBufferSource buffers,int light,int overlay){
-        var mc=Minecraft.getInstance();double phase=mc.level==null?0:mc.level.getGameTime()+mc.getTimer().getGameTimeDeltaPartialTick(false);
+        var mc=Minecraft.getInstance();double phase=mc.level==null||!dev.everyonemek.gravity.VisualConfig.ANIMATE_ITEMS.get()?0:mc.level.getGameTime()+mc.getTimer().getGameTimeDeltaPartialTick(false);
         pose.pushPose();
         try{
             pose.translate(.5,.5,.5);pose.scale(.34F,.34F,.34F);pose.mulPose(Axis.YP.rotationDegrees((float)(phase*.45%360)));pose.mulPose(Axis.ZP.rotationDegrees(12));

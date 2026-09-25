@@ -5,6 +5,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.event.level.*;
 public final class Structure {
     private static final Map<Level,Map<BlockPos,Controller>> OWNERS=new WeakHashMap<>();
+    private static final Map<Level,Map<BlockPos,Set<Controller>>> WATCHERS=new WeakHashMap<>();
+    private final Set<BlockPos> watched=new HashSet<>();private Direction watchedDirection;
     private final Set<BlockPos> claimed=new HashSet<>();
     public final Controller owner;
     public final List<Part> ports=new ArrayList<>(),fuelHatches=new ArrayList<>(),coils=new ArrayList<>();
@@ -14,18 +16,25 @@ public final class Structure {
     public BlockPos at(int x,int y,int z){return owner.getBlockPos().relative(owner.getDirection().getClockWise(),x-3).above(y-1).relative(owner.getDirection().getOpposite(),z);}
     public boolean contains(BlockPos p){var a=at(0,0,0);var b=at(6,6,6);return p.getX()>=Math.min(a.getX(),b.getX())&&p.getX()<=Math.max(a.getX(),b.getX())&&p.getY()>=a.getY()&&p.getY()<=b.getY()&&p.getZ()>=Math.min(a.getZ(),b.getZ())&&p.getZ()<=Math.max(a.getZ(),b.getZ());}
     public boolean outward(BlockPos p,Direction side){return side!=null&&contains(p)&&!contains(p.relative(side));}
-    public static void changed(Level l,BlockPos p){if(l==null||l.isClientSide)return;var map=OWNERS.get(l);var c=map==null?null:map.get(p);if(c!=null)c.structure.invalidate();}
-    public static void unload(LevelEvent.Unload e){OWNERS.remove(e.getLevel());}
-    public static void chunkUnload(ChunkEvent.Unload e){var map=OWNERS.get(e.getLevel());if(map!=null){var cs=new HashSet<Controller>();for(var entry:map.entrySet())if(new net.minecraft.world.level.ChunkPos(entry.getKey()).equals(e.getChunk().getPos()))cs.add(entry.getValue());cs.forEach(c->c.structure.invalidate());}}
+    public void watch(){var level=owner.getLevel();if(level==null||level.isClientSide||owner.isRemoved()||watchedDirection==owner.getDirection()&&!watched.isEmpty())return;
+        unwatch();watchedDirection=owner.getDirection();var map=WATCHERS.computeIfAbsent(level,k->new HashMap<>());
+        for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){var pos=at(x,y,z);watched.add(pos);map.computeIfAbsent(pos,k->new HashSet<>()).add(owner);}
+    }
+    private void unwatch(){var map=WATCHERS.get(owner.getLevel());if(map!=null)for(var p:watched){var set=map.get(p);if(set!=null){set.remove(owner);if(set.isEmpty())map.remove(p);}}watched.clear();watchedDirection=null;}
+    public static void changed(Level l,BlockPos p){if(l==null||l.isClientSide)return;var map=WATCHERS.get(l);var controllers=map==null?null:map.get(p);if(controllers!=null)for(var c:List.copyOf(controllers))c.structure.invalidate();}
+    public static void unload(LevelEvent.Unload e){OWNERS.remove(e.getLevel());WATCHERS.remove(e.getLevel());}
+    private static void chunkChanged(ChunkEvent e){var map=WATCHERS.get(e.getLevel());if(map!=null){var cs=new HashSet<Controller>();for(var entry:map.entrySet())if(new net.minecraft.world.level.ChunkPos(entry.getKey()).equals(e.getChunk().getPos()))cs.addAll(entry.getValue());cs.forEach(c->c.structure.invalidate());}}
+    public static void chunkUnload(ChunkEvent.Unload e){chunkChanged(e);}
+    public static void chunkLoad(ChunkEvent.Load e){chunkChanged(e);}
     private void notifyPorts(){var l=owner.getLevel();if(l==null||l.isClientSide)return;for(var p:List.copyOf(ports))if(!p.isRemoved()&&l.hasChunkAt(p.getBlockPos())){l.invalidateCapabilities(p.getBlockPos());l.updateNeighborsAt(p.getBlockPos(),p.getBlockState().getBlock());}}
     public void invalidate(){boolean was=formed;dirty=true;formed=false;if(was){activity(false);appearance(false);notifyPorts();}}
-    public void detach(){var map=OWNERS.get(owner.getLevel());if(map!=null)for(var p:claimed)map.remove(p,owner);claimed.clear();invalidate();}
+    public void detach(){invalidate();unwatch();var map=OWNERS.get(owner.getLevel());if(map!=null)for(var p:claimed)map.remove(p,owner);claimed.clear();}
     public boolean valid(){if(owner.getLevel()==null||owner.getLevel().isClientSide||owner.isRemoved()||checking)return false;return dirty?validate():formed;}
     private boolean fail(String error,BlockPos pos){this.error=error;errorPos=pos;return false;}
     public static boolean coilPosition(int x,int y,int z){return (x==1||x==5)&&y==3&&z==3||(y==1||y==5)&&x==3&&z==3||(z==1||z==5)&&x==3&&y==3;}
     public boolean validate(){
         if(checking||owner.getLevel()==null||owner.isRemoved())return false;
-        checking=true;dirty=false;formed=false;ports.clear();fuelHatches.clear();coils.clear();core=null;grade=Grade.ULTIMATE;energyInputs=energyOutputs=0;
+        watch();checking=true;dirty=false;formed=false;ports.clear();fuelHatches.clear();coils.clear();core=null;grade=Grade.ULTIMATE;energyInputs=energyOutputs=0;
         var l=owner.getLevel();var map=OWNERS.computeIfAbsent(l,k->new HashMap<>());for(var p:claimed)map.remove(p,owner);claimed.clear();
         try {
             for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){

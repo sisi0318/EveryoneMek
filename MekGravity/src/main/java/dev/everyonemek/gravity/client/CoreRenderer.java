@@ -67,12 +67,12 @@ public final class CoreRenderer implements BlockEntityRenderer<Part> {
         var motion=motions.computeIfAbsent(p,k->new CoreMotion());
         boolean working=p.getBlockState().getValue(PartBlock.ACTIVE)&&p.getBlockState().getValue(PartBlock.FORMED);
         motion.update(tick,working?.25+.75*p.visualLoad()/100D:0);
-        float intensity=motion.strength();double phase=motion.phase();
+        float intensity=motion.strength();double phase=VisualConfig.phase(motion.phase());
         float pulse=(float)(.86+.14*Math.sin(phase*.13));
         double distance=Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().distanceTo(p.getBlockPos().getCenter());
         pose.pushPose();pose.translate(.5,.5,.5);
-        drawCore(p.getBlockState(),pose,buffers,light,overlay,phase,intensity,distance);
-        if(intensity>.001F&&distance<32){
+        drawCore(p.getBlockState(),pose,buffers,light,overlay,phase,intensity,VisualConfig.meshDistance(distance));
+        if(VisualConfig.effects()&&intensity>.001F&&distance<Math.min(32,VisualConfig.EFFECT_DISTANCE.get())){
             intensity*=(float)Math.clamp((32-distance)/8,0,1);
             var v=buffers.getBuffer(RenderType.lightning());
             pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(phase*.65%360)));pose.mulPose(Axis.ZP.rotationDegrees(18));
@@ -83,7 +83,7 @@ public final class CoreRenderer implements BlockEntityRenderer<Part> {
             var matrix=pose.last().pose();
             for(int axis=0;axis<3;axis++)for(int sign=-1;sign<=1;sign+=2){
                 ribbon(v,matrix,axis,sign*.40F,sign*1.375F,.009F+.006F*intensity,(int)(65*intensity*pulse),false);
-                for(int spark=0;spark<3;spark++){
+                for(int spark=0;spark<(VisualConfig.reduced()?1:3);spark++){
                     double fraction=(phase/24+axis*.17+(sign+1)*.13+spark/3D)%1;float at=sign*(1.34F-(float)fraction*.91F);
                     ribbon(v,matrix,axis,at-sign*.04F,at+sign*.04F,.018F+.009F*intensity,(int)(220*intensity),true);
                 }

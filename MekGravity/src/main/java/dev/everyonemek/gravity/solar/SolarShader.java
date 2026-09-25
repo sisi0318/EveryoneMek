@@ -25,11 +25,11 @@ public final class SolarShader {
         catch(IOException error){LogUtils.getLogger().error("Could not load gravity surface shader; using the baked core",error);}
     }
     public static boolean draw(PoseStack pose,MultiBufferSource buffers,double phase,float heat,double distance){
-        if(shader==null)return false;
+        if(shader==null||!dev.everyonemek.gravity.VisualConfig.SHADERS.get())return false;
         draw(pose,buffers,phase,heat,distance,TYPE);return true;
     }
     public static boolean drawGravity(PoseStack pose,MultiBufferSource buffers,double phase,float strength,double distance){
-        if(gravityShader==null)return false;pose.pushPose();
+        if(gravityShader==null||!dev.everyonemek.gravity.VisualConfig.SHADERS.get())return false;pose.pushPose();
         try{pose.scale(.3F,.3F,.3F);draw(pose,buffers,phase,strength,distance/.3,GRAVITY_TYPE);}finally{pose.popPose();}return true;
     }
     private static void draw(PoseStack pose,MultiBufferSource buffers,double phase,float heat,double distance,RenderType type){

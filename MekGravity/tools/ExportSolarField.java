@@ -21,6 +21,9 @@ public class ExportSolarField {
         for(int frame=0;frame<240;frame++)SolarField.emit(frame*2.5,.2F,1,(a,b,width,rgb,alpha,halo)->{
             for(var p:new SolarField.Point[]{a,b})if(!Double.isFinite(p.x()+p.y()+p.z())||Math.max(Math.max(Math.abs(p.x()),Math.abs(p.y())),Math.abs(p.z()))+width*3>4)throw new AssertionError("Hot standby exceeded render bounds");
         });
+        int[] full={0},reduced={0};SolarField.emit(100,1,1,false,(a,b,w,rgb,alpha,halo)->full[0]++);SolarField.emit(100,1,1,true,(a,b,w,rgb,alpha,halo)->reduced[0]++);
+        if(full[0]!=430||reduced[0]!=76)throw new AssertionError("Quality preset geometry budgets changed: "+full[0]+"/"+reduced[0]);
+        System.out.println("Quality presets: "+full[0]+" full / "+reduced[0]+" reduced field segments.");
         // The existing world-time smoothing is shared by the solar renderer.
         var motion=new CoreMotion();motion.update(0,1);for(int t=1;t<=120;t++)motion.update(t,1);
         if(motion.strength()<.99)throw new AssertionError("Field did not start");

@@ -54,7 +54,9 @@ public final class SolarPorts {
         }
     }
     public static void eject(SolarController c){if(!c.autoEject||!c.structure.valid())return;
-        for(var p:java.util.List.copyOf(c.structure.ports))if(p.output())for(var side:Direction.values()){
+        var ordered=new java.util.ArrayList<>(c.structure.ports.stream().filter(p->p.output()&&p.kind()==SolarBlock.Kind.ENERGY).toList());
+        if(!ordered.isEmpty()){java.util.Collections.rotate(ordered,-Math.floorMod(c.outputCursor++,ordered.size()));}
+        for(var p:ordered)for(var side:Direction.values()){
             if(controller(p,side)!=c)continue;var next=p.getBlockPos().relative(side);if(!c.getLevel().hasChunkAt(next))continue;
             if(p.kind()==SolarBlock.Kind.ENERGY){
                 var source=new Energy(p,side);long offer=source.extractEnergy(0,Long.MAX_VALUE,Action.SIMULATE);if(offer<=0)continue;

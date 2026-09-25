@@ -32,16 +32,16 @@ public final class SolarRenderer implements BlockEntityRenderer<SolarPart> {
     @Override public void render(SolarPart p,float partial,PoseStack pose,MultiBufferSource buffers,int light,int overlay){if(p.kind()!=SolarBlock.Kind.SEED||p.getLevel()==null)return;
         var m=motion.computeIfAbsent(p,k->new Motion());boolean formed=p.getBlockState().getValue(SolarBlock.FORMED),active=formed&&p.getBlockState().getValue(SolarBlock.ACTIVE),hot=formed&&p.hot();double tick=p.getLevel().getGameTime()+(double)partial;
         m.activity.update(tick,active?.3+.7*p.visual()/100D:hot?.2:0);m.heat.update(tick,hot?1:0);
-        float strength=m.activity.strength();double phase=m.activity.phase();float size=.2F+.8F*m.heat.strength();
+        float strength=m.activity.strength();double phase=dev.everyonemek.gravity.VisualConfig.phase(m.activity.phase());float size=.2F+.8F*m.heat.strength();
         var mc=Minecraft.getInstance();var camera=mc.gameRenderer.getMainCamera().getPosition().subtract(p.getBlockPos().getCenter());double distance=camera.length();
         pose.pushPose();pose.translate(.5,.5,.5);pose.pushPose();pose.mulPose(Axis.YP.rotationDegrees((float)(phase*1.2%360)));pose.mulPose(Axis.ZP.rotationDegrees(12));pose.scale(size,size,size);
-        if(!SolarShader.draw(pose,buffers,phase,m.heat.strength(),distance)){
+        if(!SolarShader.draw(pose,buffers,phase,m.heat.strength(),dev.everyonemek.gravity.VisualConfig.meshDistance(distance))){
             pose.translate(-.5,-.5,-.5);mc.getBlockRenderer().getModelRenderer().renderModel(pose.last(),buffers.getBuffer(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS)),p.getBlockState(),mc.getModelManager().getModel(strength>.05?ACTIVE:IDLE),1,1,1,LightTexture.FULL_BRIGHT,overlay,ModelData.EMPTY,null);
         }pose.popPose();
-        if(strength>.002&&distance<48){
-            float fieldStrength=strength*(float)Math.clamp((48-distance)/8,0,1);
+        if(dev.everyonemek.gravity.VisualConfig.effects()&&strength>.002&&distance<dev.everyonemek.gravity.VisualConfig.EFFECT_DISTANCE.get()){
+            float fieldStrength=strength*(float)Math.clamp((dev.everyonemek.gravity.VisualConfig.EFFECT_DISTANCE.get()-distance)/8,0,1);
             if(!SolarFieldShader.draw(pose,buffers,camera,phase,fieldStrength,size)){
-                var v=buffers.getBuffer(RenderType.lightning());SolarField.emit(phase,fieldStrength,size,(a,b,width,rgb,alpha,halo)->{if(halo)strip(v,pose,camera,a,b,width*3,rgb,alpha/5);strip(v,pose,camera,a,b,width,rgb,alpha);});
+                var v=buffers.getBuffer(RenderType.lightning());SolarField.emit(phase,fieldStrength,size,dev.everyonemek.gravity.VisualConfig.reduced(),(a,b,width,rgb,alpha,halo)->{if(halo)strip(v,pose,camera,a,b,width*3,rgb,alpha/5);strip(v,pose,camera,a,b,width,rgb,alpha);});
             }}
         pose.popPose();
     }

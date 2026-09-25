@@ -9,7 +9,7 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 public final class Part extends BlockEntity implements mekanism.api.IConfigurable {
     public BlockPos master;
     private long ioTick=Long.MIN_VALUE;
-    public long inputUsed,outputUsed;
+    public long inputUsed,outputUsed;private long previousInput,previousOutput;
     private int visualLoad,sentVisualLoad;
     private long visualSentAt=Long.MIN_VALUE;
     public int visualLoad(){return visualLoad;}
@@ -27,7 +27,7 @@ public final class Part extends BlockEntity implements mekanism.api.IConfigurabl
     @Override public net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket(){return kind()==PartBlock.Kind.CORE?net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this):null;}
     @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider r){if(kind()==PartBlock.Kind.CORE)visualLoad=Math.clamp(tag.getByte("visual_load"),0,100);}
     @Override public void onDataPacket(net.minecraft.network.Connection connection,net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket packet,HolderLookup.Provider r){handleUpdateTag(packet.getTag(),r);}
-    public void clock(){if(level.getGameTime()!=ioTick){ioTick=level.getGameTime();inputUsed=outputUsed=0;}}
+    public void clock(){if(level.getGameTime()!=ioTick){previousInput=inputUsed;previousOutput=outputUsed;inputUsed=outputUsed=0;ioTick=level.getGameTime();}}
     public final ItemStackHandler inventory=new ItemStackHandler(18){
         @Override public boolean isItemValid(int i,ItemStack s){return kind()==PartBlock.Kind.FUEL&&FuelRecipe.find(level,s)!=null;}
         @Override protected void onContentsChanged(int i){Part.this.setChanged();}
@@ -35,6 +35,8 @@ public final class Part extends BlockEntity implements mekanism.api.IConfigurabl
     public Part(BlockPos pos,BlockState state){super(Content.PART.get(),pos,state);}
     public PartBlock.Kind kind(){return ((PartBlock)getBlockState().getBlock()).kind;}
     public boolean output(){return getBlockState().getValue(PartBlock.OUTPUT);}
+    public long inputRate(){long age=level==null?2:level.getGameTime()-ioTick;return age==0?(inputUsed>0?inputUsed:previousInput):age==1?inputUsed:0;}
+    public long outputRate(){long age=level==null?2:level.getGameTime()-ioTick;return age==0?(outputUsed>0?outputUsed:previousOutput):age==1?outputUsed:0;}
     public Controller controller(){if(level==null||master==null||isRemoved()||!level.hasChunkAt(worldPosition)||!level.hasChunkAt(master)||level.getBlockEntity(worldPosition)!=this)return null;return level.getBlockEntity(master) instanceof Controller c&&c.structure.contains(worldPosition)?c:null;}
     public boolean canOpen(Player p){if(level==null||p.level()!=level||isRemoved()||p.distanceToSqr(worldPosition.getCenter())>64)return false;var c=controller();if(c!=null)return c.access(p);if(master==null)return true;if(!level.hasChunkAt(master))return false;return !(level.getBlockEntity(master) instanceof Controller old)||old.access(p);}
     public void open(Player p){if(!canOpen(p))return;if(kind()==PartBlock.Kind.FUEL)FuelMenu.open(p,this);else {var c=controller();if(c!=null)ReactorMenu.open(p,c,worldPosition);else if(!level.isClientSide)p.displayClientMessage(Content.text("unlinked"),true);}}

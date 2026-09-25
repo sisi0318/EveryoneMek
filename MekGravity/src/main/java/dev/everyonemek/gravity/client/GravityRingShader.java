@@ -22,7 +22,7 @@ public final class GravityRingShader {
         catch(IOException error){LogUtils.getLogger().error("Could not load gravity ring shader; using the baked metal rings",error);}
     }
     public static boolean draw(int ring,PoseStack pose,MultiBufferSource buffers,double phase,float strength){
-        if(shader==null)return false;
+        if(shader==null||!dev.everyonemek.gravity.VisualConfig.SHADERS.get())return false;
         var vertices=GravityRingMesh.vertices(ring);var vertex=buffers.getBuffer(TYPE);var transform=pose.last();
         double turn=(ring==0?phase:-phase)/85+ring*.5;float flow=(float)(turn-Math.floor(turn));int load=Math.clamp(Math.round(strength*255),0,255);
         var position=new Vector3f();var normal=new Vector3f();

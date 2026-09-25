@@ -17,7 +17,7 @@ public final class SolarController extends TileEntityMekanism {
     private final SolarHeat heat=new SolarHeat(this);
     public long stored,fuelRemaining,fuelTotal,gross,selfUse,lastOutput,lastInput;
     public boolean enabled,ignited,autoEject=true,automatic=true,refill=true;
-    public int load=100;public String status="structure";
+    public int load=100,buildTier,outputCursor;public String status="structure";
     private long ioTick=Long.MIN_VALUE,exported,received;private int lastAlarm=-1;
     public SolarController(BlockPos pos,BlockState state){super(SolarContent.CONTROLLER,pos,state);}
     @Override protected IEnergyContainerHolder getInitialEnergyContainers(IContentsListener listener){return EnergyContainerHelper.forSide(facingSupplier).build();}
@@ -29,6 +29,7 @@ public final class SolarController extends TileEntityMekanism {
     public long accept(long n,boolean simulate){if(n<=0||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,capacity()-stored),Math.max(0,inputLimit()-received)));if(!simulate&&take>0){stored+=take;received+=take;markForSave();}return take;}
     public long extract(long n,boolean simulate){if(n<=0||!ignited||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,stored-reserve()),Math.max(0,outputLimit()-exported)));if(!simulate&&take>0){stored-=take;exported+=take;markForSave();}return take;}
     public boolean fuelAvailable(){if(fuelRemaining>0)return true;for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var fuel=SolarFuelRecipe.fuel(level,stack);if(fuel!=null&&stack.getCount()>=fuel.count())return true;}return false;}
+    public dev.everyonemek.gravity.FuelStock fuelStock(){var result=new dev.everyonemek.gravity.FuelStock();for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var fuel=SolarFuelRecipe.fuel(level,stack);if(fuel!=null)result.add(stack.getCount()/fuel.count(),fuel.remaining());}return result;}
     // "ignited" remembers the paid startup charge; it is not proof that a stopped core is hot.
     public boolean isCoreHot(){return enabled&&ignited&&structure.formed&&(gross>0||fuelRemaining>0||refill&&fuelAvailable());}
     private boolean chargeFuel(){if(fuelRemaining>0)return true;if(!refill)return false;
@@ -67,8 +68,8 @@ public final class SolarController extends TileEntityMekanism {
         int alarm=structure.formed&&!fuelAvailable()?15:0;if(alarm!=lastAlarm){lastAlarm=alarm;for(var hatch:structure.fuelHatches)if(!hatch.isRemoved()&&level.hasChunkAt(hatch.getBlockPos()))level.updateNeighbourForOutputSignal(hatch.getBlockPos(),hatch.getBlockState().getBlock());}return changed;}
     @Override public void onLoad(){super.onLoad();structure.watch();structure.invalidate();}
     @Override public void setRemoved(){structure.detach();super.setRemoved();}
-    private CompoundTag data(){var t=new CompoundTag();t.putLong("energy",stored);t.putLong("fuel",fuelRemaining);t.putLong("fuel_total",fuelTotal);t.putBoolean("enabled",enabled);t.putBoolean("ignited",ignited);t.putBoolean("automatic",automatic);t.putBoolean("refill",refill);t.putBoolean("eject",autoEject);t.putInt("load",load);return t;}
-    private void read(CompoundTag t){stored=Math.max(0,t.getLong("energy"));fuelRemaining=Math.clamp(t.getLong("fuel"),0,1_000_000_000_000_000_000L);fuelTotal=Math.max(fuelRemaining,Math.clamp(t.getLong("fuel_total"),0,1_000_000_000_000_000_000L));enabled=t.getBoolean("enabled");ignited=t.getBoolean("ignited");automatic=!t.contains("automatic")||t.getBoolean("automatic");refill=!t.contains("refill")||t.getBoolean("refill");autoEject=!t.contains("eject")||t.getBoolean("eject");load=t.contains("load")?Math.clamp(t.getInt("load"),1,100):100;gross=selfUse=0;structure.invalidate();}
+    private CompoundTag data(){var t=new CompoundTag();t.putLong("energy",stored);t.putLong("fuel",fuelRemaining);t.putLong("fuel_total",fuelTotal);t.putBoolean("enabled",enabled);t.putBoolean("ignited",ignited);t.putBoolean("automatic",automatic);t.putBoolean("refill",refill);t.putBoolean("eject",autoEject);t.putInt("load",load);t.putInt("build_tier",buildTier);return t;}
+    private void read(CompoundTag t){stored=Math.max(0,t.getLong("energy"));fuelRemaining=Math.clamp(t.getLong("fuel"),0,1_000_000_000_000_000_000L);fuelTotal=Math.max(fuelRemaining,Math.clamp(t.getLong("fuel_total"),0,1_000_000_000_000_000_000L));enabled=t.getBoolean("enabled");ignited=t.getBoolean("ignited");automatic=!t.contains("automatic")||t.getBoolean("automatic");refill=!t.contains("refill")||t.getBoolean("refill");autoEject=!t.contains("eject")||t.getBoolean("eject");buildTier=Math.clamp(t.getInt("build_tier"),0,3);load=t.contains("load")?Math.clamp(t.getInt("load"),1,100):100;gross=selfUse=0;structure.invalidate();}
     @Override public void saveAdditional(CompoundTag t,HolderLookup.Provider r){super.saveAdditional(t,r);t.put("solar",data());}
     @Override public void loadAdditional(CompoundTag t,HolderLookup.Provider r){super.loadAdditional(t,r);read(t.getCompound("solar"));}
     @Override protected void collectImplicitComponents(DataComponentMap.Builder b){super.collectImplicitComponents(b);b.set(SolarContent.DATA.get(),data());}

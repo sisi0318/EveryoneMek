@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 public final class SolarPart extends BlockEntity implements mekanism.api.IConfigurable {
     public BlockPos master;private long clock=Long.MIN_VALUE,visualSent=Long.MIN_VALUE;
-    public long inUsed,outUsed;private int visual,sentVisual;private boolean hot,sentHot;
+    public long inUsed,outUsed;private long previousInput,previousOutput;private int visual,sentVisual;private boolean hot,sentHot;
     public final ItemStackHandler inventory=new ItemStackHandler(18){
         @Override public boolean isItemValid(int slot,ItemStack stack){return kind()==SolarBlock.Kind.FUEL&&SolarFuelRecipe.fuel(level,stack)!=null;}
         @Override protected void onContentsChanged(int slot){setChanged();}
@@ -18,7 +18,9 @@ public final class SolarPart extends BlockEntity implements mekanism.api.IConfig
     public SolarBlock.Kind kind(){return ((SolarBlock)getBlockState().getBlock()).kind;}
     public int tier(){return ((SolarBlock)getBlockState().getBlock()).tier;}
     public boolean output(){return getBlockState().getValue(SolarBlock.OUTPUT);}
-    public void clock(){if(clock!=level.getGameTime()){clock=level.getGameTime();inUsed=outUsed=0;}}
+    public void clock(){if(clock!=level.getGameTime()){clock=level.getGameTime();previousInput=inUsed;previousOutput=outUsed;inUsed=outUsed=0;}}
+    public long inputRate(){long age=level==null?2:level.getGameTime()-clock;return age==0?(inUsed>0?inUsed:previousInput):age==1?inUsed:0;}
+    public long outputRate(){long age=level==null?2:level.getGameTime()-clock;return age==0?(outUsed>0?outUsed:previousOutput):age==1?outUsed:0;}
     public SolarController controller(){if(level==null||master==null||isRemoved()||!level.hasChunkAt(worldPosition)||!level.hasChunkAt(master)||level.getBlockEntity(worldPosition)!=this)return null;return level.getBlockEntity(master) instanceof SolarController c&&c.structure.contains(worldPosition)?c:null;}
     public boolean canOpen(Player p){if(level==null||p.level()!=level||isRemoved()||p.distanceToSqr(worldPosition.getCenter())>64)return false;var c=controller();if(c!=null)return c.access(p);if(master==null)return true;if(!level.hasChunkAt(master))return false;return !(level.getBlockEntity(master) instanceof SolarController old)||old.access(p);}
     public void open(Player p){if(!canOpen(p))return;if(kind()==SolarBlock.Kind.FUEL)SolarFuelMenu.open(p,this);else{var c=controller();if(c!=null)SolarMenu.open(p,c,worldPosition);else if(!level.isClientSide)p.displayClientMessage(SolarContent.text("unlinked"),true);}}

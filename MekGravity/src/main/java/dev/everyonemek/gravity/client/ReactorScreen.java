@@ -14,7 +14,7 @@ public final class ReactorScreen extends GuiMekanismTile<Controller,ReactorMenu>
     public ReactorScreen(ReactorMenu m,Inventory inv,Component title){super(m,inv,title);imageWidth=230;imageHeight=244;inventoryLabelX=34;inventoryLabelY=146;dynamicSlots=true;}
     public static String fe(long joules){double n=EnergyUnit.FORGE_ENERGY.convertTo(joules);String[] suffix={"","k","M","G","T","P","E"};int i=0;while(n>=1000&&i<suffix.length-1){n/=1000;i++;}return String.format(Locale.ROOT,i==0?"%.0f %sFE":"%.2f %sFE",n,suffix[i]);}
     private List<Component> information(){
-        if(tile.ignited)return List.of(Content.text(tile.status),Content.text("net",fe(tile.gross-tile.selfUse)),Content.text("exported",fe(tile.lastOutput)),Content.text("field_ready"));
+        if(tile.ignited)return List.of(Content.text(tile.status),Content.text("net",fe(tile.gross-tile.selfUse)),Content.text("exported",fe(tile.lastOutput)),Content.text(tile.gross>0?"field_ready":"field_inactive"));
         if(menu.capacity<=0)return List.of(Content.text(tile.status),Content.text("syncing"));
         long required=menu.startup+menu.reserve;
         return List.of(Content.text(tile.status),Content.text("charge_stored",fe(tile.stored)),Content.text("charge_required",fe(required)),Content.text(tile.stored<required?"excitation_hint":"field_waiting"));
@@ -33,5 +33,5 @@ public final class ReactorScreen extends GuiMekanismTile<Controller,ReactorMenu>
             final ReactorTab[] holder=new ReactorTab[1];holder[0]=new ReactorTab(this,tile,menu,page,()->holder[0]);addRenderableWidget(holder[0]);
         }
     }
-    @Override protected void drawForegroundText(GuiGraphics g,int mx,int my){super.drawForegroundText(g,mx,my);renderTitleText(g);renderInventoryText(g);g.drawString(font,Content.text("fuel_remaining"),8,94,titleTextColor(),false);}
+    @Override protected void drawForegroundText(GuiGraphics g,int mx,int my){super.drawForegroundText(g,mx,my);renderTitleText(g);renderInventoryText(g);g.drawString(font,Content.text("fuel_remaining"),8,94,titleTextColor(),false);drawScaledScrollingString(g,menu.reserveFuelCount<0?Content.text("stock_unknown"):Content.text("reserve_fuel",menu.reserveFuelCount),101,91,202,103,TextAlignment.RIGHT,titleTextColor(),false,.8F,getTimeOpened());}
 }

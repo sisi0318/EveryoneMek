@@ -69,7 +69,10 @@ public final class Ports {
         }
     }
     public static void eject(Controller c){if(!c.autoEject||!c.structure.valid())return;
-        for(var p:java.util.List.copyOf(c.structure.ports))if(p.output())for(var side:Direction.values()){
+        var ordered=new java.util.ArrayList<>(c.structure.ports.stream().filter(p->p.output()&&p.kind()==PartBlock.Kind.ENERGY).toList());
+        if(!ordered.isEmpty()){java.util.Collections.rotate(ordered,-Math.floorMod(c.outputCursor++,ordered.size()));}
+        ordered.addAll(c.structure.ports.stream().filter(p->p.output()&&p.kind()==PartBlock.Kind.COOLANT).toList());
+        for(var p:ordered)for(var side:Direction.values()){
             if(controller(p,side)!=c)continue;var next=p.getBlockPos().relative(side);if(!c.getLevel().hasChunkAt(next))continue;
             if(p.kind()==PartBlock.Kind.COOLANT&&!c.hot.isEmpty()){
                 var target=c.getLevel().getCapability(mekanism.common.capabilities.Capabilities.CHEMICAL.block(),next,side.getOpposite());if(target!=null){var source=new Chemicals(p,side);var offer=source.getChemicalInTank(0);long accepted=offer.getAmount()-target.insertChemical(offer.copy(),Action.EXECUTE).getAmount();if(accepted>0)source.extractChemical(0,accepted,Action.EXECUTE);}

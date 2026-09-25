@@ -118,6 +118,9 @@ pairs={
 'fuel_port':('缺少燃料仓','Fuel hatch missing'),'cold_port':('缺少钠输入口','Sodium input missing'),'hot_port':('缺少热钠输出口','Hot sodium output missing'),'excitation_port':('缺少励磁输入口','Excitation input missing'),'output_port':('缺少发电输出口','Energy output missing'),
 'error_at':('检查位置：%s','Check position: %s'),
 'startup_config':('启动与备用电超过缓存容量','Startup and reserve exceed capacity'),
+'stock_unknown':('库存待统计','Fuel stock not available'),'reserve_fuel':('备用燃料 %s 份','Reserve fuel: %s portions'),'reserve_fuel_energy':('备用能量：%s','Fuel reserve: %s'),'field_inactive':('约束场未运行','Containment field inactive'),
+'port_selected':('接口 %s/%s · %s','Port %s/%s · %s'),'port_location':('位置：%s','Position: %s'),'port_rates':('入 %s/t · 出 %s/t','In %s/t · Out %s/t'),
+'build_stop':('请先停机再搭建或升级','Stop the machine before building or upgrading'),'build_grade':('建造等级：%s','Build tier: %s'),'upgrade_assembly':('整组升级','Upgrade assembly'),'upgrade_complete':('已升级 %s 个部件，旧部件已退回','Upgraded %s parts; previous parts returned'),'build_partial':('已放置 %s 块，仍缺 %s 块材料','Placed %s blocks; %s materials still missing'),
 'structure':('等待结构成型','Structure incomplete'),'unloaded':('结构所在区块未加载','Structure chunk not loaded'),'occupied':('部件已接入其他结构','Part belongs to another structure'),'shell':('外壳缺失或放置错误','Invalid or missing casing'),'frame':('棱角需要引力堆框架','Edges require reactor frames'),'interior':('反应腔内需要留空','Clear the reaction chamber'),'core':('中心缺少引力核心','Gravitational core missing'),'coil':('约束线圈未装齐','Containment coils missing'),'coil_facing':('线圈需要朝向核心','Point the coil toward the core'),'ports':('缺少燃料、冷却或能量接口','Missing fuel, coolant or energy ports'),'port_limit':('最多 8 个燃料仓、32 个接口','Maximum 8 fuel hatches and 32 ports'),'ready':('结构完整','Structure formed'),
 'stopped':('已停机','Stopped'),'redstone':('等待红石信号','Waiting for redstone'),'fuel_missing':('缺少燃料','Fuel required'),'cold_missing':('缺少冷却钠','Sodium required'),'hot_blocked':('热钠出口堵塞','Hot sodium output blocked'),'charging':('等待启动充能','Waiting for startup power'),'reserve_low':('约束备用电不足','Containment reserve low'),'full':('电缓存已满','Energy buffer full'),'coolant_invalid':('钠冷却数据无效','Invalid sodium cooling data'),'output_limited':('电缓存接近满载','Energy buffer nearly full'),'cold_limited':('冷却不足，已降载','Cooling limited; reduced load'),'running':('运行正常','Running'),
 'input':('输入','Input'),'output':('输出','Output'),'facing':('朝向：%s','Facing: %s'),'unlinked':('尚未接入引力堆','Not connected to a reactor'),
@@ -130,6 +133,8 @@ pairs={
 for i,(z,e) in enumerate(zip(['初级','高级','精英','终极'],['Basic','Advanced','Elite','Ultimate'])):pairs['grade.'+str(i)]=(z,e)
 for direction,z in [('north','北'),('south','南'),('east','东'),('west','西'),('up','上'),('down','下')]:pairs['direction.'+direction]=(z,direction.title())
 for key,(z,e) in pairs.items():zh['mekgravity.'+key]=z;en['mekgravity.'+key]=e
+for key,z,e in [('world_effects','世界动态效果（完整/简化/关闭）','World effects (FULL / REDUCED / OFF)'),('item_animation','物品动画','Item animation'),('shaders','Shader 材质','Shader materials'),('effect_distance','特效显示距离','Effect distance')]:
+    zh['mekgravity.config.'+key]=z;en['mekgravity.config.'+key]=e
 write(Path('assets/mekgravity/lang/zh_cn.json'),zh);write(Path('assets/mekgravity/lang/en_us.json'),en)
 print('Generated gravity reactor block, recipe, loot and language resources.')
 

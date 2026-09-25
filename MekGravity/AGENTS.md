@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.18，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.19，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -14,7 +14,14 @@
 
 ## 实现入口
 
-- 2026-09-25用户要求按核查结果逐项优化；第1项燃料仓保存可靠性已在alpha.18完成。后续顺序：生存搭建/整机升级、多端口公平供电、引力堆末端取整与及时刷新、画质档位/客户端分配优化、面板明确热态与限制原因。上述后续项尚未完成，勿将计划当作已实现。
+- alpha.19 Construction/SolarConstruction使用持久化buildTier(0～3，默认0)，菜单20循环等级、21整组升级。搭建缺料跳过可继续补齐，现有高级同类不降级。升级仅替换低级线圈／太阳tiered部件，需要备齐新部件；AssemblyBuild用BreakEvent及EventHooks.onBlockPlace保护，BlockSnapshot恢复拒绝的位置；旧BE NBT迁移、新件支付、旧件退回在恢复真实主手后执行，避免退料合入临时手持栈。满背包退料掉在玩家旁；已完成部件不回滚，下次可续做。
+- 自动出电用outputCursor轮换输出能量口的优先级，不承诺同tick严格等分，不影响外部主动抽能顺序。Part/SolarPart的上一tick累计值仅用于端口读数，2tick无活动归零，不进NBT。两菜单30/31翻页查看端口，选择索引服务器限幅；capability额度仍由原Energy实现掌管。
+- 引力堆Structure新增独立完整343格WATCHERS，与遇首错终止的OWNERS区分，onLoad/区块load/unload维护；移除20tick轮询。末端按net=gross-ceil(gross/50)、gross=net+ceil(net/49)计算，使用分段整数避免溢出；不清理旧能量或燃料。
+- VisualConfig为CLIENT、mekgravity-client.toml。FULL／REDUCED／OFF只改变显示，animateItems独立，shaderMaterials=false回退原模型；GravityClient注册原ConfigurationScreen。SolarField emit新增reduced参数，旧重载仍FULL；430/76段，Shader路径按标量计算相机朝向四边形，复用一个Vector3f，不再为每段创建Vec3数组。
+- ReactorMenu.stillValid与SolarMenu统一按实际点击部件距离/安全权限检查，移除Mek父类额外按主控距离关闭远端框架GUI的限制。新版AssemblyUpgradeTests顺带覆盖最远角打开后保持菜单。
+- FuelStock只读统计仓内配方份数和剩余能量，乘加饱和为Long.MAX_VALUE时UI带≥，不把摘要回写库存。SolarMenu同步coreHot，面板把full且热态显示高温待机，停机显示已熄火；未成型备用份数=-1。保留原单份剩余燃料条，太阳结构页显示约束/采能瓶颈。
+
+- 2026-09-25用户要求逐项优化直到完成：第1项燃料保存已于alpha.18完成；其余五项于alpha.19完成，下列为当前契约。
 - FuelInventorySlot用于FuelMenu及SolarFuelMenu：原SlotItemHandler.setChanged继承Slot，只通知其emptyInventory，原生moveItemStackTo合并/部分提取直接修改ItemStack时不会进入ItemStackHandler.onContentsChanged。覆写槽位setChanged后在服务端调用实际BlockEntity.setChanged，不只在quickMoveStack末尾补救；普通右键/合并也经过同一保存通知。保持原库存、槽位索引、过滤和NBT格式。
 
 - alpha.17 GravityCoreItemRenderer通过原RegisterClientExtensionsEvent注册core，模型builtin/entity；CoreRenderer.drawCore由世界和物品共用，接收BlockState而不创建虚拟Part。GUI距离参数6经drawGravity除.3后使用384面球体，加双环192面，所有显示场景保留双环反向转动，物品不画六向世界光束。静态OBJ仍供shader失败回退。
@@ -81,6 +88,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.19共29项GameTest通过：AssemblyUpgradeTests两台真实菜单20/21/3、缺料补建、取消放置/拆除恢复、精确退料和旧BE数据；PortFairnessTests两台四个原生能量立方的真实tick轮换、守恒、读数过期归零；GravityCompletionTests 1～100 J末端及2tick补齐外观；RuntimeSummaryTests128份太阳燃料能量饱和、胶囊实际余量、热态和建造等级保存。ExportSolarField检查430/76段与原运动；没有客户端视觉验收。
 
 - alpha.18先加入FuelPersistenceTests，两台燃料仓的真实菜单QUICK_MOVE合并都在原实现失败（数量变但chunk.isUnsaved=false）；换FuelInventorySlot后23项服务端测试通过。测试清除已保存区块标记再点击，覆盖非空堆叠合并、只剩8格容量的部分取出、右键分半/单个合并、满背包阻止操作；每步用原ChunkSerializer.write并BlockEntity.loadStatic重载核对数量，额外核对掉落STOCK，finally恢复区块脏标记并清理模拟玩家。
 

@@ -16,7 +16,7 @@ public final class GravityCoreItemRenderer extends BlockEntityWithoutLevelRender
         @Override public BlockEntityWithoutLevelRenderer getCustomRenderer(){if(renderer==null)renderer=new GravityCoreItemRenderer();return renderer;}
     },Content.PARTS.get(PartBlock.Kind.CORE).asItem());}
     @Override public void renderByItem(ItemStack stack,ItemDisplayContext context,PoseStack pose,MultiBufferSource buffers,int light,int overlay){
-        var mc=Minecraft.getInstance();double phase=mc.level==null?0:mc.level.getGameTime()+mc.getTimer().getGameTimeDeltaPartialTick(false);
+        var mc=Minecraft.getInstance();double phase=mc.level==null||!dev.everyonemek.gravity.VisualConfig.ANIMATE_ITEMS.get()?0:mc.level.getGameTime()+mc.getTimer().getGameTimeDeltaPartialTick(false);
         pose.pushPose();
         try{
             pose.translate(.5,.5,.5);
