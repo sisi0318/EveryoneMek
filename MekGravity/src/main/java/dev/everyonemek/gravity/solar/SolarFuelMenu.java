@@ -6,11 +6,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.*;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import dev.everyonemek.gravity.FuelInventorySlot;
 public final class SolarFuelMenu extends MekanismContainer {
     public final SolarPart part;
     public SolarFuelMenu(int id,Inventory inv,SolarPart part){super(SolarContent.FUEL_MENU,id,inv);this.part=part;addSlotsAndOpen();}
-    @Override protected void addSlots(){for(int i=0;i<18;i++)addSlot(new SlotItemHandler(part.inventory,i,8+i%9*18,33+i/9*18));}
+    @Override protected void addSlots(){for(int i=0;i<18;i++)addSlot(new FuelInventorySlot(part,part.inventory,i,8+i%9*18,33+i/9*18));}
     @Override protected int getInventoryXOffset(){return 8;}
     @Override protected int getInventoryYOffset(){return 121;}
     @Override public boolean stillValid(Player p){return !part.isRemoved()&&(p.level().isClientSide||part.kind()==SolarBlock.Kind.FUEL&&part.canOpen(p)&&p.level().getBlockEntity(part.getBlockPos())==part);}

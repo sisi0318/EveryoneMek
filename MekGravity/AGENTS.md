@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.17，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.18，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- 2026-09-25用户要求按核查结果逐项优化；第1项燃料仓保存可靠性已在alpha.18完成。后续顺序：生存搭建/整机升级、多端口公平供电、引力堆末端取整与及时刷新、画质档位/客户端分配优化、面板明确热态与限制原因。上述后续项尚未完成，勿将计划当作已实现。
+- FuelInventorySlot用于FuelMenu及SolarFuelMenu：原SlotItemHandler.setChanged继承Slot，只通知其emptyInventory，原生moveItemStackTo合并/部分提取直接修改ItemStack时不会进入ItemStackHandler.onContentsChanged。覆写槽位setChanged后在服务端调用实际BlockEntity.setChanged，不只在quickMoveStack末尾补救；普通右键/合并也经过同一保存通知。保持原库存、槽位索引、过滤和NBT格式。
 
 - alpha.17 GravityCoreItemRenderer通过原RegisterClientExtensionsEvent注册core，模型builtin/entity；CoreRenderer.drawCore由世界和物品共用，接收BlockState而不创建虚拟Part。GUI距离参数6经drawGravity除.3后使用384面球体，加双环192面，所有显示场景保留双环反向转动，物品不画六向世界光束。静态OBJ仍供shader失败回退。
 - core及其所有静态子模型particle统一指向gravity_surface_particle.png，生成器generate_resources.py同时维护物品display和粒子引用。VerifySolarShader.java带gravity参数会直接用gravity_surface.fsh烘焙16×16粒子图；原stellar路径仍正常。总运行PNG41张，没有改已有40张。实际世界发电和库存逻辑未变。
@@ -78,6 +81,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.18先加入FuelPersistenceTests，两台燃料仓的真实菜单QUICK_MOVE合并都在原实现失败（数量变但chunk.isUnsaved=false）；换FuelInventorySlot后23项服务端测试通过。测试清除已保存区块标记再点击，覆盖非空堆叠合并、只剩8格容量的部分取出、右键分半/单个合并、满背包阻止操作；每步用原ChunkSerializer.write并BlockEntity.loadStatic重载核对数量，额外核对掉落STOCK，finally恢复区块脏标记并清理模拟玩家。
 
 - alpha.17构建、gravity shader真实OpenGL编译/多核心/冷热/遮挡验证及紫色粒子烘焙通过；新粒子16×16/不透明/233色，物品七种显示context、CoreRenderer共用入口及JAR引用检查通过。纯客户端变更不重复21项服务端测试，没有启动游戏客户端。
 
