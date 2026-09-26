@@ -140,3 +140,5 @@ print('Generated gravity reactor block, recipe, loot and language resources.')
 
 from generate_solar_resources import build as build_solar
 build_solar()
+from generate_coronal_resources import build as build_coronal
+build_coronal()

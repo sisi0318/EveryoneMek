@@ -12,7 +12,7 @@
 - [Overload Core](OverloadCore/README.md)：科技核心挂坠、Mek 作业诅咒与受控增产、发电／物流限制和随身机具收益。
 - [Botanical Mekanism](Botania/README.md)：仿生花、原生词典与火花、Chemical 魔力加工，以及可选 AE2／多媒体物品互通和原装置控制器。
 - [Mek Factory](MekFactory/README.md)：分级并行矩阵工厂、原机与共享升级、独立输入输出仓、原感应储能，可选支持 Mekanism Extras 高阶工厂与感应部件。
-- [Mek Gravity](MekGravity/README.md)：7×7×7 引力约束反应堆与9×9×9人造微缩太阳、长效燃料、分级采能及大功率供电。
+- [Mek Gravity](MekGravity/README.md)：7×7×7 引力约束反应堆与9×9×9人造微缩太阳、长效燃料、分级采能、大功率供电及日冕批量加工。
 
 开发接手与新增模组先读 [AGENTS.md](AGENTS.md)，其中提供通用规则、启动清单和各模组开发入口。
 

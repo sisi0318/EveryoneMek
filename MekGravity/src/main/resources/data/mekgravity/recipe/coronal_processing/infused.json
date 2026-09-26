@@ -1,0 +1,24 @@
+{
+  "type": "mekgravity:coronal_processing",
+  "inputs": [
+    {
+      "ingredient": {
+        "tag": "c:ingots/copper"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:redstone"
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "id": "mekanism:alloy_infused",
+    "count": 1
+  },
+  "ticks": 40,
+  "energy": 5000000000,
+  "tier": 0
+}

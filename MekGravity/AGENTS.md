@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.19，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.20，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,11 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.20日冕加工舱位于solar布局(-1,4,4)/(9,4,4)/(4,4,-1)/(4,4,9)，背面对collector的segment4且朝内相同；不加入旧220块结构。CoronalMachine原生Mek9进9出，只存一套mekanism:items，coronal_work仅保存已付费产物/进度/设置。SolarController在SolarPorts.eject后派发四舱，每舱每tick最多推进一次，spendForCorona直接扣共享储电且保留reserve，不计入外部exported；lastProcessing为上一tick批次总扣能。
+- CoronalRecipe的coronal_processing支持1～4输入、结果1～64、基础ticks≤72000、energy≤10^12 J、tier0～3；最大流分配处理标签重叠和跨槽原料。配方匹配空闲最多每5tick，已付批次不重新读取配方。finish先合并后占空槽，堵塞保留remaining；掉落loot必须同时复制mekanism:items及mekgravity:coronal_work。原生ItemSlotsBuilder能力与服务端slots数量一致。
+- 原生BlockTile菜单必须用MENUS.register(id,CoronalMachine.class,CoronalMenu::new)创建MekanismContainerType；纯registerMenu+IMenuTypeExtension不能被Mek.getProvider识别，会右键无GUI。已由真实空手右键测试验证。当前Mek富集精炼黑曜石物品ID为enriched_refined_obsidian，不是enriched_obsidian。
+- 日冕资源由generate_coronal_resources.py维护并由总生成器调用，复用原16px材料。CoronalRenderer/CoronalField/CoronalShader及coronal_processing.vsh/fsh为悬浮物料和双热环；固定128/48quads，以顶点属性携带各舱相位/进度，无全屏效果、不写透明深度。新增JEI分类只放专用高温配方，普通配方添加原SMELTING/BLASTING催化机器。
 
 - alpha.19 Construction/SolarConstruction使用持久化buildTier(0～3，默认0)，菜单20循环等级、21整组升级。搭建缺料跳过可继续补齐，现有高级同类不降级。升级仅替换低级线圈／太阳tiered部件，需要备齐新部件；AssemblyBuild用BreakEvent及EventHooks.onBlockPlace保护，BlockSnapshot恢复拒绝的位置；旧BE NBT迁移、新件支付、旧件退回在恢复真实主手后执行，避免退料合入临时手持栈。满背包退料掉在玩家旁；已完成部件不回滚，下次可续做。
 - 自动出电用outputCursor轮换输出能量口的优先级，不承诺同tick严格等分，不影响外部主动抽能顺序。Part/SolarPart的上一tick累计值仅用于端口读数，2tick无活动归零，不进NBT。两菜单30/31翻页查看端口，选择索引服务器限幅；capability额度仍由原Energy实现掌管。
@@ -57,7 +62,7 @@
 
 - 2026-09-24用户要求开始实现微缩太阳并逐步补全。alpha.8已接入基础版，行为以SOLAR_README.md为准；SOLAR_DESIGN.md/SOLAR_EXPANSIONS.md包含未完成候选，不能全部宣称可用。实际默认256/512/1024/2048 GFE/t、16/8/4/2小时、单份737.28 PJ，缓存1.024 PFE、单口1.024 TFE/t额度。长效成品燃料供料，氘氚只用于制备。
 - 微缩太阳核对经验：Generators化学品ID使用mekanismgenerators命名空间；加压反应室MAX_FLUID/MAX_GAS均10,000。现有FuelRecipe上限1 PJ，太阳737.28 PJ需独立stellar_fuel与单配方10^18 J上限、long安全乘加；64份总预算会溢出，保持物品库存与单份预算分离。原Ports的64次int FE分批理论上限约137.44 GFE/t/口，不能冒称满足1.024 TFE/t；优先原生long并有界FE回退。现有7格Structure/Controller/Ports也不能直接套9格结构。
-- alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。耀斑、日冕加工、批量升级、CC和自定义告警/调载阈值仍未实现。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
+- alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。耀斑、CC和自定义告警/调载阈值仍未实现；分级整组升级已于alpha.19完成，日冕加工已于alpha.20完成。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
 - solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器真实转向必须触发；alpha.9采能翼朝向属于布局派生状态，旧片也自动纠正。
 - SolarController只保存储电、当前单份燃料余量/总量、点火和设置；fuel仓是SolarPart自己的18格ItemStackHandler。SolarFuelRecipe独立上限10^18 J，不批量将64份相乘。STOCK/DATA/FUEL_DATA三种组件分别处理仓、主控、残余胶囊。SolarMenu按实际点击部件距离校验而非只按主控，远端柱子也可打开。SolarPorts保留共享+单口tick额度、模拟无资源变化、停止后取料、真实自动弹出。
 - SolarConfig独立mekgravity-solar-server.toml（J）。alpha.10取消原50%目标与80%提前停机：两种模式均向实际容量补满；automatic额外按上一tick真实exported净能量快速升载，关闭时使用常规升载。净可容纳量与毛燃料不能直接取min：net=fuel-ceil(fuel/20)，需反算fuel=net+ceil(net/19)，只对小于当tick产量的净余量反算，禁止乘20导致溢出。满缓存不收费、不取下一份燃料；最后单份残余仍保持预算守恒。SolarScreen续航用菜单同步power×load/100，标明设定负载，不再除瞬时gross。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新。
@@ -88,6 +93,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.20共32项GameTest通过。CoronalTests覆盖真实漏斗供料66原铁→66铁锭并自动出箱、模拟无副作用、输出拒绝外部插入；付费32批暂停/BlockEntity.loadStatic/真实掉落重放、恢复不重复收费、满输出保留32份及熄火交付；分散与重叠输入、真实合金配方、tier门槛、原生右键菜单暂停。VerifyCoronalShader隐藏GL验证实际GLSL、流动/停机像素、深度遮挡与不写透明深度，128面；静态模型深度预览复用16px原素材。未启动客户端。
 
 - alpha.19共29项GameTest通过：AssemblyUpgradeTests两台真实菜单20/21/3、缺料补建、取消放置/拆除恢复、精确退料和旧BE数据；PortFairnessTests两台四个原生能量立方的真实tick轮换、守恒、读数过期归零；GravityCompletionTests 1～100 J末端及2tick补齐外观；RuntimeSummaryTests128份太阳燃料能量饱和、胶囊实际余量、热态和建造等级保存。ExportSolarField检查430/76段与原运动；没有客户端视觉验收。
 

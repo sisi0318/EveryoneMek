@@ -1,0 +1,24 @@
+{
+  "type": "mekgravity:coronal_processing",
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "mekanism:alloy_reinforced"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "mekanism:enriched_refined_obsidian"
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "id": "mekanism:alloy_atomic",
+    "count": 2
+  },
+  "ticks": 80,
+  "energy": 40000000000,
+  "tier": 2
+}

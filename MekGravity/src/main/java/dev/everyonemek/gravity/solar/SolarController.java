@@ -16,6 +16,7 @@ public final class SolarController extends TileEntityMekanism {
     public final SolarStructure structure=new SolarStructure(this);
     private final SolarHeat heat=new SolarHeat(this);
     public long stored,fuelRemaining,fuelTotal,gross,selfUse,lastOutput,lastInput;
+    public long lastProcessing;private long processingUsed;
     public boolean enabled,ignited,autoEject=true,automatic=true,refill=true;
     public int load=100,buildTier,outputCursor;public String status="structure";
     private long ioTick=Long.MIN_VALUE,exported,received;private int lastAlarm=-1;
@@ -25,7 +26,8 @@ public final class SolarController extends TileEntityMekanism {
     public boolean access(Player p){return !isRemoved()&&p.level()==level&&mekanism.api.security.IBlockSecurityUtils.INSTANCE.canAccess(p,level,worldPosition,this);}
     public long capacity(){return SolarConfig.CAPACITY.get();}public long reserve(){return Math.min(capacity(),SolarConfig.RESERVE.get());}public long startup(){return SolarConfig.STARTUP.get();}
     public long inputLimit(){return structure.formed?SolarConfig.PORT_RATE.get()*structure.inputs:0;}public long outputLimit(){return structure.formed?SolarConfig.PORT_RATE.get()*structure.outputs:0;}
-    public void clock(){long now=level.getGameTime();if(ioTick!=now){lastOutput=exported;lastInput=received;exported=received=0;ioTick=now;}}
+    public void clock(){long now=level.getGameTime();if(ioTick!=now){lastOutput=exported;lastInput=received;lastProcessing=processingUsed;exported=received=processingUsed=0;ioTick=now;}}
+    public boolean spendForCorona(long amount){if(amount<=0||!structure.valid()||!isCoreHot()||!canFunction()||amount>Math.max(0,stored-reserve()))return false;clock();stored-=amount;processingUsed+=amount;markForSave();return true;}
     public long accept(long n,boolean simulate){if(n<=0||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,capacity()-stored),Math.max(0,inputLimit()-received)));if(!simulate&&take>0){stored+=take;received+=take;markForSave();}return take;}
     public long extract(long n,boolean simulate){if(n<=0||!ignited||!structure.valid())return 0;clock();long take=Math.min(n,Math.min(Math.max(0,stored-reserve()),Math.max(0,outputLimit()-exported)));if(!simulate&&take>0){stored-=take;exported+=take;markForSave();}return take;}
     public boolean fuelAvailable(){if(fuelRemaining>0)return true;for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var fuel=SolarFuelRecipe.fuel(level,stack);if(fuel!=null&&stack.getCount()>=fuel.count())return true;}return false;}
@@ -64,7 +66,7 @@ public final class SolarController extends TileEntityMekanism {
     // ceil(20 * net / 19), without the overflowing multiplication. Callers bound net by
     // the configured per-tick generation limit, never by the entire stored fuel budget.
     private static long fuelForNet(long net){return net+net/19+(net%19==0?0:1);}
-    @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();clock();react();SolarPorts.eject(this);if(exported>0)lastOutput=exported;if(received>0)lastInput=received;structure.activity(gross>0);setActive(gross>0);heat.tick();
+    @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();clock();react();SolarPorts.eject(this);dev.everyonemek.gravity.corona.CoronalMachine.processAttached(this);if(exported>0)lastOutput=exported;if(received>0)lastInput=received;structure.activity(gross>0);setActive(gross>0);heat.tick();
         int alarm=structure.formed&&!fuelAvailable()?15:0;if(alarm!=lastAlarm){lastAlarm=alarm;for(var hatch:structure.fuelHatches)if(!hatch.isRemoved()&&level.hasChunkAt(hatch.getBlockPos()))level.updateNeighbourForOutputSignal(hatch.getBlockPos(),hatch.getBlockState().getBlock());}return changed;}
     @Override public void onLoad(){super.onLoad();structure.watch();structure.invalidate();}
     @Override public void setRemoved(){structure.detach();super.setRemoved();}
@@ -75,6 +77,7 @@ public final class SolarController extends TileEntityMekanism {
     @Override protected void collectImplicitComponents(DataComponentMap.Builder b){super.collectImplicitComponents(b);b.set(SolarContent.DATA.get(),data());}
     @Override protected void applyImplicitComponents(BlockEntity.DataComponentInput in){super.applyImplicitComponents(in);var t=in.get(SolarContent.DATA.get());if(t!=null)read(t);}
     @Override public void addContainerTrackers(MekanismContainer menu){super.addContainerTrackers(menu);
+        menu.track(SyncableLong.create(()->lastProcessing,v->lastProcessing=v));
         menu.track(SyncableLong.create(()->stored,v->stored=v));menu.track(SyncableLong.create(()->fuelRemaining,v->fuelRemaining=v));menu.track(SyncableLong.create(()->fuelTotal,v->fuelTotal=v));menu.track(SyncableLong.create(()->gross,v->gross=v));menu.track(SyncableLong.create(()->selfUse,v->selfUse=v));menu.track(SyncableLong.create(()->lastOutput,v->lastOutput=v));menu.track(SyncableLong.create(()->lastInput,v->lastInput=v));
         menu.track(SyncableInt.create(()->load,v->load=v));menu.track(SyncableBoolean.create(()->enabled,v->enabled=v));menu.track(SyncableBoolean.create(()->ignited,v->ignited=v));menu.track(SyncableBoolean.create(()->automatic,v->automatic=v));menu.track(SyncableBoolean.create(()->refill,v->refill=v));menu.track(SyncableBoolean.create(()->autoEject,v->autoEject=v));
     }

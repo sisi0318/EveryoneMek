@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekgravity:solar_base"
+    },
+    "B": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "D": {
+      "item": "mekanism:energized_smelter"
+    }
+  },
+  "result": {
+    "id": "mekgravity:coronal_chamber"
+  }
+}
