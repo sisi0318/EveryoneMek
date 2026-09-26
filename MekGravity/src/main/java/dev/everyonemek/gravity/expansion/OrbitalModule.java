@@ -53,15 +53,16 @@ public final class OrbitalModule extends TileEntityMekanism {
         var core=FieldSource.at(level,source.pos());if(core==null){status="missing";return null;}if(!core.permitted(this)){status="access";return null;}
         if(kind()==ModuleKind.CAPTOR&&!core.solar()||kind()==ModuleKind.FORGE&&core.solar()){status="source_type";return null;}return core;}
     public boolean bind(Player player,FieldLink target,boolean node){if(!access(player)||!target.inRange(level,worldPosition)||!level.hasChunkAt(target.pos()))return false;
-        if(node){if(kind()!=ModuleKind.NODE||target.pos().equals(worldPosition)||!(level.getBlockEntity(target.pos()) instanceof OrbitalModule other)||other.kind()!=ModuleKind.NODE||!IBlockSecurityUtils.INSTANCE.canAccess(player,level,target.pos(),other))return false;peer=target;other.receiverConfigured=true;other.markForSave();other.sendUpdatePacket();}
-        else{var core=FieldSource.at(level,target.pos());if(core==null||!core.permitted(player)||kind()==ModuleKind.CAPTOR&&!core.solar()||kind()==ModuleKind.FORGE&&core.solar())return false;source=FieldLink.at(level,core.tile().getBlockPos());}
-        retryAt=0;markForSave();sendUpdatePacket();return true;}
+        if(node)return level.getBlockEntity(target.pos()) instanceof OrbitalModule other&&FieldConnections.route(player,this,other);
+        return FieldConnections.power(player,FieldSource.at(level,target.pos()),this);
+    }
     public boolean command(Player player,int action){if(!access(player))return false;
         if(action==0)enabled=!enabled;
         else if(action==1&&kind().cargo)autoEject=!autoEject;
         else if(action==2){source=null;peer=null;}
         else if(action==5&&kind()==ModuleKind.NODE)peer=null;
         else if(action==6&&kind()==ModuleKind.NODE)source=null;
+        else if(action==7){LinkPanelMenu.open(player,null,this);return true;}
         else if(action>=20&&action<=23&&kind()==ModuleKind.NODE)channels^=1<<(action-20);
         else if(action==3&&kind()==ModuleKind.OBSERVATORY)alarm=(alarm+1)%4;
         else if(action==4&&kind()==ModuleKind.OBSERVATORY)threshold=threshold==75?10:threshold==10?25:threshold==25?50:75;

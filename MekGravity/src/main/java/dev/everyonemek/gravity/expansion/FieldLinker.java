@@ -15,7 +15,7 @@ public final class FieldLinker extends Item {
     private static FieldLink power(CompoundTag tag){var current=FieldLink.read(tag.getCompound("power"));return current!=null?current:!tag.getBoolean("node")?FieldLink.read(tag):null;}
     private static boolean allowed(Player player,OrbitalModule module){return IBlockSecurityUtils.INSTANCE.canAccess(player,module.getLevel(),module.getBlockPos(),module);}
     private static InteractionResult result(Player p,boolean ok,String key,Object...args){p.displayClientMessage(ModuleContent.text(key,args),true);return ok?InteractionResult.CONSUME:InteractionResult.FAIL;}
-    @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){var stack=player.getItemInHand(hand);if(!player.isShiftKeyDown())return InteractionResultHolder.pass(stack);if(!level.isClientSide){stack.remove(ModuleContent.LINK.get());player.displayClientMessage(ModuleContent.text("selection_cleared"),true);}return InteractionResultHolder.sidedSuccess(stack,level.isClientSide);}
+    @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){var stack=player.getItemInHand(hand);if(!player.isShiftKeyDown()){if(!level.isClientSide)LinkPanelMenu.open(player,hand,null);return InteractionResultHolder.sidedSuccess(stack,level.isClientSide);}if(!level.isClientSide){stack.remove(ModuleContent.LINK.get());player.displayClientMessage(ModuleContent.text("selection_cleared"),true);}return InteractionResultHolder.sidedSuccess(stack,level.isClientSide);}
     @Override public InteractionResult useOn(UseOnContext context){var player=context.getPlayer();if(player==null)return InteractionResult.PASS;var level=context.getLevel();if(level.isClientSide)return InteractionResult.SUCCESS;
         var pos=context.getClickedPos();var be=level.getBlockEntity(pos);var item=context.getItemInHand();var previous=item.get(ModuleContent.LINK.get());var data=previous==null?new CompoundTag():previous.copy();
         var core=FieldSource.at(level,pos);
@@ -28,7 +28,7 @@ public final class FieldLinker extends Item {
             if(!selected.inRange(level,pos)||!level.hasChunkAt(selected.pos()))return result(player,false,"range");
             if(!(level.getBlockEntity(selected.pos()) instanceof OrbitalModule sender)||sender.kind()!=ModuleKind.NODE||sender==module)return result(player,false,"select_different_node");
             if(!allowed(player,sender))return result(player,false,"access");
-            sender.peer=FieldLink.at(level,pos);sender.markForSave();sender.sendUpdatePacket();module.receiverConfigured=true;module.markForSave();module.sendUpdatePacket();data.remove("sender");item.set(ModuleContent.LINK.get(),data);
+            if(!FieldConnections.route(player,sender,module))return result(player,false,"link_failed");data.remove("sender");item.set(ModuleContent.LINK.get(),data);
             return result(player,true,sender.source==null?"paired_need_power":"paired",sender.getBlockPos().toShortString(),pos.toShortString());
         }
         var energy=power(data);

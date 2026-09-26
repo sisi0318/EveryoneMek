@@ -34,6 +34,7 @@ public final class ModuleContent {
     public static final java.util.function.Supplier<Item> ALLOY=ITEMS.register("stellar_alloy",()->new Item(new Item.Properties()));
     public static final java.util.function.Supplier<RecipeType<OrbitalRecipe>> TYPE=RECIPES.register("orbital_processing",()->new RecipeType<>(){});
     public static final java.util.function.Supplier<RecipeSerializer<OrbitalRecipe>> SERIALIZER=SERIALIZERS.register("orbital_processing",OrbitalRecipe.Serializer::new);
+    public static final ContainerTypeRegistryObject<LinkPanelMenu> PANEL_MENU=MENUS.registerMenu("field_panel",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(LinkPanelMenu::fromNetwork));
     public static final ContainerTypeRegistryObject<ModuleMenu> MENU=MENUS.register("orbital_module",OrbitalModule.class,ModuleMenu::new);
     static{for(var kind:ModuleKind.values()){
         var type=Machine.MachineBuilder.<OrbitalModule>createMachine(()->TILE.get(kind),()->"description.mekgravity."+kind.id).withGui(()->MENU).withEnergyConfig(()->0L,()->0L).build();

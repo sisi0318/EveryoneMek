@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.25，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.26，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,11 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.26 场域面板：链接器普通空气右键、ModuleMenu动作7打开LinkPanelMenu，客户端LinkPanelScreen复用GuiMekanism/GuiTextField/MekanismButton，无物品槽。金线core→module、蓝线node→node；拖线与两次点击共用Action，底部四通道与解绑改变同一OrbitalModule数据。
+- LinkPanelMenu以开面板位置或host为中心，每20tick遍历ServerChunkCache.getChunkNow的已加载BE表，仅Controller/SolarController/OrbitalModule且Mek可访问；最多最近192台，不扫描方块体积、不加区块票。身份列表变化才递增revision，普通状态刷新不打断拖线。工具需继续持有且在anchor的8格内；host需同BE且安全许可。
+- LinkPanelNetwork使用两个有界StreamCodec数据包，客户端Consumer仅在SolarClient注册，不在服务端引用Screen。Action核对当前菜单、随机session、revision、BE身份和权限，每面板每tick最多4次；解绑选线附旧端点避免错删。FieldConnections复用工具和面板的pair-range/type/player及模块owner权限检查，跨128格的两个可见端点仍不能连接。
+- LinkPanelGeometry提供原生画布布局/曲线命中数学；wire四边形顶点绕序须匹配GuiGraphics.fill，避免RenderType.gui剔除连线。背景绘制用绝对屏幕坐标/scissor，标题与按钮用原Mek局部坐标；初始化先禁用无选择的资源按钮。
 
 - alpha.25 NODE通过懒创建NodeStorage扩展原生energy/fluids/chemicals；字段不能初始化覆盖父构造getInitial方法创建的数据。收发分离：J各2.56PJ，流体4+4×16MmB，化学4+4×64M，侧/背/上下入、正面出；4通道mask保存默认15，旧18物品槽和绑定不改。held item必须同时注册对应容器creators，loot复制mekanism:energy/fluids/chemicals，不能只保存orbital_module。
 - 化学罐与物品creators用ChemicalAttributeValidator.ALWAYS_ALLOW。原TileEntityMekanism.collectChemicalTanks会在shouldDumpRadiation为true时过滤放射性货物；仅NODE覆写为false保持密封，真实核废料掉落/重放回归已过。其余机器不改默认辐射行为。
@@ -117,6 +122,7 @@
 
 ## 验证
 
+- alpha.26共48项GameTest通过。LinkPanelTests三项覆盖实际空气use／ModuleMenu按钮、Snapshot与Action编解码、自动发现+私有／范围过滤、两类绑定+真实物品交付、通道切换与断线保留资源；过期revision、menu/session、pair距离、错源类型、自连、权限收回、同位置替换BE、持有物／host／交互距离失效均拒绝。测试世界地表约Y=-60，竖直距离夹具用世界高度中点，不能把低端放出建造高度。未启动客户端，GUI观感/鼠标操作留用户验收。
 - alpha.25共45项GameTest通过。NodeResourceTests覆盖正常三步远端配对与清选择、6000物品＋100GJ级能量＋两种流体（带组件）＋氢/红石化学品同一tick交付及准确耗能；保存/原生ItemStack组件/实际掉落重放保留双侧缓存及核废料；四类自动eject到原PRC、独立通道暂停与满接收端守恒。PRC基础储能仅2000J，测试核对节点余量；用1份生物燃料（原反应需2份）验证插入而不启动反应。flare实际GLSL、相位/冷热/遮挡/多实例及384/96LOD验证通过，未运行客户端。
 
 - alpha.24仍41项GameTest通过：扩展原Forge实际拆放回归，在16个恒星合金完成后仅送4个flare_cell（无燃料丸），再产4个compressed_stellar_matter，累计20GJ/基础40tick正确；复杂配方与单输入路线并存。中英文运行资源及JAR检查去除了旧记账措辞，界面未做客户端验收。

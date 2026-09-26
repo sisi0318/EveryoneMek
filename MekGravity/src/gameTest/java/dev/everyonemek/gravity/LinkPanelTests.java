@@ -1,0 +1,76 @@
+package dev.everyonemek.gravity;
+
+import static dev.everyonemek.gravity.ReactorTests.check;
+import java.util.*;
+import dev.everyonemek.gravity.expansion.*;
+import dev.everyonemek.gravity.solar.*;
+import io.netty.buffer.Unpooled;
+import mekanism.api.security.SecurityMode;
+import net.minecraft.core.*;
+import net.minecraft.gametest.framework.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.gametest.*;
+
+@GameTestHolder(MekGravity.ID) @PrefixGameTestTemplate(false)
+public final class LinkPanelTests {
+    private static OrbitalModule place(GameTestHelper h,ModuleKind kind,BlockPos pos){h.getLevel().setBlockAndUpdate(pos,ModuleContent.BLOCK.get(kind).get().defaultBlockState());return (OrbitalModule)h.getLevel().getBlockEntity(pos);}
+    private static LinkPanelMenu open(ServerPlayer p){p.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(ModuleContent.LINKER.get()));p.getMainHandItem().use(p.level(),p,InteractionHand.MAIN_HAND);check(p.containerMenu instanceof LinkPanelMenu,"Air use did not open the actual panel menu");var menu=(LinkPanelMenu)p.containerMenu;menu.broadcastChanges();return menu;}
+    private static boolean action(ServerPlayer p,LinkPanelMenu menu,int op,BlockPos from,BlockPos to){var request=new LinkPanelNetwork.Action(menu.containerId,menu.session,menu.revision,op,from,to);var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),p.registryAccess());try{LinkPanelNetwork.Action.CODEC.encode(buffer,request);return menu.handle(p,LinkPanelNetwork.Action.CODEC.decode(buffer));}finally{buffer.release();}}
+    private static boolean shows(LinkPanelMenu menu,BlockPos pos){return menu.devices.stream().anyMatch(d->d.pos().equals(pos));}
+
+    @GameTest(template="empty",timeoutTicks=90)
+    public static void panelDragActionsBindActualTransferAndIndependentChannels(GameTestHelper h){
+        var core=SolarTests.formed(h);core.enabled=core.ignited=true;core.stored=core.capacity();core.fuelRemaining=core.fuelTotal=100_000_000_000_000_000L;
+        var sender=place(h,ModuleKind.NODE,core.getBlockPos().north(3));var receiver=place(h,ModuleKind.NODE,sender.getBlockPos().west(10));receiver.autoEject=false;
+        List<LinkPanelNetwork.Snapshot> packets=new ArrayList<>();var player=ReactorTests.player(h,sender.getBlockPos().north(),packet->{if(packet instanceof ClientboundCustomPayloadPacket custom&&custom.payload() instanceof LinkPanelNetwork.Snapshot snapshot)packets.add(snapshot);});
+        var menu=open(player);check(shows(menu,core.getBlockPos())&&shows(menu,sender.getBlockPos())&&shows(menu,receiver.getBlockPos()),"Discovery omitted loaded nearby core or nodes");check(!packets.isEmpty(),"Panel did not send its discovery snapshot");
+        check(action(player,menu,1,core.getBlockPos(),sender.getBlockPos())&&action(player,menu,1,sender.getBlockPos(),receiver.getBlockPos()),"Canvas actions failed source or peer binding");
+        check(sender.source.pos().equals(core.getBlockPos())&&sender.peer.pos().equals(receiver.getBlockPos())&&receiver.receiverConfigured,"Canvas binding did not reach persistent machine state");
+        check(action(player,menu,4,sender.getBlockPos(),null)&&!sender.channel(0)&&sender.channel(1),"Panel item toggle affected the wrong channel");sender.inputs.getFirst().setStack(new ItemStack(Items.DIAMOND,100));
+        var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),h.getLevel().registryAccess());try{var snapshot=packets.getLast();LinkPanelNetwork.Snapshot.CODEC.encode(buffer,snapshot);check(snapshot.equals(LinkPanelNetwork.Snapshot.CODEC.decode(buffer)),"Snapshot lost device names, links or channel flags in transit");}finally{buffer.release();}
+        h.startSequence().thenIdle(2).thenExecute(()->{check(sender.inputs.getFirst().getCount()==100&&receiver.outputs.getFirst().isEmpty(),"Disabled canvas channel still transferred items");check(action(player,menu,4,sender.getBlockPos(),null),"Could not re-enable item channel");})
+            .thenWaitUntil(()->check(receiver.outputs.getFirst().getCount()==100&&sender.inputs.getFirst().isEmpty(),"Panel-established route did not transfer real cargo"))
+            .thenExecute(()->{try{check(action(player,menu,3,sender.getBlockPos(),receiver.getBlockPos())&&action(player,menu,2,sender.getBlockPos(),core.getBlockPos()),"Panel unlink controls did not reach machines");check(sender.peer==null&&sender.source==null&&receiver.outputs.getFirst().getCount()==100,"Disconnect destroyed cargo or left live links");}finally{core.enabled=false;ReactorTests.close(player);}}).thenSucceed();
+    }
+
+    @GameTest(template="empty",timeoutTicks=80)
+    public static void discoveryAndDelayedActionsRespectRangeIdentityAndSecurity(GameTestHelper h){
+        var anchor=h.absolutePos(new BlockPos(16,0,16)).atY((h.getLevel().getMinBuildHeight()+h.getLevel().getMaxBuildHeight())/2);int range=ModuleConfig.RANGE.get();
+        var privateOwner=ReactorTests.player(h,anchor.north(5));var near=place(h,ModuleKind.NODE,anchor.east(2));var privateNode=place(h,ModuleKind.NODE,anchor.west(2));privateNode.getSecurity().setOwnerUUID(privateOwner.getUUID());privateNode.getSecurity().setMode(SecurityMode.PRIVATE);
+        var high=place(h,ModuleKind.NODE,anchor.above(range-4));var low=place(h,ModuleKind.NODE,anchor.below(range-4));var far=place(h,ModuleKind.NODE,anchor.above(range+2));
+        var corePos=anchor.north(3);h.getLevel().setBlockAndUpdate(corePos,Content.CONTROLLER.get().defaultBlockState());var captor=place(h,ModuleKind.CAPTOR,anchor.south(3));
+        var player=ReactorTests.player(h,anchor);var menu=open(player);
+        check(shows(menu,high.getBlockPos())&&shows(menu,low.getBlockPos())&&!shows(menu,privateNode.getBlockPos())&&!shows(menu,far.getBlockPos()),"Discovery ignored visibility range or private ownership");
+        check(!menu.handle(player,new LinkPanelNetwork.Action(menu.containerId+1,menu.session,menu.revision,1,high.getBlockPos(),low.getBlockPos()))&&!menu.handle(player,new LinkPanelNetwork.Action(menu.containerId,menu.session+1,menu.revision,1,high.getBlockPos(),low.getBlockPos())),"Another menu/session could edit this network");
+        check(!menu.handle(player,new LinkPanelNetwork.Action(menu.containerId,menu.session,menu.revision-1,1,high.getBlockPos(),low.getBlockPos())),"Stale drag was accepted");
+        check(!action(player,menu,1,high.getBlockPos(),low.getBlockPos()),"Scan radius was incorrectly used as pair distance");
+        check(!action(player,menu,1,corePos,captor.getBlockPos()),"Captor accepted a gravity core");
+        check(!action(player,menu,1,near.getBlockPos(),near.getBlockPos()),"Self-routing was accepted");
+        h.startSequence().thenIdle(1).thenExecute(()->{try{
+            near.getSecurity().setOwnerUUID(privateOwner.getUUID());near.getSecurity().setMode(SecurityMode.PRIVATE);
+            check(!action(player,menu,1,low.getBlockPos(),near.getBlockPos()),"Revoked permission was bypassed before the next scan");
+            near.getSecurity().setMode(SecurityMode.PUBLIC);
+            var oldPos=high.getBlockPos();h.getLevel().setBlockAndUpdate(oldPos,Blocks.AIR.defaultBlockState());var replacement=place(h,ModuleKind.NODE,oldPos);
+            check(!action(player,menu,1,near.getBlockPos(),oldPos)&&replacement.peer==null&&near.peer==null,"Old snapshot authorized a replaced device");
+            check(!action(player,menu,1,low.getBlockPos(),privateNode.getBlockPos()),"An undiscovered private endpoint could be addressed directly");
+            player.setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);check(!menu.stillValid(player)&&!action(player,menu,4,low.getBlockPos(),null),"Panel stayed writable after linker removal");
+        }finally{ReactorTests.close(player);ReactorTests.close(privateOwner);}}).thenSucceed();
+    }
+
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void machinePanelEntryAndClosedSessionsAreValidated(GameTestHelper h){
+        var host=place(h,ModuleKind.NODE,h.absolutePos(new BlockPos(8,3,8)));var player=ReactorTests.player(h,host.getBlockPos().north());
+        try{player.gameMode.useItemOn(player,player.level(),ItemStack.EMPTY,InteractionHand.MAIN_HAND,new BlockHitResult(host.getBlockPos().getCenter(),Direction.NORTH,host.getBlockPos(),false));check(player.containerMenu instanceof ModuleMenu,"Native module GUI did not open");
+            check(player.containerMenu.clickMenuButton(player,7)&&player.containerMenu instanceof LinkPanelMenu,"Module panel button did not open a real panel");var menu=(LinkPanelMenu)player.containerMenu;menu.broadcastChanges();check(menu.stillValid(player)&&shows(menu,host.getBlockPos()),"Host panel incorrectly required a handheld linker");
+            player.setPos(host.getBlockPos().east(12).getCenter());check(!menu.stillValid(player)&&!action(player,menu,4,host.getBlockPos(),null),"Host panel accepted a distant player");player.setPos(host.getBlockPos().north().getCenter());
+            h.getLevel().setBlockAndUpdate(host.getBlockPos(),Blocks.AIR.defaultBlockState());place(h,ModuleKind.NODE,host.getBlockPos());check(!menu.stillValid(player),"Host replacement preserved the old session");
+            var reopened=open(player);check(reopened.session!=menu.session&&!menu.handle(player,new LinkPanelNetwork.Action(menu.containerId,menu.session,menu.revision,0,null,null)),"Closed menu processed actions after reopening");
+        }finally{ReactorTests.close(player);}h.succeed();
+    }
+}

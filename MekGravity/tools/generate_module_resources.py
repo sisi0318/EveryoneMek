@@ -81,7 +81,7 @@ def build():
       'select_source':('潜行右键核心装置或接收节点','Sneak-use on a reactor or receiving node'),
       'source_selected':('已记录能量源 %s','Source selected: %s'),'node_selected':('已记录接收节点 %s','Receiver selected: %s'),
       'link_failed':('绑定失败：检查类型、距离和权限','Link failed: check type, range and access'),
-      'linker_hint':('依次右键：能量源 → 发送节点 → 接收节点。','Use in order: power source → sender → receiver.'),'selected':('已记录：%s · %s','Selected: %s · %s'),
+      'linker_hint':('对空气右键打开场域面板，拖线连接设备。','Use in air to open the Field Panel and connect devices.'),'selected':('已记录：%s · %s','Selected: %s · %s'),
       'progress':('进度 %s%%','Progress %s%%'),'paid':('加工耗能：%s','Processing energy: %s'),'transfer_energy':('传输耗能：%s','Transfer energy: %s'),'pause':('暂停','Pause'),'enable':('启动','Enable'),
       'eject_on':('自动输出：开','Auto-eject: On'),'eject_off':('自动输出：关','Auto-eject: Off'),'profile':('调谐：%s','Tuning: %s'),
       'profile_0':('均衡','Balanced'),'profile_1':('加工聚焦','Processing'),'profile_2':('核心超频','Overclock'),
@@ -106,6 +106,26 @@ def build():
       'paired':('已连接 %s → %s','Linked %s → %s'),'paired_need_power':('已配对 %s → %s；请给发送端绑定能源','Paired %s → %s; bind power to sender'),
       'select_different_node':('请选择另一个接收节点','Choose a different receiving node'),'clear_selection_hint':('潜行对空气右键清除选择。','Sneak-use in air to clear selection.')})
     hints=[('绑定运行中的太阳，封装耀斑晶核。','Bind to a running sun to seal flare cells.'),('绑定运行中的引力堆，锻造恒星合金与压缩物质。','Bind to a running gravity reactor to forge stellar alloy and compressed matter.'),('绑定核心以选择调谐，消耗耀斑晶核启动短时升载。','Bind a core to tune it. Consume a flare cell for a temporary burst.'),('连接能量源和目标节点，即时传输物品、能量、流体和化学品。','Link power and a target to instantly transfer items, energy, fluids and chemicals.'),('绑定装置查看状态，并输出可选红石告警。','Bind a reactor to view its status and emit configurable redstone signals.')]
+    words.update({
+      'panel_title':('场域连接面板','Field Network Panel'),'panel_short':('网','NET'),
+      'panel_refresh':('扫描','Scan'),'panel_layout':('整理布局','Arrange'),'panel_fit':('适应视图','Fit view'),'panel_close':('关闭','Close'),
+      'panel_search':('搜索设备名称或坐标','Search device name or coordinates'),
+      'panel_channel':('%s %s','%s %s'),'panel_remove_power':('解绑能源','Unlink power'),'panel_remove_route':('断开目标','Unlink target'),
+      'panel_legend_power':('金线：核心向模块供能','Gold: core powers module'),'panel_legend_route':('蓝线：发送节点 → 接收节点','Blue: sender → receiver'),
+      'panel_help_drag':('拖动标题整理设备','Drag titles to move devices'),
+      'panel_help_pan':('拖动空白平移，滚轮缩放','Drag canvas to pan; scroll to zoom'),
+      'panel_help_wire':('拖出连接点，或依次点击两端。选线后按 Delete 断开。','Drag a port or click both ends. Select a wire and press Delete to unlink.'),
+      'panel_count':('显示 %s / %s 台 · 范围 %s 格 · 最多显示192台','Showing %s / %s devices · Range %s · Limit 192'),
+      'panel_ready':('自动扫描附近已加载、可访问的核心与模块','Scanning nearby loaded, accessible cores and modules'),
+      'panel_choose_target':('连接到同色输入点；右键取消','Connect to a matching input; right-click to cancel'),
+      'panel_delete_wire':('按 Delete 断开选中连线','Press Delete to remove the selected wire'),
+      'panel_power_out':('能源输出 → 模块金色输入点','Power output → module gold input'),
+      'panel_power_in':('能源输入 ← 核心金色输出点','Power input ← core gold output'),
+      'panel_route_out':('资源发送 → 接收节点蓝色输入点','Send resources → receiver blue input'),
+      'panel_route_in':('资源接收 ← 发送节点蓝色输出点','Receive resources ← sender blue output'),
+      'panel_applied':('连接设置已更新','Connection settings updated'),
+      'panel_rejected':('连接失败：检查设备类型、距离和权限','Cannot connect: check device type, range and access'),
+      'panel_stale':('附近设备已变化，请重新选择连线','Nearby devices changed; select the connection again')})
     for lang,i in [('zh_cn',0),('en_us',1)]:
         data=json.loads((RES/f'assets/mekgravity/lang/{lang}.json').read_text(encoding='utf-8'));data.update({'mekgravity.module.'+k:v[i] for k,v in words.items()})
         for name,label,hint in zip(KINDS,LABELS,hints):
