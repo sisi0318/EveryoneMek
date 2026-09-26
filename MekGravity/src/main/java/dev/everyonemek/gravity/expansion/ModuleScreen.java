@@ -21,43 +21,31 @@ public class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu>{
     public static ModuleScreen create(ModuleMenu menu,Inventory inventory,Component title){return menu.getTileEntity() instanceof NodeModule?new NodeScreen(menu,inventory,title):new ModuleScreen(menu,inventory,title);}
     public ModuleScreen(ModuleMenu m,Inventory i,Component title){super(m,i,title);imageWidth=230;imageHeight=248;inventoryLabelX=30;inventoryLabelY=152;dynamicSlots=true;}
     protected boolean send(int n){minecraft.gameMode.handleInventoryButtonClick(menu.containerId,n);return true;}
+    private ModuleSourceWindow sourceWindow;
+    protected void openSources(){if(sourceWindow==null){sourceWindow=new ModuleSourceWindow(this,menu);addWindow(sourceWindow);}}
+    void sourceWindowClosed(){sourceWindow=null;}
+    public void receiveSources(ModuleSourceNetwork.Snapshot packet){if(sourceWindow!=null)sourceWindow.accept(packet);}
+    private boolean sourceControls(){return tile.sourceFormed&&menu.canControlSource&&tile.enabled;}
     @Override protected void addGuiElements(){super.addGuiElements();
         if(this instanceof NodeScreen nodeScreen){nodeScreen.addNodeElements();return;}
-        if(tile.kind().cargo){
-            if(tile.kind()!=ModuleKind.NODE)addRenderableWidget(new GuiDynamicHorizontalRateBar(this,new GuiBar.IBarInfoHandler(){public Component getTooltip(){return ModuleContent.text("progress",(int)(tile.fraction()*100));}public double getLevel(){return tile.fraction();}},76,51,64,Color.ColorFunction.scale(Color.rgbi(65,45,110),Color.rgbi(225,180,95))));
-            addRenderableWidget(new GuiInnerScreen(this,10,96,210,27,()->List.of(ModuleContent.text(tile.status),ModuleContent.text(tile.kind()==ModuleKind.NODE?"transfer_energy":"paid",ReactorScreen.fe(tile.paidEnergy)))).spacing(0));
-            button(10,130,102,0,()->ModuleContent.text(tile.enabled?"pause":"enable"));button(118,130,102,1,()->ModuleContent.text(tile.autoEject?"eject_on":"eject_off"));
+        if(tile instanceof ProcessModule configured){var ref=new java.util.concurrent.atomic.AtomicReference<mekanism.client.gui.element.tab.window.GuiSideConfigurationTab<ProcessModule>>();ref.set(new mekanism.client.gui.element.tab.window.GuiSideConfigurationTab<>(this,configured,ref::get));addRenderableWidget(ref.get());}
+        addRenderableWidget(new GuiInnerScreen(this,10,18,210,24,()->List.of(ModuleContent.text("source_current",tile.sourceBound?Component.translatable(tile.sourceSolar?"block.mekgravity.solar_controller":"block.mekgravity.reactor"):ModuleContent.text("frequency_none")),ModuleContent.text(tile.status))).spacing(0));
+        addRenderableWidget(new MekanismButton(this,10,45,138,16,ModuleContent.text("source_select"),(b,x,y)->{openSources();return true;}));
+        button(154,45,66,0,()->ModuleContent.text(tile.enabled?"pause":"enable"));
+        if(tile.kind().processor()){
+            addRenderableWidget(new mekanism.client.gui.element.progress.GuiProgress(()->tile.fraction(),mekanism.client.gui.element.progress.ProgressType.LARGE_RIGHT,this,87,92));
+            button(10,134,210,1,()->ModuleContent.text(tile.autoEject?"eject_on":"eject_off"));
         }else if(tile.kind()==ModuleKind.TUNER){
-            addRenderableWidget(new GuiInnerScreen(this,10,27,210,36,()->List.of(ModuleContent.text(tile.status),ModuleContent.text("profile",ModuleContent.text("profile_"+tile.sourceProfile)),ModuleContent.text("cooldown",(tile.sourceCooldown+19)/20))).spacing(0));
-            for(int i=0;i<3;i++){int n=i;button(10+i*71,70,68,10+i,()->ModuleContent.text("profile_"+n));}
-            button(38,102,182,13,()->ModuleContent.text(tile.sourceBurst>0?"burst_left":"burst",(tile.sourceBurst+19)/20));button(10,130,210,0,()->ModuleContent.text(tile.enabled?"pause":"enable"));
+            for(int i=0;i<3;i++){int mode=i;var button=addRenderableWidget(new MekanismButton(this,10+i*71,80,68,16,ModuleContent.text("profile_"+i),(b,x,y)->send(10+mode)){{active=false;}@Override public void tick(){super.tick();active=sourceControls()&&tile.sourceProfile!=mode;}});button.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("tuning_"+mode)));}
+            addRenderableWidget(new GuiInnerScreen(this,10,100,210,16,()->List.of(ModuleContent.text("tuning_"+tile.sourceProfile))).spacing(0));
+            addRenderableWidget(new MekanismButton(this,38,120,182,16,ModuleContent.text("burst"),(b,x,y)->send(13)){{active=false;}@Override public void tick(){super.tick();active=sourceControls()&&tile.sourceHot&&tile.sourceCooldown==0&&tile.sourceStored<tile.sourceCapacity&&tile.sourceAvailable>0&&!tile.inputs.getFirst().isEmpty();setMessage(ModuleContent.text(tile.sourceBurst>0?"burst_left":"burst",(tile.sourceBurst+19)/20));}}).setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("burst_hint")));
         }else{
-            addRenderableWidget(new GuiInnerScreen(this,10,27,210,70,()->List.of(ModuleContent.text(tile.status),ModuleContent.text("stored",ReactorScreen.fe(tile.sourceStored),ReactorScreen.fe(tile.sourceCapacity)),ModuleContent.text("net",ReactorScreen.fe(tile.sourceNet)),ModuleContent.text("exported",ReactorScreen.fe(tile.sourceOutput)),ModuleContent.text("signal",tile.signal))).spacing(0));
-            button(10,104,210,3,()->ModuleContent.text("alarm_"+tile.alarm));button(10,130,102,0,()->ModuleContent.text(tile.enabled?"pause":"enable"));button(118,130,102,4,()->ModuleContent.text("threshold",tile.threshold));
+            addRenderableWidget(new GuiInnerScreen(this,10,67,210,27,()->List.of(ModuleContent.text("stored",ReactorScreen.fe(tile.sourceStored),ReactorScreen.fe(tile.sourceCapacity)),ModuleContent.text("signal",tile.signal))).spacing(0));
+            for(int i=0;i<4;i++){int mode=i;addRenderableWidget(new MekanismButton(this,10+i%2*107,98+i/2*18,103,16,ModuleContent.text("alarm_short_"+i),(b,x,y)->send(30+mode)){@Override public void tick(){super.tick();active=tile.alarm!=mode;}});}
+            var threshold=addRenderableWidget(new mekanism.client.gui.element.text.GuiTextField(this,142,136,60,14){@Override public void tick(){super.tick();active=tile.alarm>=2;setEditable(active);}});threshold.setMaxLength(3);threshold.setInputValidator(c->c>='0'&&c<='9');threshold.setText(Integer.toString(tile.threshold));Runnable save=()->{try{int value=Integer.parseInt(threshold.getText());if(value>=1&&value<=99)send(100+value);}catch(NumberFormatException ignored){}};threshold.setEnterHandler(save);threshold.addCheckmarkButton(save);
         }
-        var panel=addRenderableWidget(new MekanismButton(this,-26,tile.kind()==ModuleKind.NODE?82:54,26,26,ModuleContent.text("panel_short"),(b,x,y)->send(7)));panel.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("panel_title")));
-        final DetailTab[] ref=new DetailTab[1];ref[0]=new DetailTab(()->ref[0]);addRenderableWidget(ref[0]);if(tile.kind()==ModuleKind.NODE){final ResourceTab[] r=new ResourceTab[1];r[0]=new ResourceTab(()->r[0]);addRenderableWidget(r[0]);}
     }
-    protected void button(int x,int y,int w,int id,java.util.function.Supplier<Component> label){var button=addRenderableWidget(new MekanismButton(this,x,y,w,16,label.get(),(b,mx,my)->send(id)){@Override public void tick(){super.tick();setMessage(label.get());if(id==13)active=tile.sourceCooldown==0&&tile.sourceFormed&&tile.sourceStored<tile.sourceCapacity;}});if(id>=10&&id<=13)button.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text(id==13?"burst_hint":"tuning_"+(id-10))));}
-    private final class DetailTab extends GuiWindowCreatorTab<OrbitalModule,DetailTab>{
-        DetailTab(java.util.function.Supplier<DetailTab> self){super(MekanismUtils.getResource(MekanismUtils.ResourceType.GUI_TAB,"energy_info.png"),ModuleScreen.this,tile,-26,26,26,18,true,self);setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("details")));}
-        @Override protected GuiWindow createWindow(SelectedWindowData data){return new Details();}
-        @Override protected SelectedWindowData getNextWindowData(){return new SelectedWindowData(SelectedWindowData.WindowType.UNSPECIFIED);}
-        @Override protected void colorTab(GuiGraphics g){mekanism.client.render.MekanismRenderer.color(g,mekanism.client.SpecialColors.TAB_CONFIGURATION);}
-    }
-    private final class Details extends GuiWindow{
-        Details(){super(ModuleScreen.this,8,20,214,213,SelectedWindowData.WindowType.UNSPECIFIED);
-            addChild(new GuiInnerScreen(ModuleScreen.this,relativeX+8,relativeY+26,198,146,()->List.of(
-                ModuleContent.text("source_pos",!tile.sourceBound||tile.source==null?"—":tile.source.pos().toShortString()),
-                ModuleContent.text("stored",ReactorScreen.fe(tile.sourceStored),ReactorScreen.fe(tile.sourceCapacity)),
-                ModuleContent.text("net",ReactorScreen.fe(tile.sourceNet)),ModuleContent.text("exported",ReactorScreen.fe(tile.sourceOutput)),
-                ModuleContent.text("fuel",ReactorScreen.fe(tile.sourceFuel)),ModuleContent.text("spare",tile.sourceSpare),
-                ModuleContent.text("profile",ModuleContent.text("profile_"+tile.sourceProfile)),ModuleContent.text("transferred",tile.transferred),
-                ModuleContent.text("range_hint",ModuleConfig.RANGE.get()),ModuleContent.text("profile_hint"))).spacing(0));
-            addChild(new MekanismButton(ModuleScreen.this,relativeX+8,relativeY+183,198,16,ModuleContent.text("unlink"),(b,x,y)->send(2)));}
-
-        @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("details"),5);}
-    }
+    protected void button(int x,int y,int w,int id,java.util.function.Supplier<Component> label){addRenderableWidget(new MekanismButton(this,x,y,w,16,label.get(),(b,mx,my)->send(id)){@Override public void tick(){super.tick();setMessage(label.get());}});}
     protected final class ResourceTab extends GuiWindowCreatorTab<OrbitalModule,ResourceTab>{
         ResourceTab(java.util.function.Supplier<ResourceTab> self){super(MekanismUtils.getResource(MekanismUtils.ResourceType.GUI,"configuration.png"),ModuleScreen.this,tile,-26,54,26,18,true,self);setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("resources")));}
         @Override protected GuiWindow createWindow(SelectedWindowData data){return new Resources(1);}
@@ -85,5 +73,9 @@ public class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu>{
     }
     @Override protected void renderSlotContents(GuiGraphics g,ItemStack stack,Slot slot,String count){if(slot.index<(tile.kind().cargo?18:1)&&count==null&&stack.getCount()>=1000)count=stack.getCount()/1000+"k";super.renderSlotContents(g,stack,slot,count);}
     @Override protected List<Component> getTooltipFromContainerItem(ItemStack stack){var lines=new ArrayList<>(super.getTooltipFromContainerItem(stack));if(hoveredSlot!=null&&hoveredSlot.index<(tile.kind().cargo?18:tile.kind()==ModuleKind.TUNER?1:0))lines.add(ModuleContent.text("stock",stack.getCount(),hoveredSlot.getMaxStackSize(stack)));return lines;}
-    @Override protected void drawForegroundText(GuiGraphics g,int x,int y){super.drawForegroundText(g,x,y);renderTitleText(g);renderInventoryText(g);if(tile.kind().cargo){g.drawString(font,ModuleContent.text("input"),12,24,titleTextColor(),false);g.drawString(font,ModuleContent.text("output"),154,24,titleTextColor(),false);if(tile.kind()==ModuleKind.NODE)g.drawString(font,Component.literal("→"),105,52,titleTextColor(),false);drawScaledScrollingString(g,tile.kind()==ModuleKind.NODE?ModuleContent.text("instant"):ModuleContent.text("batch",tile.batch),74,69,145,87,TextAlignment.CENTER,titleTextColor(),false,.8F,getTimeOpened());}}
+    @Override protected void drawForegroundText(GuiGraphics g,int x,int y){renderTitleText(g);renderInventoryText(g);
+        if(tile.kind().processor()){g.drawString(font,ModuleContent.text("input"),12,67,titleTextColor(),false);g.drawString(font,ModuleContent.text("output"),154,67,titleTextColor(),false);drawScaledScrollingString(g,ModuleContent.text("batch",tile.batch),74,116,145,130,TextAlignment.CENTER,titleTextColor(),false,.8F,getTimeOpened());}
+        else if(tile.kind()==ModuleKind.TUNER){g.drawString(font,ModuleContent.text("profile",ModuleContent.text("profile_"+tile.sourceProfile)),10,67,titleTextColor(),false);g.drawString(font,ModuleContent.text("cooldown",(tile.sourceCooldown+19)/20),10,140,titleTextColor(),false);}
+        else{g.drawString(font,ModuleContent.text("threshold",tile.threshold),10,139,titleTextColor(),false);}
+    }
 }

@@ -11,23 +11,23 @@ def build():
     for index,name in enumerate(KINDS):
         variants={}
         for active in [False,True]:
-            e=[box([0,0,0],[16,3,16],'#dark',[0,0,16,10]),box([1,0,1],[15,1,15],'#steel',[0,6,16,10])]
+            # Shared industrial casing, with a function-specific recessed work area.
+            back=11 if index in [0,1] else 3
+            e=[box([0,0,0],[16,2,16],'#dark',[0,0,16,10]),box([0,14,0],[16,16,16],'#shell',[3,3,13,13]),
+               box([0,2,0],[2,14,16],'#shell',[3,3,13,13]),box([14,2,0],[16,14,16],'#shell',[3,3,13,13]),box([2,2,back],[14,14,16],'#dark',[0,11,16,16]),
+               box([2,2,.5],[14,3,3],'#steel',[0,6,16,10]),box([2,13,.5],[14,14,3],'#steel',[0,6,16,10]),
+               box([2,3,.5],[3,13,3],'#steel',[0,6,16,10]),box([13,3,.5],[14,13,3],'#steel',[0,6,16,10])]
+            # Metal rims and recessed ports use the same material proportions on all five devices.
+            for a,b in [([0,5,5],[1,11,11]),([15,5,5],[16,11,11]),([5,15,5],[11,16,11]),([5,0,5],[11,1,11]),([5,5,15],[11,11,16])]:
+                e.append(box(a,b,'#dark',[0,0,16,10]))
             if index==0:
-                e += [box([2,3,3],[4,14,13],'#steel',[0,6,16,10]),box([12,3,3],[14,14,13],'#steel',[0,6,16,10]),box([4,11,10],[12,14,14],'#dark',[0,0,16,10]),box([5,3,5],[11,5,11],'#shell',[3,3,13,13])]
+                e += [box([4,3,3],[5,12,10],'#steel',[0,6,16,10]),box([11,3,3],[12,12,10],'#steel',[0,6,16,10]),box([5,3,5],[11,4,10],'#shell',[3,3,13,13])]
             elif index==1:
-                e += [box([0,3,0],[3,16,16],'#dark',[0,0,16,10]),box([13,3,0],[16,16,16],'#dark',[0,0,16,10]),box([3,13,0],[13,16,16],'#shell',[3,3,13,13]),box([4,11,5],[12,13,13],'#steel',[0,6,16,10]),box([4,3,5],[12,5,13],'#steel',[0,6,16,10]),box([3,3,13],[13,13,16],'#dark',[0,11,16,16])]
+                e += [box([4,3,4],[12,5,10],'#steel',[0,6,16,10]),box([4,11,4],[12,13,10],'#steel',[0,6,16,10])]
             elif index==2:
-                e += [box([1,3,7],[15,7,15],'#shell',[3,3,13,13]),box([2,7,9],[14,15,13],'#dark',[0,11,16,16]),box([1,7,9],[2,16,13],'#steel',[0,6,16,10]),box([14,7,9],[15,16,13],'#steel',[0,6,16,10])]
-            elif index==3:
-                # Enclosed Mek-style chassis with a recessed front projection window.
-                e=[box([0,0,0],[16,2,16],'#shell',[3,3,13,13]),box([0,14,0],[16,16,16],'#shell',[3,3,13,13]),
-                   box([0,2,0],[2,14,16],'#shell',[3,3,13,13]),box([14,2,0],[16,14,16],'#shell',[3,3,13,13]),box([2,2,3],[14,14,16],'#dark',[0,11,16,16]),
-                   box([2,2,.5],[14,3,3],'#steel',[0,6,16,10]),box([2,13,.5],[14,14,3],'#steel',[0,6,16,10]),
-                   box([2,3,.5],[3,13,3],'#steel',[0,6,16,10]),box([13,3,.5],[14,13,3],'#steel',[0,6,16,10])]
-                for a,b in [([0,5,5],[1,11,11]),([15,5,5],[16,11,11]),([5,15,5],[11,16,11]),([5,0,5],[11,1,11]),([5,5,15],[11,11,16])]:
-                    e.append(box(a,b,'#dark',[0,0,16,10]))
-            else:
-                e += [box([5,3,8],[11,9,13],'#steel',[0,6,16,10]),box([1,7,8],[15,16,12],'#dark',[0,11,16,16]),box([0,7,8],[1,16,12],'#shell',[3,3,13,13]),box([15,7,8],[16,16,12],'#shell',[3,3,13,13]),box([1,15,8],[15,16,12],'#steel',[0,6,16,10])]
+                e += [box([3,3,1],[13,5,4],'#shell',[3,3,13,13]),box([4,3.5,.8],[6,4.5,1.2],'#dark',[0,0,16,10]),box([8,3.5,.8],[9,4.5,1.2],'#lamp',[7,7,8,8]),box([10,3.5,.8],[11,4.5,1.2],'#lamp',[7,7,8,8])]
+            elif index==4:
+                e += [box([3,3,1],[13,5,4],'#steel',[0,6,16,10]),box([5,3.5,.8],[11,4.5,1.2],'#lamp',[7,7,8,8])]
             for x in [2,12]:
                 light=box([x,1,-.02],[x+2,2,.1],'#lamp',[7,7,8,8]);
                 if active:
@@ -47,7 +47,7 @@ def build():
             shapes.append('        SHAPES['+str(index)+']['+str(['north','east','south','west'].index(direction))+']=Shapes.or('+','.join(bounds)+');')
         write(f'assets/mekgravity/blockstates/{name}.json',{'variants':variants})
         write(f'assets/mekgravity/models/item/{name}.json',{'parent':'mekgravity:block/'+name})
-        write(f'data/mekgravity/loot_table/blocks/{name}.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'mekgravity:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['mekanism:items','mekanism:owner','mekanism:security','mekanism:redstone_control','mekgravity:orbital_module','minecraft:custom_name']+(['mekanism:energy','mekanism:fluids','mekanism:chemicals','mekanism:side_config','mekanism:ejector'] if name=='gravity_node' else [])}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
+        write(f'data/mekgravity/loot_table/blocks/{name}.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'mekgravity:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['mekanism:items','mekanism:owner','mekanism:security','mekanism:redstone_control','mekgravity:orbital_module','minecraft:custom_name']+(['mekanism:energy','mekanism:fluids','mekanism:chemicals','mekanism:side_config','mekanism:ejector'] if name=='gravity_node' else ['mekanism:side_config','mekanism:ejector'] if name!='stellar_observatory' else [])}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     java='package dev.everyonemek.gravity.expansion;\nimport net.minecraft.core.Direction;\nimport net.minecraft.world.level.block.Block;\nimport net.minecraft.world.phys.shapes.*;\n/** Generated by generate_module_resources.py, from the exact solid model boxes. */\npublic final class ModuleShapes {\n    private static final VoxelShape[][] SHAPES=new VoxelShape[5][4];\n    static{\n'+'\n'.join(shapes)+'\n    }\n    public static VoxelShape get(ModuleKind kind,Direction facing){int i=switch(facing){case EAST->1;case SOUTH->2;case WEST->3;default->0;};return SHAPES[kind.ordinal()][i];}\n    private ModuleShapes(){}\n}\n'
     (ROOT/'src/main/java/dev/everyonemek/gravity/expansion/ModuleShapes.java').write_text(java,encoding='utf-8')
     # Reuse pixel materials on small original solid models; no raster repainting.
@@ -59,6 +59,8 @@ def build():
     from flare_cell_mesh import generate as generate_flare
     generate_flare(RES,write)
     write('assets/mekgravity/models/item/flare_cell.json',{'parent':'builtin/entity','gui_light':'front','textures':{'particle':'mekgravity:block/sun_collector_active'},'display':{'gui':{'rotation':[20,35,0],'scale':[1.1,1.1,1.1]},'ground':{'translation':[0,3,0],'scale':[.5,.5,.5]},'fixed':{'scale':[.8,.8,.8]},'firstperson_righthand':{'rotation':[0,-30,0],'translation':[0,2,0],'scale':[.8,.8,.8]},'firstperson_lefthand':{'rotation':[0,30,0],'translation':[0,2,0],'scale':[.8,.8,.8]},'thirdperson_righthand':{'translation':[0,2,0],'scale':[.6,.6,.6]},'thirdperson_lefthand':{'translation':[0,2,0],'scale':[.6,.6,.6]}}})
+    from stellar_materials import generate as materials
+    materials(RES,write)
     flare_shader=json.loads((RES/'assets/mekgravity/shaders/core/stellar_surface.json').read_text(encoding='utf-8'));flare_shader['vertex']=flare_shader['fragment']='mekgravity:flare_cell';write('assets/mekgravity/shaders/core/flare_cell.json',flare_shader)
     tag=json.loads((RES/'data/minecraft/tags/block/mineable/pickaxe.json').read_text(encoding='utf-8'));tag['values']=sorted(set(tag['values']+['mekgravity:'+n for n in KINDS]));write('data/minecraft/tags/block/mineable/pickaxe.json',tag)
     def craft(name,pattern,items):write(f'data/mekgravity/recipe/{name}.json',{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in items.items()},'result':{'id':'mekgravity:'+name}})
@@ -150,6 +152,14 @@ def build():
       'frequency_saved':('频率已更新','Frequency updated'),'frequency_denied':('操作失败：检查权限、名称和频率','Action failed: check access, name and frequency'),
       'frequency_create_hint':('仅频率创建者可以删除','Only the frequency owner can delete it'),
       'frequency_flow':('同频互通','Linked frequency'),'node_send':('发送缓存','Send buffer'),'node_receive':('接收缓存','Receive buffer')})
+    words.update({
+      'source_select':('选择能源','Select power source'),'source_current':('能源：%s','Source: %s'),
+      'source_scanning':('正在扫描附近能源','Scanning nearby power sources'),'source_choose':('选择能源后点击绑定','Select a source, then bind'),
+      'source_bind':('绑定','Bind'),'source_refresh':('刷新','Refresh'),'source_unbound':('能源已解绑','Power source unlinked'),
+      'source_empty':('范围内没有可绑定的能源','No accessible compatible source in range'),
+      'source_running':('正在运行','Running'),'source_stopped':('已成型，未运行','Formed, not running'),'source_unformed':('等待结构成型','Waiting for a complete structure'),
+      'source_available':('可用：%s','Available: %s'),'frequency_create':('创建','Create'),'frequency_new_name':('新频率名称','New frequency name'),
+      'alarm_short_0':('储能比例','Energy level'),'alarm_short_1':('结构告警','Structure alarm'),'alarm_short_2':('燃料不足','Low fuel'),'alarm_short_3':('储能不足','Low energy')})
     retired=['peer_missing','peer_paused','node_selected','peer_pos','receiving_ready','unlink_peer','sender_selected','paired','paired_need_power','select_different_node','panel_remove_route','panel_route_out','panel_route_in','frequency_direct']
     for key in retired:words.pop(key,None)
     for lang,i in [('zh_cn',0),('en_us',1)]:

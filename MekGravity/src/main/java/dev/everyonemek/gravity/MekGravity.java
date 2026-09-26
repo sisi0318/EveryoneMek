@@ -10,7 +10,7 @@ public final class MekGravity {
     public MekGravity(IEventBus bus,ModContainer container){
         container.registerConfig(ModConfig.Type.SERVER,ReactorConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT,VisualConfig.SPEC,"mekgravity-client.toml");
-        Content.register(bus);bus.addListener(Ports::register);bus.addListener(dev.everyonemek.gravity.expansion.LinkPanelNetwork::register);bus.addListener(dev.everyonemek.gravity.expansion.NodeFrequencyNetwork::register);bus.addListener(ReactorConfig::loaded);
+        Content.register(bus);bus.addListener(Ports::register);bus.addListener(dev.everyonemek.gravity.expansion.LinkPanelNetwork::register);bus.addListener(dev.everyonemek.gravity.expansion.NodeFrequencyNetwork::register);bus.addListener(dev.everyonemek.gravity.expansion.ModuleSourceNetwork::register);bus.addListener(ReactorConfig::loaded);
         container.registerConfig(ModConfig.Type.SERVER,dev.everyonemek.gravity.solar.SolarConfig.SPEC,"mekgravity-solar-server.toml");
         dev.everyonemek.gravity.solar.SolarContent.register(bus);bus.addListener(dev.everyonemek.gravity.solar.SolarPorts::register);
         dev.everyonemek.gravity.corona.CoronalContent.register(bus);

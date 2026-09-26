@@ -17,7 +17,9 @@
                 "mekanism:security",
                 "mekanism:redstone_control",
                 "mekgravity:orbital_module",
-                "minecraft:custom_name"
+                "minecraft:custom_name",
+                "mekanism:side_config",
+                "mekanism:ejector"
               ]
             }
           ]

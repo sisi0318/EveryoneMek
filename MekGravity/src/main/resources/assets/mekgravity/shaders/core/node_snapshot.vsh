@@ -12,11 +12,13 @@ uniform int FogShape;
 out vec2 atlasUv;
 out vec2 localUv;
 out vec4 tint;
-out vec2 work;
+out float flowPhase;
+flat out int resourceType;
 out float vertexDistance;
 void main(){
     gl_Position=ProjMat*ModelViewMat*vec4(Position,1.0);
     atlasUv=UV0;localUv=vec2(UV1)/256.0;tint=Color;
-    work=vec2(atan(Normal.y,Normal.x)+float(UV2.y)*0.024543693,floor(Normal.z*3.0+.5));
+    flowPhase=atan(Normal.y,Normal.x)+float(UV2.y)*0.024543693;
+    resourceType=int(floor(Normal.z*3.0+.5));
     vertexDistance=fog_distance(Position,FogShape);
 }

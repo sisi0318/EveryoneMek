@@ -22,7 +22,7 @@ public final class NodeScreen extends ModuleScreen {
         final ResourceTab[] resources=new ResourceTab[1];resources[0]=new ResourceTab(()->resources[0]);addRenderableWidget(resources[0]);
         addRenderableWidget(new GuiInnerScreen(this,10,18,210,24,()->List.of(ModuleContent.text("frequency_current",node().frequencyName.isEmpty()?ModuleContent.text("frequency_none"):node().frequencyName),ModuleContent.text(tile.status))).spacing(0));
         addRenderableWidget(new MekanismButton(this,10,45,138,16,ModuleContent.text("frequency_select"),(b,x,y)->{request(0,null,"",false);if(frequencyWindow==null){frequencyWindow=new FrequencyWindow();addWindow(frequencyWindow);}return true;}));
-        addRenderableWidget(new MekanismButton(this,154,45,66,16,ModuleContent.text("frequency_power_button"),(b,x,y)->send(7)));
+        addRenderableWidget(new MekanismButton(this,154,45,66,16,ModuleContent.text("frequency_power_button"),(b,x,y)->{openSources();return true;}));
         button(10,134,102,0,()->ModuleContent.text(tile.enabled?"pause":"enable"));button(118,134,102,1,()->ModuleContent.text(tile.autoEject?"eject_on":"eject_off"));
     }
     private void request(int operation,UUID id,String name,boolean shared){PacketDistributor.sendToServer(new NodeFrequencyNetwork.Action(menu.containerId,menu.nodeSession,tile.getBlockPos(),operation,id,name,shared));}
@@ -31,11 +31,12 @@ public final class NodeScreen extends ModuleScreen {
     private final class FrequencyWindow extends GuiWindow {
         private final GuiTextScrollList list;private List<NodeFrequencies.Entry> shown=List.of();private boolean shared,listedShared,autoScope=true;private List<NodeFrequencies.Entry> sourceEntries;
         FrequencyWindow(){super(NodeScreen.this,5,6,220,236,WindowType.UNSPECIFIED);
-            addChild(new GuiInnerScreen(NodeScreen.this,relativeX+10,relativeY+24,200,20,()->List.of(ModuleContent.text("frequency_current",node().frequencyName.isEmpty()?ModuleContent.text("frequency_none"):node().frequencyName),ModuleContent.text("frequency_peers",node().peers))).spacing(0));
-            addChild(new MekanismButton(NodeScreen.this,relativeX+10,relativeY+49,72,16,ModuleContent.text("frequency_private"),(b,x,y)->{shared=!shared;autoScope=false;return true;}){@Override public void tick(){super.tick();setMessage(ModuleContent.text(shared?"frequency_public":"frequency_private"));}});
-            var name=addChild(new GuiTextField(NodeScreen.this,relativeX+10,relativeY+69,180,16));name.setMaxLength(32);name.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("frequency_name")));Runnable create=()->{if(!name.getText().isBlank())request(1,null,name.getText(),shared);};name.setEnterHandler(create);name.addCheckmarkButton(create);
-            addChild(new MekanismButton(NodeScreen.this,relativeX+88,relativeY+49,122,16,ModuleContent.text("panel_refresh"),(b,x,y)->{request(0,null,"",false);return true;}));
-            list=addChild(new GuiTextScrollList(NodeScreen.this,relativeX+10,relativeY+92,200,87));
+            addChild(new GuiInnerScreen(NodeScreen.this,relativeX+10,relativeY+24,200,22,()->List.of(ModuleContent.text("frequency_current",node().frequencyName.isEmpty()?ModuleContent.text("frequency_none"):node().frequencyName),ModuleContent.text("frequency_peers",node().peers))).spacing(0));
+            addChild(new MekanismButton(NodeScreen.this,relativeX+10,relativeY+50,95,16,ModuleContent.text("frequency_private"),(b,x,y)->{shared=false;autoScope=false;return true;}){@Override public void tick(){super.tick();active=shared;}});
+            addChild(new MekanismButton(NodeScreen.this,relativeX+115,relativeY+50,95,16,ModuleContent.text("frequency_public"),(b,x,y)->{shared=true;autoScope=false;return true;}){@Override public void tick(){super.tick();active=!shared;}});
+            var name=addChild(new GuiTextField(NodeScreen.this,relativeX+10,relativeY+157,132,16));name.setMaxLength(32);name.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("frequency_name")));Runnable create=()->{if(!name.getText().isBlank())request(1,null,name.getText(),shared);};name.setEnterHandler(create);
+            addChild(new MekanismButton(NodeScreen.this,relativeX+148,relativeY+157,62,16,ModuleContent.text("frequency_create"),(b,x,y)->{create.run();return true;}){@Override public void tick(){super.tick();active=!name.getText().isBlank();}});
+            list=addChild(new GuiTextScrollList(NodeScreen.this,relativeX+10,relativeY+72,200,68));
             for(int i=0;i<3;i++){int action=i;addChild(new MekanismButton(NodeScreen.this,relativeX+10+i*68,relativeY+185,64,16,ModuleContent.text(new String[]{"frequency_join","frequency_leave","frequency_delete"}[i]),(b,x,y)->{
                 var selected=selection();if(action==1)request(3,null,"",false);else if(selected!=null)request(action==0?2:4,selected.id(),"",false);return true;
             }){{active=false;}@Override public void tick(){super.tick();var entry=selection();active=action==1?node().frequency!=null:entry!=null&&(action==0||entry.owner().equals(minecraft.player.getUUID()));}});}
@@ -44,6 +45,6 @@ public final class NodeScreen extends ModuleScreen {
         private NodeFrequencies.Entry selection(){int i=list.getSelection();return i>=0&&i<shown.size()?shown.get(i):null;}
         @Override public void tick(){super.tick();if(autoScope&&frequenciesLoaded){frequencies.stream().filter(e->e.id().equals(node().frequency)).findFirst().ifPresent(e->shared=e.shared());autoScope=false;}if(sourceEntries!=frequencies||listedShared!=shared){sourceEntries=frequencies;listedShared=shared;shown=frequencies.stream().filter(e->e.shared()==shared).toList();list.setText(shown.stream().map(NodeFrequencies.Entry::name).toList());}}
         @Override public void close(){super.close();frequencyWindow=null;}
-        @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("frequency_select"),5);}
+        @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("frequency_select"),5);g.drawString(minecraft.font,ModuleContent.text("frequency_new_name"),relativeX+10,relativeY+145,0x404040,false);}
     }
 }

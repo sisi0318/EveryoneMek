@@ -30,3 +30,14 @@ alpha.25：耀斑晶核由FlareCellRenderer绘制，builtin/entity物品共用�
 - shader关闭／不可用时，使用同框架与96面球形回退，复用已有`stellar_surface_particle`，共142面；不再退回立方体芯块。
 
 总生成器仍从`generate_module_resources.py`调用新网格生成器，同时维护两个JSON、两个OBJ和一份MTL。`tools/preview_flare_cell.cjs`用真实OBJ、原16px材质和深度缓冲检查正反侧面，输出`flare-cell-restraint-preview.png`；可传入旧框架三角网格JSON作对照。该图展示静态回退与几何，不是游戏截图或运行shader效果。没有新图像生成素材，也没有更改运行贴图。
+
+
+## alpha.30 整体打磨
+
+五种模型统一16格工业机壳、内凹工作面和接口，继续使用原16×16 PNG；不同功能用内部结构与工作显示区分。捕获／锻造特效缩至0.8倍并移到腔体内，调谐／观测屏位于前面板后方的独立深度位置。所有静态／工作模型均检查共面重叠。
+
+Node投影噪点来自对插值float类别做精确相等比较。倾斜透视下会在闪电和图集采样分支之间随机跳变，原正交测试漏掉了此问题。现改为flat int resourceType；VerifyNodeSnapshotShader用两张不同颜色图集检查12个透视视角下能量分支的输出不受图集影响，旧版首视角32292颜色通道不同，新版为0。
+
+`tools/stellar_materials.py`同时导出StellarMaterialMesh静态顶点、五种物品的OBJ回退和模型。材质种类／表面区域使用flat整数，顶点携带局部坐标、相位和燃料余量，避免同批物品共用错误uniform。金属面保持稳定，压缩物质的深紫纹理、燃料的琥珀流动和合金锭的狭窄能量槽使用独立着色。0纹理采样、固定少量sin计算，无全屏效果或FBO。11/30/132面，GROUND或REDUCED将圆柱降为4段，最高72面。
+
+VerifyStellarMaterials使用真实生成网格和GLSL检查五种形态、动态、遮挡、低面数及残余胶囊变暗。`stellar-materials-preview.png`由实际隐藏GL渲染输出组成，运行时贴图没有修改；不是游戏截图。GUI、双手、展示框、掉落物共用StellarMaterialRenderer，动画和shader遵循原客户端开关。

@@ -107,8 +107,8 @@ public final class SolarLayout {
     write('assets/mekgravity/shaders/core/stellar_field.json',shader)
     solar_surface.generate(RES)
     for active in [False,True]:model('sun_active' if active else 'sun_idle',{'parent':'minecraft:block/block','loader':'neoforge:obj','model':'mekgravity:models/block/solar/sun.obj','mtl_override':'mekgravity:models/block/solar/sun.mtl','automatic_culling':False,'shade_quads':False,'emissive_ambient':True,'textures':{'surface':'mekgravity:block/photosphere_active' if active else 'mekgravity:block/photosphere_idle','particle':'mekgravity:block/stellar_surface_particle'}})
-    for name in ['compressed_stellar_matter','stellar_fuel_preform','stellar_fuel','stellar_fuel_capsule']:
-        m=mechanical([box([4,4,4],[12,12,12],'#lamp'),box([3,6,3],[13,10,13],'#steel',[0,0,16,4])]);m['display']={'gui':{'rotation':[25,225,0],'scale':[.9,.9,.9]},'ground':{'translation':[0,3,0],'scale':[.5,.5,.5]}};write('assets/mekgravity/models/item/'+name+'.json',m)
+    from stellar_materials import generate as materials
+    materials(RES,write)
     def recipe(name,pattern,key,count=1):write('data/mekgravity/recipe/'+name+'.json',{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'id':'mekgravity:'+name,'count':count}})
     recipe('compressed_stellar_matter',['PPP','PPP','PPP'],{'P':'mekgravity:dense_fuel_pellet'})
     recipe('stellar_fuel_preform',['ACA','CHC','ACA'],{'A':'mekanism:pellet_antimatter','C':'mekgravity:compressed_stellar_matter','H':'mekanism:hdpe_sheet'})

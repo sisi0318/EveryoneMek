@@ -29,8 +29,8 @@ public class OrbitalModule extends TileEntityMekanism {
     public long paidEnergy,transferred;public String status="unlinked";
     private ItemStack product=ItemStack.EMPTY,sample=ItemStack.EMPTY;
     private long retryAt,receivedUntil,visualTick=Long.MIN_VALUE;private boolean visualRunning;
-    public long sourceStored,sourceCapacity,sourceNet,sourceOutput,sourceFuel,sourceFuelTotal,sourceSpare;
-    public int sourceProfile,sourceBurst,sourceCooldown;public boolean sourceSolar,sourceFormed;
+    public long sourceAvailable,sourceStored,sourceCapacity,sourceNet,sourceOutput,sourceFuel,sourceFuelTotal,sourceSpare;
+    public int sourceProfile,sourceBurst,sourceCooldown;public boolean sourceSolar,sourceFormed,sourceHot;
     public boolean displayRunning;public int displayProgress;public ItemStack displayItem=ItemStack.EMPTY;
     public OrbitalModule(BlockPos pos,BlockState state){super(ModuleContent.BLOCK.get(ModuleContent.kind(state)),pos,state);}
     public ModuleKind kind(){return ModuleContent.kind(getBlockState());}
@@ -64,8 +64,8 @@ public class OrbitalModule extends TileEntityMekanism {
         else if(action==6&&kind()==ModuleKind.NODE)source=null;
         else if(action==7){LinkPanelMenu.open(player,null,this);return true;}
         else if(action>=20&&action<=23&&kind()==ModuleKind.NODE)channels^=1<<(action-20);
-        else if(action==3&&kind()==ModuleKind.OBSERVATORY)alarm=(alarm+1)%4;
-        else if(action==4&&kind()==ModuleKind.OBSERVATORY)threshold=threshold==75?10:threshold==10?25:threshold==25?50:75;
+        else if(action>=30&&action<=33&&kind()==ModuleKind.OBSERVATORY)alarm=action-30;
+        else if(action>=101&&action<=199&&kind()==ModuleKind.OBSERVATORY&&(alarm==2||alarm==3))threshold=action-100;
         else if(kind()==ModuleKind.TUNER&&action>=10&&action<=13){var core=linked();if(core==null||!core.permitted(player)||!core.formed()||!enabled||!canFunction())return false;
             if(action==13){if(!core.hot()||core.available()<=0||core.stored()>=core.capacity()||inputs.getFirst().isEmpty()||!inputs.getFirst().getStack().is(ModuleContent.FLARE.get())||!core.tuning().trigger())return false;inputs.getFirst().shrinkStack(1,Action.EXECUTE);}
             else core.tuning().profile=action-10;core.tile().markForSave();telemetry(core);
@@ -101,7 +101,7 @@ public class OrbitalModule extends TileEntityMekanism {
             var stack=input.getStack().copyWithCount(n);input.shrinkStack(n,Action.EXECUTE);int left=target.insert(stack,n);if(left!=0)throw new IllegalStateException("Reserved node capacity changed during transfer");
             var sample=stack.copyWithCount(1);snapshot(0,sample);target.snapshot(0,sample);budget-=n;node.itemsMoved+=n;transferred=transferred>Long.MAX_VALUE-n?Long.MAX_VALUE:transferred+n;batch=(int)node.itemsMoved;paidEnergy+=cost;duration=progress=1;target.receivedUntil=level.getGameTime()+5;target.visual(true);target.markForSave();moved=true;
         }return moved;}
-    private void telemetry(FieldSource core){sourceStored=core.stored();sourceCapacity=core.capacity();sourceNet=core.net();sourceOutput=core.exported();sourceFuel=core.fuel();sourceFuelTotal=core.fuelTotal();sourceSpare=core.formed()?core.spare():0;sourceSolar=core.solar();sourceFormed=core.formed();sourceProfile=core.tuning().profile;sourceBurst=core.tuning().burst;sourceCooldown=core.tuning().cooldown;}
+    private void telemetry(FieldSource core){sourceAvailable=core.available();sourceStored=core.stored();sourceCapacity=core.capacity();sourceNet=core.net();sourceOutput=core.exported();sourceFuel=core.fuel();sourceFuelTotal=core.fuelTotal();sourceSpare=core.formed()?core.spare():0;sourceSolar=core.solar();sourceFormed=core.formed();sourceHot=core.hot();sourceProfile=core.tuning().profile;sourceBurst=core.tuning().burst;sourceCooldown=core.tuning().cooldown;}
     private void observe(FieldSource core){int next=0;if(enabled&&canFunction()){
         if(core==null)next=alarm==1?15:0;
         else if(alarm==0)next=(int)Math.clamp(Math.ceil(core.stored()*15D/Math.max(1,core.capacity())),0,15);
@@ -114,7 +114,7 @@ public class OrbitalModule extends TileEntityMekanism {
             var extracted=slot.extractItem(count,Action.EXECUTE,AutomationType.INTERNAL);var remainder=ItemHandlerHelper.insertItemStacked(handler,extracted,false);budget-=extracted.getCount()-remainder.getCount();if(!remainder.isEmpty())slot.insertItem(remainder,Action.EXECUTE,AutomationType.INTERNAL);}}
     @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();if(kind()==ModuleKind.NODE){node.clock(level.getGameTime());paidEnergy=0;}eject();var core=linked();boolean working=false;
         if(core!=null){if(level.getGameTime()%5==0)telemetry(core);if(kind().processor())working=process(core);else if(kind()==ModuleKind.NODE)working=transfer(core);else{status=!enabled||!canFunction()?"paused":!core.formed()?"structure":core.hot()?"monitoring":"cold";working=enabled&&canFunction()&&core.formed();}}
-        else{sourceStored=sourceCapacity=sourceNet=sourceOutput=sourceFuel=sourceFuelTotal=sourceSpare=0;sourceFormed=false;}
+        else{sourceAvailable=sourceStored=sourceCapacity=sourceNet=sourceOutput=sourceFuel=sourceFuelTotal=sourceSpare=0;sourceFormed=sourceHot=false;}
         if(kind()==ModuleKind.NODE&&enabled&&canFunction()&&receivedUntil>level.getGameTime()&&!working){status="receiving";working=true;}
         if(kind()==ModuleKind.OBSERVATORY)observe(core);setActive(working);visual(working);return changed;}
     protected CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();if(source!=null)t.put("source",source.save());t.putInt("channels",channels);t.putBoolean("enabled",enabled);t.putBoolean("eject",autoEject);t.putInt("alarm",alarm);t.putInt("threshold",threshold);t.putInt("progress",progress);t.putInt("duration",duration);t.putInt("batch",batch);t.putInt("remaining",remaining);t.putLong("paid",paidEnergy);t.putLong("transferred",transferred);if(!product.isEmpty())t.put("product",product.save(r));if(!sample.isEmpty())t.put("sample",sample.save(r));return t;}
@@ -132,8 +132,8 @@ public class OrbitalModule extends TileEntityMekanism {
         if(kind()==ModuleKind.NODE){menu.track(SyncableInt.create(()->channels,v->channels=v));menu.track(SyncableLong.create(()->node.itemsMoved,v->node.itemsMoved=v));menu.track(SyncableLong.create(()->node.energyMoved,v->node.energyMoved=v));menu.track(SyncableLong.create(()->node.fluidMoved,v->node.fluidMoved=v));menu.track(SyncableLong.create(()->node.chemicalMoved,v->node.chemicalMoved=v));}
         menu.track(SyncableInt.create(()->progress,v->progress=v));menu.track(SyncableInt.create(()->duration,v->duration=v));menu.track(SyncableInt.create(()->batch,v->batch=v));menu.track(SyncableInt.create(()->signal,v->signal=v));menu.track(SyncableInt.create(()->alarm,v->alarm=v));menu.track(SyncableInt.create(()->threshold,v->threshold=v));
         menu.track(SyncableBoolean.create(()->enabled,v->enabled=v));menu.track(SyncableBoolean.create(()->autoEject,v->autoEject=v));menu.track(SyncableLong.create(()->paidEnergy,v->paidEnergy=v));menu.track(SyncableLong.create(()->transferred,v->transferred=v));
-        menu.track(SyncableLong.create(()->sourceStored,v->sourceStored=v));menu.track(SyncableLong.create(()->sourceCapacity,v->sourceCapacity=v));menu.track(SyncableLong.create(()->sourceNet,v->sourceNet=v));menu.track(SyncableLong.create(()->sourceOutput,v->sourceOutput=v));menu.track(SyncableLong.create(()->sourceFuel,v->sourceFuel=v));menu.track(SyncableLong.create(()->sourceFuelTotal,v->sourceFuelTotal=v));menu.track(SyncableLong.create(()->sourceSpare,v->sourceSpare=v));
-        menu.track(SyncableInt.create(()->sourceProfile,v->sourceProfile=v));menu.track(SyncableInt.create(()->sourceBurst,v->sourceBurst=v));menu.track(SyncableInt.create(()->sourceCooldown,v->sourceCooldown=v));menu.track(SyncableBoolean.create(()->sourceSolar,v->sourceSolar=v));menu.track(SyncableBoolean.create(()->sourceFormed,v->sourceFormed=v));
+        menu.track(SyncableLong.create(()->sourceAvailable,v->sourceAvailable=v));menu.track(SyncableLong.create(()->sourceStored,v->sourceStored=v));menu.track(SyncableLong.create(()->sourceCapacity,v->sourceCapacity=v));menu.track(SyncableLong.create(()->sourceNet,v->sourceNet=v));menu.track(SyncableLong.create(()->sourceOutput,v->sourceOutput=v));menu.track(SyncableLong.create(()->sourceFuel,v->sourceFuel=v));menu.track(SyncableLong.create(()->sourceFuelTotal,v->sourceFuelTotal=v));menu.track(SyncableLong.create(()->sourceSpare,v->sourceSpare=v));
+        menu.track(SyncableInt.create(()->sourceProfile,v->sourceProfile=v));menu.track(SyncableInt.create(()->sourceBurst,v->sourceBurst=v));menu.track(SyncableInt.create(()->sourceCooldown,v->sourceCooldown=v));menu.track(SyncableBoolean.create(()->sourceSolar,v->sourceSolar=v));menu.track(SyncableBoolean.create(()->sourceFormed,v->sourceFormed=v));menu.track(SyncableBoolean.create(()->sourceHot,v->sourceHot=v));
         menu.track(SyncableInt.create(()->ModuleMenu.STATES.indexOf(status),v->status=ModuleMenu.STATES.get(Math.clamp(v,0,ModuleMenu.STATES.size()-1))));
         menu.track(SyncableBoolean.create(()->source!=null,v->sourceBound=v));
         menu.track(SyncableBlockPos.create(()->source==null?BlockPos.ZERO:source.pos(),v->source=new FieldLink("",v)));

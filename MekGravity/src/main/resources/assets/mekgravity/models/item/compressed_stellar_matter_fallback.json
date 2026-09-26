@@ -1,0 +1,17 @@
+{
+  "parent": "minecraft:block/block",
+  "loader": "neoforge:obj",
+  "model": "mekgravity:models/item/compressed_stellar_matter_fallback.obj",
+  "mtl_override": "mekgravity:models/item/stellar_material.mtl",
+  "automatic_culling": false,
+  "shade_quads": true,
+  "emissive_ambient": true,
+  "flip_v": false,
+  "ambientocclusion": false,
+  "textures": {
+    "steel": "mekgravity:block/orb_steel",
+    "dark": "mekgravity:block/orb_inner",
+    "energy": "mekgravity:block/orb_active",
+    "particle": "mekgravity:block/orb_active"
+  }
+}

@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.29，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.30，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,14 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.30投影噪点已复现：node_snapshot.fsh原work.y==1.0在透视插值下不稳定，误采样能量板图集。改flat int resourceType，不能用varying float精确相等选择材质。VerifyNodeSnapshotShader新增12个倾斜透视+替换图集一致性回归；旧版首视角32292颜色通道不同，新版0。不要把此问题误诊为两层模型或靠拉开深度解决。
+- ProcessModule为CAPTOR/FORGE/TUNER专用子类，原ConfigInventorySlotHolder+TileComponentConfig复用Mek物品六面；自有4096预算eject遍历配置输出面，NativeEjector不再重复搬运。NODE保持NodeModule，OBSERVATORY无库存配置。loot同时保存side_config/ejector。处理机器槽y78，调谐晶核槽y120，玩家仍y163；主界面230×248。
+- ModuleSourceNetwork为机器内的附近能源选择器；ModuleMenu对所有模块同步nodeSession。扫描仅loaded chunk BE、过滤种类和双端权限，每20tick限流/最多96项；绑定再次验证菜单、session、8格、BE身份和权限。面板操作不能从陈旧选项绑定同位置的新控制器。原链接器/全局面板继续可用。
+- ModuleScreen统一状态/能源/工作区/物品栏，GuiProgress用Mek原箭头。sourceHot/sourceAvailable菜单同步，canControlSource按菜单玩家计算；升载按钮检查热态、余电、空间、冷却及晶核。观测站动作30～33直接选模式、101～199设阈值，仅告警2/3接受阈值；移除旧循环按钮。
+- StellarMaterialRenderer覆盖COMPRESSED/PREFORM/FUEL/ALLOY/CAPSULE，模型builtin/entity，fallback模型在ModelEvent注册。tools/stellar_materials.py同时生成Java静态网格、OBJ、MTL、物品JSON，Solar和Module生成器都调用，避免覆写回旧图标。材质0/1/2=金属/暗面/能量，Alpha编码kind*3+region；UV0相位向量长度编码胶囊余量，flat int传类别。GUI 11～132quads，GROUND/REDUCED圆柱4段最高72，0纹理采样；NBT只读、不改变燃料计算。
+
+- alpha.30构建与54项GameTest通过；新增ModuleInteractionTests覆盖类型/私有过滤、sourcePicker菜单session/同位置替换拒绝、真实绑解、后面出料、side_config掉落及直接告警模式/37%阈值。VerifyStellarMaterials检查五种真实网格/着色器、动态/遮挡/GROUND和空胶囊变暗；节点12视角图集污染回归已通过。各5静态/活动模型均无共面重叠。未运行客户端。
 
 - alpha.29用户明确允许开发期破坏性更新，不需要旧节点数据兼容。本轮已删除peer/receiver字段与旧sender/node工具配对；不恢复定向节点分支，不编写旧节点迁移。节点重新放置/选择频率/配置能源和接口即可。其他模块仍通过场域工具绑定能源。
 - NodeModule为OrbitalModule的节点专用子类，沿用原注册ID；实现ISideConfiguration，以四种原Config*Holder及TileComponentConfig连接真实容器。父构造的getInitial*先创建NodeStorage/slots，禁止子字段初始化覆盖；配置组件在子构造体添加。DATA只扩展frequency UUID，原生SideConfig/Ejector组件同时进loot；UI和实际capability都使用同一份配置。

@@ -38,7 +38,18 @@ public class VerifyNodeSnapshotShader {
             for(int kind=0;kind<4;kind++){var active=render(kind,0,1,false);var moving=render(kind,1.8,1,false);var idle=render(kind,0,0,false);var blocked=render(kind,0,1,true);int visible=0,changed=0;
                 for(int i=0;i<active.length;i+=4){if((active[i]&255)+(active[i+1]&255)+(active[i+2]&255)>80)visible++;if(java.lang.Math.abs((active[i+1]&255)-(moving[i+1]&255))>8)changed++;check((idle[i]&255)<12,"Idle projection failed to fade");}
                 check(visible>1500&&changed>300,"Missing or frozen projection "+kind+": "+visible+" / "+changed);for(int y=0;y<H;y++)for(int x=0;x<W/2;x++)check((blocked[(y*W+x)*4]&255)<12,"Projection ignored solid occlusion");var depth=BufferUtils.createFloatBuffer(W*H);glReadPixels(0,0,W,H,GL_DEPTH_COMPONENT,GL_FLOAT,depth);for(int y=0;y<H;y++)for(int x=W/2;x<W;x++)check(depth.get(y*W+x)==1,"Projection wrote transparent depth");save(active,out.resolve("type-"+kind+".png"));System.out.println("PASS resource "+kind+": 1 quad, sprite/bolt, animation, fade, depth occlusion");
-            }check(glGetError()==GL_NO_ERROR,"GL error");glDeleteTextures(texture);glDeleteBuffers(vbo);glDeleteBuffers(ebo);glDeleteVertexArrays(vao);glDeleteProgram(program);glDeleteShader(vertex);glDeleteShader(fragment);
+            }
+            // A categorical varying must not switch shader branches under perspective interpolation.
+            matrix("ProjMat",new Matrix4f().perspective((float)java.lang.Math.toRadians(58),1,.03F,100));
+            for(int view=0;view<12;view++){
+                matrix("ModelViewMat",new Matrix4f().translate(0,0,-2.5F).rotateY(view*.071F).rotateX(.23F+view*.017F).translate(0,0,2));
+                var red=BufferUtils.createByteBuffer(4);red.put((byte)255).put((byte)0).put((byte)0).put((byte)255).flip();glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE,red);var a=render(1,.6,1,false);
+                var green=BufferUtils.createByteBuffer(4);green.put((byte)0).put((byte)255).put((byte)0).put((byte)255).flip();glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE,green);var b=render(1,.6,1,false);
+                int leaked=0;for(int i=0;i<a.length;i++)if(a[i]!=b[i])leaked++;
+                check(leaked==0,"Perspective energy branch sampled the atlas: view="+view+", changed channels="+leaked);
+            }
+            System.out.println("PASS: 12 perspective views; energy branch is independent of atlas contents.");
+            check(glGetError()==GL_NO_ERROR,"GL error");glDeleteTextures(texture);glDeleteBuffers(vbo);glDeleteBuffers(ebo);glDeleteVertexArrays(vao);glDeleteProgram(program);glDeleteShader(vertex);glDeleteShader(fragment);
         }finally{glfwDestroyWindow(window);glfwTerminate();}
     }
 }
