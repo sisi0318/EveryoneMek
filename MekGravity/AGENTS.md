@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.21，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.22，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,8 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.22日冕白侧板与壳体共面导致视角移动时斜纹闪烁。generate_coronal_resources.outer_surface调用runtime_geometry.exposed_faces对实体求并集，材质由后加入盒子覆盖，按原面方向裁切UV，不能再把完整六面白轨条直接叠到壳体上。原solid盒仍用于CoronalShapes，轮廓/碰撞不变；灯光额外数据复制到新表面。两模型102→86quads，原57组共面重叠归零，tools/verify_coronal_geometry.py同时检查模块内部和9块翼片接口；旧模型明确失败，新模型通过。纯几何修改仅检查资源、离线预览和构建，不重复35项服务端测试。
 
 - alpha.21日冕吞吐默认512批、额外acceleration5、普通40基础ticks→四级8/4/2/1tick。太阳react自动调载必须把lastProcessing与lastOutput一起响应，否则突发加工用电会因从零缓慢爬升而不能及时补回缓存。SolarConfig.Loading以coronalPerformanceRevision一次迁移原32批/5GJ默认值，保留自定义；旧coronal_work的duration/progress/paid不重算，批量/余量/paid上限分别扩至512/32768/512TJ。
 - CoronalInventorySlot用BasicInventorySlot的4096上限、原生oversized NBT及AttachedItems组件；世界与物品附件保持18槽原顺序并同上限。普通64堆叠存4096、16堆叠存1024、非堆叠仍1。MANUAL/EXTERNAL沿用原extractItem的物品堆叠上限，INTERNAL弹出覆盖该限制以批量转移；否则产物合并到单槽后自动出料会卡64/t。空ItemStack查询返回4096。菜单原生提取/合并/shift及真实掉落ItemStack序列化重放已验证。

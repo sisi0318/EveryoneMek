@@ -7,3 +7,5 @@
 使用已有 LWJGL/JOML 依赖 classpath 运行 `tools/VerifyCoronalShader.java .`：隐藏 OpenGL 窗口读取真实 shader 和 `CoronalField` 顶点，验证运行/停止/流动像素、实体遮挡、透明不写深度，图片写入 `build/coronal-shader-check`。该工具不会启动 Minecraft。游戏原生菜单、光影包兼容和实际观感仍需客户端验收。
 
 alpha.21：舱体改为沿翼片安装的薄型石墨机壳，白灰只作窄轨条，金色状态像素直接复用sun_collector。模型向后延伸的接合板到达相邻翼片的实际表面（本地z=24），消除旧立方体与翼片的空隙。CoronalShapes由同一几何生成；物料/热环改到新凹槽中心，碎屑使用orb_inner。preview_coronal增加真实3×3翼片与模块的组合视图。
+
+alpha.22：原六面盒子叠加使白轨条／机壳／边框共面，旧模型有57组面积重叠。导出改为实体并集的外露矩形，源盒序决定覆盖材质，并按面朝向裁切UV。碰撞仍由原solid盒生成，形状与贴图不改。102→86面；`python tools/verify_coronal_geometry.py`检查两状态及翼片接合，传旧JSON路径可复现失败。离线预览基于修复后的原生模型，非游戏截图。

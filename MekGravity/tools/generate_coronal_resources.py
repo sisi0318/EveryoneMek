@@ -1,6 +1,33 @@
 """Coronal chamber resources. Original existing 16px MekGravity materials, no new bitmap art."""
-import json
+import copy,json
 from generate_solar_resources import RES, write, box, mechanical
+from runtime_geometry import exposed_faces
+
+def outer_surface(elements):
+    """Bake the cuboid union once; later pieces own the overlapping material.
+
+    Keep the original solid boxes for collision. Render only their exposed faces,
+    with cropped source UVs so removing a covered area never stretches its texture.
+    """
+    solids=[{'lo':[n/16 for n in e['from']], 'hi':[n/16 for n in e['to']], 'material':i} for i,e in enumerate(elements)]
+    # Source UV directions used by Minecraft's unrotated cube faces.
+    uv_axes={'north':(0,-1,1,-1),'south':(0,1,1,-1),'west':(2,1,1,-1),
+             'east':(2,-1,1,-1),'up':(0,1,2,1),'down':(0,1,2,-1)}
+    result=[]
+    for lo,hi,side,index in exposed_faces(solids):
+        source=elements[index];face=copy.deepcopy(source['faces'][side]);uv=face['uv'];cropped=[]
+        assert not face.get('rotation'), 'UV remapping expects unrotated source faces'
+        for lower in (True,False):
+            coords=[]
+            for axis,sign,minimum,maximum in ((uv_axes[side][0],uv_axes[side][1],uv[0],uv[2]),(uv_axes[side][2],uv_axes[side][3],uv[1],uv[3])):
+                edge=(lo if lower else hi)[axis] if sign>0 else (hi if lower else lo)[axis]
+                fraction=(edge-source['from'][axis])/(source['to'][axis]-source['from'][axis])
+                if sign<0:fraction=1-fraction
+                coords.append(minimum+(maximum-minimum)*fraction)
+            cropped+=coords
+        face['uv']=cropped
+        result.append({'from':lo,'to':hi,'faces':{side:face}})
+    return result
 
 def build():
     variants={}
@@ -21,7 +48,7 @@ def build():
             if active:
                 for face in lamp['faces'].values():face['neoforge_data']={'block_light':12,'ambient_occlusion':False}
             e.append(lamp)
-        model=mechanical(e);model['textures']['particle']='mekgravity:block/orb_inner';model['textures']['lamp']='mekgravity:block/sun_collector_active' if active else 'mekgravity:block/sun_collector'
+        model=mechanical(outer_surface(e));model['textures']['particle']='mekgravity:block/orb_inner';model['textures']['lamp']='mekgravity:block/sun_collector_active' if active else 'mekgravity:block/sun_collector'
         name='coronal_chamber'+('_active' if active else '')
         write(f'assets/mekgravity/models/block/{name}.json',model)
         for face,y in [('north',0),('east',90),('south',180),('west',270)]:variants[f'facing={face},active={str(active).lower()}']={'model':'mekgravity:block/'+name,'y':y}
