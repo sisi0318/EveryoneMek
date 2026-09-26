@@ -41,13 +41,13 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
         int step=(imageWidth-16)/6;
         for(int i=0;i<6;i++){int action=i;addRenderableWidget(new MekanismButton(this,8+i*step,imageHeight-27,step-3,17,buttonText(i),(b,x,y)->{
             var d=selected();if(d!=null)send(action<4?4+action:action==4?2:3,d.pos(),null,menu.revision);return true;
-        }){{active=false;}@Override public void tick(){super.tick();var d=selected();active=d!=null&&(action<4?d.node():action==4?!d.core()&&d.source()!=null:d.node()&&d.peer()!=null);setMessage(buttonText(action));}});}
+        }){{active=false;}@Override public void tick(){super.tick();var d=selected();active=d!=null&&(action<4?d.node():action==4?!d.core()&&d.source()!=null:d.node()&&!d.frequency().isEmpty());setMessage(buttonText(action));}});}
     }
-    private Component buttonText(int action){if(action>=4)return ModuleContent.text(action==4?"panel_remove_power":"panel_remove_route");var d=selected();return ModuleContent.text("panel_channel",ModuleContent.text("resource_"+action),d!=null&&(d.channels()&(1<<action))!=0?"✓":"—");}
+    private Component buttonText(int action){if(action>=4)return ModuleContent.text(action==4?"panel_remove_power":"frequency_leave");var d=selected();return ModuleContent.text("panel_channel",ModuleContent.text("resource_"+action),d!=null&&(d.channels()&(1<<action))!=0?"✓":"—");}
     private List<LinkPanelNetwork.Device> visible(){return menu.devices.stream().filter(d->filter.isEmpty()||d.name().getString().toLowerCase(Locale.ROOT).contains(filter)||d.pos().toShortString().contains(filter)).toList();}
     private LinkPanelNetwork.Device device(BlockPos pos){if(pos==null)return null;return menu.devices.stream().filter(d->d.pos().equals(pos)).findFirst().orElse(null);}
     private LinkPanelNetwork.Device selected(){return device(selected);}
-    private void layout(boolean reset){if(reset)positions.clear();var devices=menu.devices;positions.keySet().removeIf(p->device(p)==null);int[] columns=devices.stream().mapToInt(d->d.core()?0:d.node()&&d.peer()==null&&d.receiver()?2:1).toArray();var points=LinkPanelGeometry.layout(columns);
+    private void layout(boolean reset){if(reset)positions.clear();var devices=menu.devices;positions.keySet().removeIf(p->device(p)==null);int[] columns=devices.stream().mapToInt(d->d.core()?0:1).toArray();var points=LinkPanelGeometry.layout(columns);
         for(int i=0;i<devices.size();i++)if(!positions.containsKey(devices.get(i).pos())){var point=points[i];while(positions.containsValue(point))point=new Point(point.x(),point.y()+ROW);positions.put(devices.get(i).pos(),point);}
         if(firstLayout&&!devices.isEmpty()){fit();firstLayout=false;}
     }
@@ -59,14 +59,14 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
     private Point screen(Point p){return new Point(cx+panX+p.x()*zoom,cy+panY+p.y()*zoom);}
     private boolean canvas(double x,double y){return x>=cx&&x<cx+cw&&y>=cy&&y<cy+ch;}
     private Point port(Port p){var at=positions.get(p.pos());var d=device(p.pos());return new Point(at.x()+(p.output()?WIDTH:0),at.y()+(p.type()==1?33:d!=null&&d.core()?22:13));}
-    private List<Port> ports(LinkPanelNetwork.Device d){var list=new ArrayList<Port>();list.add(new Port(d.pos(),0,d.core()));if(d.node()){list.add(new Port(d.pos(),1,false));list.add(new Port(d.pos(),1,true));}return list;}
+    private List<Port> ports(LinkPanelNetwork.Device d){var list=new ArrayList<Port>();list.add(new Port(d.pos(),0,d.core()));return list;}
     private Port hitPort(Point point){for(var d:visible())for(var p:ports(d)){var at=port(p);if(Math.pow(at.x()-point.x(),2)+Math.pow(at.y()-point.y(),2)<81)return p;}return null;}
     private LinkPanelNetwork.Device hitCard(Point point){var list=visible();for(int i=list.size()-1;i>=0;i--){var d=list.get(i);var at=positions.get(d.pos());if(at!=null&&contains(at,point))return d;}return null;}
     private List<Edge> edges(){var result=new ArrayList<Edge>();var shown=visible().stream().map(d->d.pos()).collect(java.util.stream.Collectors.toSet());for(var d:visible()){
         if(d.source()!=null&&shown.contains(d.source()))result.add(new Edge(d.source(),d.pos(),0,d.powerValid()));
-        if(d.peer()!=null&&shown.contains(d.peer()))result.add(new Edge(d.pos(),d.peer(),1,d.routeValid()));}return result;}
+        }return result;}
     private boolean compatible(Port from,Port to){if(from==null||to==null||!from.output()||to.output()||from.type()!=to.type()||from.pos().equals(to.pos()))return false;var a=device(from.pos());var b=device(to.pos());if(a==null||b==null)return false;
-        if(from.type()==1)return a.node()&&b.node();return a.core()&&!b.core()&&!(b.kind()==ModuleKind.CAPTOR.ordinal()+2&&a.kind()!=1||b.kind()==ModuleKind.FORGE.ordinal()+2&&a.kind()!=0);}
+        return a.core()&&!b.core()&&!(b.kind()==ModuleKind.CAPTOR.ordinal()+2&&a.kind()!=1||b.kind()==ModuleKind.FORGE.ordinal()+2&&a.kind()!=0);}
     private void connect(Port target){if(compatible(wire,target))send(1,wire.pos(),target.pos(),wireRevision);wire=null;}
     private void send(int action,BlockPos from,BlockPos to,int revision){PacketDistributor.sendToServer(new LinkPanelNetwork.Action(menu.containerId,menu.session,revision,action,from,to));}
     private static void line(GuiGraphics g,Point a,Point b,float width,int color){double dx=b.x()-a.x(),dy=b.y()-a.y(),length=Math.hypot(dx,dy);if(length<.001)return;float nx=(float)(-dy/length*width/2),ny=(float)(dx/length*width/2);var m=g.pose().last().pose();VertexConsumer v=g.bufferSource().getBuffer(RenderType.gui());
@@ -80,18 +80,18 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
         int spacing=Math.max(12,(int)(24*zoom));for(int x=cx+Math.floorMod((int)panX,spacing);x<cx+cw;x+=spacing)g.fill(x,cy,x+1,cy+ch,0xFF2B343C);for(int y=cy+Math.floorMod((int)panY,spacing);y<cy+ch;y+=spacing)g.fill(cx,y,cx+cw,y+1,0xFF2B343C);
         for(var e:edges())curve(g,port(new Port(e.from(),e.type(),true)),port(new Port(e.to(),e.type(),false)),e.valid()?(e.type()==0?POWER:ROUTE):BAD,!e.valid(),e.equals(selectedEdge));g.flush();
         for(var d:visible()){var at=screen(positions.get(d.pos()));if(at.x()+WIDTH*zoom<cx||at.x()>cx+cw||at.y()+HEIGHT*zoom<cy||at.y()>cy+ch)continue;
-            g.pose().pushPose();g.pose().translate(at.x(),at.y(),0);g.pose().scale((float)zoom,(float)zoom,1);int border=d.pos().equals(selected)?0xFFF0DC96:0xFF73828C;
+            g.pose().pushPose();g.pose().translate(at.x(),at.y(),0);g.pose().scale((float)zoom,(float)zoom,1);int border=d.pos().equals(selected)?0xFFF0DC96:d.frequency().isEmpty()?0xFF73828C:ROUTE;
             g.fill(0,0,WIDTH,HEIGHT,border);g.fill(1,1,WIDTH-1,HEIGHT-1,0xFF465159);g.fill(1,1,WIDTH-1,11,0xFF333D45);
             g.renderItem(new ItemStack(BuiltInRegistries.ITEM.get(d.item())),7,15);g.drawString(font,font.plainSubstrByWidth(d.name().getString(),WIDTH-12),6,2,0xFFE6EAED,false);
-            g.drawString(font,font.plainSubstrByWidth(d.pos().toShortString(),WIDTH-31),28,17,0xFFCCD3D6,false);g.drawString(font,font.plainSubstrByWidth(state(d).getString(),WIDTH-31),28,31,d.active()?0xFF8FE3B0:0xFFBBC0C5,false);g.pose().popPose();
+            g.drawString(font,font.plainSubstrByWidth(d.frequency().isEmpty()?d.pos().toShortString():d.frequency(),WIDTH-31),28,17,0xFFCCD3D6,false);g.drawString(font,font.plainSubstrByWidth(state(d).getString(),WIDTH-31),28,31,d.active()?0xFF8FE3B0:0xFFBBC0C5,false);g.pose().popPose();
             for(var p:ports(d)){var dot=screen(port(p));boolean match=wire==null||compatible(wire,p)||p.equals(wire);int color=match?(p.type()==0?POWER:ROUTE):0xFF64717A;g.fill((int)dot.x()-4,(int)dot.y()-4,(int)dot.x()+4,(int)dot.y()+4,0xFF13191E);g.fill((int)dot.x()-3,(int)dot.y()-3,(int)dot.x()+3,(int)dot.y()+3,color);}
         }
         if(wire!=null&&device(wire.pos())!=null)curve(g,port(wire),graph(mx,my),wire.type()==0?POWER:ROUTE,false,true);g.flush();g.disableScissor();
         if(sidebar)drawDetails(g,cx+cw+10,cy,134);
-        if(!settingsOpen&&wire==null&&moving==null&&!panning&&canvas(mx,my)){var p=hitPort(graph(mx,my));var d=hitCard(graph(mx,my));if(p!=null)setTooltipForNextRenderPass(ModuleContent.text(p.type()==0?(p.output()?"panel_power_out":"panel_power_in"):(p.output()?"panel_route_out":"panel_route_in")));else if(d!=null)setTooltipForNextRenderPass(List.of(d.name().getVisualOrderText(),Component.literal(d.pos().toShortString()).getVisualOrderText(),state(d).getVisualOrderText()));}
+        if(!settingsOpen&&wire==null&&moving==null&&!panning&&canvas(mx,my)){var p=hitPort(graph(mx,my));var d=hitCard(graph(mx,my));if(p!=null)setTooltipForNextRenderPass(ModuleContent.text(p.output()?"panel_power_out":"panel_power_in"));else if(d!=null)setTooltipForNextRenderPass(List.of(d.name().getVisualOrderText(),Component.literal(d.pos().toShortString()).getVisualOrderText(),state(d).getVisualOrderText()));}
     }
     private Component state(LinkPanelNetwork.Device d){return d.kind()==0?dev.everyonemek.gravity.Content.text(d.state()):d.kind()==1?dev.everyonemek.gravity.solar.SolarContent.text(d.state()):ModuleContent.text(d.state());}
-    private void drawDetails(GuiGraphics g,int x,int y,int width){g.fill(x,y,x+width,y+ch,0xFF2D363D);var d=selected();List<Component> lines=d==null?List.of(ModuleContent.text("panel_legend_power"),ModuleContent.text("panel_legend_route"),ModuleContent.text("panel_help_drag"),ModuleContent.text("panel_help_pan"),ModuleContent.text("panel_help_wire")):List.of(d.name(),Component.literal(d.pos().toShortString()),state(d),ModuleContent.text("source_pos",d.source()==null?"—":d.source().toShortString()),ModuleContent.text("peer_pos",d.peer()==null?"—":d.peer().toShortString()),ModuleContent.text("panel_help_wire"));
+    private void drawDetails(GuiGraphics g,int x,int y,int width){g.fill(x,y,x+width,y+ch,0xFF2D363D);var d=selected();List<Component> lines=d==null?List.of(ModuleContent.text("panel_legend_power"),ModuleContent.text("panel_legend_route"),ModuleContent.text("panel_help_drag"),ModuleContent.text("panel_help_pan"),ModuleContent.text("panel_help_wire")):List.of(d.name(),Component.literal(d.pos().toShortString()),state(d),ModuleContent.text("source_pos",d.source()==null?"—":d.source().toShortString()),ModuleContent.text("frequency_current",d.frequency().isEmpty()?"—":d.frequency()),ModuleContent.text("panel_help_wire"));
         int offset=7;for(var text:lines){for(var line:font.split(text,width-12)){if(offset+9>ch)break;g.drawString(font,line,x+6,y+offset,0xFFD9DFE3,false);offset+=11;}offset+=6;}}
     @Override protected void drawForegroundText(GuiGraphics g,int x,int y){renderTitleText(g);int y0=imageHeight-55;String text=ModuleContent.text("panel_count",visible().size(),menu.total,menu.range,menu.linkRange).getString();g.drawString(font,font.plainSubstrByWidth(text,imageWidth-16),8,y0,titleTextColor(),false);
         var label=wire!=null?ModuleContent.text("panel_choose_target"):selectedEdge!=null?ModuleContent.text("panel_delete_wire"):ModuleContent.text(menu.feedback);g.drawString(font,font.plainSubstrByWidth(label.getString(),imageWidth-16),8,y0+13,titleTextColor(),false);

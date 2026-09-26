@@ -17,10 +17,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.Slot;
-public final class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu>{
+public class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu>{
+    public static ModuleScreen create(ModuleMenu menu,Inventory inventory,Component title){return menu.getTileEntity() instanceof NodeModule?new NodeScreen(menu,inventory,title):new ModuleScreen(menu,inventory,title);}
     public ModuleScreen(ModuleMenu m,Inventory i,Component title){super(m,i,title);imageWidth=230;imageHeight=248;inventoryLabelX=30;inventoryLabelY=152;dynamicSlots=true;}
-    private boolean send(int n){minecraft.gameMode.handleInventoryButtonClick(menu.containerId,n);return true;}
+    protected boolean send(int n){minecraft.gameMode.handleInventoryButtonClick(menu.containerId,n);return true;}
     @Override protected void addGuiElements(){super.addGuiElements();
+        if(this instanceof NodeScreen nodeScreen){nodeScreen.addNodeElements();return;}
         if(tile.kind().cargo){
             if(tile.kind()!=ModuleKind.NODE)addRenderableWidget(new GuiDynamicHorizontalRateBar(this,new GuiBar.IBarInfoHandler(){public Component getTooltip(){return ModuleContent.text("progress",(int)(tile.fraction()*100));}public double getLevel(){return tile.fraction();}},76,51,64,Color.ColorFunction.scale(Color.rgbi(65,45,110),Color.rgbi(225,180,95))));
             addRenderableWidget(new GuiInnerScreen(this,10,96,210,27,()->List.of(ModuleContent.text(tile.status),ModuleContent.text(tile.kind()==ModuleKind.NODE?"transfer_energy":"paid",ReactorScreen.fe(tile.paidEnergy)))).spacing(0));
@@ -36,7 +38,7 @@ public final class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu
         var panel=addRenderableWidget(new MekanismButton(this,-26,tile.kind()==ModuleKind.NODE?82:54,26,26,ModuleContent.text("panel_short"),(b,x,y)->send(7)));panel.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("panel_title")));
         final DetailTab[] ref=new DetailTab[1];ref[0]=new DetailTab(()->ref[0]);addRenderableWidget(ref[0]);if(tile.kind()==ModuleKind.NODE){final ResourceTab[] r=new ResourceTab[1];r[0]=new ResourceTab(()->r[0]);addRenderableWidget(r[0]);}
     }
-    private void button(int x,int y,int w,int id,java.util.function.Supplier<Component> label){var button=addRenderableWidget(new MekanismButton(this,x,y,w,16,label.get(),(b,mx,my)->send(id)){@Override public void tick(){super.tick();setMessage(label.get());if(id==13)active=tile.sourceCooldown==0&&tile.sourceFormed&&tile.sourceStored<tile.sourceCapacity;}});if(id>=10&&id<=13)button.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text(id==13?"burst_hint":"tuning_"+(id-10))));}
+    protected void button(int x,int y,int w,int id,java.util.function.Supplier<Component> label){var button=addRenderableWidget(new MekanismButton(this,x,y,w,16,label.get(),(b,mx,my)->send(id)){@Override public void tick(){super.tick();setMessage(label.get());if(id==13)active=tile.sourceCooldown==0&&tile.sourceFormed&&tile.sourceStored<tile.sourceCapacity;}});if(id>=10&&id<=13)button.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text(id==13?"burst_hint":"tuning_"+(id-10))));}
     private final class DetailTab extends GuiWindowCreatorTab<OrbitalModule,DetailTab>{
         DetailTab(java.util.function.Supplier<DetailTab> self){super(MekanismUtils.getResource(MekanismUtils.ResourceType.GUI_TAB,"energy_info.png"),ModuleScreen.this,tile,-26,26,26,18,true,self);setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("details")));}
         @Override protected GuiWindow createWindow(SelectedWindowData data){return new Details();}
@@ -47,23 +49,22 @@ public final class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu
         Details(){super(ModuleScreen.this,8,20,214,213,SelectedWindowData.WindowType.UNSPECIFIED);
             addChild(new GuiInnerScreen(ModuleScreen.this,relativeX+8,relativeY+26,198,146,()->List.of(
                 ModuleContent.text("source_pos",!tile.sourceBound||tile.source==null?"—":tile.source.pos().toShortString()),
-                ModuleContent.text("peer_pos",!tile.peerBound||tile.peer==null?"—":tile.peer.pos().toShortString()),
                 ModuleContent.text("stored",ReactorScreen.fe(tile.sourceStored),ReactorScreen.fe(tile.sourceCapacity)),
                 ModuleContent.text("net",ReactorScreen.fe(tile.sourceNet)),ModuleContent.text("exported",ReactorScreen.fe(tile.sourceOutput)),
                 ModuleContent.text("fuel",ReactorScreen.fe(tile.sourceFuel)),ModuleContent.text("spare",tile.sourceSpare),
                 ModuleContent.text("profile",ModuleContent.text("profile_"+tile.sourceProfile)),ModuleContent.text("transferred",tile.transferred),
                 ModuleContent.text("range_hint",ModuleConfig.RANGE.get()),ModuleContent.text("profile_hint"))).spacing(0));
-            if(tile.kind()==ModuleKind.NODE){addChild(new MekanismButton(ModuleScreen.this,relativeX+8,relativeY+183,96,16,ModuleContent.text("unlink_peer"),(b,x,y)->send(5)));addChild(new MekanismButton(ModuleScreen.this,relativeX+110,relativeY+183,96,16,ModuleContent.text("unlink_power"),(b,x,y)->send(6)));}
-            else addChild(new MekanismButton(ModuleScreen.this,relativeX+8,relativeY+183,198,16,ModuleContent.text("unlink"),(b,x,y)->send(2)));}
+            addChild(new MekanismButton(ModuleScreen.this,relativeX+8,relativeY+183,198,16,ModuleContent.text("unlink"),(b,x,y)->send(2)));}
+
         @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("details"),5);}
     }
-    private final class ResourceTab extends GuiWindowCreatorTab<OrbitalModule,ResourceTab>{
+    protected final class ResourceTab extends GuiWindowCreatorTab<OrbitalModule,ResourceTab>{
         ResourceTab(java.util.function.Supplier<ResourceTab> self){super(MekanismUtils.getResource(MekanismUtils.ResourceType.GUI,"configuration.png"),ModuleScreen.this,tile,-26,54,26,18,true,self);setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("resources")));}
         @Override protected GuiWindow createWindow(SelectedWindowData data){return new Resources(1);}
         @Override protected SelectedWindowData getNextWindowData(){return new SelectedWindowData(SelectedWindowData.WindowType.UNSPECIFIED);}
         @Override protected void colorTab(GuiGraphics g){mekanism.client.render.MekanismRenderer.color(g,mekanism.client.SpecialColors.TAB_CONFIGURATION);}
     }
-    private final class Resources extends GuiWindow{
+    protected final class Resources extends GuiWindow{
         private final int page;
         Resources(int page){super(ModuleScreen.this,8,20,214,202,SelectedWindowData.WindowType.UNSPECIFIED);this.page=page;
             for(int i=0;i<4;i++){int target=i;addChild(new MekanismButton(ModuleScreen.this,relativeX+8+i*50,relativeY+27,48,16,ModuleContent.text("resource_"+i),(b,x,y)->{close();ModuleScreen.this.addWindow(new Resources(target));return true;}));}
@@ -80,7 +81,7 @@ public final class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu
             }
             addChild(new GuiInnerScreen(ModuleScreen.this,relativeX+10,relativeY+170,194,23,()->List.of(page==2?ModuleContent.text("fluid_rate",tile.node.fluidMoved):page==3?ModuleContent.text("chemical_rate",tile.node.chemicalMoved):ModuleContent.text("node_io_hint"))).spacing(0));
         }
-        @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("resources"),5);if(page>0){g.drawString(minecraft.font,ModuleContent.text("input"),relativeX+11,relativeY+73,0x404040,false);g.drawString(minecraft.font,ModuleContent.text("output"),relativeX+153,relativeY+73,0x404040,false);}}
+        @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("resources"),5);if(page>0){g.drawString(minecraft.font,ModuleContent.text("node_send"),relativeX+11,relativeY+73,0x404040,false);g.drawString(minecraft.font,ModuleContent.text("node_receive"),relativeX+143,relativeY+73,0x404040,false);}}
     }
     @Override protected void renderSlotContents(GuiGraphics g,ItemStack stack,Slot slot,String count){if(slot.index<(tile.kind().cargo?18:1)&&count==null&&stack.getCount()>=1000)count=stack.getCount()/1000+"k";super.renderSlotContents(g,stack,slot,count);}
     @Override protected List<Component> getTooltipFromContainerItem(ItemStack stack){var lines=new ArrayList<>(super.getTooltipFromContainerItem(stack));if(hoveredSlot!=null&&hoveredSlot.index<(tile.kind().cargo?18:tile.kind()==ModuleKind.TUNER?1:0))lines.add(ModuleContent.text("stock",stack.getCount(),hoveredSlot.getMaxStackSize(stack)));return lines;}

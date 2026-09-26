@@ -52,7 +52,7 @@ public final class ModuleContent {
                 item.addAttachedContainerCapabilities(ContainerType.CHEMICAL,()->{var b=mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder.builder();for(int i=0;i<8;i++){boolean out=i>=4;b.addTank((container,stack,index)->new mekanism.common.attachments.containers.chemical.ComponentBackedChemicalTank(stack,index,(f,a)->out||a!=mekanism.api.AutomationType.EXTERNAL,(f,a)->!out||a==mekanism.api.AutomationType.INTERNAL,f->true,()->Long.MAX_VALUE,()->NodeStorage.CHEMICAL_CAPACITY,mekanism.api.chemical.attribute.ChemicalAttributeValidator.ALWAYS_ALLOW));}return b.build();});
             }
         });
-        TILE.put(kind,TILES.mekBuilder(block,OrbitalModule::new).clientTicker(TileEntityMekanism::tickClient).serverTicker(TileEntityMekanism::tickServer).build());
+        TILE.put(kind,TILES.<OrbitalModule>mekBuilder(block,(pos,state)->kind==ModuleKind.NODE?new NodeModule(pos,state):new OrbitalModule(pos,state)).clientTicker(TileEntityMekanism::tickClient).serverTicker(TileEntityMekanism::tickServer).build());
     }}
     public static Component text(String key,Object...args){return Component.translatable("mekgravity.module."+key,args);}
     public static ModuleKind kind(net.minecraft.world.level.block.state.BlockState state){return ((ModuleBlock)state.getBlock()).kind;}

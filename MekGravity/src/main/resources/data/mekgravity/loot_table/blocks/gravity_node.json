@@ -20,7 +20,9 @@
                 "minecraft:custom_name",
                 "mekanism:energy",
                 "mekanism:fluids",
-                "mekanism:chemicals"
+                "mekanism:chemicals",
+                "mekanism:side_config",
+                "mekanism:ejector"
               ]
             }
           ]

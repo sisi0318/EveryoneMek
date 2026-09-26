@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.28，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.29，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -14,6 +14,16 @@
 
 ## 实现入口
 
+- alpha.29用户明确允许开发期破坏性更新，不需要旧节点数据兼容。本轮已删除peer/receiver字段与旧sender/node工具配对；不恢复定向节点分支，不编写旧节点迁移。节点重新放置/选择频率/配置能源和接口即可。其他模块仍通过场域工具绑定能源。
+- NodeModule为OrbitalModule的节点专用子类，沿用原注册ID；实现ISideConfiguration，以四种原Config*Holder及TileComponentConfig连接真实容器。父构造的getInitial*先创建NodeStorage/slots，禁止子字段初始化覆盖；配置组件在子构造体添加。DATA只扩展frequency UUID，原生SideConfig/Ejector组件同时进loot；UI和实际capability都使用同一份配置。
+- NodeFrequencies是当前服务器overworld SavedData，只存频率id/owner/name/public，无货物。公开同名复用、私有按owner隔离，32字符、每owner64/总2048条；列表最多128。选择/删除由NodeFrequencyNetwork检查菜单id+session、实际BE、8格、Mek权限与频率权限；删除只能owner，不移动缓存。
+- NodeNetwork按ServerLevel维护弱成员索引、每tick分组一次，不扫描世界或加区块票。收发前检查已加载/BE身份/同频/权限/距离，每tick轮换、每次最多64目标；有外接输出设备的资源类型优先发往对应节点，接口连接查询5tick缓存。组内有效能源绑定对绑定节点/发送节点都检查range，检查两者核心访问权，优先热态且可用储能较多的核心。
+- NodeModule用原生GuiSideConfigurationTab与原PacketSideData，四类型INPUT/OUTPUT/INPUT_OUTPUT/NONE均生效；默认正面出其余面入。自有大吞吐eject读各类型配置的输出面与ejecting，原TileComponentEjector停止自动tick搬运，避免双重出料；界面不暴露未实现的运输管颜色窗口。Native Node库存18槽原顺序，机器槽y78/96/114，玩家y163；NodeScreen 230×248，频率窗220×236。
+- NodeSnapshot只同步实际传输的资源registry ID，Node不再广播旧sample ItemStack/NBT；多类型20tick轮换、40tick过期。NodeSnapshotShader为1quad，NEW_ENTITY：UV0图集，UV1局部坐标，UV2位置相位，Normal相位/type，Color tint/strength。使用原atlas，能量闪电程序化；LEQUAL/COLOR_WRITE，不逐实例改uniform，Shader关闭走entityTranslucentEmissive，效果距离与CoreMotion保持。NODE不再绘制旧ModuleField环。
+- 世界/物品库存当前数据仍用原生容器，不存在频率共享库存副本。源输入直接到对方输出，输入/输出拆分防回流；单发送节点物品预算跨同tick所有接收端共用。NodeFrequencyTests经真实菜单包、原生侧面包、四类capability与真实PRC验证；保存/拆放验证当前频率/六面/核废料及物品，旧配对测试已改用频率。
+
+- alpha.29构建与52项GameTest通过；当前节点保留资源守恒/缓存拆放回归，但不维护旧配对兼容。原PacketSideData驱动4类侧面，真实PRC接收、组内借电、闲置无接收设备节点避让、权限/菜单会话/移除节点拒绝；快照4类型轮换/过期。VerifyNodeSnapshotShader真实GLSL/全部6顶点属性/1quad/采样与闪电/动画/淡出/深度检查通过，Node模型64faces无共面重叠。客户端游戏验收由用户进行。
+
 - alpha.28用户指出耀斑晶核厚方框突兀：tools/flare_cell_mesh.py替换为0.6px径向/0.8px轴向的倾斜八边环及两小磁极，46quads；generate_module_resources调用并输出frame/fallback OBJ+JSON和共享MTL，Shader/Renderer/物品变换不变。内环弦中点半径>4.8px，避免与原4.6/4.8/4.6px旋转球相交；复用原16px纹理，禁止重画大顶/底盖。
 - fallback追加96面球体、共142quads，用既有stellar_surface_particle，关闭shader仍是球体。preview_flare_cell.cjs读取真实模型检查正/反/侧面，图为静态回退而非游戏画面。外观修改仅验证生成资源、模型边界/绕序、离线深度预览及构建，不重复服务端49项测试。
 
@@ -22,15 +32,14 @@
 - RangeSettings使用原GuiWindow/GuiTextField回车与勾号，确认值与输入草稿分开，设置错误在窗口内显示。窗口打开时画布鼠标、滚轮和Delete让回父类，避免操作窗口时拖线或删链接。
 - 当前NeoForge/FML的SERVER配置默认位于实例config/，已有存档serverconfig/同名文件才覆盖；RANGE.save保存实际加载的文件，不假设始终在存档目录。已核对ServerLifecycleHooks与ConfigTracker.resolveBasePath。alpha.27共49项GameTest通过；范围测试使用真实ServerOpListEntry临时授予2级OP，finally还原配置/OP，覆盖200格实际绑定、降低/恢复距离、扫描独立及保存、畸形数值和权限收回。未运行客户端。
 
-- alpha.26 场域面板：链接器普通空气右键、ModuleMenu动作7打开LinkPanelMenu，客户端LinkPanelScreen复用GuiMekanism/GuiTextField/MekanismButton，无物品槽。金线core→module、蓝线node→node；拖线与两次点击共用Action，底部四通道与解绑改变同一OrbitalModule数据。
+- alpha.26 场域面板：链接器普通空气右键、ModuleMenu动作7打开LinkPanelMenu，客户端LinkPanelScreen复用GuiMekanism/GuiTextField/MekanismButton，无物品槽。金线core→module；蓝框显示节点频率，底部四通道/解绑能源/离开频率作用于实际NodeModule。
 - LinkPanelMenu以开面板位置或host为中心，每20tick遍历ServerChunkCache.getChunkNow的已加载BE表，仅Controller/SolarController/OrbitalModule且Mek可访问；最多最近192台，不扫描方块体积、不加区块票。身份列表变化才递增revision，普通状态刷新不打断拖线。工具需继续持有且在anchor的8格内；host需同BE且安全许可。
-- LinkPanelNetwork使用两个有界StreamCodec数据包，客户端Consumer仅在SolarClient注册，不在服务端引用Screen。Action核对当前菜单、随机session、revision、BE身份和权限，每面板每tick最多4次；解绑选线附旧端点避免错删。FieldConnections复用工具和面板的pair-range/type/player及模块owner权限检查，跨当前linkRange的两个可见端点仍不能连接。
+- LinkPanelNetwork使用两个有界StreamCodec数据包，客户端Consumer仅在SolarClient注册，不在服务端引用Screen。Action核对当前菜单、随机session、revision、BE身份和权限，每面板每tick最多4次；解绑能源选线附旧端点避免错删。FieldConnections复用工具和面板的range/type/player及模块owner权限检查；节点间只用频率，面板协议已到4。
 - LinkPanelGeometry提供原生画布布局/曲线命中数学；wire四边形顶点绕序须匹配GuiGraphics.fill，避免RenderType.gui剔除连线。背景绘制用绝对屏幕坐标/scissor，标题与按钮用原Mek局部坐标；初始化先禁用无选择的资源按钮。
 
-- alpha.25 NODE通过懒创建NodeStorage扩展原生energy/fluids/chemicals；字段不能初始化覆盖父构造getInitial方法创建的数据。收发分离：J各2.56PJ，流体4+4×16MmB，化学4+4×64M，侧/背/上下入、正面出；4通道mask保存默认15，旧18物品槽和绑定不改。held item必须同时注册对应容器creators，loot复制mekanism:energy/fluids/chemicals，不能只保存orbital_module。
+- alpha.25 NODE通过懒创建NodeStorage扩展原生energy/fluids/chemicals；字段不能初始化覆盖父构造getInitial方法创建的数据。收发分离：J各2.56PJ，流体4+4×16MmB，化学4+4×64M，默认侧/背/上下入、正面出（alpha.29可六面配置）；4通道mask保存默认15，旧18物品槽和绑定不改。held item必须同时注册对应容器creators，loot复制mekanism:energy/fluids/chemicals，不能只保存orbital_module。
 - 化学罐与物品creators用ChemicalAttributeValidator.ALWAYS_ALLOW。原TileEntityMekanism.collectChemicalTanks会在shouldDumpRadiation为true时过滤放射性货物；仅NODE覆写为false保持密封，真实核废料掉落/重放回归已过。其余机器不改默认辐射行为。
 - NodeStorage.transfer直接从输入到对方输出，先匹配容量与能耗再原子提交；流体按组件匹配，化学品按原类型，能量用long。发送端按gameTime%4轮换资源优先级。传输电费来自绑定源，能量货物另存；默认物品1MJ/个、流体/化学品1kJ/单位、能量每次1MJ。自动eject优先原生long，FE回退使用ForgeEnergyIntegration模拟对齐且64次有界循环，外部容量/速度仍生效。原FE桥canReceive/canExtract总返回true，方向测试要调用实际insert/extract，不能仅检查这两个声明。
-- FieldLinker正常点击能源→发送→接收，工具分别保存power与sender；远处配对只要求玩家在接收端附近，但每次重新检查两端权限/同维度/128格/已加载。旧flat dimension/pos/node标签和潜行接收端优先流程继续支持；空气潜行右键仅清选择。receiverConfigured保存配对记录，无源无目标的节点默认显示接收就绪；sourceBound/peerBound菜单布尔值消除未绑定时显示0,0,0。动作5/6分别解除目标/能源，20～23切换通道。
 - ModuleScreen资源窗用原GuiFluidGauge/GuiChemicalGauge，tanks supplier必须给getFluidTanks(null)/getChemicalTanks(null)完整8罐，不能传4罐子集，否则出侧GaugeDropper索引会误指入侧。GaugeType.STANDARD按18×60布局，原生父类同步真实容器；传输开关只控制无线通道，取出已有输出仍可进行。
 - FlareCellRenderer通过RegisterClientExtensionsEvent注册FLARE，item模型builtin/entity；FRAME/FALLBACK在ModelEvent注册，资源重载后从ModelManager获取。SolarShader追加独立flare_cell材质，复用SolarSphereMesh，GUI384quads、其他96；金属框复用16px原素材。VerifySolarShader新增flare参数，仅输出build预览，不能覆盖原恒星/引力粒子贴图。
 
@@ -38,7 +47,7 @@
 - alpha.24用户要求压缩恒星物质只用耀斑晶核：orbital/stellar_matter仍为5GJ/40基础tick，但输入改为单个flare_cell，不改原工作台配方。OrbitalModule.start按输入组数降序、recipe ID确定顺序；完整复杂配方即使受能量/空间/等级限制也不回退到组数更少的配方，避免新单输入路线抢走合金用晶核。旧预付快照不重算。
 
 - alpha.23 expansion包新增CAPTOR/FORGE/TUNER/NODE/OBSERVATORY五种独立ModuleBlock/OrbitalModule，ModuleContent用同菜单、按种类独立BE注册；kind从已注册BlockState读取，父构造getInitialInventory不依赖子字段。cargo9进9出复用CoronalInventorySlot；TUNER仅1个原生flare输入槽；OBS无槽且移除Attributes.AttributeRedstone，只提供正面红石输出与比较器。
-- FieldLinker监听RightClickBlock并调用物品useOn，避免Mek方块先开GUI吞掉工具操作；潜行记录源或接收节点，普通右键模块绑定。FieldLink保存维度/位置，同维度默认128格，检查hasChunkAt和源/目标权限；Node接收端由发送端付款，无需自己连源。绑定不复制库存或能量，不强加载。父类原生GUI/安全/红石和掉落mekanism:items分别保留。
+- FieldLinker监听RightClickBlock并调用物品useOn，避免Mek方块先开GUI吞掉工具操作；alpha.29只记录能源并绑定模块，节点配对已删除。FieldLink保存维度/位置，同维度默认128格，检查hasChunkAt和源/目标权限；Node发送端从同频组寻找可用绑定能源。绑定不复制库存或能量，不强加载。父类原生GUI/安全/红石和掉落mekanism:items分别保留。
 - OrbitalRecipe使用orbital_processing，machine仅flare_captor/gravity_forge，1～4输入/结果≤64/ticks≤72000/energy≤100TJ/tier0～3。记录已付输出和进度进orbital_module组件，库存仅mekanism:items。Node本机输入到远端输出，每tick4096，1MJ/物品，双端仅真实slot事务；拒绝未加载/暂停/无权限/满库存。
 - CoreTuning在两种主控中单份保存profile/burst/cooldown，平衡默认0不改旧行为；聚焦80%功率、加工×2，超频125%功率/15%燃料附加，耀斑150%/30%附加，400tick持续与1600tick复用计时仅加载tick推进。gross为电能，cost(gross)实际扣燃料；affordable先按剩余燃料反算gross，末端不足支付1gross时耗尽为等量selfUse避免卡1J。主控DATA/solar_data掉落同样保存调谐，菜单同步3字段，太阳续航按当前调谐成本估算。
 - generate_module_resources.py由总资源生成器调用；outer_surface复用去共面面，ModuleShapes由同实体盒生成。ModuleField/ModuleShader/ModuleRenderer与orbital_module.vsh/fsh不改逐实例uniform，顶点编码类型/相位/进度；调谐和观测屏1quad，其他128/48quads，0纹理采样。VerifyModuleShader用真实几何与shader检查5种模式；preview_modules为静态原生模型预览，非游戏截图。

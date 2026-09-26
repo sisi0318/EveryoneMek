@@ -8,6 +8,16 @@
 
 `tools/VerifyModuleShader.java` 读取实际shader及ModuleField，在隐藏OpenGL窗口检查5种模式的链接、运行／停止／移动像素、实体遮挡与深度不写，输出 `build/module-shader-check/`。它不会启动Minecraft客户端。
 
+## alpha.29 频率物流节点
+
+节点由原开放环架改为白灰封闭工业机壳、五面接口识别区与正面内凹投影窗。仍复用原16×16贴图，模型及选择框继续由`generate_module_resources.py`同一份实体盒生成。`orbital-modules-preview.png`是实际静态网格的深度预览，不包含工作投影。
+
+`NodeSnapshot`只收集真实无线搬运事件中的注册ID，不保存另一份货物或物品私有NBT；同时活跃的四类资源每20tick轮换，40tick无记录后过期。`NodeSnapshotShader`使用原物品／流体／化学品图集和原颜色，能量用程序化闪电轮廓，流体用水滴轮廓，化学品用六边轮廓区分；物品为模型材质快照，方块类物品显示表面材质。停止后沿用CoreMotion平滑淡出。
+
+`node_snapshot.vsh/.fsh`每个节点只有1quad，最多1次纹理采样；NEW_ENTITY的UV0为图集坐标、UV1为局部平面坐标、UV2携带位置相位偏移，Normal携带动态相位／资源类型，Color携带资源颜色和强度。没有逐节点uniform修改，不写透明深度，保留遮挡／雾及原特效距离开关；关闭shader时显示原图集的发光材质回退。
+
+`tools/VerifyNodeSnapshotShader.java`在隐藏OpenGL窗口验证实际GLSL150、NEW_ENTITY顶点布局、四类着色、流动、淡出和实体遮挡；输出留在`build/node-snapshot-check`，不进入运行资源。离屏测试以Minecraft铁锭纹理配合分类着色作采样夹具，不能当作完整游戏画面。未启动用户的游戏客户端。
+
 alpha.25：耀斑晶核由FlareCellRenderer绘制，builtin/entity物品共用独立flare_cell.vsh/fsh与现有球体网格，GUI384面／其他96面。原16px金属框由generate_module_resources.py生成flare_cell_frame，flare_cell_fallback保留完整实体。仅两次固定值噪声、0贴图采样，显式按ANIMATE_ITEMS/SHADERS开关处理；VerifySolarShader.java . flare验证实际着色器，不修改现有粒子材质。
 
 ## alpha.28 开放式耀斑晶核

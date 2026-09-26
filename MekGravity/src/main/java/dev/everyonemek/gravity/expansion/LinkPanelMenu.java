@@ -37,14 +37,13 @@ public final class LinkPanelMenu extends AbstractContainerMenu {
         found.sort(Comparator.comparingDouble((BlockEntity b)->b.getBlockPos().distSqr(anchor)).thenComparing(b->b.getBlockPos().asLong()));total=found.size();var next=new LinkedHashMap<BlockPos,BlockEntity>();found.stream().limit(LinkPanelNetwork.MAX_DEVICES).forEach(be->next.put(be.getBlockPos().immutable(),be));
         if(!next.equals(members)){revision++;members=next;}publish();
     }
-    private LinkPanelNetwork.Device describe(BlockEntity be){var tile=(TileEntityMekanism)be;int kind;String state;boolean active,enabled,receiver=false,power=false,route=false;int channels=0;BlockPos source=null,peer=null;
+    private LinkPanelNetwork.Device describe(BlockEntity be){var tile=(TileEntityMekanism)be;int kind;String state;boolean active,enabled,power=false;int channels=0;BlockPos source=null;
         if(be instanceof Controller c){kind=0;state=c.status;enabled=c.enabled;active=c.enabled&&c.ignited&&c.structure.formed&&c.fuelAvailable();}
         else if(be instanceof SolarController c){kind=1;state=c.status;enabled=c.enabled;active=c.isCoreHot();}
-        else{var m=(OrbitalModule)be;kind=m.kind().ordinal()+2;state=m.status;enabled=m.enabled;active=m.getActive();channels=m.channels;receiver=m.receiverConfigured;
+        else{var m=(OrbitalModule)be;kind=m.kind().ordinal()+2;state=m.status;enabled=m.enabled;active=m.getActive();channels=m.channels;
             if(m.source!=null){source=m.source.pos();if(m.source.inRange(owner.level(),m.getBlockPos())&&owner.level().hasChunkAt(source))power=FieldConnections.canPower(owner,FieldSource.at(owner.level(),source),m);}
-            if(m.peer!=null){peer=m.peer.pos();if(m.peer.inRange(owner.level(),m.getBlockPos())&&owner.level().hasChunkAt(peer)&&owner.level().getBlockEntity(peer) instanceof OrbitalModule target)route=FieldConnections.canRoute(owner,m,target);}
         }
-        return new LinkPanelNetwork.Device(be.getBlockPos(),BuiltInRegistries.ITEM.getKey(be.getBlockState().getBlock().asItem()),displayName(tile),kind,state,active,enabled,channels,source,peer,power,route,receiver);
+        return new LinkPanelNetwork.Device(be.getBlockPos(),BuiltInRegistries.ITEM.getKey(be.getBlockState().getBlock().asItem()),displayName(tile),kind,state,active,enabled,channels,source,power,be instanceof NodeModule n&&n.frequency!=null?n.frequencyName.isEmpty()?"—":n.frequencyName:"");
     }
     private net.minecraft.network.chat.Component displayName(TileEntityMekanism tile){var custom=tile.getCustomName();if(custom==null)return net.minecraft.network.chat.Component.translatable(tile.getBlockState().getBlock().getDescriptionId());var text=custom.getString();return net.minecraft.network.chat.Component.literal(text.length()>80?text.substring(0,80):text);}
     private static boolean canConfigure(ServerPlayer p){return p.hasPermissions(2)||p.server.isSingleplayerOwner(p.getGameProfile());}
@@ -64,10 +63,9 @@ public final class LinkPanelMenu extends AbstractContainerMenu {
         if(request.operation()==8||request.operation()==9)return settings(player,request.operation(),request.value());
         var from=current(request.from());var to=current(request.to());boolean ok=false;
         if(request.operation()==1){if(from instanceof Controller||from instanceof SolarController){if(to instanceof OrbitalModule target)ok=FieldConnections.power(player,new FieldSource((TileEntityMekanism)from),target);}
-            else if(from instanceof OrbitalModule sender&&to instanceof OrbitalModule target)ok=FieldConnections.route(player,sender,target);
         }else if(from instanceof OrbitalModule module){
             if(request.operation()==2&&(request.to()==null||module.source!=null&&module.source.pos().equals(request.to()))){module.source=null;ok=true;}
-            else if(request.operation()==3&&module.kind()==ModuleKind.NODE&&(request.to()==null||module.peer!=null&&module.peer.pos().equals(request.to()))){module.peer=null;ok=true;}
+            else if(request.operation()==3&&module instanceof NodeModule node){ok=node.selectFrequency(player,null);}
             else if(request.operation()>=4&&request.operation()<=7&&module.kind()==ModuleKind.NODE){module.channels^=1<<(request.operation()-4);ok=true;}
             if(ok){module.markForSave();module.sendUpdatePacket();}
         }
