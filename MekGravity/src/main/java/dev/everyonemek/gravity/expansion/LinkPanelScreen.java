@@ -4,6 +4,9 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import mekanism.client.gui.GuiMekanism;
 import mekanism.client.gui.element.button.MekanismButton;
 import mekanism.client.gui.element.text.GuiTextField;
+import mekanism.client.gui.element.GuiInnerScreen;
+import mekanism.client.gui.element.window.GuiWindow;
+import mekanism.common.inventory.container.SelectedWindowData.WindowType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
@@ -24,7 +27,7 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
     private record Edge(BlockPos from,BlockPos to,int type,boolean valid){}
     private Port wire;private Edge selectedEdge;private int wireRevision;
     private double zoom=1,panX=16,panY=14,dragX,dragY,startMouseX,startMouseY;
-    private boolean panning,firstLayout=true;private int cx,cy,cw,ch;private boolean sidebar;
+    private boolean panning,firstLayout=true,settingsOpen;private int cx,cy,cw,ch;private boolean sidebar;
     public LinkPanelScreen(LinkPanelMenu menu,Inventory inv,Component title){super(menu,inv,title);}
     @Override protected void init(){imageWidth=Math.min(660,Math.max(220,width-16));imageHeight=Math.min(410,Math.max(200,height-16));sidebar=imageWidth>=470;super.init();canvasBounds();}
     private void canvasBounds(){cx=leftPos+8;cy=topPos+68;cw=imageWidth-16-(sidebar?150:0);ch=imageHeight-128;}
@@ -33,7 +36,8 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
         addRenderableWidget(new MekanismButton(this,76,24,76,16,ModuleContent.text("panel_layout"),(b,x,y)->{layout(true);fit();return true;}));
         if(imageWidth>=310)addRenderableWidget(new MekanismButton(this,158,24,62,16,ModuleContent.text("panel_fit"),(b,x,y)->{fit();return true;}));
         addRenderableWidget(new MekanismButton(this,imageWidth-60,24,52,16,ModuleContent.text("panel_close"),(b,x,y)->{onClose();return true;}));
-        search=addRenderableWidget(new GuiTextField(this,8,46,imageWidth-16,16));search.setMaxLength(64);search.setText(filter);search.setResponder(text->{filter=text.toLowerCase(Locale.ROOT);wire=null;selectedEdge=null;});search.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("panel_search")));
+        addRenderableWidget(new MekanismButton(this,imageWidth-80,46,72,16,ModuleContent.text("panel_settings"),(b,x,y)->{if(!settingsOpen){wire=null;moving=null;panning=false;search.setFocused(false);settingsOpen=true;addWindow(new RangeSettings());}return true;}));
+        search=addRenderableWidget(new GuiTextField(this,8,46,imageWidth-94,16));search.setMaxLength(64);search.setText(filter);search.setResponder(text->{filter=text.toLowerCase(Locale.ROOT);wire=null;selectedEdge=null;});search.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(ModuleContent.text("panel_search")));
         int step=(imageWidth-16)/6;
         for(int i=0;i<6;i++){int action=i;addRenderableWidget(new MekanismButton(this,8+i*step,imageHeight-27,step-3,17,buttonText(i),(b,x,y)->{
             var d=selected();if(d!=null)send(action<4?4+action:action==4?2:3,d.pos(),null,menu.revision);return true;
@@ -84,23 +88,39 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
         }
         if(wire!=null&&device(wire.pos())!=null)curve(g,port(wire),graph(mx,my),wire.type()==0?POWER:ROUTE,false,true);g.flush();g.disableScissor();
         if(sidebar)drawDetails(g,cx+cw+10,cy,134);
-        if(wire==null&&moving==null&&!panning&&canvas(mx,my)){var p=hitPort(graph(mx,my));var d=hitCard(graph(mx,my));if(p!=null)setTooltipForNextRenderPass(ModuleContent.text(p.type()==0?(p.output()?"panel_power_out":"panel_power_in"):(p.output()?"panel_route_out":"panel_route_in")));else if(d!=null)setTooltipForNextRenderPass(List.of(d.name().getVisualOrderText(),Component.literal(d.pos().toShortString()).getVisualOrderText(),state(d).getVisualOrderText()));}
+        if(!settingsOpen&&wire==null&&moving==null&&!panning&&canvas(mx,my)){var p=hitPort(graph(mx,my));var d=hitCard(graph(mx,my));if(p!=null)setTooltipForNextRenderPass(ModuleContent.text(p.type()==0?(p.output()?"panel_power_out":"panel_power_in"):(p.output()?"panel_route_out":"panel_route_in")));else if(d!=null)setTooltipForNextRenderPass(List.of(d.name().getVisualOrderText(),Component.literal(d.pos().toShortString()).getVisualOrderText(),state(d).getVisualOrderText()));}
     }
     private Component state(LinkPanelNetwork.Device d){return d.kind()==0?dev.everyonemek.gravity.Content.text(d.state()):d.kind()==1?dev.everyonemek.gravity.solar.SolarContent.text(d.state()):ModuleContent.text(d.state());}
     private void drawDetails(GuiGraphics g,int x,int y,int width){g.fill(x,y,x+width,y+ch,0xFF2D363D);var d=selected();List<Component> lines=d==null?List.of(ModuleContent.text("panel_legend_power"),ModuleContent.text("panel_legend_route"),ModuleContent.text("panel_help_drag"),ModuleContent.text("panel_help_pan"),ModuleContent.text("panel_help_wire")):List.of(d.name(),Component.literal(d.pos().toShortString()),state(d),ModuleContent.text("source_pos",d.source()==null?"—":d.source().toShortString()),ModuleContent.text("peer_pos",d.peer()==null?"—":d.peer().toShortString()),ModuleContent.text("panel_help_wire"));
         int offset=7;for(var text:lines){for(var line:font.split(text,width-12)){if(offset+9>ch)break;g.drawString(font,line,x+6,y+offset,0xFFD9DFE3,false);offset+=11;}offset+=6;}}
-    @Override protected void drawForegroundText(GuiGraphics g,int x,int y){renderTitleText(g);int y0=imageHeight-55;String text=ModuleContent.text("panel_count",visible().size(),menu.total,menu.range).getString();g.drawString(font,font.plainSubstrByWidth(text,imageWidth-16),8,y0,titleTextColor(),false);
+    @Override protected void drawForegroundText(GuiGraphics g,int x,int y){renderTitleText(g);int y0=imageHeight-55;String text=ModuleContent.text("panel_count",visible().size(),menu.total,menu.range,menu.linkRange).getString();g.drawString(font,font.plainSubstrByWidth(text,imageWidth-16),8,y0,titleTextColor(),false);
         var label=wire!=null?ModuleContent.text("panel_choose_target"):selectedEdge!=null?ModuleContent.text("panel_delete_wire"):ModuleContent.text(menu.feedback);g.drawString(font,font.plainSubstrByWidth(label.getString(),imageWidth-16),8,y0+13,titleTextColor(),false);
-        if(search!=null&&search.getText().isEmpty()&&!search.isTextFieldFocused())g.drawString(font,ModuleContent.text("panel_search"),13,50,0xFF80858A,false);
+        if(search!=null&&search.getText().isEmpty()&&!search.isTextFieldFocused())g.drawString(font,font.plainSubstrByWidth(ModuleContent.text("panel_search").getString(),imageWidth-108),13,50,0xFF80858A,false);
     }
-    @Override public boolean mouseClicked(double x,double y,int button){if(!canvas(x,y))return super.mouseClicked(x,y,button);search.setFocused(false);if(button==1){wire=null;selectedEdge=null;return true;}var point=graph(x,y);var p=hitPort(point);startMouseX=x;startMouseY=y;
+    @Override public boolean mouseClicked(double x,double y,int button){if(settingsOpen||!canvas(x,y))return super.mouseClicked(x,y,button);search.setFocused(false);if(button==1){wire=null;selectedEdge=null;return true;}var point=graph(x,y);var p=hitPort(point);startMouseX=x;startMouseY=y;
         if(button==0&&p!=null){if(p.output()){wire=p;wireRevision=menu.revision;selected=p.pos();selectedEdge=null;}else if(wire!=null)connect(p);else selected=p.pos();return true;}
         var d=hitCard(point);if(button==0&&d!=null){if(wire!=null){connect(new Port(d.pos(),wire.type(),false));return true;}selected=d.pos();selectedEdge=null;if(point.y()-positions.get(d.pos()).y()<12){moving=d.pos();dragX=point.x()-positions.get(moving).x();dragY=point.y()-positions.get(moving).y();}return true;}
         if(button==0){selectedEdge=hitEdge(point);if(selectedEdge!=null){selected=selectedEdge.type()==0?selectedEdge.to():selectedEdge.from();return true;}}
         panning=true;return true;
     }
-    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){if(moving!=null){var p=graph(x,y);positions.put(moving,new Point(p.x()-dragX,p.y()-dragY));return true;}if(panning){panX+=dx;panY+=dy;return true;}if(wire!=null)return true;return super.mouseDragged(x,y,button,dx,dy);}
-    @Override public boolean mouseReleased(double x,double y,int button){if(moving!=null||panning){moving=null;panning=false;return true;}if(wire!=null&&button==0&&Math.hypot(x-startMouseX,y-startMouseY)>4&&canvas(x,y)){var p=hitPort(graph(x,y));if(p!=null&&!p.output())connect(p);else{var d=hitCard(graph(x,y));if(d!=null)connect(new Port(d.pos(),wire.type(),false));}return true;}return super.mouseReleased(x,y,button);}
-    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(!canvas(x,y))return super.mouseScrolled(x,y,horizontal,vertical);var before=graph(x,y);zoom=Math.clamp(zoom*Math.pow(1.12,vertical),.4,1.6);panX=x-cx-before.x()*zoom;panY=y-cy-before.y()*zoom;return true;}
-    @Override public boolean keyPressed(int key,int scan,int modifiers){if(search!=null&&search.isTextFieldFocused())return super.keyPressed(key,scan,modifiers);if(key==GLFW.GLFW_KEY_ESCAPE&&wire!=null){wire=null;return true;}if(key==GLFW.GLFW_KEY_DELETE&&selectedEdge!=null){var e=selectedEdge;send(e.type()==0?2:3,e.type()==0?e.to():e.from(),e.type()==0?e.from():e.to(),menu.revision);selectedEdge=null;return true;}return super.keyPressed(key,scan,modifiers);}
+    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){if(settingsOpen)return super.mouseDragged(x,y,button,dx,dy);if(moving!=null){var p=graph(x,y);positions.put(moving,new Point(p.x()-dragX,p.y()-dragY));return true;}if(panning){panX+=dx;panY+=dy;return true;}if(wire!=null)return true;return super.mouseDragged(x,y,button,dx,dy);}
+    @Override public boolean mouseReleased(double x,double y,int button){if(settingsOpen)return super.mouseReleased(x,y,button);if(moving!=null||panning){moving=null;panning=false;return true;}if(wire!=null&&button==0&&Math.hypot(x-startMouseX,y-startMouseY)>4&&canvas(x,y)){var p=hitPort(graph(x,y));if(p!=null&&!p.output())connect(p);else{var d=hitCard(graph(x,y));if(d!=null)connect(new Port(d.pos(),wire.type(),false));}return true;}return super.mouseReleased(x,y,button);}
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(settingsOpen||!canvas(x,y))return super.mouseScrolled(x,y,horizontal,vertical);var before=graph(x,y);zoom=Math.clamp(zoom*Math.pow(1.12,vertical),.4,1.6);panX=x-cx-before.x()*zoom;panY=y-cy-before.y()*zoom;return true;}
+    @Override public boolean keyPressed(int key,int scan,int modifiers){if(settingsOpen||search!=null&&search.isTextFieldFocused())return super.keyPressed(key,scan,modifiers);if(key==GLFW.GLFW_KEY_ESCAPE&&wire!=null){wire=null;return true;}if(key==GLFW.GLFW_KEY_DELETE&&selectedEdge!=null){var e=selectedEdge;send(e.type()==0?2:3,e.type()==0?e.to():e.from(),e.type()==0?e.from():e.to(),menu.revision);selectedEdge=null;return true;}return super.keyPressed(key,scan,modifiers);}
+
+    private final class RangeSettings extends GuiWindow {
+        RangeSettings(){super(LinkPanelScreen.this,(imageWidth-222)/2,Math.max(4,(imageHeight-192)/2),222,192,WindowType.UNSPECIFIED);
+            addChild(new GuiInnerScreen(LinkPanelScreen.this,relativeX+10,relativeY+24,202,20,()->List.of(ModuleContent.text("panel_scan_range",menu.range))));
+            rangeField(48,8,menu.range);
+            addChild(new GuiInnerScreen(LinkPanelScreen.this,relativeX+10,relativeY+72,202,20,()->List.of(ModuleContent.text("panel_link_range",menu.linkRange))));
+            rangeField(96,9,menu.linkRange);
+            addChild(new GuiInnerScreen(LinkPanelScreen.this,relativeX+10,relativeY+124,202,54,()->List.of(ModuleContent.text("panel_range_limits"),ModuleContent.text("panel_range_scope"),ModuleContent.text(menu.canEditLinkRange?"panel_range_world":"panel_range_admin"),ModuleContent.text(menu.feedback.startsWith("panel_range_")?menu.feedback:"panel_device_limit"))).spacing(0));
+        }
+        private void rangeField(int y,int operation,int value){var field=addChild(new GuiTextField(LinkPanelScreen.this,relativeX+10,relativeY+y,182,16){@Override public void tick(){super.tick();active=operation==8||menu.canEditLinkRange;setEditable(active);}});field.active=operation==8||menu.canEditLinkRange;field.setEditable(field.active);field.setMaxLength(4);field.setInputValidator(c->c>='0'&&c<='9');field.setText(Integer.toString(value));
+            Runnable submit=()->{if(operation==9&&!menu.canEditLinkRange)return;try{int n=Integer.parseInt(field.getText());if(n<ModuleConfig.MIN_RANGE||n>ModuleConfig.MAX_RANGE){menu.feedback="panel_range_invalid";return;}PacketDistributor.sendToServer(new LinkPanelNetwork.Action(menu.containerId,menu.session,menu.revision,operation,null,null,n));}catch(NumberFormatException ignored){menu.feedback="panel_range_invalid";}};
+            field.setEnterHandler(submit);field.addCheckmarkButton(submit);
+        }
+        @Override public void close(){super.close();settingsOpen=false;}
+        @Override public void renderForeground(GuiGraphics g,int x,int y){super.renderForeground(g,x,y);drawTitleText(g,ModuleContent.text("panel_settings"),5);}
+    }
 }

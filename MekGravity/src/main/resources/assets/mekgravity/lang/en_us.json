@@ -377,7 +377,7 @@
   "mekgravity.module.panel_help_drag": "Drag titles to move devices",
   "mekgravity.module.panel_help_pan": "Drag canvas to pan; scroll to zoom",
   "mekgravity.module.panel_help_wire": "Drag a port or click both ends. Select a wire and press Delete to unlink.",
-  "mekgravity.module.panel_count": "Showing %s / %s devices · Range %s · Limit 192",
+  "mekgravity.module.panel_count": "Showing %s / %s · Scan %s · Link %s blocks",
   "mekgravity.module.panel_ready": "Scanning nearby loaded, accessible cores and modules",
   "mekgravity.module.panel_choose_target": "Connect to a matching input; right-click to cancel",
   "mekgravity.module.panel_delete_wire": "Press Delete to remove the selected wire",
@@ -387,5 +387,16 @@
   "mekgravity.module.panel_route_in": "Receive resources ← sender blue output",
   "mekgravity.module.panel_applied": "Connection settings updated",
   "mekgravity.module.panel_rejected": "Cannot connect: check device type, range and access",
-  "mekgravity.module.panel_stale": "Nearby devices changed; select the connection again"
+  "mekgravity.module.panel_stale": "Nearby devices changed; select the connection again",
+  "mekgravity.module.panel_settings": "Range settings",
+  "mekgravity.module.panel_scan_range": "Scan radius: %s blocks",
+  "mekgravity.module.panel_link_range": "Link distance: %s blocks",
+  "mekgravity.module.panel_range_limits": "Enter 16–512; press Enter or checkmark",
+  "mekgravity.module.panel_range_scope": "Scanning changes your view only",
+  "mekgravity.module.panel_range_world": "Link distance affects all world links",
+  "mekgravity.module.panel_range_admin": "Link distance requires world owner / OP",
+  "mekgravity.module.panel_device_limit": "Shows the nearest 192 devices",
+  "mekgravity.module.panel_range_saved": "Range saved; devices refresh within 1s",
+  "mekgravity.module.panel_range_invalid": "Range must be 16–512 blocks",
+  "mekgravity.module.panel_range_error": "Save failed; check the server config file"
 }

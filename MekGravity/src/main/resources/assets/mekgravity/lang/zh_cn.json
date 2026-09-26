@@ -377,7 +377,7 @@
   "mekgravity.module.panel_help_drag": "拖动标题整理设备",
   "mekgravity.module.panel_help_pan": "拖动空白平移，滚轮缩放",
   "mekgravity.module.panel_help_wire": "拖出连接点，或依次点击两端。选线后按 Delete 断开。",
-  "mekgravity.module.panel_count": "显示 %s / %s 台 · 范围 %s 格 · 最多显示192台",
+  "mekgravity.module.panel_count": "显示 %s / %s 台 · 扫描 %s 格 · 连接 %s 格",
   "mekgravity.module.panel_ready": "自动扫描附近已加载、可访问的核心与模块",
   "mekgravity.module.panel_choose_target": "连接到同色输入点；右键取消",
   "mekgravity.module.panel_delete_wire": "按 Delete 断开选中连线",
@@ -387,5 +387,16 @@
   "mekgravity.module.panel_route_in": "资源接收 ← 发送节点蓝色输出点",
   "mekgravity.module.panel_applied": "连接设置已更新",
   "mekgravity.module.panel_rejected": "连接失败：检查设备类型、距离和权限",
-  "mekgravity.module.panel_stale": "附近设备已变化，请重新选择连线"
+  "mekgravity.module.panel_stale": "附近设备已变化，请重新选择连线",
+  "mekgravity.module.panel_settings": "范围设置",
+  "mekgravity.module.panel_scan_range": "扫描范围：%s 格",
+  "mekgravity.module.panel_link_range": "连接距离：%s 格",
+  "mekgravity.module.panel_range_limits": "输入16～512，回车或勾号保存",
+  "mekgravity.module.panel_range_scope": "扫描只改变自己看到的设备",
+  "mekgravity.module.panel_range_world": "连接距离影响全服现有链接",
+  "mekgravity.module.panel_range_admin": "修改连接距离需存档主人或OP",
+  "mekgravity.module.panel_device_limit": "最多显示最近192台设备",
+  "mekgravity.module.panel_range_saved": "范围已保存，设备列表将在1秒内刷新",
+  "mekgravity.module.panel_range_invalid": "范围必须为16～512格",
+  "mekgravity.module.panel_range_error": "保存失败，请检查服务端配置文件"
 }

@@ -23,6 +23,27 @@ public final class LinkPanelTests {
     private static LinkPanelMenu open(ServerPlayer p){p.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(ModuleContent.LINKER.get()));p.getMainHandItem().use(p.level(),p,InteractionHand.MAIN_HAND);check(p.containerMenu instanceof LinkPanelMenu,"Air use did not open the actual panel menu");var menu=(LinkPanelMenu)p.containerMenu;menu.broadcastChanges();return menu;}
     private static boolean action(ServerPlayer p,LinkPanelMenu menu,int op,BlockPos from,BlockPos to){var request=new LinkPanelNetwork.Action(menu.containerId,menu.session,menu.revision,op,from,to);var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),p.registryAccess());try{LinkPanelNetwork.Action.CODEC.encode(buffer,request);return menu.handle(p,LinkPanelNetwork.Action.CODEC.decode(buffer));}finally{buffer.release();}}
     private static boolean shows(LinkPanelMenu menu,BlockPos pos){return menu.devices.stream().anyMatch(d->d.pos().equals(pos));}
+    private static boolean range(ServerPlayer p,LinkPanelMenu menu,int operation,int value){var request=new LinkPanelNetwork.Action(menu.containerId,menu.session,menu.revision,operation,null,null,value);var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),p.registryAccess());try{LinkPanelNetwork.Action.CODEC.encode(buffer,request);return menu.handle(p,LinkPanelNetwork.Action.CODEC.decode(buffer));}finally{buffer.release();}}
+
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void panelRangesPersistAndWorldDistanceRequiresOperator(GameTestHelper h){
+        var anchor=h.absolutePos(new BlockPos(8,6,8));var sender=place(h,ModuleKind.NODE,anchor.east(2));var target=place(h,ModuleKind.NODE,anchor.east(200));sender.inputs.getFirst().setStack(new ItemStack(Items.DIAMOND,32));
+        int original=ModuleConfig.RANGE.get();var player=ReactorTests.player(h,anchor);var ops=player.server.getPlayerList().getOps();
+        try{ModuleConfig.RANGE.set(128);var menu=open(player);check(!shows(menu,target.getBlockPos()),"Initial radius incorrectly included distant receiver");
+            check(range(player,menu,8,256)&&menu.range==256&&ModuleConfig.RANGE.get()==128,"Personal scan changed the global transfer limit");
+            menu=open(player);check(menu.range==256&&shows(menu,target.getBlockPos()),"Scan preference did not persist across actual panel reopen");
+            check(!range(player,menu,9,256)&&ModuleConfig.RANGE.get()==128,"Non-operator changed the world's connection distance");
+            check(!action(player,menu,1,sender.getBlockPos(),target.getBlockPos()),"A larger scan bypassed actual link range");
+            ops.add(new net.minecraft.server.players.ServerOpListEntry(player.getGameProfile(),2,false));menu=open(player);check(menu.canEditLinkRange,"Operator permission not synchronized to the panel");
+            check(range(player,menu,9,256)&&menu.linkRange==256&&ModuleConfig.RANGE.get()==256,"Operator range update was not saved/acknowledged");
+            check(action(player,menu,1,sender.getBlockPos(),target.getBlockPos())&&sender.peer.inRange(h.getLevel(),sender.getBlockPos()),"Expanded world limit did not permit real binding");
+            check(range(player,menu,9,64)&&sender.peer!=null&&!sender.peer.inRange(h.getLevel(),sender.getBlockPos()),"Reduced world range deleted the link or left it operational");
+            check(range(player,menu,9,256)&&sender.peer.inRange(h.getLevel(),sender.getBlockPos()),"Restoring world range did not resume the existing link");
+            menu=open(player);check(range(player,menu,8,16)&&!shows(menu,target.getBlockPos())&&sender.peer!=null&&sender.inputs.getFirst().getCount()==32,"Scan reduction altered links or cargo");
+            check(!range(player,menu,8,Integer.MAX_VALUE)&&!range(player,menu,9,-1)&&menu.range==16&&ModuleConfig.RANGE.get()==256,"Malformed range escaped bounds checking");
+            ops.remove(player.getGameProfile());check(!range(player,menu,9,128)&&ModuleConfig.RANGE.get()==256,"Revoked operator status still changed settings");
+        }finally{ModuleConfig.RANGE.set(original);ModuleConfig.RANGE.save();ops.remove(player.getGameProfile());ReactorTests.close(player);}h.succeed();
+    }
 
     @GameTest(template="empty",timeoutTicks=90)
     public static void panelDragActionsBindActualTransferAndIndependentChannels(GameTestHelper h){

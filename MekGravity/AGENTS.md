@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.26，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.27，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -14,9 +14,14 @@
 
 ## 实现入口
 
+- alpha.27范围设置：ModuleConfig.MIN_RANGE/MAX_RANGE为16/512，原linkRange默认128不迁移。面板个人range与全服linkRange分开同步；Action追加value，8改扫描，9改连接，registrar协议2。个人范围存Player.PERSISTED_NBT_TAG内mekgravity_panel_range，保留其他持久标签，首次缺省跟随linkRange。
+- 修改扫描只改变eligible及画布范围，不改source/peer；每20tick扫描限流不因设置或刷新请求重置，缩小时快照先过滤、扩张最多1秒发现。范围变化递增revision，拒绝旧拖线。连接设置每次核对hasPermissions(2)或isSingleplayerOwner，RANGE.set后RANGE.save触发原配置保存/重载；客户端只显示Snapshot确认值，普通用户无权修改全服值。FieldLink.inRange仍是绑定和实际物流的共同范围依据。
+- RangeSettings使用原GuiWindow/GuiTextField回车与勾号，确认值与输入草稿分开，设置错误在窗口内显示。窗口打开时画布鼠标、滚轮和Delete让回父类，避免操作窗口时拖线或删链接。
+- 当前NeoForge/FML的SERVER配置默认位于实例config/，已有存档serverconfig/同名文件才覆盖；RANGE.save保存实际加载的文件，不假设始终在存档目录。已核对ServerLifecycleHooks与ConfigTracker.resolveBasePath。alpha.27共49项GameTest通过；范围测试使用真实ServerOpListEntry临时授予2级OP，finally还原配置/OP，覆盖200格实际绑定、降低/恢复距离、扫描独立及保存、畸形数值和权限收回。未运行客户端。
+
 - alpha.26 场域面板：链接器普通空气右键、ModuleMenu动作7打开LinkPanelMenu，客户端LinkPanelScreen复用GuiMekanism/GuiTextField/MekanismButton，无物品槽。金线core→module、蓝线node→node；拖线与两次点击共用Action，底部四通道与解绑改变同一OrbitalModule数据。
 - LinkPanelMenu以开面板位置或host为中心，每20tick遍历ServerChunkCache.getChunkNow的已加载BE表，仅Controller/SolarController/OrbitalModule且Mek可访问；最多最近192台，不扫描方块体积、不加区块票。身份列表变化才递增revision，普通状态刷新不打断拖线。工具需继续持有且在anchor的8格内；host需同BE且安全许可。
-- LinkPanelNetwork使用两个有界StreamCodec数据包，客户端Consumer仅在SolarClient注册，不在服务端引用Screen。Action核对当前菜单、随机session、revision、BE身份和权限，每面板每tick最多4次；解绑选线附旧端点避免错删。FieldConnections复用工具和面板的pair-range/type/player及模块owner权限检查，跨128格的两个可见端点仍不能连接。
+- LinkPanelNetwork使用两个有界StreamCodec数据包，客户端Consumer仅在SolarClient注册，不在服务端引用Screen。Action核对当前菜单、随机session、revision、BE身份和权限，每面板每tick最多4次；解绑选线附旧端点避免错删。FieldConnections复用工具和面板的pair-range/type/player及模块owner权限检查，跨当前linkRange的两个可见端点仍不能连接。
 - LinkPanelGeometry提供原生画布布局/曲线命中数学；wire四边形顶点绕序须匹配GuiGraphics.fill，避免RenderType.gui剔除连线。背景绘制用绝对屏幕坐标/scissor，标题与按钮用原Mek局部坐标；初始化先禁用无选择的资源按钮。
 
 - alpha.25 NODE通过懒创建NodeStorage扩展原生energy/fluids/chemicals；字段不能初始化覆盖父构造getInitial方法创建的数据。收发分离：J各2.56PJ，流体4+4×16MmB，化学4+4×64M，侧/背/上下入、正面出；4通道mask保存默认15，旧18物品槽和绑定不改。held item必须同时注册对应容器creators，loot复制mekanism:energy/fluids/chemicals，不能只保存orbital_module。
