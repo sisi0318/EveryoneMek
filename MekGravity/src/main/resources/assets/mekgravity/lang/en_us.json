@@ -228,8 +228,8 @@
   "mekgravity.corona.output": "Outputs",
   "mekgravity.corona.batch": "Batch %s",
   "mekgravity.corona.progress": "Progress %s%%",
-  "mekgravity.corona.paid": "Batch paid: %s",
-  "mekgravity.corona.energy_used": "Coronal batch debit: %s",
+  "mekgravity.corona.paid": "Processing energy: %s",
+  "mekgravity.corona.energy_used": "Module consumption: %s/t",
   "mekgravity.corona.unlinked": "Attach rear to the outer center of a collector wing",
   "mekgravity.corona.access": "No permission to use this sun",
   "mekgravity.corona.paused": "Processing paused",
@@ -279,7 +279,7 @@
   "mekgravity.module.linker_hint": "Sneak-use to select a device; use on a module to bind.",
   "mekgravity.module.selected": "Selected: %s · %s",
   "mekgravity.module.progress": "Progress %s%%",
-  "mekgravity.module.paid": "Batch paid: %s",
+  "mekgravity.module.paid": "Processing energy: %s",
   "mekgravity.module.pause": "Pause",
   "mekgravity.module.enable": "Enable",
   "mekgravity.module.eject_on": "Auto-eject: On",
@@ -331,5 +331,6 @@
   "description.mekgravity.stellar_observatory": "Bind a reactor to view its status and emit configurable redstone signals.",
   "item.mekgravity.field_linker": "Field Linker",
   "item.mekgravity.flare_cell": "Flare Cell",
-  "item.mekgravity.stellar_alloy": "Stellar Alloy"
+  "item.mekgravity.stellar_alloy": "Stellar Alloy",
+  "mekgravity.module.transfer_energy": "Transfer energy: %s"
 }

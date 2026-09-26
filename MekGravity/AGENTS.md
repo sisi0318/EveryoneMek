@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.23，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.24，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.24用户要求GUI不出现“本批已付”等内部记账措辞：显示加工耗能／传输耗能，太阳汇总为模块耗能（每tick），持久化paid键不改。
+- alpha.24用户要求压缩恒星物质只用耀斑晶核：orbital/stellar_matter仍为5GJ/40基础tick，但输入改为单个flare_cell，不改原工作台配方。OrbitalModule.start按输入组数降序、recipe ID确定顺序；完整复杂配方即使受能量/空间/等级限制也不回退到组数更少的配方，避免新单输入路线抢走合金用晶核。旧预付快照不重算。
 
 - alpha.23 expansion包新增CAPTOR/FORGE/TUNER/NODE/OBSERVATORY五种独立ModuleBlock/OrbitalModule，ModuleContent用同菜单、按种类独立BE注册；kind从已注册BlockState读取，父构造getInitialInventory不依赖子字段。cargo9进9出复用CoronalInventorySlot；TUNER仅1个原生flare输入槽；OBS无槽且移除Attributes.AttributeRedstone，只提供正面红石输出与比较器。
 - FieldLinker监听RightClickBlock并调用物品useOn，避免Mek方块先开GUI吞掉工具操作；潜行记录源或接收节点，普通右键模块绑定。FieldLink保存维度/位置，同维度默认128格，检查hasChunkAt和源/目标权限；Node接收端由发送端付款，无需自己连源。绑定不复制库存或能量，不强加载。父类原生GUI/安全/红石和掉落mekanism:items分别保留。
@@ -106,6 +109,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.24仍41项GameTest通过：扩展原Forge实际拆放回归，在16个恒星合金完成后仅送4个flare_cell（无燃料丸），再产4个compressed_stellar_matter，累计20GJ/基础40tick正确；复杂配方与单输入路线并存。中英文运行资源及JAR检查去除了旧记账措辞，界面未做客户端验收。
 
 - alpha.23共41项GameTest通过：OrbitalTests六项覆盖真实工具绑定→配方加工→箱子，Forge付费物实际拆放继续，Node满端不扣资源及10000物品真实储物箱守恒，私有源/维度/距离拒绝，三模式能量/燃料与1～160J末端、主控掉落保存冷却，观测站真实灯和坏结构告警；满缓存升载不消耗晶核，信号只发正面且OBS无红石启停。所有旧35项继续通过；五类shader隐藏GL动态/停机/遮挡和几何去重检查通过。没有客户端游戏验收。
 

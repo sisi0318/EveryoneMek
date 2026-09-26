@@ -59,7 +59,7 @@ def build():
     for name,machine,inputs,result,count,ticks,energy in [
         ('flare','flare_captor',[('mekanism:alloy_atomic',4),('minecraft:quartz',4)],'mekgravity:flare_cell',1,20,50_000_000_000),
         ('stellar_alloy','gravity_forge',[('mekanism:alloy_atomic',4),('mekanism:hdpe_sheet',1),('mekgravity:flare_cell',1)],'mekgravity:stellar_alloy',4,20,2_000_000_000),
-        ('stellar_matter','gravity_forge',[('mekgravity:dense_fuel_pellet',8),('mekgravity:flare_cell',1)],'mekgravity:compressed_stellar_matter',1,40,5_000_000_000)]:
+        ('stellar_matter','gravity_forge',[('mekgravity:flare_cell',1)],'mekgravity:compressed_stellar_matter',1,40,5_000_000_000)]:
         write(f'data/mekgravity/recipe/orbital/{name}.json',{'type':'mekgravity:orbital_processing','machine':machine,'inputs':[{'ingredient':{'item':item},'count':n} for item,n in inputs],'result':{'id':result,'count':count},'ticks':ticks,'energy':energy,'tier':0})
     shader=json.loads((RES/'assets/mekgravity/shaders/core/coronal_processing.json').read_text(encoding='utf-8'));shader['vertex']=shader['fragment']='mekgravity:orbital_module';write('assets/mekgravity/shaders/core/orbital_module.json',shader)
     words={
@@ -76,7 +76,7 @@ def build():
       'source_selected':('已记录能量源 %s','Source selected: %s'),'node_selected':('已记录接收节点 %s','Receiver selected: %s'),
       'link_failed':('绑定失败：检查类型、距离和权限','Link failed: check type, range and access'),
       'linker_hint':('潜行右键记录装置，右键模块绑定。','Sneak-use to select a device; use on a module to bind.'),'selected':('已记录：%s · %s','Selected: %s · %s'),
-      'progress':('进度 %s%%','Progress %s%%'),'paid':('本批已付：%s','Batch paid: %s'),'pause':('暂停','Pause'),'enable':('启动','Enable'),
+      'progress':('进度 %s%%','Progress %s%%'),'paid':('加工耗能：%s','Processing energy: %s'),'transfer_energy':('传输耗能：%s','Transfer energy: %s'),'pause':('暂停','Pause'),'enable':('启动','Enable'),
       'eject_on':('自动输出：开','Auto-eject: On'),'eject_off':('自动输出：关','Auto-eject: Off'),'profile':('调谐：%s','Tuning: %s'),
       'profile_0':('均衡','Balanced'),'profile_1':('加工聚焦','Processing'),'profile_2':('核心超频','Overclock'),
       'cooldown':('耀斑恢复：%s秒','Flare recovery: %ss'),'burst':('消耗晶核 · 耀斑升载','Use cell · Flare burst'),'burst_left':('耀斑剩余 %s秒','Flare remaining: %ss'),

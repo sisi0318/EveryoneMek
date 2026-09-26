@@ -62,7 +62,11 @@ public final class OrbitalModule extends TileEntityMekanism {
     private int room(ItemStack item){int n=0;for(var s:outputs)if(s.isEmpty()||ItemStack.isSameItemSameComponents(item,s.getStack()))n+=Math.max(0,s.getLimit(item)-s.getCount());return n;}
     private int insert(ItemStack item,int amount){int left=amount;for(int pass=0;pass<2&&left>0;pass++)for(var slot:outputs){if(slot.isEmpty()!=(pass==1))continue;left=slot.insertItem(item.copyWithCount(left),Action.EXECUTE,AutomationType.INTERNAL).getCount();if(left==0)break;}return left;}
     private boolean start(FieldSource core){var inv=new OrbitalRecipe.Inventory(inputs.stream().map(s->s.getStack().copy()).toList());boolean tier=false,blocked=false,energy=false;
-        for(var holder:level.getRecipeManager().getAllRecipesFor(ModuleContent.TYPE.get())){var recipe=holder.value();if(!recipe.machine().equals(kind().id)||recipe.allocate(inv,1)==null)continue;
+        // Prefer a complete multi-input recipe over its single-input fallback, regardless of reload order.
+        var recipes=level.getRecipeManager().getAllRecipesFor(ModuleContent.TYPE.get()).stream().filter(h->h.value().machine().equals(kind().id))
+            .sorted(Comparator.<net.minecraft.world.item.crafting.RecipeHolder<OrbitalRecipe>>comparingInt(h->h.value().inputs().size()).reversed().thenComparing(h->h.id().toString())).toList();
+        int matchedGroups=-1;
+        for(var holder:recipes){var recipe=holder.value();if(recipe.inputs().size()<matchedGroups)break;if(recipe.allocate(inv,1)==null)continue;matchedGroups=recipe.inputs().size();
             if(recipe.tier()>core.tier()){tier=true;continue;}int space=room(recipe.result())/recipe.result().getCount();if(space<=0){blocked=true;continue;}
             long funded=core.available()/recipe.energy();if(funded==0){energy=true;continue;}int n=recipe.maxBatch(inv,(int)Math.min(Math.min(space,ModuleConfig.BATCH.get()),funded));if(n<=0)continue;var used=recipe.allocate(inv,n);long paid=Math.multiplyExact(recipe.energy(),n);
             if(!core.spend(paid)){energy=true;continue;}sample=ItemStack.EMPTY;for(int i=0;i<used.length;i++)if(used[i]>0){if(sample.isEmpty())sample=inputs.get(i).getStack().copyWithCount(1);inputs.get(i).shrinkStack(used[i],Action.EXECUTE);}

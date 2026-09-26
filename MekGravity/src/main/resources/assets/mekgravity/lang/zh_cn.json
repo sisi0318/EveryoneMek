@@ -228,8 +228,8 @@
   "mekgravity.corona.output": "产物",
   "mekgravity.corona.batch": "批量 %s",
   "mekgravity.corona.progress": "进度 %s%%",
-  "mekgravity.corona.paid": "本批已付：%s",
-  "mekgravity.corona.energy_used": "日冕加工扣能：%s",
+  "mekgravity.corona.paid": "加工耗能：%s",
+  "mekgravity.corona.energy_used": "模块耗能：%s/t",
   "mekgravity.corona.unlinked": "贴在采能翼外侧中心，背面朝向采能翼",
   "mekgravity.corona.access": "无权使用这台微缩太阳",
   "mekgravity.corona.paused": "加工已暂停",
@@ -279,7 +279,7 @@
   "mekgravity.module.linker_hint": "潜行右键记录装置，右键模块绑定。",
   "mekgravity.module.selected": "已记录：%s · %s",
   "mekgravity.module.progress": "进度 %s%%",
-  "mekgravity.module.paid": "本批已付：%s",
+  "mekgravity.module.paid": "加工耗能：%s",
   "mekgravity.module.pause": "暂停",
   "mekgravity.module.enable": "启动",
   "mekgravity.module.eject_on": "自动输出：开",
@@ -331,5 +331,6 @@
   "description.mekgravity.stellar_observatory": "绑定装置查看状态，并输出可选红石告警。",
   "item.mekgravity.field_linker": "场域链接器",
   "item.mekgravity.flare_cell": "耀斑晶核",
-  "item.mekgravity.stellar_alloy": "恒星合金"
+  "item.mekgravity.stellar_alloy": "恒星合金",
+  "mekgravity.module.transfer_energy": "传输耗能：%s"
 }

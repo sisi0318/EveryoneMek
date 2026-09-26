@@ -78,7 +78,7 @@ def build():
     shader=json.loads((RES/'assets/mekgravity/shaders/core/stellar_field.json').read_text(encoding='utf-8'));shader['vertex']=shader['fragment']='mekgravity:coronal_processing';write('assets/mekgravity/shaders/core/coronal_processing.json',shader)
     words={'slot_stock':('库存：%s / %s','Stored: %s / %s'),
       'input':('原料','Inputs'),'output':('产物','Outputs'),'batch':('批量 %s','Batch %s'),'progress':('进度 %s%%','Progress %s%%'),
-      'paid':('本批已付：%s','Batch paid: %s'),'energy_used':('日冕加工扣能：%s','Coronal batch debit: %s'),
+      'paid':('加工耗能：%s','Processing energy: %s'),'energy_used':('模块耗能：%s/t','Module consumption: %s/t'),
       'unlinked':('贴在采能翼外侧中心，背面朝向采能翼','Attach rear to the outer center of a collector wing'),
       'access':('无权使用这台微缩太阳','No permission to use this sun'),'paused':('加工已暂停','Processing paused'),
       'cold':('等待恒星点燃','Waiting for a hot star'),'energy':('太阳可用储能不足','Insufficient available solar energy'),

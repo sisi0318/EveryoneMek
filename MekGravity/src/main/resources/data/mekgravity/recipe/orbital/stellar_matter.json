@@ -4,12 +4,6 @@
   "inputs": [
     {
       "ingredient": {
-        "item": "mekgravity:dense_fuel_pellet"
-      },
-      "count": 8
-    },
-    {
-      "ingredient": {
         "item": "mekgravity:flare_cell"
       },
       "count": 1

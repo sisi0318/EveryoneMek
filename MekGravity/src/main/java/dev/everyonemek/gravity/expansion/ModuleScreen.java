@@ -21,7 +21,7 @@ public final class ModuleScreen extends GuiMekanismTile<OrbitalModule,ModuleMenu
     @Override protected void addGuiElements(){super.addGuiElements();
         if(tile.kind().cargo){
             addRenderableWidget(new GuiDynamicHorizontalRateBar(this,new GuiBar.IBarInfoHandler(){public Component getTooltip(){return ModuleContent.text("progress",(int)(tile.fraction()*100));}public double getLevel(){return tile.fraction();}},76,51,64,Color.ColorFunction.scale(Color.rgbi(65,45,110),Color.rgbi(225,180,95))));
-            addRenderableWidget(new GuiInnerScreen(this,10,96,210,27,()->List.of(ModuleContent.text(tile.status),ModuleContent.text("paid",ReactorScreen.fe(tile.paidEnergy)))).spacing(0));
+            addRenderableWidget(new GuiInnerScreen(this,10,96,210,27,()->List.of(ModuleContent.text(tile.status),ModuleContent.text(tile.kind()==ModuleKind.NODE?"transfer_energy":"paid",ReactorScreen.fe(tile.paidEnergy)))).spacing(0));
             button(10,130,102,0,()->ModuleContent.text(tile.enabled?"pause":"enable"));button(118,130,102,1,()->ModuleContent.text(tile.autoEject?"eject_on":"eject_off"));
         }else if(tile.kind()==ModuleKind.TUNER){
             addRenderableWidget(new GuiInnerScreen(this,10,27,210,36,()->List.of(ModuleContent.text(tile.status),ModuleContent.text("profile",ModuleContent.text("profile_"+tile.sourceProfile)),ModuleContent.text("cooldown",(tile.sourceCooldown+19)/20))).spacing(0));
