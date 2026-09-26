@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "facing=north,active=false": {
+      "model": "mekgravity:block/flare_captor",
+      "y": 0
+    },
+    "facing=east,active=false": {
+      "model": "mekgravity:block/flare_captor",
+      "y": 90
+    },
+    "facing=south,active=false": {
+      "model": "mekgravity:block/flare_captor",
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "mekgravity:block/flare_captor",
+      "y": 270
+    },
+    "facing=north,active=true": {
+      "model": "mekgravity:block/flare_captor_active",
+      "y": 0
+    },
+    "facing=east,active=true": {
+      "model": "mekgravity:block/flare_captor_active",
+      "y": 90
+    },
+    "facing=south,active=true": {
+      "model": "mekgravity:block/flare_captor_active",
+      "y": 180
+    },
+    "facing=west,active=true": {
+      "model": "mekgravity:block/flare_captor_active",
+      "y": 270
+    }
+  }
+}

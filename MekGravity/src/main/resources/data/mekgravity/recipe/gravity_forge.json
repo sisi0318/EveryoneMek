@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "SPS",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "P": {
+      "item": "mekanism:osmium_compressor"
+    }
+  },
+  "result": {
+    "id": "mekgravity:gravity_forge"
+  }
+}

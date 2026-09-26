@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 public final class Controller extends TileEntityMekanism {
+    public final dev.everyonemek.gravity.expansion.CoreTuning tuning=new dev.everyonemek.gravity.expansion.CoreTuning();
     public final Structure structure=new Structure(this);
     public long stored,fuelRemaining,fuelTotal,gross,selfUse,lastOutput,lastInput;
     public ChemicalStack cold=ChemicalStack.EMPTY,hot=ChemicalStack.EMPTY;
@@ -33,6 +34,7 @@ public final class Controller extends TileEntityMekanism {
     public long outputLimit(){return structure.formed?ReactorConfig.PORT_RATE.get()*structure.energyOutputs:0;}
     public long accept(long n,boolean simulate){if(n<=0||!structure.valid())return 0;clock();long accepted=Math.min(n,Math.min(Math.max(0,capacity()-stored),Math.max(0,inputLimit()-received)));if(!simulate&&accepted>0){stored+=accepted;received+=accepted;markForSave();}return accepted;}
     public long extract(long n,boolean simulate){if(n<=0||!ignited||!structure.valid())return 0;clock();long amount=Math.min(n,Math.min(Math.max(0,stored-reserve()),Math.max(0,outputLimit()-exported)));if(!simulate&&amount>0){stored-=amount;exported+=amount;markForSave();}return amount;}
+    public boolean spendForModules(long amount){if(amount<=0||!structure.valid()||!enabled||!ignited||!canFunction()||!fuelAvailable()||amount>Math.max(0,stored-reserve()))return false;stored-=amount;markForSave();return true;}
     public long tankCapacity(){return ReactorConfig.TANK_CAPACITY.get();}
     public boolean fuelAvailable(){if(fuelRemaining>0)return true;for(var h:structure.fuelHatches)for(int i=0;i<18;i++){var stack=h.inventory.getStackInSlot(i);var r=FuelRecipe.find(level,stack);if(r!=null&&stack.getCount()>=r.count())return true;}return false;}
     public FuelStock fuelStock(){var result=new FuelStock();for(var hatch:structure.fuelHatches)for(int i=0;i<18;i++){var stack=hatch.inventory.getStackInSlot(i);var recipe=FuelRecipe.find(level,stack);if(recipe!=null)result.add(stack.getCount()/recipe.count(),recipe.energy());}return result;}
@@ -46,6 +48,7 @@ public final class Controller extends TileEntityMekanism {
         }
     }
     public void react(){
+        if(tuning.tick(level.getGameTime(),enabled&&ignited&&structure.valid()&&canFunction()&&stored<capacity()&&fuelAvailable()))markForSave();
         long previousGross=gross;gross=selfUse=0;
         if(!structure.valid()){status=structure.error;return;}
         if(!enabled){status="stopped";return;}if(!canFunction()){status="redstone";return;}
@@ -53,29 +56,29 @@ public final class Controller extends TileEntityMekanism {
         if(!fuelAvailable()){status="fuel_missing";return;}
         if(!ignited){if(stored<startup()+reserve()){status="charging";return;}stored-=startup();ignited=true;markForSave();}
         if(stored<reserve()){status="reserve_low";return;}
-        long target=structure.grade.power()*load/100;
+        long target=tuning.power(structure.grade.power())*load/100;
         long requested=Math.min(target,previousGross+Math.max(1,structure.grade.power()/20));
         long room=Math.max(0,capacity()-stored);if(room==0){status="full";return;}
         long net=requested-requested/50-(requested%50==0?0:1);
         long available=net>room?room+room/49+(room%49==0?0:1):requested;
         if(available<=1){status="output_limited";return;}
-        chargeFuel(available);available=Math.min(available,fuelRemaining);
-        if(available<=0){status="fuel_missing";return;}
+        chargeFuel(tuning.cost(available));available=Math.min(available,tuning.affordable(fuelRemaining));
+        if(available<=0){if(fuelRemaining>0){gross=selfUse=fuelRemaining;fuelRemaining=fuelTotal=0;markForSave();}status="fuel_missing";return;}
         gross=available;selfUse=gross/50+(gross%50==0?0:1);
-        fuelRemaining-=gross;stored+=gross-selfUse;
+        fuelRemaining-=tuning.cost(gross);stored+=gross-selfUse;
         if(fuelRemaining==0)fuelTotal=0;
         status=gross<requested?(room<=gross?"output_limited":"fuel_limited"):"running";markForSave();
     }
     @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();clock();react();Ports.eject(this);if(exported>0)lastOutput=exported;if(received>0)lastInput=received;structure.activity(gross>0);setActive(gross>0);return changed;}
     @Override public void onLoad(){super.onLoad();structure.watch();structure.invalidate();}
     @Override public void setRemoved(){structure.detach();super.setRemoved();}
-    private CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();t.putLong("energy",stored);t.putLong("fuel",fuelRemaining);t.putLong("fuel_total",fuelTotal);t.putBoolean("enabled",enabled);t.putBoolean("ignited",ignited);t.putBoolean("eject",autoEject);t.putInt("load",load);t.putInt("build_tier",buildTier);t.put("cold",cold.saveOptional(r));t.put("hot",hot.saveOptional(r));return t;}
-    private void read(CompoundTag t,HolderLookup.Provider r){stored=Math.max(0,t.getLong("energy"));fuelRemaining=Math.max(0,t.getLong("fuel"));fuelTotal=Math.max(fuelRemaining,t.getLong("fuel_total"));enabled=t.getBoolean("enabled");ignited=t.getBoolean("ignited");autoEject=!t.contains("eject")||t.getBoolean("eject");buildTier=Math.clamp(t.getInt("build_tier"),0,3);load=t.contains("load")?Math.clamp(t.getInt("load"),1,100):100;cold=ChemicalStack.parseOptional(r,t.getCompound("cold"));hot=ChemicalStack.parseOptional(r,t.getCompound("hot"));structure.invalidate();}
+    private CompoundTag data(HolderLookup.Provider r){var t=new CompoundTag();t.putLong("energy",stored);t.putLong("fuel",fuelRemaining);t.putLong("fuel_total",fuelTotal);t.putBoolean("enabled",enabled);t.putBoolean("ignited",ignited);t.putBoolean("eject",autoEject);t.putInt("load",load);t.putInt("build_tier",buildTier);t.put("tuning",tuning.save());t.put("cold",cold.saveOptional(r));t.put("hot",hot.saveOptional(r));return t;}
+    private void read(CompoundTag t,HolderLookup.Provider r){tuning.load(t.getCompound("tuning"));stored=Math.max(0,t.getLong("energy"));fuelRemaining=Math.max(0,t.getLong("fuel"));fuelTotal=Math.max(fuelRemaining,t.getLong("fuel_total"));enabled=t.getBoolean("enabled");ignited=t.getBoolean("ignited");autoEject=!t.contains("eject")||t.getBoolean("eject");buildTier=Math.clamp(t.getInt("build_tier"),0,3);load=t.contains("load")?Math.clamp(t.getInt("load"),1,100):100;cold=ChemicalStack.parseOptional(r,t.getCompound("cold"));hot=ChemicalStack.parseOptional(r,t.getCompound("hot"));structure.invalidate();}
     @Override public void saveAdditional(CompoundTag t,HolderLookup.Provider r){super.saveAdditional(t,r);t.put("reactor",data(r));}
     @Override public void loadAdditional(CompoundTag t,HolderLookup.Provider r){super.loadAdditional(t,r);read(t.getCompound("reactor"),r);}
     @Override protected void collectImplicitComponents(DataComponentMap.Builder b){super.collectImplicitComponents(b);b.set(Content.DATA.get(),data(level.registryAccess()));}
     @Override protected void applyImplicitComponents(BlockEntity.DataComponentInput input){super.applyImplicitComponents(input);var t=input.get(Content.DATA.get());if(t!=null)read(t,level.registryAccess());}
-    @Override public void addContainerTrackers(MekanismContainer menu){super.addContainerTrackers(menu);
+    @Override public void addContainerTrackers(MekanismContainer menu){super.addContainerTrackers(menu);tuning.track(menu);
         menu.track(SyncableLong.create(()->stored,v->stored=v));menu.track(SyncableLong.create(()->fuelRemaining,v->fuelRemaining=v));menu.track(SyncableLong.create(()->fuelTotal,v->fuelTotal=v));
         menu.track(SyncableLong.create(()->gross,v->gross=v));menu.track(SyncableLong.create(()->selfUse,v->selfUse=v));menu.track(SyncableLong.create(()->lastOutput,v->lastOutput=v));
         menu.track(SyncableLong.create(()->lastInput,v->lastInput=v));

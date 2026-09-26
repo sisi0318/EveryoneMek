@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " AC",
+    " SB",
+    "S  "
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "B": {
+      "item": "mekanism:teleportation_core"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:ingot_steel"
+    }
+  },
+  "result": {
+    "id": "mekgravity:field_linker"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "type": "mekgravity:orbital_processing",
+  "machine": "flare_captor",
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "mekanism:alloy_atomic"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:quartz"
+      },
+      "count": 4
+    }
+  ],
+  "result": {
+    "id": "mekgravity:flare_cell",
+    "count": 1
+  },
+  "ticks": 20,
+  "energy": 50000000000,
+  "tier": 0
+}

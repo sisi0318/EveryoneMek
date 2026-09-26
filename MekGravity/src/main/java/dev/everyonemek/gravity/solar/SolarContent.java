@@ -51,7 +51,7 @@ public final class SolarContent {
             int grade=tier;String id=kind.id()+(kind.tiered()?"_"+List.of("basic","advanced","elite","ultimate").get(tier):"");
             PARTS.put(id,BLOCKS.register("solar_"+id,()->new SolarBlock(kind,grade)));
         }
-        TABS.register("solar",()->CreativeModeTab.builder().title(text("tab")).icon(()->new ItemStack(CONTROLLER)).displayItems((p,out)->{out.accept(CONTROLLER);PARTS.values().forEach(out::accept);out.accept(dev.everyonemek.gravity.corona.CoronalContent.BLOCK);out.accept(COMPRESSED.get());out.accept(PREFORM.get());out.accept(FUEL.get());}).build());
+        TABS.register("solar",()->CreativeModeTab.builder().title(text("tab")).icon(()->new ItemStack(CONTROLLER)).displayItems((p,out)->{out.accept(CONTROLLER);PARTS.values().forEach(out::accept);out.accept(dev.everyonemek.gravity.corona.CoronalContent.BLOCK);dev.everyonemek.gravity.expansion.ModuleContent.creative(out);out.accept(COMPRESSED.get());out.accept(PREFORM.get());out.accept(FUEL.get());}).build());
     }
     public static BlockRegistryObject<SolarBlock,BlockItem> block(SolarBlock.Kind kind,int tier){return PARTS.get(kind.id()+(kind.tiered()?"_"+List.of("basic","advanced","elite","ultimate").get(tier):""));}
     public static Component text(String key,Object...args){return Component.translatable("mekgravity.solar."+key,args);}

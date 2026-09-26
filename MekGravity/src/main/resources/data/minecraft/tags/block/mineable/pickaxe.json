@@ -6,12 +6,16 @@
     "mekgravity:casing",
     "mekgravity:coolant",
     "mekgravity:core",
+    "mekgravity:core_tuner",
     "mekgravity:coronal_chamber",
     "mekgravity:elite_coil",
     "mekgravity:energy",
+    "mekgravity:flare_captor",
     "mekgravity:frame",
     "mekgravity:fuel",
     "mekgravity:glass",
+    "mekgravity:gravity_forge",
+    "mekgravity:gravity_node",
     "mekgravity:reactor",
     "mekgravity:solar_base",
     "mekgravity:solar_collector_advanced",
@@ -32,6 +36,7 @@
     "mekgravity:solar_ring_ultimate",
     "mekgravity:solar_seed",
     "mekgravity:solar_support",
+    "mekgravity:stellar_observatory",
     "mekgravity:ultimate_coil"
   ]
 }

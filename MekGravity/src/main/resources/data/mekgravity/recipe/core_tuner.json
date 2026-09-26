@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "SPS",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekgravity:stellar_alloy"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:ingot_steel"
+    },
+    "P": {
+      "item": "mekanism:energy_tablet"
+    }
+  },
+  "result": {
+    "id": "mekgravity:core_tuner"
+  }
+}

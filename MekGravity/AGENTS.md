@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.22，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.23，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,12 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.23 expansion包新增CAPTOR/FORGE/TUNER/NODE/OBSERVATORY五种独立ModuleBlock/OrbitalModule，ModuleContent用同菜单、按种类独立BE注册；kind从已注册BlockState读取，父构造getInitialInventory不依赖子字段。cargo9进9出复用CoronalInventorySlot；TUNER仅1个原生flare输入槽；OBS无槽且移除Attributes.AttributeRedstone，只提供正面红石输出与比较器。
+- FieldLinker监听RightClickBlock并调用物品useOn，避免Mek方块先开GUI吞掉工具操作；潜行记录源或接收节点，普通右键模块绑定。FieldLink保存维度/位置，同维度默认128格，检查hasChunkAt和源/目标权限；Node接收端由发送端付款，无需自己连源。绑定不复制库存或能量，不强加载。父类原生GUI/安全/红石和掉落mekanism:items分别保留。
+- OrbitalRecipe使用orbital_processing，machine仅flare_captor/gravity_forge，1～4输入/结果≤64/ticks≤72000/energy≤100TJ/tier0～3。记录已付输出和进度进orbital_module组件，库存仅mekanism:items。Node本机输入到远端输出，每tick4096，1MJ/物品，双端仅真实slot事务；拒绝未加载/暂停/无权限/满库存。
+- CoreTuning在两种主控中单份保存profile/burst/cooldown，平衡默认0不改旧行为；聚焦80%功率、加工×2，超频125%功率/15%燃料附加，耀斑150%/30%附加，400tick持续与1600tick复用计时仅加载tick推进。gross为电能，cost(gross)实际扣燃料；affordable先按剩余燃料反算gross，末端不足支付1gross时耗尽为等量selfUse避免卡1J。主控DATA/solar_data掉落同样保存调谐，菜单同步3字段，太阳续航按当前调谐成本估算。
+- generate_module_resources.py由总资源生成器调用；outer_surface复用去共面面，ModuleShapes由同实体盒生成。ModuleField/ModuleShader/ModuleRenderer与orbital_module.vsh/fsh不改逐实例uniform，顶点编码类型/相位/进度；调谐和观测屏1quad，其他128/48quads，0纹理采样。VerifyModuleShader用真实几何与shader检查5种模式；preview_modules为静态原生模型预览，非游戏截图。
 
 - alpha.22日冕白侧板与壳体共面导致视角移动时斜纹闪烁。generate_coronal_resources.outer_surface调用runtime_geometry.exposed_faces对实体求并集，材质由后加入盒子覆盖，按原面方向裁切UV，不能再把完整六面白轨条直接叠到壳体上。原solid盒仍用于CoronalShapes，轮廓/碰撞不变；灯光额外数据复制到新表面。两模型102→86quads，原57组共面重叠归零，tools/verify_coronal_geometry.py同时检查模块内部和9块翼片接口；旧模型明确失败，新模型通过。纯几何修改仅检查资源、离线预览和构建，不重复35项服务端测试。
 
@@ -69,7 +75,7 @@
 
 - 2026-09-24用户要求开始实现微缩太阳并逐步补全。alpha.8已接入基础版，行为以SOLAR_README.md为准；SOLAR_DESIGN.md/SOLAR_EXPANSIONS.md包含未完成候选，不能全部宣称可用。实际默认256/512/1024/2048 GFE/t、16/8/4/2小时、单份737.28 PJ，缓存1.024 PFE、单口1.024 TFE/t额度。长效成品燃料供料，氘氚只用于制备。
 - 微缩太阳核对经验：Generators化学品ID使用mekanismgenerators命名空间；加压反应室MAX_FLUID/MAX_GAS均10,000。现有FuelRecipe上限1 PJ，太阳737.28 PJ需独立stellar_fuel与单配方10^18 J上限、long安全乘加；64份总预算会溢出，保持物品库存与单份预算分离。原Ports的64次int FE分批理论上限约137.44 GFE/t/口，不能冒称满足1.024 TFE/t；优先原生long并有界FE回退。现有7格Structure/Controller/Ports也不能直接套9格结构。
-- alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。耀斑、CC和自定义告警/调载阈值仍未实现；分级整组升级已于alpha.19完成，日冕加工已于alpha.20完成。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
+- alpha.8已做自动调载、残余胶囊回收、基础供能明细、耗尽比较器与太阳动效。CC和自定义调载阈值仍未实现；耀斑与观测告警已于alpha.23通过独立模块实现；分级整组升级已于alpha.19完成，日冕加工已于alpha.20完成。不要加入未完成功能占位按钮。胶囊与主控预算原子转移、不带点火资格，满背包不回收。
 - solar/包是独立装配/存储域：SolarStructure按生成的SolarLayout扫描八角足迹内9格空间，缓存校验、跟踪失效位置、禁止重叠控制器和强加载。SolarLayout由generate_solar_resources.py从art/solar-design/layout.json生成，220个实块、219块加主控；角落足迹外不要求空气。每组9块采能翼同级，四组可混级；环/聚束器最低级决定约束上限。装饰FACING/SEGMENT更新不得触发递归校验，聚束器真实转向必须触发；alpha.9采能翼朝向属于布局派生状态，旧片也自动纠正。
 - SolarController只保存储电、当前单份燃料余量/总量、点火和设置；fuel仓是SolarPart自己的18格ItemStackHandler。SolarFuelRecipe独立上限10^18 J，不批量将64份相乘。STOCK/DATA/FUEL_DATA三种组件分别处理仓、主控、残余胶囊。SolarMenu按实际点击部件距离校验而非只按主控，远端柱子也可打开。SolarPorts保留共享+单口tick额度、模拟无资源变化、停止后取料、真实自动弹出。
 - SolarConfig独立mekgravity-solar-server.toml（J）。alpha.10取消原50%目标与80%提前停机：两种模式均向实际容量补满；automatic额外按上一tick真实exported净能量快速升载，关闭时使用常规升载。净可容纳量与毛燃料不能直接取min：net=fuel-ceil(fuel/20)，需反算fuel=net+ceil(net/19)，只对小于当tick产量的净余量反算，禁止乘20导致溢出。满缓存不收费、不取下一份燃料；最后单份残余仍保持预算守恒。SolarScreen续航用菜单同步power×load/100，标明设定负载，不再除瞬时gross。比较器只告警全部燃料耗尽，统一在反应事务结束后刷新。
@@ -100,6 +106,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.23共41项GameTest通过：OrbitalTests六项覆盖真实工具绑定→配方加工→箱子，Forge付费物实际拆放继续，Node满端不扣资源及10000物品真实储物箱守恒，私有源/维度/距离拒绝，三模式能量/燃料与1～160J末端、主控掉落保存冷却，观测站真实灯和坏结构告警；满缓存升载不消耗晶核，信号只发正面且OBS无红石启停。所有旧35项继续通过；五类shader隐藏GL动态/停机/遮挡和几何去重检查通过。没有客户端游戏验收。
 
 - alpha.21共35项GameTest通过：四个真实舱经capability补给，原生ULTIMATE_BIN接收，四个等级分别预热20tick后测40tick准确出量并核对实际发电足以补回扣能；扩容4096模拟/容量拒绝、正常64手动提取、合并/shift守恒、BE与掉落物双序列化和真实重放；512已付批保存/堵塞/熄火交付、旧32批40tick/160GJ记录不重算。模型和碰撞来源相同，已检查组合深度预览及JAR资源；没有客户端视觉验收。
 

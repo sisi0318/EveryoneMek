@@ -68,7 +68,7 @@ public final class CoronalMachine extends TileEntityMekanism {
             int cap=(int)Math.min(Math.min(SolarConfig.CORONAL_BATCH.get(),room),funded);
             int n=recipe.maxBatch(view,cap);if(n==0)continue;var used=recipe.allocate(view,n);
             ItemStack example=ItemStack.EMPTY;for(int i=0;i<used.length;i++)if(used[i]>0){example=view.getItem(i).copyWithCount(1);break;}
-            return new Plan(recipe.result().copyWithCount(1),example,recipe.result().getCount()*n,n,workTicks(recipe.ticks(),c.structure.tier),Math.multiplyExact(recipe.energy(),n),used);
+            return new Plan(recipe.result().copyWithCount(1),example,recipe.result().getCount()*n,n,Math.max(1,(workTicks(recipe.ticks(),c.structure.tier)+c.tuning.processing()-1)/c.tuning.processing()),Math.multiplyExact(recipe.energy(),n),used);
         }
         for(int i=0;i<view.size();i++){var stack=view.getItem(i);if(stack.isEmpty())continue;var input=new SingleRecipeInput(stack.copyWithCount(1));
             Optional<? extends RecipeHolder<? extends AbstractCookingRecipe>> found=level.getRecipeManager().getRecipeFor(RecipeType.BLASTING,input,level);
@@ -79,7 +79,7 @@ public final class CoronalMachine extends TileEntityMekanism {
             int available=0;for(var s:view.items())if(ItemStack.isSameItemSameComponents(s,stack))available+=s.getCount();
             int n=(int)Math.min(Math.min(available,SolarConfig.CORONAL_BATCH.get()),Math.min(room,funded));
             int[] used=new int[9];int need=n;for(int slot=0;slot<9&&need>0;slot++)if(ItemStack.isSameItemSameComponents(view.getItem(slot),stack)){used[slot]=Math.min(need,view.getItem(slot).getCount());need-=used[slot];}
-            return new Plan(result.copyWithCount(1),stack.copyWithCount(1),result.getCount()*n,n,workTicks(SolarConfig.CORONAL_TICKS.get(),c.structure.tier),Math.multiplyExact(SolarConfig.CORONAL_ENERGY.get(),n),used);
+            return new Plan(result.copyWithCount(1),stack.copyWithCount(1),result.getCount()*n,n,Math.max(1,(workTicks(SolarConfig.CORONAL_TICKS.get(),c.structure.tier)+c.tuning.processing()-1)/c.tuning.processing()),Math.multiplyExact(SolarConfig.CORONAL_ENERGY.get(),n),used);
         }
         status=outputBlocked?"output_full":tierBlocked?"tier_low":energyBlocked?"energy":"no_recipe";return null;
     }

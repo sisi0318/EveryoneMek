@@ -1,0 +1,31 @@
+{
+  "type": "mekgravity:orbital_processing",
+  "machine": "gravity_forge",
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "mekanism:alloy_atomic"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "mekanism:hdpe_sheet"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "mekgravity:flare_cell"
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "id": "mekgravity:stellar_alloy",
+    "count": 4
+  },
+  "ticks": 20,
+  "energy": 2000000000,
+  "tier": 0
+}

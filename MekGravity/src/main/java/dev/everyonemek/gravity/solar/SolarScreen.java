@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 public final class SolarScreen extends GuiMekanismTile<SolarController,SolarMenu> {
     public SolarScreen(SolarMenu m,Inventory i,Component title){super(m,i,title);imageWidth=240;imageHeight=262;inventoryLabelX=38;inventoryLabelY=164;dynamicSlots=true;}
-    private Component duration(){long rate=menu.power*tile.load/100;if(tile.gross<=0||rate<=0)return SolarContent.text("paused");long seconds=tile.fuelRemaining/rate/20;return SolarContent.text("load_duration",seconds/3600,seconds/60%60,seconds%60);}
+    private Component duration(){long rate=tile.tuning.cost(tile.tuning.power(menu.power)*tile.load/100);if(tile.gross<=0||rate<=0)return SolarContent.text("paused");long seconds=tile.fuelRemaining/rate/20;return SolarContent.text("load_duration",seconds/3600,seconds/60%60,seconds%60);}
     @Override protected void addGuiElements(){super.addGuiElements();
         addRenderableWidget(new GuiInnerScreen(this,8,28,212,28,()->List.of(SolarContent.text(menu.coreHot&&tile.gross==0&&tile.status.equals("full")?"hot_standby":tile.status),SolarContent.text(menu.coreHot?"hot_core":"cold_core").copy().withStyle(menu.coreHot?net.minecraft.ChatFormatting.GOLD:net.minecraft.ChatFormatting.GRAY))).spacing(0));
         addRenderableWidget(new GuiInnerScreen(this,8,58,102,34,()->List.of(SolarContent.text("net_label"),Component.literal(ReactorScreen.fe(tile.gross-tile.selfUse)+"/t"))).spacing(0));

@@ -1,6 +1,6 @@
 # Mek Gravity · 引力约束反应堆
 
-**0.1.0-alpha.22** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.23** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 一台 7×7×7 后期多方块发电机。六组线圈约束引力核心，持续消耗致密燃料丸；电力维持约束，**不再需要钠冷却**。
 
@@ -8,11 +8,13 @@
 
 新增[日冕加工舱](CORONAL_README.md)：挂在采能翼外侧，用太阳储能批量熔炼和精炼合金，每舱最高10,240份/秒、两侧各36,864物料缓存，配套贴合采能翼的扁平舱体与动态热环 shader。
 
+新增[五台场域扩展机器](ORBITAL_MODULES.md)：耀斑捕获、引力锻造、核心调谐、引力物流和恒星观测，使用场域链接器接入现有装置。
+
 ## 安装
 
 客户端和服务端安装同一版本的本模组、**Mekanism 1.21.1-10.7.19.85** 与同版本 **Mekanism Generators**。JEI 可选，不要求安装 MekFactory 或 Extras。
 
-JAR：`build/libs/MekGravity-0.1.0-alpha.22.jar`。
+JAR：`build/libs/MekGravity-0.1.0-alpha.23.jar`。
 
 升级时先退出游戏，用新版JAR替换mods内的旧版，目录中只保留一个MekGravity。立体框架、阶梯式线圈和内嵌观察窗从alpha.5开始提供，alpha.8包含这些模型；仍加载alpha.4时不会看到新造型。客户端和服务端一起更新，已有引力堆无需重建，微缩太阳另行建造。
 
