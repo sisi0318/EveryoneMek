@@ -50,11 +50,8 @@ def build():
         'stellar_alloy':[box([2,5,4],[14,9,12],'#steel',[0,6,16,10]),box([3,9,5],[13,10,11],'#dark'),box([4,9.9,6],[12,10.1,10],'#lamp',[7,7,8,8])]
     }.items():
         model=mechanical(outer_surface(e));model['textures']['lamp']='mekgravity:block/sun_collector_active';write(f'assets/mekgravity/models/item/{name}.json',model)
-    frame=[box([3,3,3],[13,5,13],'#steel',[0,6,16,10]),box([3,11,3],[13,13,13],'#steel',[0,6,16,10])]
-    for x in [3,12]:
-        for z in [3,12]:frame.append(box([x,5,z],[x+1,11,z+1],'#dark',[0,0,16,10]))
-    for name,geometry in [('flare_cell_frame',frame),('flare_cell_fallback',frame+[box([4,4,4],[12,12,12],'#lamp',[7,7,8,8])])]:
-        model=mechanical(outer_surface(geometry));model['textures']['lamp']='mekgravity:block/sun_collector_active';write(f'assets/mekgravity/models/item/{name}.json',model)
+    from flare_cell_mesh import generate as generate_flare
+    generate_flare(RES,write)
     write('assets/mekgravity/models/item/flare_cell.json',{'parent':'builtin/entity','gui_light':'front','textures':{'particle':'mekgravity:block/sun_collector_active'},'display':{'gui':{'rotation':[20,35,0],'scale':[1.1,1.1,1.1]},'ground':{'translation':[0,3,0],'scale':[.5,.5,.5]},'fixed':{'scale':[.8,.8,.8]},'firstperson_righthand':{'rotation':[0,-30,0],'translation':[0,2,0],'scale':[.8,.8,.8]},'firstperson_lefthand':{'rotation':[0,30,0],'translation':[0,2,0],'scale':[.8,.8,.8]},'thirdperson_righthand':{'translation':[0,2,0],'scale':[.6,.6,.6]},'thirdperson_lefthand':{'translation':[0,2,0],'scale':[.6,.6,.6]}}})
     flare_shader=json.loads((RES/'assets/mekgravity/shaders/core/stellar_surface.json').read_text(encoding='utf-8'));flare_shader['vertex']=flare_shader['fragment']='mekgravity:flare_cell';write('assets/mekgravity/shaders/core/flare_cell.json',flare_shader)
     tag=json.loads((RES/'data/minecraft/tags/block/mineable/pickaxe.json').read_text(encoding='utf-8'));tag['values']=sorted(set(tag['values']+['mekgravity:'+n for n in KINDS]));write('data/minecraft/tags/block/mineable/pickaxe.json',tag)

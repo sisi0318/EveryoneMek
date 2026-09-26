@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.27，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.28，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,9 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.28用户指出耀斑晶核厚方框突兀：tools/flare_cell_mesh.py替换为0.6px径向/0.8px轴向的倾斜八边环及两小磁极，46quads；generate_module_resources调用并输出frame/fallback OBJ+JSON和共享MTL，Shader/Renderer/物品变换不变。内环弦中点半径>4.8px，避免与原4.6/4.8/4.6px旋转球相交；复用原16px纹理，禁止重画大顶/底盖。
+- fallback追加96面球体、共142quads，用既有stellar_surface_particle，关闭shader仍是球体。preview_flare_cell.cjs读取真实模型检查正/反/侧面，图为静态回退而非游戏画面。外观修改仅验证生成资源、模型边界/绕序、离线深度预览及构建，不重复服务端49项测试。
 
 - alpha.27范围设置：ModuleConfig.MIN_RANGE/MAX_RANGE为16/512，原linkRange默认128不迁移。面板个人range与全服linkRange分开同步；Action追加value，8改扫描，9改连接，registrar协议2。个人范围存Player.PERSISTED_NBT_TAG内mekgravity_panel_range，保留其他持久标签，首次缺省跟随linkRange。
 - 修改扫描只改变eligible及画布范围，不改source/peer；每20tick扫描限流不因设置或刷新请求重置，缩小时快照先过滤、扩张最多1秒发现。范围变化递增revision，拒绝旧拖线。连接设置每次核对hasPermissions(2)或isSingleplayerOwner，RANGE.set后RANGE.save触发原配置保存/重载；客户端只显示Snapshot确认值，普通用户无权修改全服值。FieldLink.inRange仍是绑定和实际物流的共同范围依据。

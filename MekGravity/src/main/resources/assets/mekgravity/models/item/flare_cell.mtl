@@ -1,0 +1,19 @@
+newmtl steel
+Ka 0 0 0
+Kd 1 1 1
+map_Kd #steel
+
+newmtl dark
+Ka 0 0 0
+Kd 1 1 1
+map_Kd #dark
+
+newmtl lamp
+Ka 1 1 1
+Kd 1 1 1
+map_Kd #lamp
+
+newmtl surface
+Ka 1 1 1
+Kd 1 1 1
+map_Kd #surface
