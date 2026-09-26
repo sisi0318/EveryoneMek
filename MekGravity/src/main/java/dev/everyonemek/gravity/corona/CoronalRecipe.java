@@ -18,6 +18,8 @@ public record CoronalRecipe(List<Input> inputs,ItemStack result,int ticks,long e
     public CoronalRecipe{if(inputs.isEmpty()||inputs.size()>4||result.isEmpty()||result.getCount()>64||ticks<1||ticks>72000||energy<1||energy>1_000_000_000_000L||tier<0||tier>3)throw new IllegalArgumentException("Invalid coronal recipe");inputs=List.copyOf(inputs);result=result.copy();}
     /** Tiny max-flow allocator handles overlapping tags and split stacks without greedy false negatives. */
     public int[] allocate(Inventory inventory,int batches){return allocate(inventory,inputs,batches);}
+    /** Feasibility is monotone: find the largest batch in O(log cap) flow checks. */
+    public int maxBatch(Inventory inventory,int cap){int low=0,high=cap;while(low<high){int mid=(low+high+1)/2;if(allocate(inventory,mid)!=null)low=mid;else high=mid-1;}return low;}
     public static int[] allocate(Inventory inventory,List<Input> inputs,int batches){
         int slots=inventory.size(),ingredients=inputs.size(),sink=slots+ingredients+1,n=sink+1;int[][] capacity=new int[n][n];int wanted=0;
         for(int i=0;i<slots;i++){capacity[0][i+1]=inventory.getItem(i).getCount();for(int j=0;j<ingredients;j++)if(inputs.get(j).ingredient.test(inventory.getItem(i)))capacity[i+1][slots+j+1]=capacity[0][i+1];}

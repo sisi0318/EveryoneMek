@@ -5,3 +5,5 @@
 加工视效由 `CoronalRenderer`、`CoronalField`、`CoronalShader` 与 `coronal_processing.vsh/.fsh` 构成：悬浮输入物品，两道橙金热环，亮线随相位移动并随加工进度升温。每舱相位、进度、强度通过顶点属性传递，不使用逐方块修改的全局 uniform。完整 128、简化 48 个四边形，0 次贴图读取，固定三角函数计算；加法混合、深度测试、不写透明深度。
 
 使用已有 LWJGL/JOML 依赖 classpath 运行 `tools/VerifyCoronalShader.java .`：隐藏 OpenGL 窗口读取真实 shader 和 `CoronalField` 顶点，验证运行/停止/流动像素、实体遮挡、透明不写深度，图片写入 `build/coronal-shader-check`。该工具不会启动 Minecraft。游戏原生菜单、光影包兼容和实际观感仍需客户端验收。
+
+alpha.21：舱体改为沿翼片安装的薄型石墨机壳，白灰只作窄轨条，金色状态像素直接复用sun_collector。模型向后延伸的接合板到达相邻翼片的实际表面（本地z=24），消除旧立方体与翼片的空隙。CoronalShapes由同一几何生成；物料/热环改到新凹槽中心，碎屑使用orb_inner。preview_coronal增加真实3×3翼片与模块的组合视图。

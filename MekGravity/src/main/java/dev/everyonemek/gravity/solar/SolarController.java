@@ -53,7 +53,7 @@ public final class SolarController extends TileEntityMekanism {
         long requested=Math.min(limit,previous+Math.max(1,structure.power()/20));
         // Always refill toward actual capacity. Automatic mode can also respond immediately
         // to real exported energy, instead of ramping up again after every full-buffer pause.
-        if(automatic)requested=Math.max(requested,fuelForNet(Math.min(Math.max(0,lastOutput),netEnergy(limit))));
+        if(automatic)requested=Math.max(requested,fuelForNet(Math.min(Math.max(0,lastOutput+lastProcessing),netEnergy(limit))));
         // Capacity is NET energy, fuel is GROSS energy. Using room directly as fuel causes
         // an asymptotic tail and eventually burns 1 J/t forever without filling the last joule.
         long amount=netEnergy(requested)>room?fuelForNet(room):requested;

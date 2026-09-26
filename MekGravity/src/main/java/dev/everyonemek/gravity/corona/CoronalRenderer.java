@@ -13,7 +13,7 @@ public final class CoronalRenderer implements BlockEntityRenderer<CoronalMachine
     @Override public void render(CoronalMachine tile,float partial,PoseStack pose,MultiBufferSource buffers,int light,int overlay){
         if(tile.getLevel()==null)return;var mc=Minecraft.getInstance();double distance=mc.gameRenderer.getMainCamera().getPosition().distanceTo(tile.getBlockPos().getCenter());
         if(distance>VisualConfig.EFFECT_DISTANCE.get())return;var motion=motions.computeIfAbsent(tile,t->new CoreMotion());motion.update(tile.getLevel().getGameTime()+(double)partial,tile.displayRunning?1:0);double phase=VisualConfig.phase(motion.phase());
-        pose.pushPose();pose.translate(.5,.5,.5);pose.mulPose(Axis.YP.rotationDegrees(180-tile.getDirection().toYRot()));pose.translate(0,0,-.30);
+        pose.pushPose();pose.translate(.5,.5,.5);pose.mulPose(Axis.YP.rotationDegrees(180-tile.getDirection().toYRot()));pose.translate(0,0,.13);
         if(!tile.displayItem.isEmpty()){
             pose.pushPose();pose.translate(0,Math.sin(phase*.06)*.015,0);pose.mulPose(Axis.YP.rotationDegrees((float)(phase*2%360)));pose.scale(.32F,.32F,.32F);
             mc.getItemRenderer().renderStatic(tile.displayProgress>=90&&!tile.displayResult.isEmpty()?tile.displayResult:tile.displayItem,ItemDisplayContext.FIXED,LightTexture.FULL_BRIGHT,overlay,pose,buffers,tile.getLevel(),0);pose.popPose();

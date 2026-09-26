@@ -246,5 +246,6 @@
   "mekgravity.corona.recipe_info": "等级 %s · %s tick · %s",
   "block.mekgravity.coronal_chamber": "日冕加工舱",
   "container.mekgravity.coronal_chamber": "日冕加工舱",
-  "description.mekgravity.coronal_chamber": "贴在采能翼外侧中心。消耗太阳储能批量熔炼、精炼合金；侧面及上下进料，正面出料。"
+  "description.mekgravity.coronal_chamber": "贴在采能翼外侧中心。消耗太阳储能批量熔炼、精炼合金；侧面及上下进料，正面出料。",
+  "mekgravity.corona.slot_stock": "库存：%s / %s"
 }

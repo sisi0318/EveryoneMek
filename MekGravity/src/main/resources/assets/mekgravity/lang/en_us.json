@@ -246,5 +246,6 @@
   "mekgravity.corona.recipe_info": "Tier %s · %s ticks · %s",
   "block.mekgravity.coronal_chamber": "Coronal Processing Chamber",
   "container.mekgravity.coronal_chamber": "Coronal Processing Chamber",
-  "description.mekgravity.coronal_chamber": "Mount outside the center of a collector wing. Uses solar energy for batch smelting and alloy refining. Inputs: sides, top and bottom. Output: front."
+  "description.mekgravity.coronal_chamber": "Mount outside the center of a collector wing. Uses solar energy for batch smelting and alloy refining. Inputs: sides, top and bottom. Output: front.",
+  "mekgravity.corona.slot_stock": "Stored: %s / %s"
 }

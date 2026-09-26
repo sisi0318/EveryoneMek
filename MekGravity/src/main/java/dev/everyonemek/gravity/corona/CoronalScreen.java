@@ -16,5 +16,10 @@ public final class CoronalScreen extends GuiMekanismTile<CoronalMachine,CoronalM
         for(int i=0;i<2;i++){int action=i;addRenderableWidget(new MekanismButton(this,10+i*108,130,102,16,label(action),(b,x,y)->{minecraft.gameMode.handleInventoryButtonClick(menu.containerId,action);return true;}){@Override public void tick(){super.tick();setMessage(label(action));}});}
     }
     private Component label(int action){return CoronalContent.text(action==0?(tile.enabled?"stop":"start"):(tile.autoEject?"eject_on":"eject_off"));}
+    @Override protected void renderSlotContents(GuiGraphics g,net.minecraft.world.item.ItemStack stack,net.minecraft.world.inventory.Slot slot,String count){
+        if(slot.index<18&&count==null&&stack.getCount()>=1000)count=stack.getCount()/1000+"k";
+        super.renderSlotContents(g,stack,slot,count);
+    }
+    @Override protected List<Component> getTooltipFromContainerItem(net.minecraft.world.item.ItemStack stack){var lines=new java.util.ArrayList<>(super.getTooltipFromContainerItem(stack));if(hoveredSlot!=null&&hoveredSlot.index<18)lines.add(CoronalContent.text("slot_stock",stack.getCount(),hoveredSlot.getMaxStackSize(stack)));return lines;}
     @Override protected void drawForegroundText(GuiGraphics g,int x,int y){super.drawForegroundText(g,x,y);renderTitleText(g);renderInventoryText(g);g.drawString(font,CoronalContent.text("input"),12,24,titleTextColor(),false);g.drawString(font,CoronalContent.text("output"),154,24,titleTextColor(),false);drawScaledScrollingString(g,CoronalContent.text("batch",tile.batch),74,69,145,87,TextAlignment.CENTER,titleTextColor(),false,.8F,getTimeOpened());}
 }

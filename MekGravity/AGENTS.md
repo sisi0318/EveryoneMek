@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.20，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.21，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,11 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.21日冕吞吐默认512批、额外acceleration5、普通40基础ticks→四级8/4/2/1tick。太阳react自动调载必须把lastProcessing与lastOutput一起响应，否则突发加工用电会因从零缓慢爬升而不能及时补回缓存。SolarConfig.Loading以coronalPerformanceRevision一次迁移原32批/5GJ默认值，保留自定义；旧coronal_work的duration/progress/paid不重算，批量/余量/paid上限分别扩至512/32768/512TJ。
+- CoronalInventorySlot用BasicInventorySlot的4096上限、原生oversized NBT及AttachedItems组件；世界与物品附件保持18槽原顺序并同上限。普通64堆叠存4096、16堆叠存1024、非堆叠仍1。MANUAL/EXTERNAL沿用原extractItem的物品堆叠上限，INTERNAL弹出覆盖该限制以批量转移；否则产物合并到单槽后自动出料会卡64/t。空ItemStack查询返回4096。菜单原生提取/合并/shift及真实掉落ItemStack序列化重放已验证。
+- 配方maxBatch二分最大流，先按可支付能量和产物空间限界，不按512逐项循环；onContentsChanged清nextAttempt响应补货，未改变库存的空闲仍5tick重试。完成后保留最近batch/progress/paid显示；特效仅启停与4tick周期更新，不逐批force发包。
+- CoronalBlock/生成CoronalShapes匹配薄型翼片接合舱；同一generate_coronal_resources.py生成模型/碰撞，背部接合板延伸至本地z24的真实翼片背面。复用orb_inner为主体、窄shell_panel轨条和sun_collector金色灯，Renderer中心local z=.63，物品GUI缩放和破坏粒子同步。
 
 - alpha.20日冕加工舱位于solar布局(-1,4,4)/(9,4,4)/(4,4,-1)/(4,4,9)，背面对collector的segment4且朝内相同；不加入旧220块结构。CoronalMachine原生Mek9进9出，只存一套mekanism:items，coronal_work仅保存已付费产物/进度/设置。SolarController在SolarPorts.eject后派发四舱，每舱每tick最多推进一次，spendForCorona直接扣共享储电且保留reserve，不计入外部exported；lastProcessing为上一tick批次总扣能。
 - CoronalRecipe的coronal_processing支持1～4输入、结果1～64、基础ticks≤72000、energy≤10^12 J、tier0～3；最大流分配处理标签重叠和跨槽原料。配方匹配空闲最多每5tick，已付批次不重新读取配方。finish先合并后占空槽，堵塞保留remaining；掉落loot必须同时复制mekanism:items及mekgravity:coronal_work。原生ItemSlotsBuilder能力与服务端slots数量一致。
@@ -93,6 +98,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.21共35项GameTest通过：四个真实舱经capability补给，原生ULTIMATE_BIN接收，四个等级分别预热20tick后测40tick准确出量并核对实际发电足以补回扣能；扩容4096模拟/容量拒绝、正常64手动提取、合并/shift守恒、BE与掉落物双序列化和真实重放；512已付批保存/堵塞/熄火交付、旧32批40tick/160GJ记录不重算。模型和碰撞来源相同，已检查组合深度预览及JAR资源；没有客户端视觉验收。
 
 - alpha.20共32项GameTest通过。CoronalTests覆盖真实漏斗供料66原铁→66铁锭并自动出箱、模拟无副作用、输出拒绝外部插入；付费32批暂停/BlockEntity.loadStatic/真实掉落重放、恢复不重复收费、满输出保留32份及熄火交付；分散与重叠输入、真实合金配方、tier门槛、原生右键菜单暂停。VerifyCoronalShader隐藏GL验证实际GLSL、流动/停机像素、深度遮挡与不写透明深度，128面；静态模型深度预览复用16px原素材。未启动客户端。
 

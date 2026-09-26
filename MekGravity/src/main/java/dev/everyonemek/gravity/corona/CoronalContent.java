@@ -32,8 +32,8 @@ public final class CoronalContent {
     static{
         var machine=Machine.MachineBuilder.<CoronalMachine>createMachine(()->CoronalContent.TILE,()->"description.mekgravity.coronal_chamber").withGui(()->MENU).withEnergyConfig(()->0L,()->0L).build();
         machine.remove(mekanism.common.block.attribute.AttributeUpgradeSupport.class,mekanism.common.block.attribute.AttributeParticleFX.class);
-        BLOCK=BLOCKS.registerDetails("coronal_chamber",()->new BlockTile<>(machine,p->p.strength(6,20).noOcclusion()));
-        BLOCK.forItemHolder(item->item.addAttachedContainerCapabilities(ContainerType.ITEM,()->ItemSlotsBuilder.builder().addInput(9).addOutput(9).build()));
+        BLOCK=BLOCKS.registerDetails("coronal_chamber",()->new CoronalBlock(machine));
+        BLOCK.forItemHolder(item->item.addAttachedContainerCapabilities(ContainerType.ITEM,()->ItemSlotsBuilder.builder().addSlots(9,(type,stack,index)->CoronalInventorySlot.attached(stack,index,false)).addSlots(9,(type,stack,index)->CoronalInventorySlot.attached(stack,index,true)).build()));
         TILE=TILES.mekBuilder(BLOCK,CoronalMachine::new).clientTicker(TileEntityMekanism::tickClient).serverTicker(TileEntityMekanism::tickServer).build();
     }
     public static Component text(String key,Object...args){return Component.translatable("mekgravity.corona."+key,args);}
