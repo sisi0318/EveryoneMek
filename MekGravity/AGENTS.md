@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.24，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.25，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,13 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.25 NODE通过懒创建NodeStorage扩展原生energy/fluids/chemicals；字段不能初始化覆盖父构造getInitial方法创建的数据。收发分离：J各2.56PJ，流体4+4×16MmB，化学4+4×64M，侧/背/上下入、正面出；4通道mask保存默认15，旧18物品槽和绑定不改。held item必须同时注册对应容器creators，loot复制mekanism:energy/fluids/chemicals，不能只保存orbital_module。
+- 化学罐与物品creators用ChemicalAttributeValidator.ALWAYS_ALLOW。原TileEntityMekanism.collectChemicalTanks会在shouldDumpRadiation为true时过滤放射性货物；仅NODE覆写为false保持密封，真实核废料掉落/重放回归已过。其余机器不改默认辐射行为。
+- NodeStorage.transfer直接从输入到对方输出，先匹配容量与能耗再原子提交；流体按组件匹配，化学品按原类型，能量用long。发送端按gameTime%4轮换资源优先级。传输电费来自绑定源，能量货物另存；默认物品1MJ/个、流体/化学品1kJ/单位、能量每次1MJ。自动eject优先原生long，FE回退使用ForgeEnergyIntegration模拟对齐且64次有界循环，外部容量/速度仍生效。原FE桥canReceive/canExtract总返回true，方向测试要调用实际insert/extract，不能仅检查这两个声明。
+- FieldLinker正常点击能源→发送→接收，工具分别保存power与sender；远处配对只要求玩家在接收端附近，但每次重新检查两端权限/同维度/128格/已加载。旧flat dimension/pos/node标签和潜行接收端优先流程继续支持；空气潜行右键仅清选择。receiverConfigured保存配对记录，无源无目标的节点默认显示接收就绪；sourceBound/peerBound菜单布尔值消除未绑定时显示0,0,0。动作5/6分别解除目标/能源，20～23切换通道。
+- ModuleScreen资源窗用原GuiFluidGauge/GuiChemicalGauge，tanks supplier必须给getFluidTanks(null)/getChemicalTanks(null)完整8罐，不能传4罐子集，否则出侧GaugeDropper索引会误指入侧。GaugeType.STANDARD按18×60布局，原生父类同步真实容器；传输开关只控制无线通道，取出已有输出仍可进行。
+- FlareCellRenderer通过RegisterClientExtensionsEvent注册FLARE，item模型builtin/entity；FRAME/FALLBACK在ModelEvent注册，资源重载后从ModelManager获取。SolarShader追加独立flare_cell材质，复用SolarSphereMesh，GUI384quads、其他96；金属框复用16px原素材。VerifySolarShader新增flare参数，仅输出build预览，不能覆盖原恒星/引力粒子贴图。
 
 - alpha.24用户要求GUI不出现“本批已付”等内部记账措辞：显示加工耗能／传输耗能，太阳汇总为模块耗能（每tick），持久化paid键不改。
 - alpha.24用户要求压缩恒星物质只用耀斑晶核：orbital/stellar_matter仍为5GJ/40基础tick，但输入改为单个flare_cell，不改原工作台配方。OrbitalModule.start按输入组数降序、recipe ID确定顺序；完整复杂配方即使受能量/空间/等级限制也不回退到组数更少的配方，避免新单输入路线抢走合金用晶核。旧预付快照不重算。
@@ -109,6 +116,8 @@
 - 根docs/gravity-reactor为结构与视觉资料；代码生成JSON只改tools/generate_resources.py。运行贴图必须16×16，原稿/图集/提示词放art且不进JAR。
 
 ## 验证
+
+- alpha.25共45项GameTest通过。NodeResourceTests覆盖正常三步远端配对与清选择、6000物品＋100GJ级能量＋两种流体（带组件）＋氢/红石化学品同一tick交付及准确耗能；保存/原生ItemStack组件/实际掉落重放保留双侧缓存及核废料；四类自动eject到原PRC、独立通道暂停与满接收端守恒。PRC基础储能仅2000J，测试核对节点余量；用1份生物燃料（原反应需2份）验证插入而不启动反应。flare实际GLSL、相位/冷热/遮挡/多实例及384/96LOD验证通过，未运行客户端。
 
 - alpha.24仍41项GameTest通过：扩展原Forge实际拆放回归，在16个恒星合金完成后仅送4个flare_cell（无燃料丸），再产4个compressed_stellar_matter，累计20GJ/基础40tick正确；复杂配方与单输入路线并存。中英文运行资源及JAR检查去除了旧记账措辞，界面未做客户端验收。
 

@@ -11,19 +11,21 @@ import org.joml.Vector3f;
 
 /** A single opaque sphere pass. Per-star data travels in vertices, not shared mutable uniforms. */
 public final class SolarShader {
-    private static ShaderInstance shader,gravityShader;
-    private static final RenderType TYPE=type("stellar_surface",()->shader),GRAVITY_TYPE=type("gravity_surface",()->gravityShader);
+    private static ShaderInstance shader,gravityShader,flareShader;
+    private static final RenderType TYPE=type("stellar_surface",()->shader),GRAVITY_TYPE=type("gravity_surface",()->gravityShader),FLARE_TYPE=type("flare_cell",()->flareShader);
     private static RenderType type(String name,java.util.function.Supplier<ShaderInstance> shader){return RenderType.create("mekgravity_"+name,DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,VertexFormat.Mode.QUADS,131072,false,false,
           RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(shader))
           .setTransparencyState(RenderStateShard.NO_TRANSPARENCY).setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
           .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE).setCullState(RenderStateShard.CULL).createCompositeState(false));}
     public static void register(RegisterShadersEvent event){
-        shader=gravityShader=null;
+        shader=gravityShader=flareShader=null;
         try{event.registerShader(new ShaderInstance(event.getResourceProvider(),ResourceLocation.fromNamespaceAndPath(MekGravity.ID,"stellar_surface"),DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),loaded->shader=loaded);}
         catch(IOException error){LogUtils.getLogger().error("Could not load stellar surface shader; using the baked photosphere",error);}
         try{event.registerShader(new ShaderInstance(event.getResourceProvider(),ResourceLocation.fromNamespaceAndPath(MekGravity.ID,"gravity_surface"),DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),loaded->gravityShader=loaded);}
         catch(IOException error){LogUtils.getLogger().error("Could not load gravity surface shader; using the baked core",error);}
     }
+    public static void registerFlare(RegisterShadersEvent event){try{event.registerShader(new ShaderInstance(event.getResourceProvider(),ResourceLocation.fromNamespaceAndPath(MekGravity.ID,"flare_cell"),DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),loaded->flareShader=loaded);}catch(IOException error){LogUtils.getLogger().error("Could not load flare cell shader; using the caged fallback",error);}}
+    public static boolean drawFlare(PoseStack pose,MultiBufferSource buffers,double phase,double distance){if(flareShader==null||!dev.everyonemek.gravity.VisualConfig.SHADERS.get())return false;draw(pose,buffers,phase*3,1,distance,FLARE_TYPE);return true;}
     public static boolean draw(PoseStack pose,MultiBufferSource buffers,double phase,float heat,double distance){
         if(shader==null||!dev.everyonemek.gravity.VisualConfig.SHADERS.get())return false;
         draw(pose,buffers,phase,heat,distance,TYPE);return true;

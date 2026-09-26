@@ -40,9 +40,17 @@ public final class ModuleContent {
         type.remove(mekanism.common.block.attribute.AttributeUpgradeSupport.class,mekanism.common.block.attribute.AttributeParticleFX.class);
         if(kind==ModuleKind.OBSERVATORY)type.remove(mekanism.common.block.attribute.Attributes.AttributeRedstone.class);
         var block=BLOCKS.registerDetails(kind.id,()->new ModuleBlock(type,kind));BLOCK.put(kind,block);
-        block.forItemHolder(item->item.addAttachedContainerCapabilities(ContainerType.ITEM,()->{
+        block.forItemHolder(item->{item.addAttachedContainerCapabilities(ContainerType.ITEM,()->{
             var slots=ItemSlotsBuilder.builder();if(kind.cargo)return slots.addSlots(9,(t,s,i)->CoronalInventorySlot.attached(s,i,false)).addSlots(9,(t,s,i)->CoronalInventorySlot.attached(s,i,true)).build();
-            if(kind==ModuleKind.TUNER)slots.addInput(s->s.is(FLARE.get()));return slots.build();}));
+            if(kind==ModuleKind.TUNER)slots.addInput(s->s.is(FLARE.get()));return slots.build();});
+            if(kind==ModuleKind.NODE){
+                item.addAttachedContainerCapabilities(ContainerType.ENERGY,()->mekanism.common.attachments.containers.energy.EnergyContainersBuilder.builder()
+                    .addBasic(a->a!=mekanism.api.AutomationType.EXTERNAL,a->true,()->Long.MAX_VALUE,()->NodeStorage.ENERGY_CAPACITY)
+                    .addBasic(a->true,a->a==mekanism.api.AutomationType.INTERNAL,()->Long.MAX_VALUE,()->NodeStorage.ENERGY_CAPACITY).build());
+                item.addAttachedContainerCapabilities(ContainerType.FLUID,()->{var b=mekanism.common.attachments.containers.fluid.FluidTanksBuilder.builder();for(int i=0;i<8;i++){boolean out=i>=4;b.addTank((container,stack,index)->new mekanism.common.attachments.containers.fluid.ComponentBackedFluidTank(stack,index,(f,a)->out||a!=mekanism.api.AutomationType.EXTERNAL,(f,a)->!out||a==mekanism.api.AutomationType.INTERNAL,f->true,()->Integer.MAX_VALUE,()->NodeStorage.FLUID_CAPACITY));}return b.build();});
+                item.addAttachedContainerCapabilities(ContainerType.CHEMICAL,()->{var b=mekanism.common.attachments.containers.chemical.ChemicalTanksBuilder.builder();for(int i=0;i<8;i++){boolean out=i>=4;b.addTank((container,stack,index)->new mekanism.common.attachments.containers.chemical.ComponentBackedChemicalTank(stack,index,(f,a)->out||a!=mekanism.api.AutomationType.EXTERNAL,(f,a)->!out||a==mekanism.api.AutomationType.INTERNAL,f->true,()->Long.MAX_VALUE,()->NodeStorage.CHEMICAL_CAPACITY,mekanism.api.chemical.attribute.ChemicalAttributeValidator.ALWAYS_ALLOW));}return b.build();});
+            }
+        });
         TILE.put(kind,TILES.mekBuilder(block,OrbitalModule::new).clientTicker(TileEntityMekanism::tickClient).serverTicker(TileEntityMekanism::tickServer).build());
     }}
     public static Component text(String key,Object...args){return Component.translatable("mekgravity.module."+key,args);}

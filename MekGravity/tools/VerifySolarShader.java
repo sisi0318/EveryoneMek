@@ -56,7 +56,7 @@ public class VerifySolarShader {
     }}
     private static String key(float[] data,int i){return java.lang.Math.round(data[i]*1E6)+","+java.lang.Math.round(data[i+1]*1E6)+","+java.lang.Math.round(data[i+2]*1E6);}
     public static void main(String[] args)throws Exception{
-        boolean gravity=args.length>1&&args[1].equals("gravity");geometry();Path root=Path.of(args[0]),out=root.resolve(gravity?"build/gravity-shader-check":"build/shader-check");Files.createDirectories(out);
+        boolean gravity=args.length>1&&args[1].equals("gravity"),flare=args.length>1&&args[1].equals("flare");geometry();Path root=Path.of(args[0]),out=root.resolve(flare?"build/flare-shader-check":gravity?"build/gravity-shader-check":"build/shader-check");Files.createDirectories(out);
         if(!glfwInit())throw new AssertionError("Cannot initialize standalone OpenGL");
         glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
         long window=glfwCreateWindow(WIDTH,HEIGHT,"MekGravity shader validation (hidden)",0,0);if(window==0)throw new AssertionError("Cannot create hidden GL context");
@@ -64,9 +64,9 @@ public class VerifySolarShader {
             glfwMakeContextCurrent(window);GL.createCapabilities();System.out.println("OpenGL "+glGetString(GL_VERSION)+" / "+glGetString(GL_RENDERER));
             String fog;try(var zip=new ZipFile(root.resolve("build/moddev/artifacts/neoforge-21.1.241-client-extra-aka-minecraft-resources.jar").toFile())){fog=new String(zip.getInputStream(zip.getEntry("assets/minecraft/shaders/include/fog.glsl")).readAllBytes(),java.nio.charset.StandardCharsets.UTF_8).replace("#version 150","");}
             Path shaders=root.resolve("src/main/resources/assets/mekgravity/shaders/core");
-            int vertex=compile(GL_VERTEX_SHADER,Files.readString(shaders.resolve("stellar_surface.vsh")).replace("#moj_import <fog.glsl>",fog));
+            int vertex=compile(GL_VERTEX_SHADER,Files.readString(shaders.resolve(flare?"flare_cell.vsh":"stellar_surface.vsh")).replace("#moj_import <fog.glsl>",fog));
             String noise=Files.readString(shaders.resolve("../include/core_convection.glsl"));
-            int fragment=compile(GL_FRAGMENT_SHADER,Files.readString(shaders.resolve(gravity?"gravity_surface.fsh":"stellar_surface.fsh")).replace("#moj_import <fog.glsl>",fog).replace("#moj_import <mekgravity:core_convection.glsl>",noise));
+            int fragment=compile(GL_FRAGMENT_SHADER,Files.readString(shaders.resolve(flare?"flare_cell.fsh":gravity?"gravity_surface.fsh":"stellar_surface.fsh")).replace("#moj_import <fog.glsl>",fog).replace("#moj_import <mekgravity:core_convection.glsl>",noise));
             program=glCreateProgram();glAttachShader(program,vertex);glAttachShader(program,fragment);
             String[] attr={"Position","UV0","Color","Normal"};for(int i=0;i<attr.length;i++)glBindAttribLocation(program,i,attr[i]);glLinkProgram(program);if(glGetProgrami(program,GL_LINK_STATUS)==0)throw new AssertionError(glGetProgramInfoLog(program));glUseProgram(program);
             for(String uniform:new String[]{"ModelViewMat","ProjMat","ColorModulator","FogStart","FogEnd","FogColor","FogShape"})if(glGetUniformLocation(program,uniform)<0)throw new AssertionError("Missing uniform "+uniform);
@@ -92,7 +92,7 @@ public class VerifySolarShader {
             for(double distance:new double[]{0,16,40}){int count=upload(mesh(distance,0,1,0));matrix("ModelViewMat",new Matrix4f().translate(0,0,(float)-distance));glViewport(0,0,WIDTH,HEIGHT);for(int i=0;i<5;i++){glClear(GL_DEPTH_BUFFER_BIT);glDrawElements(GL_TRIANGLES,count,GL_UNSIGNED_INT,0L);}glFinish();
                 int timer=glGenQueries();glBeginQuery(GL_TIME_ELAPSED,timer);for(int i=0;i<100;i++){glClear(GL_DEPTH_BUFFER_BIT);glDrawElements(GL_TRIANGLES,count,GL_UNSIGNED_INT,0L);}glEndQuery(GL_TIME_ELAPSED);long ns=glGetQueryObjecti64(timer,GL_QUERY_RESULT);glDeleteQueries(timer);System.out.printf(Locale.ROOT,"LOD %.0f: %d quads, %.3f ms/draw in 640px offscreen benchmark%n",distance,count/6,ns/100_000_000D);}
             if(glGetError()!=GL_NO_ERROR)throw new AssertionError("OpenGL error");
-            {
+            if(!flare){
                 // Bake a 16px particle tile directly with the currently selected surface shader.
                 // A front-surface patch fills the viewport, so no background pixels enter the atlas.
                 var tile=BufferUtils.createByteBuffer(4*28);float nx=.4F,ny=.4F,nz=(float)java.lang.Math.sqrt(1-2*.16);

@@ -17,7 +17,10 @@
                 "mekanism:security",
                 "mekanism:redstone_control",
                 "mekgravity:orbital_module",
-                "minecraft:custom_name"
+                "minecraft:custom_name",
+                "mekanism:energy",
+                "mekanism:fluids",
+                "mekanism:chemicals"
               ]
             }
           ]
