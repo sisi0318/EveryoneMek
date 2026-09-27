@@ -40,7 +40,7 @@ public final class GearEnergy implements IMekanismStrictEnergyHandler, IEnergyCo
     public static int bar(ItemStack stack) { return (int)Math.clamp(Math.round(13D * stored(stack) / Math.max(1, capacity(stack))), 0, 13); }
     public static void tooltip(ItemStack stack, List<Component> lines) {
         if (capacity(stack) > 0 || stored(stack) > 0) lines.add(CoreContent.text("gear.energy",
-              mekanism.common.util.text.EnergyDisplay.of(stored(stack)), mekanism.common.util.text.EnergyDisplay.of(capacity(stack))));
+              mekanism.common.util.text.EnergyDisplay.of(stored(stack)).getTextComponent(), mekanism.common.util.text.EnergyDisplay.of(capacity(stack)).getTextComponent()));
     }
     private boolean available() { return !stack.isEmpty() && (!stack.is(CoreContent.WARD) || WardCustody.energyAccess(stack)); }
     private boolean write(long amount) {

@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.17，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.17.jar`。
+- 0.1.0-alpha.18，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.18.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -19,6 +19,8 @@
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
 
 ## 实现入口与数据契约
+
+- alpha.18：CoreContent.text 使用原生 Component.translatable，不会自动展开 Mek IHasTextComponent。EnergyDisplay.of(...) 必须先 getTextComponent() 再作参数，不能让 Object.toString 泄漏类名与每次分配变化的 identity hash。GearEnergy.tooltip 和 ServiceScreen 两处已修正；真实储能、单位转换、组件与费用不变。classes jar及发布字节码检查通过，未重复服务端GameTest、未启动客户端。
 
 - alpha.17 EquipmentModules/GearUpgrade为显式支持表；Mek原改装站处理所有已注册容器。CoreItem/Ward实现IModuleContainerItem，CoreBinding的equipment保存完整快照但只恢复认可模块，回收电量仍只有玩家KEY一份；绑定／改装／恢复都保持同instance。新增RESERVOIR按启用等级扩容，降级不删余雷。
 - GearEffects在原Workplace半秒采样处处理热沉／磁荷，按真实盔甲储能先模拟再扣款；金属load保留真实值，compensation单独同步，heavy继续用原恢复滞后。模块仅放背包、禁用或缺电不得生效。
