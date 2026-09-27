@@ -1,0 +1,4 @@
+newmtl metal
+map_Kd overloadcore:item/module_residual_coupling_unit
+newmtl energy
+map_Kd overloadcore:item/module_residual_coupling_unit

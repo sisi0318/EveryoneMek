@@ -35,3 +35,13 @@
 alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置 ImageGen 新生成，原稿为 [module_residual_coupling_unit.png](source/module_residual_coupling_unit.png)，完整提示词和参考记录见 [coupling-module-prompt.txt](coupling-module-prompt.txt)。原图具有真实透明通道；`tools/export_module_art.cjs` 仅透明边裁切与最近邻缩放为16×16，运行时不新增动态渲染器。
 
 ![实际16×16图标放大](coupling-module-preview.png)
+
+## alpha.17 装备与武器模型
+
+新增模块、武器和MekaSuit外装为原创代码模型，由 `tools/generate_equipment.py` 生成，使用已有原创16px耦合模块配色，并通过模型顶点色添加少量绿色指示灯。没有另行绘制／改写位图，没有复制上游装备贴图。
+
+- [模块实际资源预览](equipment-modules-preview.png)
+- [武器静态回退预览](weapons-preview.png)
+- `GearGlowMesh` 与 `.vsh/.fsh` 只覆盖武器能量面；所有机壳与能量面共同求外表面后拆分，消除覆盖面。
+- `tools/preview_equipment.cjs` 用原PNG最近邻采样和深度缓存离线渲染，不代表游戏内验收。
+- `tools/VerifyGearShader.java` 在隐藏GL上下文编译实际GLSL并核对动画、空电量变暗和遮挡；不启动Minecraft客户端。

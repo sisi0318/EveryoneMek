@@ -10,6 +10,10 @@ public final class CoreConfig {
     public static final ModConfigSpec.IntValue WARD_COST_FE;
     public static final ModConfigSpec.IntValue WARD_RESERVE_PERCENT, WARD_SHIELD_HITS, WARD_SHIELD_TICKS;
     public static final java.util.List<ModConfigSpec.IntValue> COUPLING_RATES;
+    public static final ModConfigSpec.IntValue HEAT_SINK_COST_FE, HEAT_SINK_PER_LEVEL, MAGNETIC_COST_FE, MAGNETIC_PER_LEVEL;
+    public static final ModConfigSpec.IntValue CAPACITOR_CHARGES, GEAR_CHARGE_RATE, AFTERGUARD_HITS, AFTERGUARD_TICKS;
+    public static final ModConfigSpec.IntValue RAIL_COST, RAIL_CHARGE, RAIL_RANGE, BLADE_COST, BLADE_BURST_COST, BLADE_CHARGE, ARC_COST;
+    public static final ModConfigSpec.DoubleValue RAIL_DAMAGE, BLADE_DAMAGE, ARC_DAMAGE;
     static {
         var b = new ModConfigSpec.Builder();
         RANGE = b.comment("Radius in blocks; only owned or explicitly shared devices.").defineInRange("range", 32, 1, 64);
@@ -20,8 +24,28 @@ public final class CoreConfig {
         b.push("equipment");
         for (int level = 1; level <= 4; level++) rates.add(b.comment("Coupling transfer cap in FE/t. Limited by recovered energy and chest acceptance; not an energy source.")
               .defineInRange("couplingFEPerTickLevel" + level, 4000 << (2 * (level - 1)), 0, 10000000));
+        HEAT_SINK_COST_FE = b.defineInRange("heatSinkFEPerHalfSecondPerLevel", 500, 1, 1000000);
+        HEAT_SINK_PER_LEVEL = b.defineInRange("heatSinkCoolingPerLevel", 2, 1, 20);
+        MAGNETIC_COST_FE = b.defineInRange("magneticFEPerHalfSecondPerLevel", 250, 1, 1000000);
+        MAGNETIC_PER_LEVEL = b.defineInRange("magneticIngotCompensationPerLevel", 128, 1, 4096);
+        CAPACITOR_CHARGES = b.defineInRange("wardCapacitorChargesPerLevel", 3, 1, 100);
+        GEAR_CHARGE_RATE = b.defineInRange("equipmentChargeFEPerTick", 100000, 1, 10000000);
+        AFTERGUARD_HITS = b.defineInRange("afterguardHitsPerLevel", 1, 1, 5);
+        AFTERGUARD_TICKS = b.defineInRange("afterguardTicksPerLevel", 20, 1, 200);
         b.pop();
         COUPLING_RATES = java.util.List.copyOf(rates);
+        b.push("combat");
+        RAIL_COST = b.defineInRange("railShotFE", 50000, 1, 100000000);
+        RAIL_CHARGE = b.defineInRange("railChargeTicks", 32, 8, 200);
+        RAIL_RANGE = b.defineInRange("railRange", 48, 8, 128);
+        RAIL_DAMAGE = b.defineInRange("railDamage", 32D, 1D, 10000D);
+        BLADE_COST = b.defineInRange("bladeHitFE", 4000, 1, 100000000);
+        BLADE_BURST_COST = b.defineInRange("bladeBurstFE", 25000, 1, 100000000);
+        BLADE_CHARGE = b.defineInRange("bladeChargeTicks", 24, 8, 200);
+        BLADE_DAMAGE = b.defineInRange("bladeDamage", 18D, 4D, 10000D);
+        ARC_COST = b.defineInRange("resonanceTargetFE", 5000, 1, 100000000);
+        ARC_DAMAGE = b.defineInRange("resonanceDamage", 6D, 1D, 10000D);
+        b.pop();
         SOUND_GAIN = b.defineInRange("soundGain", 1.8, 1, 3);
         WARD_COST_FE = b.comment("Thunder Ward: total FE cost per averted fatal incident; no cooldown.")
               .defineInRange("wardCostFE", 100000, 1, 1000000000);

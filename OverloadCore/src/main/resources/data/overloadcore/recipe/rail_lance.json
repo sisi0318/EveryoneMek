@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "APA",
+    "ECE",
+    "ASA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "P": {
+      "item": "mekanism:pellet_polonium"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    }
+  },
+  "result": {
+    "id": "overloadcore:rail_lance"
+  }
+}

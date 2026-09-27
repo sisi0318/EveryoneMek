@@ -61,6 +61,7 @@ public final class CorePackets {
         var tag = new CompoundTag(); var data = CoreBinding.data(player);
         tag.putBoolean("bound", CoreBinding.bound(player));
         tag.putBoolean("heavy", data.getBoolean("heavy")); tag.putInt("load", data.getInt("load")); tag.putInt("heat", data.getInt("heat")); tag.putInt("noise", data.getInt("noise"));
+        tag.putInt("compensation", data.getInt("compensation"));
         tag.putLong("energy", (long) EnergyUnit.FORGE_ENERGY.convertTo(Math.max(0, data.getLong("energy"))));
         var devices = new ListTag(); var seen = new HashSet<net.minecraft.core.BlockPos>();
         if (CoreBinding.active(player)) for (var tile : DeviceTracker.nearby(player.level(), player.position(), CoreConfig.RANGE.get())) {

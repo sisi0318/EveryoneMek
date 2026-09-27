@@ -22,7 +22,7 @@ def generate(mek_jar):
           'result': {'id': f'{MOD}:module_residual_coupling_unit'}})
     write(f'data/{MOD}/tags/item/recovery_chargeable.json', {'replace': False, 'values': [
           'mekanism:meka_tool', 'mekanism:mekasuit_helmet', 'mekanism:mekasuit_bodyarmor',
-          'mekanism:mekasuit_pants', 'mekanism:mekasuit_boots']})
+          'mekanism:mekasuit_pants', 'mekanism:mekasuit_boots', 'overloadcore:rail_lance', 'overloadcore:thunder_blade']})
     write(f'{MOD}.mixins.json', {'required': True, 'package': 'dev.everyonemek.overloadcore.mixin', 'compatibilityLevel': 'JAVA_21',
           'plugin': 'dev.everyonemek.overloadcore.mixin.OptionalMixinPlugin',
           'mixins': ['WardLivingAccess', 'WardHealthMixin', 'WardPlayerMixin', 'WardRemoveMixin', 'WardSetRemovedMixin',
@@ -32,7 +32,7 @@ def generate(mek_jar):
                      'CachedRecipeAccess', 'MachineEnergyOwner', 'RecipeMonitorMixin', 'CachedEnergyMixin', 'RecipeOutputMixin',
                      'MachineTickMixin', 'TransmitterTickMixin', 'ManualEnergyMixin', 'MachineDataMixin', 'PlayerSprintMixin', 'GeneratorMixin',
                      'GeneratorHeatMixin', 'GeneratorTurbineMixin', 'GeneratorFusionMixin', 'NetworkAccess', 'EnergyNetworkMixin',
-                     'FluidNetworkMixin', 'ChemicalNetworkMixin', 'EnergyTargetMixin', 'FluidTargetMixin', 'ChemicalTargetMixin', 'ItemTransportMixin', 'FluidPullMixin', 'LongPullMixin'],
+                     'MekaToolCombatMixin', 'WeaponEnergyModuleMixin', 'FluidNetworkMixin', 'ChemicalNetworkMixin', 'EnergyTargetMixin', 'FluidTargetMixin', 'ChemicalTargetMixin', 'ItemTransportMixin', 'FluidPullMixin', 'LongPullMixin'],
           'client': ['MachineSoundMixin'], 'injectors': {'defaultRequire': 1}})
     write(f'data/{MOD}/curios/slots/overload_core.json', {'size': 1, 'operation': 'SET', 'order': 30, 'icon': 'curios:slot/empty_necklace_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
     write(f'data/{MOD}/curios/slots/overload_ward.json', {'size': 1, 'operation': 'SET', 'order': 31, 'icon': 'curios:slot/empty_bracelet_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
@@ -155,6 +155,8 @@ def generate(mek_jar):
     ]
     for i,pair in enumerate(curses): pairs[f'overloadcore.curse.{i}'] = pair
     for i,pair in enumerate(gifts): pairs[f'overloadcore.gift.{i}'] = pair
+    from generate_equipment import generate as equipment
+    pairs.update(equipment(write))
     for lang,index in [('zh_cn',0),('en_us',1)]: write(f'assets/{MOD}/lang/{lang}.json', {key:value[index] for key,value in pairs.items()})
     # Test-only empty structure; never included in the runtime jar.
     def string(text):

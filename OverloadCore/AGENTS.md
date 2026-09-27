@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.16，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.16.jar`。
+- 0.1.0-alpha.17，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.17.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -20,11 +20,20 @@
 
 ## 实现入口与数据契约
 
+- alpha.17 EquipmentModules/GearUpgrade为显式支持表；Mek原改装站处理所有已注册容器。CoreItem/Ward实现IModuleContainerItem，CoreBinding的equipment保存完整快照但只恢复认可模块，回收电量仍只有玩家KEY一份；绑定／改装／恢复都保持同instance。新增RESERVOIR按启用等级扩容，降级不删余雷。
+- GearEffects在原Workplace半秒采样处处理热沉／磁荷，按真实盔甲储能先模拟再扣款；金属load保留真实值，compensation单独同步，heavy继续用原恢复滞后。模块仅放背包、禁用或缺电不得生效。
+- GearEnergy实现IMekanismStrictEnergyHandler和IEnergyContainer，通过gear_energy保存唯一J余额；FE复用ForgeEnergyIntegration。WardCustody.energyAccess只读核对live身份、seal、完整快照及真实槽，SIMULATE不修复；合法能量／模块改动走update，只允许MODULE_CONTAINER与GEAR_ENERGY并同步新快照。直接写组件仍被原Mixin拦截；不能放宽整个ItemStack防护。
+- WardPower先预检电容，再检查剩余设备费用。设备不足时电容不扣；全由电容支付时不扫描区块。设备预检通过才扣电容与原生设备；设备权限／留电／极限模式沿用原规则。AFTERGUARD每级增加次数／时限，但原wardShieldHits=0优先。WardRuntime状态附电容读数。
+- ServiceMenu从原GuiModificationStation左侧“饰”入口打开。模块输入槽代理同一个原站slot0；要求原站装备槽空、canFunction、原BE身份、8格、安全许可、menu/session和目标instance/seal。安装消费真实芯片和一次原生工作电量，拆卸背包放不下则拒绝；只修改实际饰品，不移出Curios。快照5tick核对且仅变化发包，client仅展示。Core/Ward两种身份都不可使用过期窗口编辑。
+- WeaponItem/GearCombat：新枪用rail_ammo计弹仓，GEAR_ENERGY计能量；蓄力/冷却服务器复核，reload消耗rail_ammunition标签物品。射线先限制已加载区块，再裁墙；贯穿实体按距离排序。刃场最多16候选，谐振只伤敌对/交战者、最多模块等级个。MekaToolCombatMixin只在原hurtEnemy TAIL追加电弧，二次hurt不会再触发自身。WeaponEnergyModuleMixin只取消新WeaponItem在原ModuleEnergyUnit.onRemoved中的裁能，其他Mek装备不变。
+- GearRenderer为客户端：机壳使用烘焙模型，shader发光面使用静态GearGlowMesh，状态编码顶点，禁止逐物品改uniform。材质分类flat int防透视串色；1.21.1 fog_distance签名为(vec3,int)，不能套旧三参数。光束最多96条、每条2面、8tick、距离裁剪，退出清理强世界引用；开关与静态回退由GearVisualConfig控制。MekaSuit外装用原ModuleModelSpec与OBJ，组名必须同时含spec名和body/left_leg/right_leg，led组沿原发光管线。
+- 资源统一由generate_resources调用generate_equipment生成：11个新增模块各自几何、两种武器的base/fallback/动态面、外装OBJ和语言配方；surface_boxes对壳体+能量部件一起求外表面，再拆分渲染，避免共面闪烁。只复用现有原创16px位图，不新增脚本绘制贴图。预览和原稿不进JAR；按实际材料归一化检查配方唯一性，不能只比较字母pattern。
+
 - alpha.16新增gear/EquipmentModules与ResidualCouplingUnit；ModuleDeferredRegister + MekanismIMC只注册胸甲支持，原生ItemModule提供支持列表／4级上限与描述，安装保存由Mek MODULE_CONTAINER负责。高速充能只在CoreBinding.charge唯一入口执行，模块tick不得再次扣电；先验证真实核心槽及已穿戴胸甲，再根据启用等级优先充胸甲。只按实际接收量扣原余雷，已转移量占用原基础预算，满胸甲仅保留剩余基础预算供给其他物品。基础范围改为recovery_chargeable标签（默认原5件），不遍历任意Curios充电，后续分配交原ModuleChargeDistributionUnit。四级4k/16k/64k/256k FE/t可配置，原100k FE缓冲不变，不保证瞬时达到配置上限。
 - alpha.16 build、41项GameTest、3项JUnit与JAR检查通过；EquipmentModuleGameTests覆盖真实改装站tick、安装4退回4余1、支持列表／序列化、四级实际能量和满仓/零余量、关模块/放背包/无绑定、原生充电分配实际玩家tick守恒。改装站无侧面ItemHandler也是只读：测试必须提供真实Direction，不能把null拒绝当作模块不能安装。未启动客户端。
 - 原创模块图标见art/source/module_residual_coupling_unit.png与art/coupling-module-prompt.txt；tools/export_module_art.cjs仅透明trim和最近邻16px，保留原alpha，无脚本重绘或上游贴图打包。
 
-- 2026-09-27用户要求研究基于Mek本体扩展装备／饰品／武器升级，核对结果与候选顺序见 `GEAR_EXPANSION.md`；alpha.16仅完成余雷耦合，其余仍为方案。目标发布源码确认：原改装站接受IMC注册的模块容器；原模块配置菜单仅护甲／快捷栏／副手，不含Curios；原充电分配已支持Curios。核心重建目前不保存新模块，雷印完整快照会撤销未授权组件变化；饰品模块化必须先补合法改装／动态能量事务，不能关闭防篡改或复制储能。该研究提交本身仅文档，后续实现版本按各条记录。
+- 2026-09-27用户要求研究基于Mek本体扩展装备／饰品／武器升级，核对结果与候选顺序见 `GEAR_EXPANSION.md`；alpha.17已完成本轮模块、饰品改装、两种武器和外装，当前行为以该文档为准。目标发布源码确认：原改装站接受IMC注册的模块容器；原模块配置菜单仅护甲／快捷栏／副手，不含Curios；原充电分配已支持Curios。当时发现的模块恢复、佩戴中配置和合法组件更新问题已由alpha.17处理；不得关闭防篡改或复制储能。该研究提交本身仅文档，后续实现版本按各条记录。
 
 - `CoreItem`：真实持续使用 40 tick 后绑定；拖入、捡起、快捷使用不自动装备。Curios `ALWAYS_KEEP` 保留死亡饰品。
 - `CoreBinding`：玩家 `overloadcore_binding` 是绑定实例、回收电量和体热的唯一权威记录；物品 `core_data` 仅保存 owner/instance。恢复与去重不能生成第二份电量。Clone、登录、换维度分别处理。回收缓冲内部用 Mek 原生 J，向随身 MekaTool/MekaSuit 原生能量 handler 转移；FE 仅用于配置和显示。
@@ -84,6 +93,8 @@
 - 不在任意 FE capability 全局注入倍率。原生能量以 J 计量，处理 SIMULATE 与 EXTERNAL/MANUAL/INTERNAL 的差别。
 
 ## 资源与验证
+
+- alpha.17：build、46项服务端GameTest与3项JUnit通过，包含56种注册伤害原有回归；新增真实作业热/磁负荷与缺电恢复、原改装站进入佩戴服务/nonce/实际安装拆卸/核心恢复、独立电容充放电与联合支付不足不扣/防篡改/保存摘戴、原胸甲给Curios实际充电守恒、枪械弹药/遮挡和MekaTool连锁、原生能量单元拆卸不裁新武器电量。实际GLSL隐藏GL编译及动态/空电变暗/深度检查通过（枪10、刃39发光面）；136组语言、16个独立有序配方、模型范围、16pxPNG、shader/OBJ与JAR排除检查通过。未运行客户端，游戏内UI/外装/握持和第三方光影仍由用户验收。
 
 - JSON 由 `tools/generate_resources.py` 维护；生成时传 `--mek-jar` 指向固定版本 Mek JAR。提交资源，不把临时参考源码或依赖 JAR 打包。
 - 图稿在 `art/source/`，完整最终提示词在 `art/prompt-v2.txt`，来源为内置 ImageGen。`tools/export_art.cjs` 仅裁去透明外沿、保持比例最近邻导出真正 16×16 PNG，不重画或抠背景。运行物品模型同时由 Curios 挂坠渲染使用。

@@ -12,16 +12,17 @@ public final class CoreHud {
     public static void render(GuiGraphics gui, Font font, CompoundTag data) {
         int load = Math.max(0, data.getInt("load"));
         int limit = CoreConfig.METAL_LIMIT.get();
+        int compensation = Math.clamp(data.getInt("compensation"),0,load), effective = load-compensation;
         int heat = Math.clamp(data.getInt("heat"), 0, 100);
         var metalLabel = CoreContent.text("hud.metal");
         var heatLabel = CoreContent.text("hud.heat");
-        var metalValue = Component.literal(load + " / " + limit);
+        var metalValue = Component.literal((compensation>0?load+" − "+compensation:Integer.toString(load)) + " / " + limit);
         var heatValue = Component.literal(heat + "%");
         int innerWidth = Math.max(116, Math.max(font.width(metalLabel) + font.width(metalValue),
               font.width(heatLabel) + font.width(heatValue)) + 12);
         int x = 8, y = Math.max(8, gui.guiHeight() - 104);
         int width = innerWidth + 12;
-        int color = data.getBoolean("heavy") ? 0xFFEC717A : load >= limit * 2L / 3 ? 0xFFE8B66A : 0xFFBBA4E0;
+        int color = data.getBoolean("heavy") ? 0xFFEC717A : effective >= limit * 2L / 3 ? 0xFFE8B66A : 0xFFBBA4E0;
         int heatColor = heat >= 80 ? 0xFFEC717A : heat >= 60 ? 0xFFF0A965 : 0xFFC98268;
 
         gui.fill(x, y, x + width, y + 44, 0xA312101B);
@@ -36,7 +37,7 @@ public final class CoreHud {
         gui.fill(x + width - 7, y + 43, x + width, y + 44, frame);
         gui.fill(x + width - 1, y + 37, x + width, y + 44, frame);
 
-        meter(gui, font, x + 6, y + 5, innerWidth, metalLabel, metalValue, (double) load / limit, color);
+        meter(gui, font, x + 6, y + 5, innerWidth, metalLabel, metalValue, (double) effective / limit, color);
         meter(gui, font, x + 6, y + 25, innerWidth, heatLabel, heatValue, heat / 100.0, heatColor);
     }
 

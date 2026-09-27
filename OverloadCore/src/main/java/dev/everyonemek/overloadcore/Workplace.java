@@ -34,7 +34,10 @@ public final class Workplace {
     public static void tick(ServerPlayer player) {
         var data = CoreBinding.data(player); long tick = player.level().getGameTime();
         int load = MetalLoad.measure(player); boolean heavy = data.getBoolean("heavy"); int limit = CoreConfig.METAL_LIMIT.get();
-        data.putInt("load", load); data.putBoolean("heavy", heavy ? load >= Math.max(0, limit - 32) : load >= limit);
+        int compensation = dev.everyonemek.overloadcore.gear.GearEffects.magnetic(player, load);
+        data.putInt("load", load); data.putInt("compensation", compensation);
+        int effective = Math.max(0, load - compensation);
+        data.putBoolean("heavy", heavy ? effective >= Math.max(0, limit - 32) : effective >= limit);
         int heat = Math.clamp(data.getInt("heat"), 0, 100), noise = Math.clamp(data.getInt("noise"), 0, 100);
         double noiseRate = 0; int heatRate = 0; DeviceScope.Device shock = null; double nearest = Double.MAX_VALUE;
         var seen = new HashSet<BlockPos>();
@@ -68,6 +71,7 @@ public final class Workplace {
         } else data.remove("shock_warning");
         // Called every ten ticks; rates below are per half-second.
         int heatStep = player.isInWater() ? -12 : heatRate > 0 ? heatRate : -5;
+        if (CoreConfig.HAZARDS.get()) heatStep = dev.everyonemek.overloadcore.gear.GearEffects.cool(player, heat, heatStep);
         int heatRemainder = data.getInt("heat_remainder") + heatStep;
         heat = Math.clamp(heat + heatRemainder / 2, 0, 100); data.putInt("heat_remainder", heatRemainder % 2);
         noise = Math.clamp(noise + (noiseRate > 0 ? (int) Math.ceil(noiseRate / 2) : -10), 0, 100);

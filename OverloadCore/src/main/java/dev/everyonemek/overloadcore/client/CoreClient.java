@@ -28,6 +28,20 @@ import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = OverloadCore.ID, value = Dist.CLIENT)
 public final class CoreClient {
+    @SubscribeEvent public static void screens(RegisterMenuScreensEvent event) {
+        event.register(dev.everyonemek.overloadcore.gear.GearMenus.SERVICE.get(), ServiceScreen::new);
+        dev.everyonemek.overloadcore.gear.GearMenus.client = state -> {
+            if (Minecraft.getInstance().screen instanceof ServiceScreen screen) screen.accept(state);
+        };
+    }
+    @SubscribeEvent public static void stationButton(ScreenEvent.Init.Post event) {
+        if (event.getScreen() instanceof mekanism.client.gui.GuiModificationStation screen) {
+            var button = new mekanism.client.gui.element.button.MekanismButton(screen,-26,86,26,18,CoreContent.text("service.tab"),(b,x,y)->{
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new dev.everyonemek.overloadcore.gear.GearMenus.Open(screen.getMenu().containerId));return true;
+            });
+            button.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(CoreContent.text("service.title"))); event.addListener(button);
+        }
+    }
     private static final KeyMapping KEY = new KeyMapping("key.overloadcore.status", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "key.categories.overloadcore");
     private static final KeyMapping EXTREME = new KeyMapping("key.overloadcore.extreme", net.neoforged.neoforge.client.settings.KeyConflictContext.IN_GAME,
           InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.overloadcore");
@@ -138,7 +152,7 @@ public final class CoreClient {
         if (data.getBoolean("bound")) CoreHud.render(gui, mc.font, data);
         var ward=CorePackets.clientWardState;
         if (ward.getBoolean("equipped") || ward.getBoolean("pending")) {
-            int y=Math.max(8,gui.guiHeight()-(data.getBoolean("bound")?132:86));
+            int y=Math.max(8,gui.guiHeight()-(data.getBoolean("bound")?132:86)-(ward.getLong("capacity")>0?13:0));
             var mode=CoreContent.text(ward.getBoolean("pending")?"ward.state.pending":ward.getBoolean("extreme")?"ward.mode.extreme":"ward.mode.normal");
             gui.fill(8,y,20+mc.font.width(mode),y+12,0xA312101B);
             gui.drawString(mc.font,mode,12,y+2,ward.getBoolean("extreme")?0xFFFFAE74:0xFFADE5EA,false);
@@ -146,6 +160,7 @@ public final class CoreClient {
                 var shield=CoreContent.text("ward.shield_hud",ward.getInt("hits"),(ward.getInt("ticks")+19)/20);
                 gui.drawString(mc.font,shield,12,y+15,0xFFA9E7FF,false);
             }
+            if(ward.getLong("capacity")>0)gui.drawString(mc.font,CoreContent.text("ward.capacitor_hud",ward.getLong("capacitor")),12,y+28,0xFF8EE7C6,false);
         }
         if (diagnostics && data.getBoolean("bound")) {
             int line = 0;

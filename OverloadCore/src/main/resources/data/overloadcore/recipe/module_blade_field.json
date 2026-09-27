@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ASA",
+    "CBC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "S": {
+      "item": "mekanism:ingot_refined_glowstone"
+    },
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "B": {
+      "item": "mekanism:module_base"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    }
+  },
+  "result": {
+    "id": "overloadcore:module_blade_field"
+  }
+}

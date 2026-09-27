@@ -22,16 +22,26 @@ public final class CoreContent {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.UUID>> WARD_SEAL = COMPONENTS.register("ward_seal",
           () -> DataComponentType.<java.util.UUID>builder().persistent(net.minecraft.core.UUIDUtil.CODEC)
                 .networkSynchronized(net.minecraft.core.UUIDUtil.STREAM_CODEC).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> GEAR_ENERGY = COMPONENTS.register("gear_energy",
+          () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG).build());
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> RAIL_AMMO = COMPONENTS.register("rail_ammo",
+          () -> DataComponentType.<Integer>builder().persistent(com.mojang.serialization.Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
     public static final DeferredItem<CoreItem> CORE = ITEMS.register("overloaded_short_circuit_core",
-          () -> new CoreItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC)));
+          () -> new CoreItem(mekanism.api.gear.IModuleHelper.INSTANCE.applyModuleContainerProperties(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC))));
     public static final DeferredItem<ThunderWardItem> WARD = ITEMS.register("thunder_ward",
-          () -> new ThunderWardItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC)));
+          () -> new ThunderWardItem(mekanism.api.gear.IModuleHelper.INSTANCE.applyModuleContainerProperties(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC))));
     public static final DeferredItem<mekanism.common.item.ItemModule> COUPLING_MODULE = ITEMS.register("module_residual_coupling_unit",
           () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.RESIDUAL_COUPLING,
                 new Item.Properties().rarity(Rarity.UNCOMMON)));
+    public static final DeferredItem<dev.everyonemek.overloadcore.gear.WeaponItem> RAILGUN = ITEMS.register("rail_lance", () -> new dev.everyonemek.overloadcore.gear.WeaponItem(true));
+    public static final DeferredItem<dev.everyonemek.overloadcore.gear.WeaponItem> BLADE = ITEMS.register("thunder_blade", () -> new dev.everyonemek.overloadcore.gear.WeaponItem(false));
+    public static final java.util.Map<dev.everyonemek.overloadcore.gear.GearUpgrade, DeferredItem<mekanism.common.item.ItemModule>> UPGRADE_ITEMS =
+          new java.util.EnumMap<>(dev.everyonemek.overloadcore.gear.GearUpgrade.class);
     static {
+        for (var upgrade : dev.everyonemek.overloadcore.gear.GearUpgrade.values()) UPGRADE_ITEMS.put(upgrade, ITEMS.register("module_" + upgrade.id,
+              () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.get(upgrade), new Item.Properties().rarity(Rarity.RARE))));
         TABS.register("core", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.overloadcore"))
-              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); }).build());
+              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); UPGRADE_ITEMS.values().forEach(output::accept); output.accept(RAILGUN); output.accept(BLADE); }).build());
     }
     public static net.minecraft.network.chat.MutableComponent text(String key, Object... args) { return Component.translatable("overloadcore." + key, args); }
     public static void register(IEventBus bus) { ITEMS.register(bus); COMPONENTS.register(bus); TABS.register(bus); }

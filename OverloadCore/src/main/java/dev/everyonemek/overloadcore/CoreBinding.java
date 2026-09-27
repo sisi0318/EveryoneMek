@@ -34,6 +34,7 @@ public final class CoreBinding {
         var state = new CompoundTag(); state.putUUID("instance", UUID.randomUUID()); save(player, state);
         var stack = source.copyWithCount(1); var item = new CompoundTag(); item.putUUID("owner", player.getUUID()); item.putUUID("instance", state.getUUID("instance"));
         stack.set(CoreContent.DATA.get(), item);
+        state.put("equipment", stack.save(player.registryAccess())); save(player, state);
         CuriosApi.getCuriosInventory(player).flatMap(h -> h.getStacksHandler(SLOT)).orElseThrow().getStacks().setStackInSlot(0, stack);
         source.shrink(1); player.displayClientMessage(CoreContent.text("bound"), false); CorePackets.sendStatus(player, false); return true;
     }
@@ -43,6 +44,12 @@ public final class CoreBinding {
         var coreSlots = inventory.getStacksHandler(SLOT).orElse(null); if (coreSlots == null || coreSlots.getStacks().getSlots() == 0) return;
         var slots = coreSlots.getStacks();
         if (matches(player, slots.getStackInSlot(0))) {
+            var live = slots.getStackInSlot(0); var state = data(player);
+            if (state.contains("equipment")) {
+                ItemStack.parse(player.registryAccess(), state.getCompound("equipment")).filter(s -> matches(player, s)).ifPresent(saved ->
+                      live.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER,
+                            saved.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY)));
+            } else { state.put("equipment", live.save(player.registryAccess())); save(player, state); }
             for (int i = 0; i < player.getInventory().getContainerSize(); i++) if (matches(player, player.getInventory().getItem(i))) player.getInventory().setItem(i, ItemStack.EMPTY);
             for (var entry : inventory.getCurios().entrySet()) for (int i = 0; i < entry.getValue().getStacks().getSlots(); i++)
                 if (!(entry.getKey().equals(SLOT) && i == 0) && matches(player, entry.getValue().getStacks().getStackInSlot(i))) entry.getValue().getStacks().setStackInSlot(i, ItemStack.EMPTY);
@@ -55,10 +62,17 @@ public final class CoreBinding {
             if (matches(player, candidate)) { if (recovered.isEmpty()) recovered = candidate.copyWithCount(1); candidate.shrink(1); }
         }
         if (recovered.isEmpty()) {
-            recovered = new ItemStack(CoreContent.CORE.get()); var item = new CompoundTag(); item.putUUID("owner", player.getUUID()); item.putUUID("instance", data(player).getUUID("instance"));
-            recovered.set(CoreContent.DATA.get(), item);
+            recovered = ItemStack.parse(player.registryAccess(), data(player).getCompound("equipment")).filter(s -> matches(player, s)).orElse(ItemStack.EMPTY);
+            if (recovered.isEmpty()) {
+                recovered = new ItemStack(CoreContent.CORE.get()); var item = new CompoundTag(); item.putUUID("owner", player.getUUID()); item.putUUID("instance", data(player).getUUID("instance"));
+                recovered.set(CoreContent.DATA.get(), item);
+            }
         }
         var previous = slots.getStackInSlot(0);
+        final ItemStack canonical = recovered;
+        ItemStack.parse(player.registryAccess(), data(player).getCompound("equipment")).filter(s -> matches(player, s)).ifPresent(saved ->
+              canonical.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER,
+                    saved.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY)));
         if (!previous.isEmpty() && !player.getInventory().add(previous.copy())) player.drop(previous.copy(), false);
         slots.setStackInSlot(0, recovered); player.getInventory().setChanged();
     }
@@ -72,10 +86,22 @@ public final class CoreBinding {
     public static void recover(ServerPlayer player, long extraJoules) {
         if (!active(player) || extraJoules <= 0) return;
         var tag = data(player); long old = Math.max(0, tag.getLong("energy"));
-        long capacity = EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.BUFFER_FE.get().longValue());
+        int level = dev.everyonemek.overloadcore.gear.GearEffects.level(worn(player), dev.everyonemek.overloadcore.gear.GearUpgrade.RESERVOIR);
+        long capacity = EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.BUFFER_FE.get().longValue() << level);
         long quarter = extraJoules / 4; int remainder = (int) (extraJoules % 4) + Math.clamp(tag.getInt("recovery_remainder"), 0, 3);
         long add = quarter + remainder / 4;
         tag.putLong("energy", old + Math.min(add, Math.max(0, capacity - old))); tag.putInt("recovery_remainder", remainder % 4); save(player, tag);
+    }
+    public static ItemStack worn(Player player) {
+        return CuriosApi.getCuriosInventory(player).flatMap(i -> i.getStacksHandler(SLOT))
+              .map(s -> s.getStacks().getSlots() > 0 ? s.getStacks().getStackInSlot(0) : ItemStack.EMPTY).orElse(ItemStack.EMPTY);
+    }
+    public static boolean updateEquipment(ServerPlayer player, ItemStack original, java.util.function.Consumer<ItemStack> action) {
+        if (worn(player) != original || !matches(player, original)) return false;
+        var draft = original.copy(); action.accept(draft);
+        original.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER,
+              draft.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY));
+        var state = data(player); state.put("equipment", original.save(player.registryAccess())); save(player, state); return true;
     }
     public static void charge(ServerPlayer player) {
         if (!active(player)) return;

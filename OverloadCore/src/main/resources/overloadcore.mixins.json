@@ -39,6 +39,8 @@
     "GeneratorFusionMixin",
     "NetworkAccess",
     "EnergyNetworkMixin",
+    "MekaToolCombatMixin",
+    "WeaponEnergyModuleMixin",
     "FluidNetworkMixin",
     "ChemicalNetworkMixin",
     "EnergyTargetMixin",

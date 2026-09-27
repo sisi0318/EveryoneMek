@@ -41,11 +41,20 @@ public final class WardPower {
     private static boolean pay(ServerPlayer player, boolean fresh) {
         long cost = EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.WARD_COST_FE.get().longValue());
         if (cost <= 0) return false;
+        var ward = WardRuntime.worn(player);
+        var capacitor = new dev.everyonemek.overloadcore.gear.GearEnergy(ward);
+        long fromCapacitor = dev.everyonemek.overloadcore.gear.GearEffects.level(ward, dev.everyonemek.overloadcore.gear.GearUpgrade.CAPACITOR) > 0
+              ? capacitor.extract(cost, Action.SIMULATE, AutomationType.INTERNAL) : 0;
+        cost -= fromCapacitor;
+        if (cost == 0) {
+            if (capacitor.extract(fromCapacitor, Action.EXECUTE, AutomationType.INTERNAL) != fromCapacitor) return false;
+            WardRuntime.paid(player, CoreConfig.WARD_COST_FE.get(), 0); return true;
+        }
         var sources = new ArrayList<Source>();
         var seen = Collections.newSetFromMap(new IdentityHashMap<IEnergyContainer, Boolean>());
         var level = player.serverLevel();
         BigInteger total = BigInteger.ZERO, unreserved = BigInteger.ZERO;
-        boolean extreme = WardLedger.get(player).extreme(player), found = false;
+        boolean extreme = WardLedger.get(player).extreme(player), found = fromCapacitor > 0;
         var previous = CANDIDATES.get(player);
         var positions = candidates(player, fresh);
         boolean reused = !fresh && previous != null && previous.positions == positions;
@@ -102,6 +111,7 @@ public final class WardPower {
         }
         // These are native reservoir objects, deduplicated across multiblock ports. Direct debit avoids
         // machine I/O rules, cube transfer limits and the cursed core's work-energy multiplier.
+        if (fromCapacitor > 0 && capacitor.extract(fromCapacitor, Action.EXECUTE, AutomationType.INTERNAL) != fromCapacitor) return false;
         for (int i = 0; i < sources.size(); i++) if (shares[i] > 0) {
             var source = sources.get(i);
             if (source.tank instanceof MatrixEnergyContainer matrix) {

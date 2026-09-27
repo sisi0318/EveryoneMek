@@ -26,9 +26,15 @@ public final class WardRuntime {
     public static void clearShield(ServerPlayer p) { var s = state(p); s.hits = 0; s.shieldUntil = 0; }
     public static void afterRescue(ServerPlayer p) {
         var s = state(p);
-        s.hits = CoreConfig.WARD_SHIELD_HITS.get();
-        s.shieldUntil = p.level().getGameTime() + CoreConfig.WARD_SHIELD_TICKS.get();
+        int upgrade = dev.everyonemek.overloadcore.gear.GearEffects.level(worn(p), dev.everyonemek.overloadcore.gear.GearUpgrade.AFTERGUARD);
+        s.hits = CoreConfig.WARD_SHIELD_HITS.get() == 0 ? 0 : Math.min(20, CoreConfig.WARD_SHIELD_HITS.get() + upgrade * CoreConfig.AFTERGUARD_HITS.get());
+        s.shieldUntil = p.level().getGameTime() + Math.min(1200, CoreConfig.WARD_SHIELD_TICKS.get() + upgrade * CoreConfig.AFTERGUARD_TICKS.get());
         sync(p);
+    }
+    public static net.minecraft.world.item.ItemStack worn(ServerPlayer p) {
+        return top.theillusivec4.curios.api.CuriosApi.getCuriosInventory(p).flatMap(i -> i.getStacksHandler(ThunderWardItem.SLOT))
+              .map(s -> s.getStacks().getSlots() > 0 ? s.getStacks().getStackInSlot(0) : net.minecraft.world.item.ItemStack.EMPTY)
+              .orElse(net.minecraft.world.item.ItemStack.EMPTY);
     }
     public static void block(LivingDamageEvent.Pre event) {
         if (!(event.getEntity() instanceof ServerPlayer p) || !(event.getNewDamage() > 0) || hits(p) == 0) return;
@@ -70,6 +76,8 @@ public final class WardRuntime {
         tag.putBoolean("extreme", WardLedger.get(p).extreme(p));
         tag.putInt("hits", hits(p)); tag.putInt("ticks", s.hits == 0 ? 0 : (int)Math.clamp(s.shieldUntil - p.level().getGameTime(), 0, 1200));
         tag.putLong("cost", s.lastCost); tag.putInt("sources", s.sources); tag.putString("result", s.result);
+        tag.putLong("capacitor", (long)mekanism.common.util.UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertTo(dev.everyonemek.overloadcore.gear.GearEnergy.stored(worn(p))));
+        tag.putLong("capacity", (long)mekanism.common.util.UnitDisplayUtils.EnergyUnit.FORGE_ENERGY.convertTo(dev.everyonemek.overloadcore.gear.GearEnergy.capacity(worn(p))));
         var entry = WardLedger.get(p).worn.get(p.getUUID()); if (entry != null) tag.putUUID("seal", entry.token);
         return tag;
     }

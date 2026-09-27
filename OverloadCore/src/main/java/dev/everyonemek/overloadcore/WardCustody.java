@@ -38,6 +38,39 @@ public final class WardCustody {
         var p = ref == null ? null : ref.get();
         return p != null && locked(p) && WardLedger.get(p).worn.get(p.getUUID()).live == stack;
     }
+    /** Read-only identity check, also used by SIMULATE energy operations. */
+    public static boolean energyAccess(ItemStack stack) {
+        if (!stack.has(CoreContent.WARD_SEAL)) return !LIVE.containsKey(stack);
+        var ref = LIVE.get(stack); var p = ref == null ? null : ref.get();
+        if (p == null || !ThunderWard.tracked(p)) return false;
+        var entry = WardLedger.get(p).worn.get(p.getUUID());
+        return entry != null && entry.live == stack && entry.matches(stack) && CuriosApi.getCuriosInventory(p)
+              .flatMap(i -> i.getStacksHandler(ThunderWardItem.SLOT)).map(s -> s.getStacks().getSlots() > 0
+                    && s.getStacks().getStackInSlot(0) == stack && !s.getActiveStates().isEmpty() && s.getActiveStates().get(0)).orElse(false);
+    }
+    public static boolean energy(ItemStack stack, long value) {
+        if (!energyAccess(stack)) return false;
+        if (!stack.has(CoreContent.WARD_SEAL)) { stack.set(CoreContent.GEAR_ENERGY, value); return true; }
+        var player = LIVE.get(stack).get();
+        return update(player, stack, copy -> copy.set(CoreContent.GEAR_ENERGY, value));
+    }
+    /** Only module data and capacitor energy may change; the original seal and all other components stay intact. */
+    public static boolean update(ServerPlayer p, ItemStack original, java.util.function.Consumer<ItemStack> action) {
+        if (p == null || !energyAccess(original)) return false;
+        var entry = WardLedger.get(p).worn.get(p.getUUID());
+        if (entry == null || entry.live != original) return false;
+        var draft = original.copy(); action.accept(draft);
+        var modules = draft.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY);
+        long energy = Math.max(0, draft.getOrDefault(CoreContent.GEAR_ENERGY, 0L));
+        REPAIRING.put(p, true);
+        try {
+            original.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, modules);
+            original.set(CoreContent.GEAR_ENERGY, energy);
+            var replacement = new WardLedger.Entry(original, p.registryAccess()); replacement.live = original;
+            WardLedger.get(p).worn.put(p.getUUID(), replacement); WardLedger.get(p).setDirty();
+            return true;
+        } finally { REPAIRING.remove(p); }
+    }
     public static void changed(SlotContext ctx) {
         if (ctx.index() == 0 && !ctx.cosmetic() && ctx.identifier().equals(ThunderWardItem.SLOT)
               && ctx.entity() instanceof ServerPlayer p) ensure(p);

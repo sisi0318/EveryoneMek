@@ -9,7 +9,11 @@ public final class OverloadCore {
     public static final String ID = "overloadcore";
     public OverloadCore(IEventBus bus, ModContainer container) {
         container.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, CoreConfig.SPEC);
+        container.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT, dev.everyonemek.overloadcore.gear.GearVisualConfig.SPEC);
         CoreContent.register(bus); bus.addListener(CorePackets::register);
         dev.everyonemek.overloadcore.gear.EquipmentModules.register(bus);
+        bus.addListener(dev.everyonemek.overloadcore.gear.GearEnergy::register);
+        dev.everyonemek.overloadcore.gear.GearMenus.register(bus);
+        bus.addListener(dev.everyonemek.overloadcore.gear.GearVisuals::register);
     }
 }
