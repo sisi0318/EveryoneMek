@@ -9,7 +9,7 @@
 - [Nature's Mekanism](NaturesAura/README.md)：自然灵气供给、仪式加工、装瓶、环境调控、生物生产与矿物凝聚室。
 - [Ars Mekanism](Ars-Nouveau/README.md)：魔源供给与转换、灌注与附魔、萃取与粉碎、魔符抄写、药水加工，以及德格米、风转草和仪式火盆自动化。
 - [Forbidden Mekanism](Forbidden-Arcanus/README.md)：赫菲斯托斯锻造室与炽炉控制器，机内锻造、四类资源插件、逐级升级，以及炽炉嵌入、电热和端口物流。
-- [Overload Core](OverloadCore/README.md)：科技核心挂坠、Mek 作业诅咒与受控增产、发电／物流限制和随身机具收益。
+- [Overload Core](OverloadCore/README.md)：科技核心挂坠、逆命雷印、Mek 作业诅咒与受控增产，以及原生改装站安装的余雷耦合装备模块。
 - [Botanical Mekanism](Botania/README.md)：仿生花、原生词典与火花、Chemical 魔力加工，以及可选 AE2／多媒体物品互通和原装置控制器。
 - [Mek Factory](MekFactory/README.md)：分级并行矩阵工厂、原机与共享升级、独立输入输出仓、原感应储能，可选支持 Mekanism Extras 高阶工厂与感应部件。
 - [Mek Gravity](MekGravity/README.md)：7×7×7 引力约束反应堆与9×9×9人造微缩太阳、长效燃料、分级采能、大功率供电、日冕批量加工，以及捕获／锻造／调谐／物流／观测扩展。

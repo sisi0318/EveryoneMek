@@ -1,5 +1,9 @@
 {
   "itemGroup.overloadcore": "过载核心",
+  "module.overloadcore.residual_coupling_unit": "余雷耦合单元",
+  "description.overloadcore.residual_coupling_unit": "余雷归枢，万机同脉。加快核心余雷向已穿戴胸甲充能；需佩戴过载核心。",
+  "overloadcore.coupling.rate": "余雷耦合：上限 %s FE/t",
+  "overloadcore.coupling.no_core": "余雷耦合：未佩戴核心",
   "item.overloadcore.overloaded_short_circuit_core": "过载短路核心",
   "item.overloadcore.thunder_ward": "逆命雷印",
   "curios.identifier.overload_ward": "护命",

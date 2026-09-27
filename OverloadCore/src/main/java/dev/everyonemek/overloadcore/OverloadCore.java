@@ -10,5 +10,6 @@ public final class OverloadCore {
     public OverloadCore(IEventBus bus, ModContainer container) {
         container.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, CoreConfig.SPEC);
         CoreContent.register(bus); bus.addListener(CorePackets::register);
+        dev.everyonemek.overloadcore.gear.EquipmentModules.register(bus);
     }
 }

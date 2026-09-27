@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "overloadcore:item/module_residual_coupling_unit"
+  }
+}

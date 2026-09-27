@@ -1,5 +1,9 @@
 {
   "itemGroup.overloadcore": "Overload Core",
+  "module.overloadcore.residual_coupling_unit": "Residual Thunder Coupling Unit",
+  "description.overloadcore.residual_coupling_unit": "Gather the lingering thunder. Transfers recovered core energy into worn bodyarmor faster; requires the Overloaded Core.",
+  "overloadcore.coupling.rate": "Thunder coupling: up to %s FE/t",
+  "overloadcore.coupling.no_core": "Thunder coupling: core not equipped",
   "item.overloadcore.overloaded_short_circuit_core": "Overloaded Short-Circuit Core",
   "item.overloadcore.thunder_ward": "Thunder Ward",
   "curios.identifier.overload_ward": "Ward",

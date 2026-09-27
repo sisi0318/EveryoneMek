@@ -13,6 +13,16 @@ def write(path, value):
 
 def generate(mek_jar):
     write('pack.mcmeta', {'pack': {'pack_format': 34, 'description': 'Overload Core'}})
+    write(f'assets/{MOD}/models/item/module_residual_coupling_unit.json', {'parent': 'minecraft:item/generated',
+          'textures': {'layer0': f'{MOD}:item/module_residual_coupling_unit'}})
+    write(f'data/{MOD}/recipe/module_residual_coupling_unit.json', {'type': 'minecraft:crafting_shaped',
+          'pattern': ['AEA', 'CBC', 'AEA'], 'key': {k: {'item': v} for k, v in {
+              'A': 'mekanism:alloy_reinforced', 'E': 'mekanism:energy_tablet',
+              'C': 'mekanism:advanced_control_circuit', 'B': 'mekanism:module_base'}.items()},
+          'result': {'id': f'{MOD}:module_residual_coupling_unit'}})
+    write(f'data/{MOD}/tags/item/recovery_chargeable.json', {'replace': False, 'values': [
+          'mekanism:meka_tool', 'mekanism:mekasuit_helmet', 'mekanism:mekasuit_bodyarmor',
+          'mekanism:mekasuit_pants', 'mekanism:mekasuit_boots']})
     write(f'{MOD}.mixins.json', {'required': True, 'package': 'dev.everyonemek.overloadcore.mixin', 'compatibilityLevel': 'JAVA_21',
           'plugin': 'dev.everyonemek.overloadcore.mixin.OptionalMixinPlugin',
           'mixins': ['WardLivingAccess', 'WardHealthMixin', 'WardPlayerMixin', 'WardRemoveMixin', 'WardSetRemovedMixin',
@@ -64,6 +74,11 @@ def generate(mek_jar):
     write('overloadcore-bonus-recipes.json', bonuses)
     pairs = {
         'itemGroup.overloadcore': ('过载核心', 'Overload Core'),
+        'module.overloadcore.residual_coupling_unit': ('余雷耦合单元', 'Residual Thunder Coupling Unit'),
+        'description.overloadcore.residual_coupling_unit': ('余雷归枢，万机同脉。加快核心余雷向已穿戴胸甲充能；需佩戴过载核心。',
+              'Gather the lingering thunder. Transfers recovered core energy into worn bodyarmor faster; requires the Overloaded Core.'),
+        'overloadcore.coupling.rate': ('余雷耦合：上限 %s FE/t', 'Thunder coupling: up to %s FE/t'),
+        'overloadcore.coupling.no_core': ('余雷耦合：未佩戴核心', 'Thunder coupling: core not equipped'),
         'item.overloadcore.overloaded_short_circuit_core': ('过载短路核心', 'Overloaded Short-Circuit Core'),
         'item.overloadcore.thunder_ward': ('逆命雷印', 'Thunder Ward'),
         'curios.identifier.overload_ward': ('护命', 'Ward'),

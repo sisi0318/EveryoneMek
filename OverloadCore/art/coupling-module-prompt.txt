@@ -1,0 +1,8 @@
+Tool: built-in ImageGen; transparent_background=true. New original image; no upstream bitmap copied.
+Style research: actual Mekanism 10.7.19.85 item/module_energy_unit.png and item/module_charge_distribution_unit.png inspected locally. These references remain in ignored build/reference/gear.
+Original output: exec-3dd417d4-a48d-447d-8c53-6c321a57519e.png
+Workspace source: art/source/module_residual_coupling_unit.png
+Runtime export: tools/export_module_art.cjs; original alpha preserved, transparent trim and nearest-neighbour 16x16 only.
+
+Complete prompt:
+Create ONE original Minecraft inventory item sprite, a Mekanism-style equipment upgrade cartridge named Residual Thunder Coupling Unit. Use case: game item sprite. This is a small square industrial module circuit cartridge, straight orthographic view, centered silhouette occupying most of square canvas. Silver gray chunky metal rim, charcoal circuit board, exactly two broad squared violet copper induction coils linked by a short bright lavender bridge, 2 or 3 subdued green connector pixels on the lower edge. The coils and bridge are its distinct recognizable symbol. Strong readable silhouette, looks like a removable MekaSuit upgrade circuit board, not jewelry, not a rune, not a standalone battery or machine. Design using the simplicity of 16x16 large solid-color pixel cells, hard pixel edges, limited gray/black/purple/green palette. Transparent alpha outside the silhouette, no checkerboard, no background color, no ground shadow, no text, no lettering, no border around the canvas, no perspective, no gradients, no glow haze, no tiny details. Original image, not a copied Mekanism texture. It will be mechanically nearest-neighbor reduced to a true 16x16 PNG.

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AEA",
+    "CBC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "B": {
+      "item": "mekanism:module_base"
+    }
+  },
+  "result": {
+    "id": "overloadcore:module_residual_coupling_unit"
+  }
+}

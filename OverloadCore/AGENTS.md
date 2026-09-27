@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.15，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.15.jar`。
+- 0.1.0-alpha.16，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.16.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -20,7 +20,11 @@
 
 ## 实现入口与数据契约
 
-- 2026-09-27用户要求研究基于Mek本体扩展装备／饰品／武器升级，核对结果与候选顺序见 `GEAR_EXPANSION.md`，仍是方案，不是已发布能力。目标发布源码确认：原改装站接受IMC注册的模块容器；原模块配置菜单仅护甲／快捷栏／副手，不含Curios；原充电分配已支持Curios。核心重建目前不保存新模块，雷印完整快照会撤销未授权组件变化；饰品模块化必须先补合法改装／动态能量事务，不能关闭防篡改或复制储能。此次仅文档，无版本提升或新JAR。
+- alpha.16新增gear/EquipmentModules与ResidualCouplingUnit；ModuleDeferredRegister + MekanismIMC只注册胸甲支持，原生ItemModule提供支持列表／4级上限与描述，安装保存由Mek MODULE_CONTAINER负责。高速充能只在CoreBinding.charge唯一入口执行，模块tick不得再次扣电；先验证真实核心槽及已穿戴胸甲，再根据启用等级优先充胸甲。只按实际接收量扣原余雷，已转移量占用原基础预算，满胸甲仅保留剩余基础预算供给其他物品。基础范围改为recovery_chargeable标签（默认原5件），不遍历任意Curios充电，后续分配交原ModuleChargeDistributionUnit。四级4k/16k/64k/256k FE/t可配置，原100k FE缓冲不变，不保证瞬时达到配置上限。
+- alpha.16 build、41项GameTest、3项JUnit与JAR检查通过；EquipmentModuleGameTests覆盖真实改装站tick、安装4退回4余1、支持列表／序列化、四级实际能量和满仓/零余量、关模块/放背包/无绑定、原生充电分配实际玩家tick守恒。改装站无侧面ItemHandler也是只读：测试必须提供真实Direction，不能把null拒绝当作模块不能安装。未启动客户端。
+- 原创模块图标见art/source/module_residual_coupling_unit.png与art/coupling-module-prompt.txt；tools/export_module_art.cjs仅透明trim和最近邻16px，保留原alpha，无脚本重绘或上游贴图打包。
+
+- 2026-09-27用户要求研究基于Mek本体扩展装备／饰品／武器升级，核对结果与候选顺序见 `GEAR_EXPANSION.md`；alpha.16仅完成余雷耦合，其余仍为方案。目标发布源码确认：原改装站接受IMC注册的模块容器；原模块配置菜单仅护甲／快捷栏／副手，不含Curios；原充电分配已支持Curios。核心重建目前不保存新模块，雷印完整快照会撤销未授权组件变化；饰品模块化必须先补合法改装／动态能量事务，不能关闭防篡改或复制储能。该研究提交本身仅文档，后续实现版本按各条记录。
 
 - `CoreItem`：真实持续使用 40 tick 后绑定；拖入、捡起、快捷使用不自动装备。Curios `ALWAYS_KEEP` 保留死亡饰品。
 - `CoreBinding`：玩家 `overloadcore_binding` 是绑定实例、回收电量和体热的唯一权威记录；物品 `core_data` 仅保存 owner/instance。恢复与去重不能生成第二份电量。Clone、登录、换维度分别处理。回收缓冲内部用 Mek 原生 J，向随身 MekaTool/MekaSuit 原生能量 handler 转移；FE 仅用于配置和显示。

@@ -78,18 +78,28 @@ public final class CoreBinding {
         tag.putLong("energy", old + Math.min(add, Math.max(0, capacity - old))); tag.putInt("recovery_remainder", remainder % 4); save(player, tag);
     }
     public static void charge(ServerPlayer player) {
+        if (!active(player)) return;
         var tag = data(player); long stored = Math.max(0, tag.getLong("energy")); if (stored == 0) return;
-        long remaining = Math.min(stored, EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.CHARGE_FE.get().longValue()));
+        long baseline = EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.CHARGE_FE.get().longValue());
+        int coupling = dev.everyonemek.overloadcore.gear.ResidualCouplingUnit.wornLevel(player);
+        var chest = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST);
+        long coupled = coupling == 0 ? 0 : chargeStack(chest, Math.min(stored,
+              EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.couplingRateFE(coupling))));
+        stored -= coupled;
+        // The faster route replaces the base budget. It must not run in parallel with a second free base transfer.
+        long remaining = Math.min(stored, Math.max(0, baseline - coupled));
         for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
             var stack = player.getInventory().getItem(i);
-            var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
-            if (!id.getNamespace().equals("mekanism") || !(id.getPath().equals("meka_tool") || id.getPath().startsWith("mekasuit_"))) continue;
-            var handler = mekanism.common.integration.energy.EnergyCompatUtils.getStrictEnergyHandler(stack);
-            if (handler == null) continue;
-            long accepted = Math.clamp(remaining - handler.insertEnergy(remaining, mekanism.api.Action.EXECUTE), 0, remaining);
+            if (!stack.is(CoreContent.RECOVERY_CHARGEABLE) || coupling > 0 && stack == chest) continue;
+            long accepted = chargeStack(stack, remaining);
             stored -= accepted; remaining -= accepted;
         }
         tag.putLong("energy", stored); save(player, tag);
+    }
+    private static long chargeStack(ItemStack stack, long offered) {
+        if (offered <= 0 || stack.isEmpty()) return 0;
+        var handler = mekanism.common.integration.energy.EnergyCompatUtils.getStrictEnergyHandler(stack);
+        return handler == null ? 0 : Math.clamp(offered - handler.insertEnergy(offered, mekanism.api.Action.EXECUTE), 0, offered);
     }
     private CoreBinding() { }
 }

@@ -9,12 +9,19 @@ public final class CoreConfig {
     public static final ModConfigSpec.BooleanValue WORK, GENERATION, TRANSPORT, HAZARDS;
     public static final ModConfigSpec.IntValue WARD_COST_FE;
     public static final ModConfigSpec.IntValue WARD_RESERVE_PERCENT, WARD_SHIELD_HITS, WARD_SHIELD_TICKS;
+    public static final java.util.List<ModConfigSpec.IntValue> COUPLING_RATES;
     static {
         var b = new ModConfigSpec.Builder();
         RANGE = b.comment("Radius in blocks; only owned or explicitly shared devices.").defineInRange("range", 32, 1, 64);
         METAL_LIMIT = b.comment("Metal ingot equivalents that prevent sprinting.").defineInRange("metalLimit", 384, 32, 4096);
         BUFFER_FE = b.defineInRange("bufferFE", 100000, 0, 10000000);
         CHARGE_FE = b.defineInRange("chargeFEPerTick", 1000, 0, 100000);
+        var rates = new java.util.ArrayList<ModConfigSpec.IntValue>();
+        b.push("equipment");
+        for (int level = 1; level <= 4; level++) rates.add(b.comment("Coupling transfer cap in FE/t. Limited by recovered energy and chest acceptance; not an energy source.")
+              .defineInRange("couplingFEPerTickLevel" + level, 4000 << (2 * (level - 1)), 0, 10000000));
+        b.pop();
+        COUPLING_RATES = java.util.List.copyOf(rates);
         SOUND_GAIN = b.defineInRange("soundGain", 1.8, 1, 3);
         WARD_COST_FE = b.comment("Thunder Ward: total FE cost per averted fatal incident; no cooldown.")
               .defineInRange("wardCostFE", 100000, 1, 1000000000);
@@ -27,6 +34,12 @@ public final class CoreConfig {
         WORK = b.define("workCurse", true); GENERATION = b.define("generationCurse", true);
         TRANSPORT = b.define("transportCurse", true); HAZARDS = b.define("workplaceHazards", true);
         SPEC = b.build();
+    }
+    public static int couplingRateFE(int installed) {
+        int rate = CHARGE_FE.get();
+        // More installed modules cannot lower throughput, even with non-monotonic pack settings.
+        for (int i = 0; i < Math.clamp(installed, 0, COUPLING_RATES.size()); i++) rate = Math.max(rate, COUPLING_RATES.get(i).get());
+        return rate;
     }
     private CoreConfig() { }
 }
