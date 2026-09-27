@@ -43,7 +43,7 @@ public final class LinkPanelScreen extends GuiMekanism<LinkPanelMenu> {
             var d=selected();if(d!=null)send(action<4?4+action:action==4?2:3,d.pos(),null,menu.revision);return true;
         }){{active=false;}@Override public void tick(){super.tick();var d=selected();active=d!=null&&(action<4?d.node():action==4?!d.core()&&d.source()!=null:d.node()&&!d.frequency().isEmpty());setMessage(buttonText(action));}});}
     }
-    private Component buttonText(int action){if(action>=4)return ModuleContent.text(action==4?"panel_remove_power":"frequency_leave");var d=selected();return ModuleContent.text("panel_channel",ModuleContent.text("resource_"+action),d!=null&&(d.channels()&(1<<action))!=0?"✓":"—");}
+    private Component buttonText(int action){if(action>=4)return ModuleContent.text(action==4?"panel_remove_power":"panel_clear_frequency");var d=selected();return ModuleContent.text("panel_channel",ModuleContent.text("resource_"+action),d!=null&&(d.channels()&(1<<action))!=0?"✓":"—");}
     private List<LinkPanelNetwork.Device> visible(){return menu.devices.stream().filter(d->filter.isEmpty()||d.name().getString().toLowerCase(Locale.ROOT).contains(filter)||d.pos().toShortString().contains(filter)).toList();}
     private LinkPanelNetwork.Device device(BlockPos pos){if(pos==null)return null;return menu.devices.stream().filter(d->d.pos().equals(pos)).findFirst().orElse(null);}
     private LinkPanelNetwork.Device selected(){return device(selected);}

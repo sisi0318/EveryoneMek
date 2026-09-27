@@ -5,7 +5,6 @@ import dev.everyonemek.gravity.client.ReactorScreen;
 import mekanism.client.gui.IGuiWrapper;
 import mekanism.client.gui.element.GuiInnerScreen;
 import mekanism.client.gui.element.button.MekanismButton;
-import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.client.gui.element.window.GuiWindow;
 import mekanism.common.inventory.container.SelectedWindowData.WindowType;
 import net.minecraft.client.Minecraft;
@@ -17,8 +16,8 @@ public final class SolarWindow extends GuiWindow {
         if(page==0)addChild(new GuiInnerScreen(gui,relativeX+10,relativeY+27,184,134,()->List.of(Content.text("gross",ReactorScreen.fe(c.gross)),Content.text("self_use",ReactorScreen.fe(c.selfUse)),dev.everyonemek.gravity.corona.CoronalContent.text("energy_used",ReactorScreen.fe(c.lastProcessing)),Content.text("input_rate",ReactorScreen.fe(c.lastInput)),Content.text("input_limit",ReactorScreen.fe(m.inputLimit)),Content.text("exported",ReactorScreen.fe(c.lastOutput)),Content.text("output_limit",ReactorScreen.fe(m.outputLimit)),Content.text("stored",ReactorScreen.fe(c.stored),ReactorScreen.fe(m.capacity)),Content.text("startup_cost",ReactorScreen.fe(m.startup)),Content.text("reserve",ReactorScreen.fe(m.reserve)))).spacing(0));
         if(page==0){
             addChild(new GuiInnerScreen(gui,relativeX+10,relativeY+164,184,42,()->List.of(Content.text("port_selected",m.portCount==0?0:m.portIndex+1,m.portCount,Content.text(m.portIsOutput?"output":"input")),Content.text("port_location",m.portPos==null?"—":m.portPos.toShortString()),Content.text("port_rates",ReactorScreen.fe(m.portInput),ReactorScreen.fe(m.portOutput)))).spacing(0));
-            addChild(new MekanismButton(gui,relativeX+10,relativeY+214,88,16,Component.literal("<"),(b,x,y)->send(m,30)));
-            addChild(new MekanismButton(gui,relativeX+106,relativeY+214,88,16,Component.literal(">"),(b,x,y)->send(m,31)));
+            addChild(new MekanismButton(gui,relativeX+10,relativeY+214,88,16,Component.literal("<"),(b,x,y)->send(m,30)){{active=false;}@Override public void tick(){super.tick();active=m.portCount>1;}}).setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(Content.text("port_previous")));
+            addChild(new MekanismButton(gui,relativeX+106,relativeY+214,88,16,Component.literal(">"),(b,x,y)->send(m,31)){{active=false;}@Override public void tick(){super.tick();active=m.portCount>1;}}).setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(Content.text("port_next")));
         }
         if(page==1){addChild(new GuiInnerScreen(gui,relativeX+10,relativeY+27,184,103,()->{
             var lines=new ArrayList<Component>();lines.add(SolarContent.text("size"));lines.add(SolarContent.text("constraint",ReactorScreen.fe(m.constraint)));lines.add(SolarContent.text("collector",ReactorScreen.fe(m.collector)));
@@ -38,7 +37,7 @@ public final class SolarWindow extends GuiWindow {
             m.reserveFuelCount<0?Content.text("stock_unknown"):Content.text("reserve_fuel",m.reserveFuelCount),
             Content.text("reserve_fuel_energy",(m.reserveFuelEnergy==Long.MAX_VALUE?"≥":"")+ReactorScreen.fe(m.reserveFuelEnergy)),
             SolarContent.text(m.coreHot?"hot_core":"cold_core"))).spacing(0));
-        if(page==3){var field=addChild(new GuiTextField(gui,relativeX+18,relativeY+42,136,16));field.setMaxLength(3);field.setInputValidator(ch->ch>='0'&&ch<='9');field.setText(Integer.toString(c.load));Runnable apply=()->{try{int n=Integer.parseInt(field.getText());if(n>=1&&n<=100)send(m,100+n);}catch(NumberFormatException ignored){}};field.setEnterHandler(apply);field.addCheckmarkButton(apply);addChild(new GuiInnerScreen(gui,relativeX+10,relativeY+78,184,24,()->List.of(Content.text("confirmed_load",c.load))));}
+        if(page==3){addChild(new dev.everyonemek.gravity.client.PercentField(gui,relativeX+18,relativeY+42,136,16,100,()->c.load,()->true,n->send(m,100+n)));addChild(new GuiInnerScreen(gui,relativeX+10,relativeY+78,184,24,()->List.of(Content.text("confirmed_load",c.load))));}
     }
     private void button(IGuiWrapper gui,SolarMenu m,int x,int y,int width,String key,int id){addChild(new MekanismButton(gui,relativeX+x,relativeY+y,width,16,Content.text(key),(b,mx,my)->send(m,id)));}
     private static boolean send(SolarMenu m,int id){Minecraft.getInstance().gameMode.handleInventoryButtonClick(m.containerId,id);return true;}

@@ -4,7 +4,7 @@
 
 ## 基线与当前要求
 
-- 0.1.0-alpha.30，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
+- 0.1.0-alpha.31，ID mekgravity，包dev.everyonemek.gravity；MC1.21.1、NeoForge21.1.241、Mek/Mek Generators10.7.19.85、Java21。原7格引力堆与新增9格微缩太阳共存。
 - 固定7×7×7。主控在(3,1,0)，核心(3,3,3)，六线圈沿轴距核心2格，中间留空。最低线圈等级决定发电。
 - alpha.2用户明确取消强制钠冷却，要求连接玻璃、修复UI、提高向外输电、成型专用材质、核心特效与更高发电效率。不能再把冷却口作为成型条件。
 - 默认毛功率2/4/8/16 GFE/t，alpha.6单丸能值24 TJ（alpha.5的120倍），默认100%稳态续航240/120/60/30秒；单口16 GFE/t，默认四输出口合计64 GFE/t。未用燃料丸按新配方，已付费反应余量保留J值。数字按默认FE/J和20TPS。
@@ -13,6 +13,8 @@
 - 燃料丸保留alpha.3的独立透明item/generated图标，不借用机器纹理。新核心/外壳原稿在art/source/orb.png及shell-v2.png，提示词见art/orb-and-shell-prompts.json。
 
 ## 实现入口
+
+- alpha.31界面规范依据见GUI_TEXT_GUIDE.md。StableSelectionList按UUID/BlockPos保留刷新选择；Resources只切现有子控件visible/active，不close/new窗口，完整8罐supplier继续保留。PercentField只保留输入草稿，旁边菜单读数为确认值；1～99/100范围外标红、不发包，外部更新不擦除正在编辑的新草稿。频率“设置”同时支持新建/选用同名，删除走Mek GuiConfirmationDialog，清除仅离开当前频率。此次未修改服务端协议或加工规则。build、442组语言键/格式参数/直接引用与JAR检查通过；未启动客户端，本轮不重复服务端GameTest。
 
 - alpha.30投影噪点已复现：node_snapshot.fsh原work.y==1.0在透视插值下不稳定，误采样能量板图集。改flat int resourceType，不能用varying float精确相等选择材质。VerifyNodeSnapshotShader新增12个倾斜透视+替换图集一致性回归；旧版首视角32292颜色通道不同，新版0。不要把此问题误诊为两层模型或靠拉开深度解决。
 - ProcessModule为CAPTOR/FORGE/TUNER专用子类，原ConfigInventorySlotHolder+TileComponentConfig复用Mek物品六面；自有4096预算eject遍历配置输出面，NativeEjector不再重复搬运。NODE保持NodeModule，OBSERVATORY无库存配置。loot同时保存side_config/ejector。处理机器槽y78，调谐晶核槽y120，玩家仍y163；主界面230×248。

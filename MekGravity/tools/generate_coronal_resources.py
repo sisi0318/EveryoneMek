@@ -77,14 +77,14 @@ def build():
         write(f'data/mekgravity/recipe/coronal_processing/{name}.json',{'type':'mekgravity:coronal_processing','inputs':[{'ingredient':{'tag' if tag else 'item':item},'count':n} for item,n,tag in inputs],'result':{'id':result,'count':count},'ticks':ticks,'energy':energy,'tier':tier})
     shader=json.loads((RES/'assets/mekgravity/shaders/core/stellar_field.json').read_text(encoding='utf-8'));shader['vertex']=shader['fragment']='mekgravity:coronal_processing';write('assets/mekgravity/shaders/core/coronal_processing.json',shader)
     words={'slot_stock':('库存：%s / %s','Stored: %s / %s'),
-      'input':('原料','Inputs'),'output':('产物','Outputs'),'batch':('批量 %s','Batch %s'),'progress':('进度 %s%%','Progress %s%%'),
+      'input':('输入','Input'),'output':('输出','Output'),'batch':('批量：%s','Batch: %s'),'progress':('进度：%s%%','Progress: %s%%'),
       'paid':('加工耗能：%s','Processing energy: %s'),'energy_used':('模块耗能：%s/t','Module consumption: %s/t'),
       'unlinked':('贴在采能翼外侧中心，背面朝向采能翼','Attach rear to the outer center of a collector wing'),
       'access':('无权使用这台微缩太阳','No permission to use this sun'),'paused':('加工已暂停','Processing paused'),
       'cold':('等待恒星点燃','Waiting for a hot star'),'energy':('太阳可用储能不足','Insufficient available solar energy'),
       'tier_low':('需要更高级的恒星约束部件','Higher stellar containment tier required'),'no_recipe':('等待可加工原料','Waiting for processable inputs'),
-      'output_full':('产物空间不足','Output space full'),'running':('日冕高温加工中','Coronal processing'),
-      'stop':('暂停','Pause'),'start':('启动','Start'),'eject_on':('自动输出：开','Auto-eject: On'),'eject_off':('自动输出：关','Auto-eject: Off'),
+      'output_full':('输出空间不足','Output space full'),'running':('正在加工','Processing'),
+      'stop':('停机','Stop'),'start':('启动','Start'),'eject_on':('自动弹出：开','Auto-eject: On'),'eject_off':('自动弹出：关','Auto-eject: Off'),
       'category':('日冕高温加工','Coronal Processing'),'recipe_info':('等级 %s · %s tick · %s','Tier %s · %s ticks · %s')}
     for lang,i in [('zh_cn',0),('en_us',1)]:
         p=RES/f'assets/mekgravity/lang/{lang}.json';data=json.loads(p.read_text(encoding='utf-8'));data.update({'mekgravity.corona.'+k:v[i] for k,v in words.items()})
