@@ -20,6 +20,8 @@
 
 ## 实现入口与数据契约
 
+- 2026-09-27用户要求研究基于Mek本体扩展装备／饰品／武器升级，核对结果与候选顺序见 `GEAR_EXPANSION.md`，仍是方案，不是已发布能力。目标发布源码确认：原改装站接受IMC注册的模块容器；原模块配置菜单仅护甲／快捷栏／副手，不含Curios；原充电分配已支持Curios。核心重建目前不保存新模块，雷印完整快照会撤销未授权组件变化；饰品模块化必须先补合法改装／动态能量事务，不能关闭防篡改或复制储能。此次仅文档，无版本提升或新JAR。
+
 - `CoreItem`：真实持续使用 40 tick 后绑定；拖入、捡起、快捷使用不自动装备。Curios `ALWAYS_KEEP` 保留死亡饰品。
 - `CoreBinding`：玩家 `overloadcore_binding` 是绑定实例、回收电量和体热的唯一权威记录；物品 `core_data` 仅保存 owner/instance。恢复与去重不能生成第二份电量。Clone、登录、换维度分别处理。回收缓冲内部用 Mek 原生 J，向随身 MekaTool/MekaSuit 原生能量 handler 转移；FE 仅用于配置和显示。
 - `DeviceScope`：BE 的 `overloadcore_machine` 保存放置者、逐设备共享名单、加工元数据；原生 owner capability 优先。Public 安全不等于诅咒授权。多方块必须归属一致且已知，或由管理员登记当前结构 ID。重叠佩戴者仅选最近一人，同距按 UUID 排序。

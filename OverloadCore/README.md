@@ -116,6 +116,7 @@ $env:GRADLE_USER_HOME = Join-Path $PWD '.gradle-home'
 `-PwithGenerators=false` 可验证不安装 Generators 的环境。服务端测试不包含在发布 JAR 中。客户端游戏内验收由用户进行，不自动运行客户端。
 
 - [设计稿与后续边界](DESIGN.md)
+- [装备、饰品与武器升级方案（尚未实现）](GEAR_EXPANSION.md)
 - [开发与验证记录](AGENTS.md)
 - [变更记录](CHANGELOG.md)
 - [原创挂坠与提示词](art/README.md)
