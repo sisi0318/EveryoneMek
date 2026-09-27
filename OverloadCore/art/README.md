@@ -45,3 +45,11 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 - `GearGlowMesh` 与 `.vsh/.fsh` 只覆盖武器能量面；所有机壳与能量面共同求外表面后拆分，消除覆盖面。
 - `tools/preview_equipment.cjs` 用原PNG最近邻采样和深度缓存离线渲染，不代表游戏内验收。
 - `tools/VerifyGearShader.java` 在隐藏GL上下文编译实际GLSL并核对动画、空电量变暗和遮挡；不启动Minecraft客户端。
+
+## alpha.19 Mek 风格修订（当前）
+
+- 模块使用 Mek 的原生 `mekanism:item/module_base` 作为模型底层，原创功能窗口作为第二层；只引用上游资源，不将上游PNG复制进JAR。
+- 内置 ImageGen 原稿：[功能窗口图集](source/mek-module-panels-v2.png)、[装备材质图集](source/mek-equipment-materials-v2.png)。完整提示词和工具记录：[mek-gear-v2-prompts.json](mek-gear-v2-prompts.json)。
+- `tools/export_mek_gear.cjs` 按4×3切窗口、中央70%×75%裁切、nearest到8×6并填透明边到16×16；装备材质2×2分面后nearest到16×16。没有脚本重绘图案、抠背景或模糊。
+- [模块联系表](mek-module-icons-v2.png)使用忽略目录中的原版基板作离线合成参考。武器和MekaSuit外装改用gear_alloy／gear_graphite／gear_grip／gear_circuit，缩小发光槽，统一绿色shader和静态回退。
+- 过载核心原稿与运行贴图未改。alpha.17的紫色立体模块预览为历史设计，当前模块已换成原版尺寸的平面插针板图标。

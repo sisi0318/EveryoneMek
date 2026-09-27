@@ -27,7 +27,7 @@ public final class CoreContent {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> RAIL_AMMO = COMPONENTS.register("rail_ammo",
           () -> DataComponentType.<Integer>builder().persistent(com.mojang.serialization.Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
     public static final DeferredItem<CoreItem> CORE = ITEMS.register("overloaded_short_circuit_core",
-          () -> new CoreItem(mekanism.api.gear.IModuleHelper.INSTANCE.applyModuleContainerProperties(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC))));
+          () -> new CoreItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC)));
     public static final DeferredItem<ThunderWardItem> WARD = ITEMS.register("thunder_ward",
           () -> new ThunderWardItem(mekanism.api.gear.IModuleHelper.INSTANCE.applyModuleContainerProperties(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.EPIC))));
     public static final DeferredItem<mekanism.common.item.ItemModule> COUPLING_MODULE = ITEMS.register("module_residual_coupling_unit",
@@ -41,7 +41,7 @@ public final class CoreContent {
         for (var upgrade : dev.everyonemek.overloadcore.gear.GearUpgrade.values()) UPGRADE_ITEMS.put(upgrade, ITEMS.register("module_" + upgrade.id,
               () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.get(upgrade), new Item.Properties().rarity(Rarity.RARE))));
         TABS.register("core", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.overloadcore"))
-              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); UPGRADE_ITEMS.values().forEach(output::accept); output.accept(RAILGUN); output.accept(BLADE); }).build());
+              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); output.accept(RAILGUN); output.accept(BLADE); }).build());
     }
     public static net.minecraft.network.chat.MutableComponent text(String key, Object... args) { return Component.translatable("overloadcore." + key, args); }
     public static void register(IEventBus bus) { ITEMS.register(bus); COMPONENTS.register(bus); TABS.register(bus); }

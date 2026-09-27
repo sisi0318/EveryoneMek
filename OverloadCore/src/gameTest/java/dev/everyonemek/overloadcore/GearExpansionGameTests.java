@@ -48,32 +48,51 @@ public final class GearExpansionGameTests {
         }finally{remove(p);}
     }
 
-    @GameTest(template="empty",timeoutTicks=90)
-    public static void wornServiceEditsCanonicalWardAndCoreWithoutReleasingThem(GameTestHelper h){
-        var fixture=ThunderWardGameTests.player(h,new BlockPos(20,4,20));var p=fixture.player();bind(p);
+    private static int playerSlot(net.minecraft.world.inventory.AbstractContainerMenu menu,ServerPlayer p,int slot){
+        for(int i=0;i<menu.slots.size();i++)if(menu.slots.get(i).container==p.getInventory()&&menu.slots.get(i).getContainerSlot()==slot)return i;
+        throw new IllegalStateException("Player slot unavailable");
+    }
+    @GameTest(template="empty",timeoutTicks=100)
+    public static void removableWardUsesNativeStationAndReequipsWithUpgrades(GameTestHelper h){
+        var f=ThunderWardGameTests.player(h,new BlockPos(20,4,20));var p=f.player();
+        WardCustodyGameTests.click(p,ClickType.PICKUP,0);
+        var ward=p.containerMenu.getCarried();check(ward.is(CoreContent.WARD)&&!ward.has(CoreContent.WARD_SEAL),"Manual unequip did not release the original");
+        p.containerMenu.setCarried(ItemStack.EMPTY);p.getInventory().setItem(0,ward);p.closeContainer();
         var pos=new BlockPos(20,4,22);h.setBlock(pos,MekanismBlocks.MODIFICATION_STATION.get());var station=(TileEntityModificationStation)h.getBlockEntity(pos);
-        station.getEnergyContainer().setEnergy(station.getEnergyContainer().getMaxEnergy());
+        station.getEnergyContainer().setEnergy(station.getEnergyContainer().getMaxEnergy());long before=station.getEnergyContainer().getEnergy();
         station.getBlockState().useWithoutItem(h.getLevel(),p,new BlockHitResult(h.absolutePos(pos).getCenter(),Direction.NORTH,h.absolutePos(pos),false));
-        GearMenus.open(p,new GearMenus.Open(p.containerMenu.containerId));check(p.containerMenu instanceof ServiceMenu,"Native station service tab did not open");var menu=(ServiceMenu)p.containerMenu;
-        var ward=WardRuntime.worn(p);var token=ServiceMenu.identity(ward);
-        station.getInventorySlots(null).getFirst().setStack(new ItemStack(CoreContent.UPGRADE_ITEMS.get(GearUpgrade.CAPACITOR).get(),4));
-        long before=station.getEnergyContainer().getEnergy();
-        check(!menu.action(p,new GearMenus.Edit(menu.containerId,menu.session+1,1,GearUpgrade.CAPACITOR.ordinal(),0,token)),"Stale session changed a worn item");
-        check(menu.action(p,new GearMenus.Edit(menu.containerId,menu.session,1,GearUpgrade.CAPACITOR.ordinal(),0,token)),"Authorized capacitor install failed");
-        check(station.getInventorySlots(null).getFirst().isEmpty()&&station.getEnergyContainer().getEnergy()<before,"Install did not consume chip/power");
-        WardCustody.ensure(p);check(WardRuntime.worn(p)==ward&&GearEffects.level(ward,GearUpgrade.CAPACITOR)==4&&token.equals(ServiceMenu.identity(ward)),"Ward restoration undid install or replaced seal");
-        h.startSequence().thenIdle(1).thenExecute(()->{
-            station.getInventorySlots(null).getFirst().setStack(new ItemStack(CoreContent.UPGRADE_ITEMS.get(GearUpgrade.RESERVOIR).get(),2));
-            var core=CoreBinding.worn(p);check(menu.action(p,new GearMenus.Edit(menu.containerId,menu.session,0,GearUpgrade.RESERVOIR.ordinal(),0,ServiceMenu.identity(core))),"Bound core could not be modified");
-            top.theillusivec4.curios.api.CuriosApi.getCuriosInventory(p).orElseThrow().getStacksHandler(CoreBinding.SLOT).orElseThrow().getStacks().setStackInSlot(0,ItemStack.EMPTY);
-            CoreBinding.restore(p);check(GearEffects.level(CoreBinding.worn(p),GearUpgrade.RESERVOIR)==2,"Restoration lost core modules");
-        }).thenIdle(1).thenExecute(()->{
-            try{
-                check(menu.action(p,new GearMenus.Edit(menu.containerId,menu.session,1,GearUpgrade.CAPACITOR.ordinal(),1,token)),"Worn module removal failed");
-                check(GearEffects.level(ward,GearUpgrade.CAPACITOR)==3&&p.getInventory().countItem(CoreContent.UPGRADE_ITEMS.get(GearUpgrade.CAPACITOR).get())==1,"Worn module return duplicated or lost chips");
-                check(!CoreContent.CORE.get().canUnequip(new top.theillusivec4.curios.api.SlotContext(CoreBinding.SLOT,p,0,false,true),CoreBinding.worn(p)),"Service released core binding");
-            }finally{ThunderWardGameTests.close(fixture);}
-        }).thenSucceed();
+        var menu=p.containerMenu;check(menu instanceof mekanism.common.inventory.container.tile.MekanismTileContainer<?>,"Not the original Mek station menu");
+        p.getInventory().setItem(1,new ItemStack(CoreContent.UPGRADE_ITEMS.get(GearUpgrade.CAPACITOR).get(),4));
+        menu.quickMoveStack(p,playerSlot(menu,p,0));menu.quickMoveStack(p,playerSlot(menu,p,1));
+        check(station.containerSlot.getStack().is(CoreContent.WARD),"Shift click did not insert ward into native equipment slot");
+        h.startSequence().thenWaitUntil(()->check(GearEffects.level(station.containerSlot.getStack(),GearUpgrade.CAPACITOR)==4,"Native station has not completed installation"))
+              .thenExecute(()->{try{
+                  check(station.getEnergyContainer().getEnergy()<before&&station.getInventorySlots(null).getFirst().isEmpty(),"Native installation did not consume power/chips");
+                  station.removeModule(p,EquipmentModules.get(GearUpgrade.CAPACITOR),false);
+                  check(GearEffects.level(station.containerSlot.getStack(),GearUpgrade.CAPACITOR)==3&&p.getInventory().countItem(CoreContent.UPGRADE_ITEMS.get(GearUpgrade.CAPACITOR).get())==1,"Native remove did not return exactly one chip");
+                  int output=-1;for(int i=0;i<menu.slots.size();i++)if(menu.slots.get(i) instanceof mekanism.common.inventory.container.slot.InventoryContainerSlot slot&&slot.getInventorySlot()==station.containerSlot)output=i;
+                  check(output>=0,"Native equipment slot missing");menu.quickMoveStack(p,output);
+                  ItemStack upgraded=ItemStack.EMPTY;for(int i=0;i<p.getInventory().getContainerSize();i++)if(p.getInventory().getItem(i).is(CoreContent.WARD)){upgraded=p.getInventory().getItem(i);p.getInventory().setItem(i,ItemStack.EMPTY);break;}
+                  check(!upgraded.isEmpty()&&station.containerSlot.isEmpty(),"Native shift extraction lost or duplicated ward");
+                  p.closeContainer();var slots=top.theillusivec4.curios.api.CuriosApi.getCuriosInventory(p).orElseThrow().getStacksHandler(ThunderWardItem.SLOT).orElseThrow().getStacks();
+                  check(slots.insertItem(0,upgraded,false).isEmpty()&&ThunderWard.equipped(p),"Modified ward did not re-equip");WardCustody.ensure(p);
+                  check(GearEffects.level(WardRuntime.worn(p),GearUpgrade.CAPACITOR)==3,"Custody reverted native station changes");
+                  check(!mekanism.api.gear.IModuleHelper.INSTANCE.isModuleContainer(new ItemStack(CoreContent.CORE.get())),"Core still accepts upgrades");
+              }finally{ThunderWardGameTests.close(f);}}).thenSucceed();
+    }
+    @GameTest(template="empty",timeoutTicks=50)
+    public static void retiringCoreUpgradesPreservesEnergyAndRefundsOnce(GameTestHelper h){
+        var p=player(h,new BlockPos(20,4,20));bind(p);
+        try{
+            var core=CoreBinding.worn(p);
+            // Recreate the canonical saved component from alpha.17/18; current installation is intentionally unsupported.
+            mekanism.common.content.gear.ModuleContainer.EMPTY.addModule(p.registryAccess(),core,EquipmentModules.get(GearUpgrade.RESERVOIR),2);
+            var saved=CoreBinding.data(p);saved.put("equipment",core.save(p.registryAccess()));saved.putLong("energy",GearCombat.joules(700000));CoreBinding.save(p,saved);
+            CoreBinding.restore(p);CoreBinding.restore(p);
+            check(!CoreBinding.worn(p).has(MekanismDataComponents.MODULE_CONTAINER)&&CoreBinding.data(p).getLong("energy")==GearCombat.joules(700000),"Retirement lost energy or left an upgrade active");
+            check(p.getInventory().countItem(CoreContent.UPGRADE_ITEMS.get(GearUpgrade.RESERVOIR).get())==2,"Retirement did not refund exactly once");
+            CoreBinding.recover(p,100000);check(CoreBinding.data(p).getLong("energy")==GearCombat.joules(700000),"Over-capacity reserve was lost or old expansion remained active");h.succeed();
+        }finally{remove(p);}
     }
 
     @GameTest(template="empty",timeoutTicks=100)

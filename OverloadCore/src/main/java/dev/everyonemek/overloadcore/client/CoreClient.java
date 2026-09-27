@@ -28,20 +28,6 @@ import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = OverloadCore.ID, value = Dist.CLIENT)
 public final class CoreClient {
-    @SubscribeEvent public static void screens(RegisterMenuScreensEvent event) {
-        event.register(dev.everyonemek.overloadcore.gear.GearMenus.SERVICE.get(), ServiceScreen::new);
-        dev.everyonemek.overloadcore.gear.GearMenus.client = state -> {
-            if (Minecraft.getInstance().screen instanceof ServiceScreen screen) screen.accept(state);
-        };
-    }
-    @SubscribeEvent public static void stationButton(ScreenEvent.Init.Post event) {
-        if (event.getScreen() instanceof mekanism.client.gui.GuiModificationStation screen) {
-            var button = new mekanism.client.gui.element.button.MekanismButton(screen,-26,86,26,18,CoreContent.text("service.tab"),(b,x,y)->{
-                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new dev.everyonemek.overloadcore.gear.GearMenus.Open(screen.getMenu().containerId));return true;
-            });
-            button.setTooltip(mekanism.client.gui.tooltip.TooltipUtils.create(CoreContent.text("service.title"))); event.addListener(button);
-        }
-    }
     private static final KeyMapping KEY = new KeyMapping("key.overloadcore.status", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "key.categories.overloadcore");
     private static final KeyMapping EXTREME = new KeyMapping("key.overloadcore.extreme", net.neoforged.neoforge.client.settings.KeyConflictContext.IN_GAME,
           InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.overloadcore");

@@ -35,6 +35,7 @@ public final class CoreBinding {
         var stack = source.copyWithCount(1); var item = new CompoundTag(); item.putUUID("owner", player.getUUID()); item.putUUID("instance", state.getUUID("instance"));
         stack.set(CoreContent.DATA.get(), item);
         state.put("equipment", stack.save(player.registryAccess())); save(player, state);
+        retireUpgrades(player, stack);
         CuriosApi.getCuriosInventory(player).flatMap(h -> h.getStacksHandler(SLOT)).orElseThrow().getStacks().setStackInSlot(0, stack);
         source.shrink(1); player.displayClientMessage(CoreContent.text("bound"), false); CorePackets.sendStatus(player, false); return true;
     }
@@ -44,12 +45,7 @@ public final class CoreBinding {
         var coreSlots = inventory.getStacksHandler(SLOT).orElse(null); if (coreSlots == null || coreSlots.getStacks().getSlots() == 0) return;
         var slots = coreSlots.getStacks();
         if (matches(player, slots.getStackInSlot(0))) {
-            var live = slots.getStackInSlot(0); var state = data(player);
-            if (state.contains("equipment")) {
-                ItemStack.parse(player.registryAccess(), state.getCompound("equipment")).filter(s -> matches(player, s)).ifPresent(saved ->
-                      live.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER,
-                            saved.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY)));
-            } else { state.put("equipment", live.save(player.registryAccess())); save(player, state); }
+            retireUpgrades(player, slots.getStackInSlot(0));
             for (int i = 0; i < player.getInventory().getContainerSize(); i++) if (matches(player, player.getInventory().getItem(i))) player.getInventory().setItem(i, ItemStack.EMPTY);
             for (var entry : inventory.getCurios().entrySet()) for (int i = 0; i < entry.getValue().getStacks().getSlots(); i++)
                 if (!(entry.getKey().equals(SLOT) && i == 0) && matches(player, entry.getValue().getStacks().getStackInSlot(i))) entry.getValue().getStacks().setStackInSlot(i, ItemStack.EMPTY);
@@ -69,10 +65,7 @@ public final class CoreBinding {
             }
         }
         var previous = slots.getStackInSlot(0);
-        final ItemStack canonical = recovered;
-        ItemStack.parse(player.registryAccess(), data(player).getCompound("equipment")).filter(s -> matches(player, s)).ifPresent(saved ->
-              canonical.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER,
-                    saved.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY)));
+        retireUpgrades(player, recovered);
         if (!previous.isEmpty() && !player.getInventory().add(previous.copy())) player.drop(previous.copy(), false);
         slots.setStackInSlot(0, recovered); player.getInventory().setChanged();
     }
@@ -86,8 +79,7 @@ public final class CoreBinding {
     public static void recover(ServerPlayer player, long extraJoules) {
         if (!active(player) || extraJoules <= 0) return;
         var tag = data(player); long old = Math.max(0, tag.getLong("energy"));
-        int level = dev.everyonemek.overloadcore.gear.GearEffects.level(worn(player), dev.everyonemek.overloadcore.gear.GearUpgrade.RESERVOIR);
-        long capacity = EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.BUFFER_FE.get().longValue() << level);
+        long capacity = EnergyUnit.FORGE_ENERGY.convertFrom(CoreConfig.BUFFER_FE.get().longValue());
         long quarter = extraJoules / 4; int remainder = (int) (extraJoules % 4) + Math.clamp(tag.getInt("recovery_remainder"), 0, 3);
         long add = quarter + remainder / 4;
         tag.putLong("energy", old + Math.min(add, Math.max(0, capacity - old))); tag.putInt("recovery_remainder", remainder % 4); save(player, tag);
@@ -96,12 +88,17 @@ public final class CoreBinding {
         return CuriosApi.getCuriosInventory(player).flatMap(i -> i.getStacksHandler(SLOT))
               .map(s -> s.getStacks().getSlots() > 0 ? s.getStacks().getStackInSlot(0) : ItemStack.EMPTY).orElse(ItemStack.EMPTY);
     }
-    public static boolean updateEquipment(ServerPlayer player, ItemStack original, java.util.function.Consumer<ItemStack> action) {
-        if (worn(player) != original || !matches(player, original)) return false;
-        var draft = original.copy(); action.accept(draft);
-        original.set(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER,
-              draft.getOrDefault(mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER, mekanism.common.content.gear.ModuleContainer.EMPTY));
-        var state = data(player); state.put("equipment", original.save(player.registryAccess())); save(player, state); return true;
+    /** Refund the formerly supported modules once, before saving a core without any upgrade data. */
+    private static void retireUpgrades(ServerPlayer player, ItemStack core) {
+        var state = data(player);
+        var canonical = ItemStack.parse(player.registryAccess(), state.getCompound("equipment")).filter(s -> matches(player, s)).orElse(core);
+        var component = mekanism.common.registries.MekanismDataComponents.MODULE_CONTAINER;
+        if (!canonical.has(component) && !core.has(component)) return;
+        var modules = canonical.getOrDefault(component, mekanism.common.content.gear.ModuleContainer.EMPTY);
+        core.remove(component);
+        state.put("equipment", core.save(player.registryAccess())); save(player, state);
+        for (var module : modules.modules()) player.getInventory().placeItemBackInInventory(
+              new ItemStack(module.getUntypedData().getItemHolder(), module.getInstalledCount()));
     }
     public static void charge(ServerPlayer player) {
         if (!active(player)) return;

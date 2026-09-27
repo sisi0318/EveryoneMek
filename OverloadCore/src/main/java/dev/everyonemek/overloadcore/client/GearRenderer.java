@@ -80,7 +80,7 @@ public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
             for(int plane=0;plane<2;plane++){var offset=plane==0?width:direction.cross(width);var points=new Vec3[]{beam.from().subtract(offset),beam.to().subtract(offset),beam.to().add(offset),beam.from().add(offset)};
                 for(int i=0;i<4;i++){var point=points[i];var v=out.addVertex(pose.last().pose(),(float)point.x,(float)point.y,(float)point.z);
                     if(custom)v.setUv(i==1||i==2?1:0,phase()).setColor(2+Math.clamp(beam.kind(),0,2),255,0,alpha).setNormal(0,1,0);
-                    else v.setColor(beam.kind()==0?110:195,190,255,alpha);}
+                    else v.setColor(beam.kind()==0?90:140,245,beam.kind()==0?180:130,alpha);}
             }
         }
         pose.popPose();buffers.endBatch(type);

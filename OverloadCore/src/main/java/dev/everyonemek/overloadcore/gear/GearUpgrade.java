@@ -6,7 +6,8 @@ public enum GearUpgrade {
     MAGNETIC("magnetic_compensation", 4, 2),
     CAPACITOR("ward_capacitor", 4, 4),
     AFTERGUARD("afterguard_stabilizer", 4, 4),
-    RESERVOIR("residual_reservoir", 4, 8),
+    // Decode old stacks only. No installation target, recipe or creative entry.
+    RESERVOIR("residual_reservoir", 4, 0),
     RESONANCE("resonant_discharge", 4, 16 | 64),
     ACCELERATOR("charge_accelerator", 4, 32 | 64),
     MAGAZINE("rail_magazine", 4, 32),

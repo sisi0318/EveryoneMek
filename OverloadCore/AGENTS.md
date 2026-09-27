@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.18，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.18.jar`。
+- 0.1.0-alpha.19，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.19.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -20,13 +20,16 @@
 
 ## 实现入口与数据契约
 
+- alpha.19用户明确：过载核心不需要升级；雷印可正常手动摘下，只用Mek原改造站。已删除ServiceMenu/ServiceScreen/GearMenus及“饰”入口，不再替换原GUI。真实Curios摘下释放seal，原装备槽接收雷印、原tick安装/耗能、原removeModule返还，重新佩戴按新组件登记。不要恢复佩戴中改装页面或给核心加模块支持。
+- CoreItem已撤去IModuleContainerItem与默认MODULE_CONTAINER，EquipmentModules不再登记CORE；RESERVOIR targets=0，只保留注册以读旧物品，隐藏创造栏、取消配方。CoreBinding.retireUpgrades使用canonical equipment快照返还旧模块并先清掉记录，重复恢复不重复返还；原energy不改，recover回到基础容量，超容量存量可继续用。核心PNG和原诅咒收益不变。
+- 模块图标直接引用mekanism:item/module_base作layer0，原创ImageGen窗口是layer1（16px透明图内x5..12/y3..8）；不复制上游框架贴图。新装备材质来自art/source/mek-equipment-materials-v2.png，四张真正16px；export_mek_gear仅格裁/中央裁切/nearest/透明填边。generate_equipment输出平面模块模型、新材质UV与窄绿色能量面；核心贴图禁止替换。
+
 - alpha.18：CoreContent.text 使用原生 Component.translatable，不会自动展开 Mek IHasTextComponent。EnergyDisplay.of(...) 必须先 getTextComponent() 再作参数，不能让 Object.toString 泄漏类名与每次分配变化的 identity hash。GearEnergy.tooltip 和 ServiceScreen 两处已修正；真实储能、单位转换、组件与费用不变。classes jar及发布字节码检查通过，未重复服务端GameTest、未启动客户端。
 
-- alpha.17 EquipmentModules/GearUpgrade为显式支持表；Mek原改装站处理所有已注册容器。CoreItem/Ward实现IModuleContainerItem，CoreBinding的equipment保存完整快照但只恢复认可模块，回收电量仍只有玩家KEY一份；绑定／改装／恢复都保持同instance。新增RESERVOIR按启用等级扩容，降级不删余雷。
+- alpha.17 EquipmentModules/GearUpgrade为显式支持表；Mek原改装站处理所有已注册容器。Ward实现IModuleContainerItem；核心已在alpha.19撤销模块支持。CoreBinding的equipment保留恢复与旧数据退役用途，回收电量仍只有玩家KEY一份。
 - GearEffects在原Workplace半秒采样处处理热沉／磁荷，按真实盔甲储能先模拟再扣款；金属load保留真实值，compensation单独同步，heavy继续用原恢复滞后。模块仅放背包、禁用或缺电不得生效。
 - GearEnergy实现IMekanismStrictEnergyHandler和IEnergyContainer，通过gear_energy保存唯一J余额；FE复用ForgeEnergyIntegration。WardCustody.energyAccess只读核对live身份、seal、完整快照及真实槽，SIMULATE不修复；合法能量／模块改动走update，只允许MODULE_CONTAINER与GEAR_ENERGY并同步新快照。直接写组件仍被原Mixin拦截；不能放宽整个ItemStack防护。
 - WardPower先预检电容，再检查剩余设备费用。设备不足时电容不扣；全由电容支付时不扫描区块。设备预检通过才扣电容与原生设备；设备权限／留电／极限模式沿用原规则。AFTERGUARD每级增加次数／时限，但原wardShieldHits=0优先。WardRuntime状态附电容读数。
-- ServiceMenu从原GuiModificationStation左侧“饰”入口打开。模块输入槽代理同一个原站slot0；要求原站装备槽空、canFunction、原BE身份、8格、安全许可、menu/session和目标instance/seal。安装消费真实芯片和一次原生工作电量，拆卸背包放不下则拒绝；只修改实际饰品，不移出Curios。快照5tick核对且仅变化发包，client仅展示。Core/Ward两种身份都不可使用过期窗口编辑。
 - WeaponItem/GearCombat：新枪用rail_ammo计弹仓，GEAR_ENERGY计能量；蓄力/冷却服务器复核，reload消耗rail_ammunition标签物品。射线先限制已加载区块，再裁墙；贯穿实体按距离排序。刃场最多16候选，谐振只伤敌对/交战者、最多模块等级个。MekaToolCombatMixin只在原hurtEnemy TAIL追加电弧，二次hurt不会再触发自身。WeaponEnergyModuleMixin只取消新WeaponItem在原ModuleEnergyUnit.onRemoved中的裁能，其他Mek装备不变。
 - GearRenderer为客户端：机壳使用烘焙模型，shader发光面使用静态GearGlowMesh，状态编码顶点，禁止逐物品改uniform。材质分类flat int防透视串色；1.21.1 fog_distance签名为(vec3,int)，不能套旧三参数。光束最多96条、每条2面、8tick、距离裁剪，退出清理强世界引用；开关与静态回退由GearVisualConfig控制。MekaSuit外装用原ModuleModelSpec与OBJ，组名必须同时含spec名和body/left_leg/right_leg，led组沿原发光管线。
 - 资源统一由generate_resources调用generate_equipment生成：11个新增模块各自几何、两种武器的base/fallback/动态面、外装OBJ和语言配方；surface_boxes对壳体+能量部件一起求外表面，再拆分渲染，避免共面闪烁。只复用现有原创16px位图，不新增脚本绘制贴图。预览和原稿不进JAR；按实际材料归一化检查配方唯一性，不能只比较字母pattern。
@@ -95,6 +98,8 @@
 - 不在任意 FE capability 全局注入倍率。原生能量以 J 计量，处理 SIMULATE 与 EXTERNAL/MANUAL/INTERNAL 的差别。
 
 ## 资源与验证
+
+- alpha.19：47项GameTest与3项JUnit通过；替换旧Service测试为真实Curios摘戴＋原菜单quickMoveStack＋原station tick安装＋原removeModule返还＋重新佩戴保留模块。新增旧canonical核心模块一次性返还与超容量储能保留。图标11个panel/4材质均16px，核心PNG与前版字节一致；JAR无旧Service类、旧核心扩容配方或上游PNG。Shader真实GL动画/变暗/遮挡通过（枪15/刃26面），未启动客户端。
 
 - alpha.17：build、46项服务端GameTest与3项JUnit通过，包含56种注册伤害原有回归；新增真实作业热/磁负荷与缺电恢复、原改装站进入佩戴服务/nonce/实际安装拆卸/核心恢复、独立电容充放电与联合支付不足不扣/防篡改/保存摘戴、原胸甲给Curios实际充电守恒、枪械弹药/遮挡和MekaTool连锁、原生能量单元拆卸不裁新武器电量。实际GLSL隐藏GL编译及动态/空电变暗/深度检查通过（枪10、刃39发光面）；136组语言、16个独立有序配方、模型范围、16pxPNG、shader/OBJ与JAR排除检查通过。未运行客户端，游戏内UI/外装/握持和第三方光影仍由用户验收。
 

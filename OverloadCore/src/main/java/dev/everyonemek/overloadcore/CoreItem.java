@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.*;
 
-public final class CoreItem extends Item implements ICurioItem, mekanism.common.content.gear.IModuleContainerItem {
+public final class CoreItem extends Item implements ICurioItem {
     public CoreItem(Properties properties) { super(properties); }
     @Override public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         var identity=player.getItemInHand(hand).get(CoreContent.DATA.get());
@@ -60,6 +60,5 @@ public final class CoreItem extends Item implements ICurioItem, mekanism.common.
         text.add(CoreContent.text("details_hint").withStyle(ChatFormatting.DARK_GRAY));
         var data = stack.get(CoreContent.DATA.get());
         if (data != null && data.hasUUID("owner")) text.add(CoreContent.text("bound").withStyle(ChatFormatting.DARK_GRAY));
-        addModuleDetails(stack, text);
     }
 }

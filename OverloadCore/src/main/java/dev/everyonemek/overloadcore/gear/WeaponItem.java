@@ -54,7 +54,7 @@ public final class WeaponItem extends ItemEnergized implements IModuleContainerI
     @Override public boolean isBarVisible(ItemStack stack){return true;}
     @Override public void onDestroyed(net.minecraft.world.entity.item.ItemEntity entity,net.minecraft.world.damagesource.DamageSource source){IModuleHelper.INSTANCE.dropModuleContainerContents(entity,source);}
     @Override public int getBarWidth(ItemStack stack){return GearEnergy.bar(stack);}
-    @Override public int getBarColor(ItemStack stack){return rail?0x72DFC0:0xC3A0FF;}
+    @Override public int getBarColor(ItemStack stack){return rail?0x72DFC0:0x66DF88;}
     @Override public void appendHoverText(ItemStack stack,TooltipContext context,List<Component> lines,TooltipFlag flag){
         GearEnergy.tooltip(stack,lines);lines.add(CoreContent.text(rail?"weapon.rail_hint":"weapon.blade_hint"));
         if(rail)lines.add(CoreContent.text("weapon.magazine",GearCombat.ammo(stack),GearCombat.magazine(stack)));

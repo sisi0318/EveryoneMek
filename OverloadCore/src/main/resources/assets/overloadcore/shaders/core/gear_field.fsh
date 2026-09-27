@@ -10,7 +10,7 @@ uniform float FogEnd;
 uniform vec4 FogColor;
 out vec4 fragColor;
 void main() {
-    vec3 tint = (material == 0 || material == 2) ? vec3(0.22, 0.90, 0.72) : vec3(0.64, 0.33, 1.0);
+    vec3 tint = (material == 0 || material == 2) ? vec3(0.16, 0.90, 0.62) : vec3(0.34, 0.96, 0.48);
     float wave = 0.5 + 0.5 * sin(flow.x * 27.0 - flow.y);
     float filaments = smoothstep(0.80, 0.99, wave);
     float power = 0.08 + 0.92 * powerAlpha.x;

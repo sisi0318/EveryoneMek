@@ -27,7 +27,6 @@ public final class EquipmentModules {
 
     private static void enqueue(InterModEnqueueEvent event) {
         MekanismIMC.addMekaSuitBodyarmorModules(RESIDUAL_COUPLING);
-        container(CoreContent.CORE, "overloadcore_core", 8);
         container(CoreContent.WARD, "overloadcore_ward", 4);
         container(CoreContent.RAILGUN, "overloadcore_rail", 32);
         container(CoreContent.BLADE, "overloadcore_blade", 64);

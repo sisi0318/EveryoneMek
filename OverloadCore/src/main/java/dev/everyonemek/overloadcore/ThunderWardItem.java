@@ -27,6 +27,7 @@ public final class ThunderWardItem extends Item implements ICurioItem, mekanism.
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> text, TooltipFlag flag) {
         text.add(CoreContent.text("ward.lore").withStyle(ChatFormatting.GRAY));
         text.add(CoreContent.text("ward.equip").withStyle(ChatFormatting.GRAY));
+        text.add(CoreContent.text("ward.upgrade_hint").withStyle(ChatFormatting.DARK_GRAY));
         text.add(CoreContent.text("ward.details_hint").withStyle(ChatFormatting.DARK_GRAY));
         dev.everyonemek.overloadcore.gear.GearEnergy.tooltip(stack, text);
         addModuleDetails(stack, text);

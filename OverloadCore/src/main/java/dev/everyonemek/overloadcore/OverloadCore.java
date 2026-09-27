@@ -13,7 +13,6 @@ public final class OverloadCore {
         CoreContent.register(bus); bus.addListener(CorePackets::register);
         dev.everyonemek.overloadcore.gear.EquipmentModules.register(bus);
         bus.addListener(dev.everyonemek.overloadcore.gear.GearEnergy::register);
-        dev.everyonemek.overloadcore.gear.GearMenus.register(bus);
         bus.addListener(dev.everyonemek.overloadcore.gear.GearVisuals::register);
     }
 }

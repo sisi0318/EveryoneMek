@@ -2,7 +2,7 @@
   "parent": "builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "overloadcore:item/module_residual_coupling_unit"
+    "particle": "overloadcore:item/gear_alloy"
   },
   "display": {
     "gui": {

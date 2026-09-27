@@ -84,6 +84,7 @@ def generate(mek_jar):
         'curios.identifier.overload_ward': ('护命', 'Ward'),
         'overloadcore.ward.lore': ('借万机一瞬之雷，驳回此身既定之死。', 'Borrow the thunder of a thousand engines. Deny the appointed end.'),
         'overloadcore.ward.equip': ('右键佩戴，或放入护命饰品槽。', 'Use to equip, or place in the Ward accessory slot.'),
+        'overloadcore.ward.upgrade_hint': ('摘下后放入改造站安装模块。', 'Unequip and place in a Modification Station to install modules.'),
         'overloadcore.ward.details_hint': ('按住 Shift，窥见逆命之价。', 'Hold Shift to reveal the price of defiance.'),
         'overloadcore.ward.scope': ('雷域 %s 格 · 抽取自有及获授机枢的储能。', 'Thunder domain: %s blocks. Draws from owned or entrusted machines.'),
         'overloadcore.ward.price': ('每次逆命共耗 %s FE，诸机分担，不设冷却。', 'Each reprieve costs %s FE, shared by nearby machines. No cooldown.'),
