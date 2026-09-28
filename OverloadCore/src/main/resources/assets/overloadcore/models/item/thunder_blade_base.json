@@ -3227,68 +3227,58 @@
       "rotation": [
         0,
         0,
-        -15
-      ],
-      "translation": [
-        0,
-        -4,
         0
       ],
       "scale": [
-        0.7,
-        0.7,
-        0.7
+        1,
+        1,
+        1
       ]
     },
     "firstperson_lefthand": {
       "rotation": [
         0,
-        90,
-        -20
-      ],
-      "translation": [
-        1,
-        -2,
-        1
+        0,
+        0
       ],
       "scale": [
-        0.55,
-        0.55,
-        0.55
+        1,
+        1,
+        1
       ]
     },
     "thirdperson_righthand": {
       "rotation": [
+        30,
         0,
-        -90,
         0
       ],
       "translation": [
         0,
-        2,
-        1
+        2.814582562299426,
+        1.625
       ],
       "scale": [
-        0.5,
-        0.5,
-        0.5
+        0.65,
+        0.65,
+        0.65
       ]
     },
     "thirdperson_lefthand": {
       "rotation": [
+        30,
         0,
-        90,
         0
       ],
       "translation": [
         0,
-        2,
-        1
+        2.814582562299426,
+        1.625
       ],
       "scale": [
-        0.5,
-        0.5,
-        0.5
+        0.65,
+        0.65,
+        0.65
       ]
     }
   }

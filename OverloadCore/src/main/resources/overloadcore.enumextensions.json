@@ -1,0 +1,31 @@
+{
+  "entries": [
+    {
+      "enum": "net/minecraft/client/model/HumanoidModel$ArmPose",
+      "name": "OVERLOADCORE_RAIL_HOLD",
+      "constructor": "(ZLnet/neoforged/neoforge/client/IArmPoseTransformer;)V",
+      "parameters": {
+        "class": "dev/everyonemek/overloadcore/client/GearArmPoses",
+        "field": "RAIL_HOLD"
+      }
+    },
+    {
+      "enum": "net/minecraft/client/model/HumanoidModel$ArmPose",
+      "name": "OVERLOADCORE_RAIL_SINGLE",
+      "constructor": "(ZLnet/neoforged/neoforge/client/IArmPoseTransformer;)V",
+      "parameters": {
+        "class": "dev/everyonemek/overloadcore/client/GearArmPoses",
+        "field": "RAIL_SINGLE"
+      }
+    },
+    {
+      "enum": "net/minecraft/client/model/HumanoidModel$ArmPose",
+      "name": "OVERLOADCORE_BLADE_READY",
+      "constructor": "(ZLnet/neoforged/neoforge/client/IArmPoseTransformer;)V",
+      "parameters": {
+        "class": "dev/everyonemek/overloadcore/client/GearArmPoses",
+        "field": "BLADE_READY"
+      }
+    }
+  ]
+}

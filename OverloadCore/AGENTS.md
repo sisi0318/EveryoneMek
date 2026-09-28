@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.19，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.19.jar`。
+- 0.1.0-alpha.20，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.20.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -31,7 +31,7 @@
 - GearEnergy实现IMekanismStrictEnergyHandler和IEnergyContainer，通过gear_energy保存唯一J余额；FE复用ForgeEnergyIntegration。WardCustody.energyAccess只读核对live身份、seal、完整快照及真实槽，SIMULATE不修复；合法能量／模块改动走update，只允许MODULE_CONTAINER与GEAR_ENERGY并同步新快照。直接写组件仍被原Mixin拦截；不能放宽整个ItemStack防护。
 - WardPower先预检电容，再检查剩余设备费用。设备不足时电容不扣；全由电容支付时不扫描区块。设备预检通过才扣电容与原生设备；设备权限／留电／极限模式沿用原规则。AFTERGUARD每级增加次数／时限，但原wardShieldHits=0优先。WardRuntime状态附电容读数。
 - WeaponItem/GearCombat：新枪用rail_ammo计弹仓，GEAR_ENERGY计能量；蓄力/冷却服务器复核，reload消耗rail_ammunition标签物品。射线先限制已加载区块，再裁墙；贯穿实体按距离排序。刃场最多16候选，谐振只伤敌对/交战者、最多模块等级个。MekaToolCombatMixin只在原hurtEnemy TAIL追加电弧，二次hurt不会再触发自身。WeaponEnergyModuleMixin只取消新WeaponItem在原ModuleEnergyUnit.onRemoved中的裁能，其他Mek装备不变。
-- GearRenderer为客户端：机壳使用烘焙模型，shader发光面使用静态GearGlowMesh，状态编码顶点，禁止逐物品改uniform。材质分类flat int防透视串色；1.21.1 fog_distance签名为(vec3,int)，不能套旧三参数。光束最多96条、每条2面、8tick、距离裁剪，退出清理强世界引用；开关与静态回退由GearVisualConfig控制。MekaSuit外装用原ModuleModelSpec与OBJ，组名必须同时含spec名和body/left_leg/right_leg，led组沿原发光管线。
+- GearRenderer为客户端：机壳使用烘焙模型，shader发光面使用静态GearGlowMesh，状态编码顶点，禁止逐物品改uniform。材质分类flat int防透视串色；1.21.1 fog_distance签名为(vec3,int)，不能套旧三参数。战斗队列最多96组／15tick，GearEffectGeometry分别绘制短弹迹、刃场、电弧和命中闪光，按线段距离裁剪，退出清理强世界引用；开关与静态回退由GearVisualConfig控制。MekaSuit外装用原ModuleModelSpec与OBJ，组名必须同时含spec名和body/left_leg/right_leg，led组沿原发光管线。
 - 资源统一由generate_resources调用generate_equipment生成：11个新增模块各自几何、两种武器的base/fallback/动态面、外装OBJ和语言配方；surface_boxes对壳体+能量部件一起求外表面，再拆分渲染，避免共面闪烁。只复用现有原创16px位图，不新增脚本绘制贴图。预览和原稿不进JAR；按实际材料归一化检查配方唯一性，不能只比较字母pattern。
 
 - alpha.16新增gear/EquipmentModules与ResidualCouplingUnit；ModuleDeferredRegister + MekanismIMC只注册胸甲支持，原生ItemModule提供支持列表／4级上限与描述，安装保存由Mek MODULE_CONTAINER负责。高速充能只在CoreBinding.charge唯一入口执行，模块tick不得再次扣电；先验证真实核心槽及已穿戴胸甲，再根据启用等级优先充胸甲。只按实际接收量扣原余雷，已转移量占用原基础预算，满胸甲仅保留剩余基础预算供给其他物品。基础范围改为recovery_chargeable标签（默认原5件），不遍历任意Curios充电，后续分配交原ModuleChargeDistributionUnit。四级4k/16k/64k/256k FE/t可配置，原100k FE缓冲不变，不保证瞬时达到配置上限。
@@ -57,6 +57,11 @@
 - `client/ChromaticTooltipText`：按用户截图加入 huige233 的 DreamJournalClientTooltipComponent.styleGlitchRGB 所示红蓝色散风格。风味行使用亮色主字，展开说明保留红/绿主字；两者均有持续红蓝叠影和轻微抖动，间歇加强残影。必须给 FormattedCharSequence 的 Style 强制设置叠影颜色，只改 drawInBatch 的颜色会被原红/绿样式覆盖。独立实现、无原模组依赖；保留两个渲染类注释和 THIRD_PARTY_NOTICES 中的作者 huige233 署名。
 - `CorePackets` / `client/CoreClient`：服务器同步最多 64 台设备；K（含潜行 K）切换最多 8 台设备位置提示。info 命令在聊天栏报告状态，旧 Request 消息仍接受但不再打开窗口。只在客户端注册键位、声音和 Curios renderer。当前无世界轮廓高亮。
 - `client/CoreHud`：半透明双条 HUD；磁枷为 load／服务器 metalLimit，劫热为 heat 百分比。禁跑颜色读取服务器 heavy 标记以尊重恢复滞后，不能只按当前数值重新判定；填充限于 0～1 但数值保留超过阈值的实际负荷。只在存活、非旁观、关闭菜单且非 F1 时绘制，使用正常稳定文字，避免常驻读数抖动。
+
+- alpha.20：WeaponItem 使用 UseAnim.NONE，GearRenderer 的 IClientItemExtensions.applyForgeHandTransform 接入 GearPose，固定真实握把，再由 ItemRenderer 的 -.5 平移完成模型坐标转换；第一人称 JSON 保持单位变换。ItemTransform 自己会镜像左手，不能再把左手 Y/Z 角取反一遍。第三人称由生成器按握把计算 translation，枪原生轴为 -Z、刃为 +Y。
+- 21.1.241 的 IClientItemExtensions 注释仍提到 ArmPose.create，但发布类没有该方法；使用 mods.toml 的 enumExtensions、GearArmPoses 独立 EnumProxy 参数类与 getValue，构造描述符以目标 HumanoidModel$ArmPose 字节码为准。不要让枚举参数类提前初始化 GearRenderer。官方迁移说明：https://neoforged.net/news/21.0release/ 。
+- gear_effect 客户端消息协议 2 携带射手、手臂、真实截断终点与是否命中；磁轨枪伤害仍为原服务器即时判定，视觉短弹迹不能画成整条激光，也不能继续穿过最后允许贯穿的目标。刃场每次仅发一个扇形效果，命中目标不再各发一道射线。真实物品电量、弹药和模块保存格式未变。
+- alpha.20：47 项服务端 GameTest 通过。原武器回归改用记录真实数据包的玩家，追加墙体／贯穿终点、单个刃场、空电不发送、协议编解码验证；测试玩家站在整数 Y 的地板，不能比原两格墙高半格。隐藏 GL 检查五类实际效果的动画、混合与遮挡；电弧用交叉双面避免侧面消失。VerifyGearPoses 与 preview_weapon_poses 检查 16 个实际模型视角／握把／近裁面，输出在 build/weapon-visual-check，不启动客户端。
 
 ## 逆命雷印
 

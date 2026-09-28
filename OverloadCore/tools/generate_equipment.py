@@ -89,7 +89,13 @@ def weapons(write):
    piece=box(a,b,material);piece['faces']={side:piece['faces'][side]};(lit if material=='energy' else elements).append(piece)
   display=json.loads(json.dumps(DISPLAY))
   if i==0:display['gui']={'rotation':[30,42,0],'scale':[.46,.46,.46]}
-  else:display['gui']={'rotation':[0,0,-35],'translation':[0,-3,0],'scale':[.55,.55,.55]};display['firstperson_righthand']={'rotation':[0,0,-15],'translation':[0,-4,0],'scale':[.7,.7,.7]}
+  else:display['gui']={'rotation':[0,0,-35],'translation':[0,-3,0],'scale':[.55,.55,.55]}
+  # First person is grip-anchored by GearPose, without vanilla bow/spear transforms.
+  # ItemTransform already mirrors Y/Z rotation and X translation for the left hand.
+  for hand in ['righthand','lefthand']:
+   display['firstperson_'+hand]={'rotation':[0,0,0],'scale':[1,1,1]}
+   if i==0:display['thirdperson_'+hand]={'rotation':[0,0,0],'translation':[0,3.4,-2.72],'scale':[.68,.68,.68]}
+   else:display['thirdperson_'+hand]={'rotation':[30,0,0],'translation':[0,5*.65*math.cos(math.pi/6),5*.65*.5],'scale':[.65,.65,.65]}
   write(f'assets/overloadcore/models/item/{name}_base.json',model(elements,display))
   write(f'assets/overloadcore/models/item/{name}_fallback.json',model(elements+lit,display))
   write(f'assets/overloadcore/models/item/{name}.json',{'parent':'builtin/entity','gui_light':'front','textures':{'particle':'overloadcore:item/gear_alloy'},'display':display})
@@ -127,6 +133,7 @@ def armor():
  (out/'equipment_modules.mtl').write_text('newmtl metal\nmap_Kd overloadcore:item/gear_alloy\nnewmtl energy\nmap_Kd overloadcore:item/gear_circuit\n',encoding='utf-8')
 def generate(write):
  modules(write);weapons(write);armor()
+ write('overloadcore.enumextensions.json',{'entries':[{'enum':'net/minecraft/client/model/HumanoidModel$ArmPose','name':'OVERLOADCORE_'+name,'constructor':'(ZLnet/neoforged/neoforge/client/IArmPoseTransformer;)V','parameters':{'class':'dev/everyonemek/overloadcore/client/GearArmPoses','field':name}} for name in ['RAIL_HOLD','RAIL_SINGLE','BLADE_READY']]})
  uniforms=[]
  for name in ['ModelViewMat','ProjMat']:uniforms.append({'name':name,'type':'matrix4x4','count':16,'values':[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]})
  for name,values,kind in [('ColorModulator',[1,1,1,1],'float'),('FogStart',[0],'float'),('FogEnd',[1000],'float'),('FogColor',[0,0,0,0],'float'),('FogShape',[0],'int')]:uniforms.append({'name':name,'type':kind,'count':len(values),'values':values})

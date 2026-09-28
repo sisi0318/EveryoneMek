@@ -137,7 +137,9 @@ public final class GearExpansionGameTests {
     }
     @GameTest(template="empty",timeoutTicks=55)
     public static void weaponsUseAmmoPowerAndRespectWallsWhileNativeToolChains(GameTestHelper h){
-        var p=player(h,new BlockPos(20,4,20));p.setYRot(0);p.setXRot(0);var gun=new ItemStack(CoreContent.RAILGUN.get());var blade=new ItemStack(CoreContent.BLADE.get());
+        var fixture=ThunderWardGameTests.player(h,new BlockPos(20,4,20));var p=fixture.player();p.setYRot(0);p.setXRot(0);var gun=new ItemStack(CoreContent.RAILGUN.get());var blade=new ItemStack(CoreContent.BLADE.get());
+        // This range's wall is two blocks high; stand on its floor, not half a block above it.
+        p.setPos(p.getX(),h.absolutePos(new BlockPos(20,4,20)).getY(),p.getZ());
         var first=mob(h,new BlockPos(20,4,25));var behind=mob(h,new BlockPos(20,4,30));
         try{
             p.setItemSlot(EquipmentSlot.MAINHAND,gun);p.getInventory().setItem(1,new ItemStack(Items.IRON_NUGGET,20));module(gun,GearUpgrade.MAGAZINE,2,p);module(gun,GearUpgrade.PIERCING,1,p);
@@ -146,17 +148,30 @@ public final class GearExpansionGameTests {
             h.setBlock(new BlockPos(20,5,27),Blocks.STONE);h.setBlock(new BlockPos(20,4,27),Blocks.STONE);
             check(GearCombat.shoot(p,gun)&&first.getHealth()<200&&behind.getHealth()==200,"Rail did not hit or passed through a wall");
             check(GearCombat.ammo(gun)==9&&before-GearEnergy.stored(gun)==GearCombat.joules(CoreConfig.RAIL_COST.get()),"Rail shot was not paid exactly once");
-            new GearEnergy(gun).setEnergy(0);check(!GearCombat.shoot(p,gun)&&GearCombat.ammo(gun)==9,"Empty weapon consumed a round");
+            var wallShot=visuals(fixture).getLast();check(wallShot.kind()==0&&wallShot.impact()&&wallShot.shooter()==p.getId()&&wallShot.to().z()<=h.absolutePos(new BlockPos(20,5,27)).getZ()+.001,"Rail impact packet passed wall or lost shooter");
+            ModuleHelper.get().getModuleContainer(gun).removeModule(p.registryAccess(),gun,EquipmentModules.get(GearUpgrade.PIERCING),1);
+            first.invulnerableTime=0;check(GearCombat.shoot(p,gun),"Second rail shot failed");
+            var stopped=visuals(fixture).getLast();check(stopped.impact()&&stopped.to().z()<wallShot.to().z()-1,"Non-piercing slug visual continued beyond target");
+            var buffer=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),p.registryAccess());
+            try{GearVisuals.Beam.CODEC.encode(buffer,stopped);check(GearVisuals.Beam.CODEC.decode(buffer).equals(stopped),"Weapon effect codec changed endpoint/type/hand");}finally{buffer.release();}
+            int sent=visuals(fixture).size();new GearEnergy(gun).setEnergy(0);check(!GearCombat.shoot(p,gun)&&GearCombat.ammo(gun)==8&&visuals(fixture).size()==sent,"Empty weapon consumed a round or displayed a shot");
             var tool=new ItemStack(MekanismItems.MEKA_TOOL.get());module(tool,GearUpgrade.RESONANCE,2,p);StorageUtils.getEnergyContainer(tool,0).setEnergy(100000);
             var neighbor=mob(h,new BlockPos(21,4,25));try{long old=StorageUtils.getEnergyContainer(tool,0).getEnergy();p.setItemSlot(EquipmentSlot.MAINHAND,tool);tool.getItem().hurtEnemy(tool,first,p);check(neighbor.getHealth()<200&&StorageUtils.getEnergyContainer(tool,0).getEnergy()<old,"Native MekaTool hook did not arc/pay");}finally{neighbor.discard();}
             new GearEnergy(blade).setEnergy(GearCombat.joules(100000));module(blade,GearUpgrade.BLADE_FIELD,2,p);p.setItemSlot(EquipmentSlot.MAINHAND,blade);first.invulnerableTime=0;float health=first.getHealth();
+            fixture.packets().clear();
             check(GearCombat.burst(p,blade)&&first.getHealth()<health&&behind.getHealth()==200,"Charged blade failed range/occlusion");
-            var roundTrip=ItemStack.parse(p.registryAccess(),gun.save(p.registryAccess())).orElseThrow();check(GearCombat.ammo(roundTrip)==9&&GearEnergy.stored(roundTrip)==0,"Weapon save lost ammo/energy");
+            check(visuals(fixture).size()==1&&visuals(fixture).getFirst().kind()==1,"Blade still emitted target-by-target laser beams");
+            var roundTrip=ItemStack.parse(p.registryAccess(),gun.save(p.registryAccess())).orElseThrow();check(GearCombat.ammo(roundTrip)==8&&GearEnergy.stored(roundTrip)==0,"Weapon save lost ammo/energy");
             var modules=ModuleHelper.get().getModuleContainer(gun);modules.addModule(p.registryAccess(),gun,MekanismModules.ENERGY_UNIT,1);
             new GearEnergy(gun).setEnergy(GearEnergy.capacity(gun));long retained=GearEnergy.stored(gun);
             ModuleHelper.get().getModuleContainer(gun).removeModule(p.registryAccess(),gun,MekanismModules.ENERGY_UNIT,1);
             check(GearEnergy.stored(gun)==retained&&retained>GearEnergy.capacity(gun)&&new GearEnergy(gun).insert(100,Action.SIMULATE,AutomationType.INTERNAL)==100,"Native energy module removal discarded charge or overfilled");
             h.succeed();
-        }finally{first.discard();behind.discard();remove(p);}
+        }finally{first.discard();behind.discard();ThunderWardGameTests.close(fixture);}
+    }
+    private static java.util.List<GearVisuals.Beam> visuals(ThunderWardGameTests.Fixture fixture){
+        return fixture.packets().stream().filter(net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket.class::isInstance)
+            .map(net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket.class::cast).map(net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket::payload)
+            .filter(GearVisuals.Beam.class::isInstance).map(GearVisuals.Beam.class::cast).toList();
     }
 }

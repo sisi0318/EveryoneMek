@@ -25,7 +25,7 @@ public final class WeaponItem extends ItemEnergized implements IModuleContainerI
     }
     public int chargeTicks(ItemStack stack) { return Math.max(6,(rail?CoreConfig.RAIL_CHARGE.get():CoreConfig.BLADE_CHARGE.get())-5*GearEffects.level(stack,GearUpgrade.ACCELERATOR)); }
     @Override public int getUseDuration(ItemStack stack,LivingEntity entity){return 72000;}
-    @Override public UseAnim getUseAnimation(ItemStack stack){return rail?UseAnim.BOW:UseAnim.SPEAR;}
+    @Override public UseAnim getUseAnimation(ItemStack stack){return UseAnim.NONE;}
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){var stack=player.getItemInHand(hand);
         if(player instanceof ServerPlayer server && rail && (player.isShiftKeyDown()||GearCombat.ammo(stack)==0)){
             GearCombat.reload(server,stack);if(player.isShiftKeyDown()||GearCombat.ammo(stack)==0)return InteractionResultHolder.sidedSuccess(stack,level.isClientSide);

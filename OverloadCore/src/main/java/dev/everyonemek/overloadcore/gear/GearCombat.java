@@ -47,7 +47,10 @@ public final class GearCombat {
               .sorted(Comparator.comparingDouble(i->i.point.distanceToSqr(start))).limit(1+GearEffects.level(stack,GearUpgrade.PIERCING)).toList();
         var source=p.damageSources().source(ResourceKey.create(Registries.DAMAGE_TYPE,ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,"rail")),p);
         int index=0;for(var impact:impacts)impact.entity.hurt(source,(float)(CoreConfig.RAIL_DAMAGE.get()*Math.pow(.8,index++)));
-        GearVisuals.send(p,start,end,0);p.level().playSound(null,p.blockPosition(),net.minecraft.sounds.SoundEvents.TRIDENT_THUNDER.value(),net.minecraft.sounds.SoundSource.PLAYERS,.35F,1.7F);return true;
+        // A rail slug stops at its final allowed penetration, rather than drawing past that target.
+        boolean stopped=impacts.size()==1+GearEffects.level(stack,GearUpgrade.PIERCING);
+        if(stopped)end=impacts.getLast().point;
+        GearVisuals.send(p,start,end,0,stopped||hit.getType()!=HitResult.Type.MISS);p.level().playSound(null,p.blockPosition(),net.minecraft.sounds.SoundEvents.TRIDENT_THUNDER.value(),net.minecraft.sounds.SoundSource.PLAYERS,.35F,1.7F);return true;
     }
     public static boolean burst(ServerPlayer p,ItemStack stack){
         if(!pay(stack,CoreConfig.BLADE_BURST_COST.get())){p.displayClientMessage(CoreContent.text("weapon.no_energy"),true);return false;}
@@ -56,9 +59,12 @@ public final class GearCombat {
               .stream().sorted(Comparator.comparingDouble(e->e.distanceToSqr(p))).limit(16).toList();
         boolean chained=false;
         for(var entity:targets){var point=entity.getBoundingBox().getCenter();if(point.subtract(eye).normalize().dot(look)<.4||!visible(p,eye,point))continue;
-            if(entity.hurt(p.damageSources().playerAttack(p),(float)(CoreConfig.BLADE_DAMAGE.get()*1.5+tier*3))){GearVisuals.send(p,eye,point,1);if(!chained){resonate(p,stack,entity);chained=true;}}
+            if(entity.hurt(p.damageSources().playerAttack(p),(float)(CoreConfig.BLADE_DAMAGE.get()*1.5+tier*3))){if(!chained){resonate(p,stack,entity);chained=true;}}
         }
-        GearVisuals.send(p,eye,eye.add(look.scale(radius)),1);p.level().playSound(null,p.blockPosition(),net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP,net.minecraft.sounds.SoundSource.PLAYERS,.8F,.6F);return true;
+        Vec3 fieldEnd=endLoaded(p,eye,look,radius);
+        var wall=p.level().clip(new ClipContext(eye,fieldEnd,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,p));
+        if(wall.getType()!=HitResult.Type.MISS)fieldEnd=wall.getLocation();
+        GearVisuals.send(p,eye,fieldEnd,1);p.level().playSound(null,p.blockPosition(),net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP,net.minecraft.sounds.SoundSource.PLAYERS,.8F,.6F);return true;
     }
     public static void resonate(ServerPlayer p,ItemStack stack,LivingEntity primary){
         int level=GearEffects.level(stack,GearUpgrade.RESONANCE);if(level==0)return;
