@@ -59,3 +59,7 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 
 `gear_field.vsh/.fsh` 与 `GearEffectGeometry` 绘制短曳光、刃场、蓄力约束环和电弧。`VerifyGearShader.java` 在隐藏 OpenGL 上下文中检查实际几何、时间变化、透明混合和深度遮挡，输出到 `build/gear-shader-check/`；不启动 Minecraft 客户端。
 - 过载核心原稿与运行贴图未改。alpha.17的紫色立体模块预览为历史设计，当前模块已换成原版尺寸的平面插针板图标。
+
+### alpha.21 造型修订
+
+不新增位图。金属尖头弹丸采用8边外壳、收尖与底面，shader做钢色面光和少量铜色尾缘，火花独立绘制；月牙剑气改为横截面上的宽弧刃，并封闭侧边。`VerifyGearShader` 的 `shooter-0.png`／`shooter-1.png` 检查射手视角，补齐此前仅斜侧面预览的缺口。大剑的第一／第三人称预览沿用 `VerifyGearPoses` 和 `preview_weapon_poses`。

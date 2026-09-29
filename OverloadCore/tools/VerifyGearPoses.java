@@ -1,5 +1,6 @@
 import com.google.gson.*;
 import dev.everyonemek.overloadcore.client.GearPose;
+import dev.everyonemek.overloadcore.client.GearProjection;
 import java.nio.file.*;
 import java.util.*;
 import org.joml.*;
@@ -23,8 +24,8 @@ public class VerifyGearPoses {
                 check(display(d,sign).equals(new Matrix4f(),.00001F),"First-person JSON must not reapply pose");
                 matrix=GearPose.first(rail,sign,charge,0,0).mul(display(d,sign)).translate(-.5F,-.5F,-.5F);
                 project=new Matrix4f().perspective(rad(70),16/9F,.05F,100);
-                // At both normal and wide FOV, all corners must stay in front of the near plane;
-                // idle/full charge must not vanish or expand into a screen-covering box.
+                // The item pass has its own 70 degree projection, independent of world FOV.
+                // Idle/full charge must not vanish or expand into a screen-covering box.
                 var fallback=JsonParser.parseString(Files.readString(root.resolve("src/main/resources/assets/overloadcore/models/item/"+name+"_fallback.json"))).getAsJsonObject();
                 int visible=0,total=0;float min=100,max=-100;
                 for(var element:fallback.getAsJsonArray("elements"))for(String corner:new String[]{"from","to"}){
@@ -35,6 +36,14 @@ public class VerifyGearPoses {
                 check(visible>total*.75,"Weapon outside screen: "+name+" "+visible+"/"+total);check(max-min<.9,"Weapon fills screen: "+name+" / "+charge+" / "+sign+" / "+min+".."+max);
                 var mirror=GearPose.first(rail,-sign,charge,0,0).translate(-.5F,-.5F,-.5F).transformPosition(new Vector3f(grip));
                 var anchor=matrix.transformPosition(new Vector3f(grip));check(java.lang.Math.abs(anchor.x+mirror.x)<.001&&java.lang.Math.abs(anchor.y-mirror.y)<.001,"Left grip is not mirrored");
+                if(!rail){var tip=matrix.transformPosition(new Vector3f(.5F,28/16F,.5F));check(tip.distance(anchor)>1.35F,"Blade still has miniature held scale");}
+                else for(int fov:new int[]{50,70,90,110}){
+                    var world=new Matrix4f().perspective(rad(fov),16/9F,.05F,200);
+                    var muzzle=matrix.transformPosition(new Vector3f(.5F,7/16F,-.765F));
+                    var aligned=GearProjection.worldViewPoint(muzzle,project,new Matrix4f(world).invert());
+                    var screen=project.transformProject(new Vector3f(muzzle));var actual=world.transformProject(aligned);
+                    check(java.lang.Math.abs(screen.x-actual.x)<.00001&&java.lang.Math.abs(screen.y-actual.y)<.00001,"Muzzle detached under world FOV "+fov);
+                }
             }else{
                 var body=new Matrix4f().translate(0,1.5F,0).scale(-1,-1,1);
                 float xr=rail?-(float)java.lang.Math.PI/2:charge==1?-.7F:-.314F,yr=rail?-.10F*sign:charge==1?-.2F*sign:0,zr=!rail&&charge==1?-.15F*sign:0;

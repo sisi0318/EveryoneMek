@@ -24,18 +24,21 @@ void main() {
         float core = 1.0 - smoothstep(0.05, 0.30+aa, edge);
         light = mix(tint, vec3(0.87,1.0,0.96), core);
         alpha *= band;
-        if (material == 2) {
-            // A short white-hot metal slug, tapered into a warm, rapidly vanishing wake.
-            light = mix(vec3(1.0,0.46,0.10), vec3(1.0,0.96,0.79), core);
-            alpha *= smoothstep(0.0,0.7,flow.x);
-        } else if (material == 3) {
+        if (material == 3) {
             alpha *= sin(clamp(flow.x,0.0,1.0) * 3.1415927);
-            light *= 0.8 + 0.2 * sin(flow.x*40.0-phase*2.0);
+            light = mix(vec3(.06,.46,.24),vec3(.74,1.0,.84),smoothstep(.1,.75,flow.y));
+            float leading = 1.0-smoothstep(.025,.10,abs(flow.y-.78));
+            light = mix(light,vec3(.90,1.0,.94),leading*.85);
+            light *= 0.9 + 0.1 * sin(flow.x*12.0-phase*2.0);
         } else if (material == 4 || material == 7) {
             float arc = abs(flow.y-.5-.22*sin(flow.x*32.0+phase*3.0));
             float filament = 1.0-smoothstep(.02,.06+fwidth(arc),arc);
             light = mix(tint*.4,vec3(.93,1.0,1.0),filament);
             alpha *= .22+.78*filament;
+            if(material == 7) {
+                alpha *= 1.0-smoothstep(powerAlpha.x-.02,powerAlpha.x+.04,flow.x);
+                light = mix(tint*.65,vec3(.8,1.0,.9),filament*.7+core*.3);
+            }
         } else if (material == 5) {
             float pulse = .5+.5*sin(flow.x*18.84956-phase*2.0);
             alpha *= .3+.7*pulse;
@@ -46,6 +49,11 @@ void main() {
             float spark = pow(max(0.0,1.0-abs(p.x*p.y)*22.0),3.0);
             alpha = powerAlpha.y*(1.0-smoothstep(.08,1.0,r))*(.3+.7*spark);
             light = mix(vec3(1.0,.44,.07),vec3(1.0,.97,.8),1.0-smoothstep(0.0,.4,r));
+        } else if (material == 8) {
+            // Opaque faceted steel projectile. Shading is supplied per face, with a hot copper base.
+            light = mix(vec3(.12,.15,.17),vec3(.64,.72,.75),powerAlpha.x);
+            light = mix(vec3(.46,.25,.10),light,smoothstep(0.0,.22,flow.x));
+            alpha = 1.0;
         }
         if(alpha < .004) discard;
     }

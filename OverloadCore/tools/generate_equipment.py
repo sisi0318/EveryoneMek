@@ -95,7 +95,7 @@ def weapons(write):
   for hand in ['righthand','lefthand']:
    display['firstperson_'+hand]={'rotation':[0,0,0],'scale':[1,1,1]}
    if i==0:display['thirdperson_'+hand]={'rotation':[0,0,0],'translation':[0,3.4,-2.72],'scale':[.68,.68,.68]}
-   else:display['thirdperson_'+hand]={'rotation':[30,0,0],'translation':[0,5*.65*math.cos(math.pi/6),5*.65*.5],'scale':[.65,.65,.65]}
+   else:display['thirdperson_'+hand]={'rotation':[30,0,0],'translation':[0,5*.92*math.cos(math.pi/6),5*.92*.5],'scale':[.92,.92,.92]}
   write(f'assets/overloadcore/models/item/{name}_base.json',model(elements,display))
   write(f'assets/overloadcore/models/item/{name}_fallback.json',model(elements+lit,display))
   write(f'assets/overloadcore/models/item/{name}.json',{'parent':'builtin/entity','gui_light':'front','textures':{'particle':'overloadcore:item/gear_alloy'},'display':display})

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.IdentityHashMap;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.systems.RenderSystem;
 import dev.everyonemek.overloadcore.*;
 import dev.everyonemek.overloadcore.gear.*;
 import net.minecraft.client.Minecraft;
@@ -29,18 +30,31 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 @EventBusSubscriber(modid=OverloadCore.ID,value=Dist.CLIENT)
 public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
     private static ShaderInstance shader;
-    private static final RenderType SOLID=type(false),BEAM=type(true);
-    private record Trace(GearVisuals.Beam beam,Vec3 from,double created){}
+    private static final RenderType SOLID=type(false,false),HELD_EFFECT=type(true,false),WORLD_EFFECT=type(true,true),WORLD_BODY=type(false,true);
+    private static final RenderType WORLD_FALLBACK=fallback(false),WORLD_BODY_FALLBACK=fallback(true);
+    private static RenderType fallback(boolean body){return RenderType.create("overloadcore_effect_fallback_"+body,DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,8192,false,false,
+        RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeLightningShader))
+            .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setTransparencyState(body?RenderStateShard.NO_TRANSPARENCY:RenderStateShard.LIGHTNING_TRANSPARENCY)
+            .setWriteMaskState(body?RenderStateShard.COLOR_DEPTH_WRITE:RenderStateShard.COLOR_WRITE).setCullState(RenderStateShard.NO_CULL).setOutputState(RenderStateShard.PARTICLES_TARGET).createCompositeState(false));}
+    private static final class Trace {
+        final GearVisuals.Beam beam;final double received;Vec3 from;double started=Double.NaN;
+        Trace(GearVisuals.Beam beam,double received){this.beam=beam;this.received=received;}
+    }
+    private record HeldMuzzle(org.joml.Vector3f view,org.joml.Matrix4f projection,double captured){}
+    private static final HeldMuzzle[] MUZZLES=new HeldMuzzle[2];
+    private static final double[] FIRED={-100,-100};
+    private static final org.joml.Matrix4f INVERSE_WORLD_PROJECTION=new org.joml.Matrix4f();
     private static final ArrayDeque<Trace> TRACES=new ArrayDeque<>();
     private static final IdentityHashMap<ItemStack,Integer> CHARGING=new IdentityHashMap<>();
     private static net.minecraft.client.multiplayer.ClientLevel lastLevel;
     private GearRenderer(){super(Minecraft.getInstance().getBlockEntityRenderDispatcher(),Minecraft.getInstance().getEntityModels());}
     private static ResourceLocation id(String path){return ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,path);}
     private static ModelResourceLocation model(boolean rail,String suffix){return ModelResourceLocation.standalone(id("item/"+(rail?"rail_lance":"thunder_blade")+suffix));}
-    private static RenderType type(boolean translucent){return RenderType.create("overloadcore_gear_"+translucent,DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,VertexFormat.Mode.QUADS,8192,false,translucent,
+    private static RenderType type(boolean translucent,boolean world){return RenderType.create("overloadcore_gear_"+translucent+"_"+world,DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,VertexFormat.Mode.QUADS,8192,false,false,
           RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(()->shader)).setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
                 .setTransparencyState(translucent?RenderStateShard.LIGHTNING_TRANSPARENCY:RenderStateShard.NO_TRANSPARENCY)
-                .setWriteMaskState(translucent?RenderStateShard.COLOR_WRITE:RenderStateShard.COLOR_DEPTH_WRITE).setCullState(RenderStateShard.NO_CULL).createCompositeState(false));}
+                .setWriteMaskState(translucent?RenderStateShard.COLOR_WRITE:RenderStateShard.COLOR_DEPTH_WRITE).setCullState(RenderStateShard.NO_CULL)
+                .setOutputState(world?RenderStateShard.PARTICLES_TARGET:RenderStateShard.MAIN_TARGET).createCompositeState(false));}
     @SubscribeEvent public static void models(ModelEvent.RegisterAdditional e){for(boolean rail:new boolean[]{true,false}){e.register(model(rail,"_base"));e.register(model(rail,"_fallback"));}}
     @SubscribeEvent public static void extensions(RegisterClientExtensionsEvent e){e.registerItem(new IClientItemExtensions(){
         private GearRenderer renderer;
@@ -58,15 +72,17 @@ public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
     @SubscribeEvent public static void shaders(RegisterShadersEvent e){shader=null;try{e.registerShader(new ShaderInstance(e.getResourceProvider(),id("gear_field"),DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),s->shader=s);}catch(IOException error){com.mojang.logging.LogUtils.getLogger().error("Gear shader unavailable; using baked weapons",error);}}
     @SubscribeEvent public static void setup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e){e.enqueueWork(()->{
         GearVisuals.client=beam->{var mc=Minecraft.getInstance();if(mc.level==null||!GearVisualConfig.BEAMS.get()||beam.kind()>2||!Double.isFinite(beam.from().lengthSqr()+beam.to().lengthSqr())||beam.from().distanceToSqr(beam.to())>256*256)return;
-            if(lastLevel!=mc.level){TRACES.clear();CHARGING.clear();lastLevel=mc.level;}
-            while(TRACES.size()>=96)TRACES.removeFirst();TRACES.addLast(new Trace(beam,muzzle(beam),clock()));};
+            if(lastLevel!=mc.level){clear();lastLevel=mc.level;}
+            while(TRACES.size()>=96)TRACES.removeFirst();TRACES.addLast(new Trace(beam,clock()));
+            if(beam.kind()==0&&mc.player!=null&&beam.shooter()==mc.player.getId())FIRED[beam.rightHand()?0:1]=clock();};
         var helper=mekanism.api.gear.IModuleHelper.INSTANCE;
         helper.addMekaSuitModuleModels(id("models/entity/equipment_modules.obj"));
         helper.addMekaSuitModuleModelSpec("overloadcore_coupler",EquipmentModules.RESIDUAL_COUPLING,net.minecraft.world.entity.EquipmentSlot.CHEST);
         helper.addMekaSuitModuleModelSpec("overloadcore_heat_sink",EquipmentModules.get(GearUpgrade.HEAT_SINK),net.minecraft.world.entity.EquipmentSlot.CHEST);
         helper.addMekaSuitModuleModelSpec("overloadcore_magnetic",EquipmentModules.get(GearUpgrade.MAGNETIC),net.minecraft.world.entity.EquipmentSlot.LEGS);
     });}
-    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut e){TRACES.clear();CHARGING.clear();lastLevel=null;}
+    private static void clear(){TRACES.clear();CHARGING.clear();java.util.Arrays.fill(MUZZLES,null);java.util.Arrays.fill(FIRED,-100);}
+    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut e){clear();lastLevel=null;}
     @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post e){
         CHARGING.clear();var mc=Minecraft.getInstance();if(mc.level==null)return;
         for(var player:mc.level.players())if(player.isUsingItem()&&player.getUseItem().getItem() instanceof WeaponItem){CHARGING.put(player.getUseItem(),player.getTicksUsingItem());if(CHARGING.size()>=64)break;}
@@ -76,7 +92,9 @@ public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
         if(beam.kind()!=0||beam.from().distanceToSqr(beam.to())<4)return beam.from();
         var mc=Minecraft.getInstance();int sign=beam.rightHand()?1:-1;
         if(mc.player!=null&&beam.shooter()==mc.player.getId()&&mc.options.getCameraType().isFirstPerson()){
-            var local=GearPose.first(true,sign,1,0,0).translate(-.5F,-.5F,-.5F).transformPosition(new org.joml.Vector3f(.5F,7/16F,-.75F));
+            var captured=MUZZLES[beam.rightHand()?0:1];
+            if(captured==null||clock()-captured.captured()>2)return beam.from();
+            var local=GearProjection.worldViewPoint(captured.view(),captured.projection(),INVERSE_WORLD_PROJECTION);
             local.rotate(mc.gameRenderer.getMainCamera().rotation());return mc.gameRenderer.getMainCamera().getPosition().add(local.x,local.y,local.z);
         }
         var forward=beam.to().subtract(beam.from()).normalize();var right=forward.cross(new Vec3(0,1,0)).normalize();
@@ -85,6 +103,10 @@ public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
     private static float phase(){var mc=Minecraft.getInstance();return mc.level==null||!GearVisualConfig.ANIMATE.get()?0:(float)((mc.level.getGameTime()+mc.getTimer().getGameTimeDeltaPartialTick(false))*.18%(Math.PI*2));}
     @Override public void renderByItem(ItemStack stack,ItemDisplayContext context,PoseStack pose,MultiBufferSource buffers,int light,int overlay){
         boolean rail=stack.is(CoreContent.RAILGUN);var mc=Minecraft.getInstance();boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();
+        if(rail&&context.firstPerson()&&mc.level!=null){
+            var view=new org.joml.Matrix4f(RenderSystem.getModelViewMatrix()).mul(pose.last().pose()).transformPosition(new org.joml.Vector3f(.5F,7/16F,-.765F));
+            MUZZLES[context==ItemDisplayContext.FIRST_PERSON_RIGHT_HAND?0:1]=new HeldMuzzle(view,new org.joml.Matrix4f(RenderSystem.getProjectionMatrix()),clock());
+        }
         mc.getBlockRenderer().getModelRenderer().renderModel(pose.last(),buffers.getBuffer(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS)),Blocks.IRON_BLOCK.defaultBlockState(),mc.getModelManager().getModel(model(rail,custom?"_base":"_fallback")),1,1,1,light,overlay,ModelData.EMPTY,null);
         if(!custom)return;
         float[] mesh=rail?GearGlowMesh.RAIL:GearGlowMesh.BLADE;float strength=(float)Math.clamp(GearEnergy.stored(stack)/(double)Math.max(1,GearEnergy.capacity(stack)),0,1);float phase=phase();
@@ -97,7 +119,11 @@ public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
         var out=buffers.getBuffer(SOLID);var point=new org.joml.Vector3f();var normal=new org.joml.Vector3f();
         for(int i=0;i<mesh.length;i+=6){pose.last().pose().transformPosition(mesh[i],mesh[i+1],mesh[i+2],point);pose.last().transformNormal(mesh[i+3],mesh[i+4],mesh[i+5],normal);
             out.addVertex(point.x,point.y,point.z).setUv(mesh[i+1]+mesh[i+2],phase).setColor(rail?0:1,(int)(strength*255),0,255).setNormal(normal.x,normal.y,normal.z);}
-        if(charge>0)GearEffectGeometry.charge(sink(buffers.getBuffer(BEAM),pose,true,phase),rail,charge);
+        if(charge>0)GearEffectGeometry.charge(sink(buffers.getBuffer(HELD_EFFECT),pose,true,phase),rail,charge);
+        if(rail&&context.firstPerson()&&GearVisualConfig.BEAMS.get()&&mc.level!=null){
+            float age=(float)(clock()-FIRED[context==ItemDisplayContext.FIRST_PERSON_RIGHT_HAND?0:1]);
+            if(age>=0&&age<1.8F){pose.pushPose();pose.translate(.5,7/16D,-.80);GearEffectGeometry.muzzle(sink(buffers.getBuffer(HELD_EFFECT),pose,true,phase),age);pose.popPose();}
+        }
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post e){var mc=Minecraft.getInstance();if(mc.player==null||mc.screen!=null||mc.options.hideGui||mc.player.isSpectator())return;
         if(!mc.options.getCameraType().isFirstPerson())return;
@@ -106,26 +132,36 @@ public final class GearRenderer extends BlockEntityWithoutLevelRenderer {
     }
     @SubscribeEvent public static void world(RenderLevelStageEvent e){
         if(e.getStage()!=RenderLevelStageEvent.Stage.AFTER_PARTICLES)return;var mc=Minecraft.getInstance();
-        if(mc.level==null||mc.level!=lastLevel){TRACES.clear();CHARGING.clear();lastLevel=mc.level;return;}
-        double now=clock();while(!TRACES.isEmpty()&&TRACES.peekFirst().created+15<=now)TRACES.removeFirst();
+        if(mc.level==null||mc.level!=lastLevel){clear();lastLevel=mc.level;return;}
+        INVERSE_WORLD_PROJECTION.set(e.getProjectionMatrix()).invert();
+        double now=clock();while(!TRACES.isEmpty()&&TRACES.peekFirst().received+16<=now)TRACES.removeFirst();
         if(TRACES.isEmpty()||!GearVisualConfig.BEAMS.get())return;
-        boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();var type=custom?BEAM:RenderType.lightning();var buffers=mc.renderBuffers().bufferSource();var out=buffers.getBuffer(type);
+        boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();var buffers=mc.renderBuffers().bufferSource();
         var camera=e.getCamera().getPosition();var pose=e.getPoseStack();pose.pushPose();pose.translate(-camera.x,-camera.y,-camera.z);double distance=GearVisualConfig.DISTANCE.get();
+        for(int pass=0;pass<2;pass++){
+        boolean body=pass==0;var type=body?(custom?WORLD_BODY:WORLD_BODY_FALLBACK):(custom?WORLD_EFFECT:WORLD_FALLBACK);var out=buffers.getBuffer(type);
         for(var trace:TRACES){var beam=trace.beam;
+            if(body&&beam.kind()!=0)continue;
+            if(Double.isNaN(trace.started)){trace.started=now;trace.from=muzzle(beam);}
             Vec3 delta=beam.to().subtract(trace.from);double length=delta.length();if(length<.01)continue;
             double nearest=Math.clamp(camera.subtract(trace.from).dot(delta)/(length*length),0,1);
             if(camera.distanceToSqr(trace.from.add(delta.scale(nearest)))>distance*distance)continue;
             var direction=delta.scale(1/length);pose.pushPose();pose.translate(trace.from.x,trace.from.y,trace.from.z);
             pose.mulPose(new org.joml.Quaternionf().rotationTo(0,0,1,(float)direction.x,(float)direction.y,(float)direction.z));
-            GearEffectGeometry.shot(sink(out,pose,custom,phase()),beam.kind(),(float)length,(float)(now-trace.created),beam.impact());pose.popPose();
+            boolean localGun=custom&&beam.kind()==0&&mc.player!=null&&beam.shooter()==mc.player.getId()&&mc.options.getCameraType().isFirstPerson();
+            var target=sink(out,pose,custom,phase());
+            GearEffectGeometry.shot((x,y,z,u,v,mat,power,a)->{if((mat==8)==body)target.vertex(x,y,z,u,v,mat,power,a);},beam.kind(),(float)length,(float)(now-trace.started),beam.impact(),!localGun);pose.popPose();
         }
-        pose.popPose();buffers.endBatch(type);
+        buffers.endBatch(type);
+        }
+        pose.popPose();
     }
     private static GearEffectGeometry.Sink sink(VertexConsumer out,PoseStack pose,boolean custom,float phase){
         return (x,y,z,u,v,material,power,alpha)->{
             var vertex=out.addVertex(pose.last().pose(),x,y,z);int a=(int)(255*Math.clamp(alpha,0,1));
             if(custom)vertex.setUv(u,v).setColor(material,(int)(power*255),(int)(phase/(2*Math.PI)*255),a).setNormal(0,1,0);
-            else vertex.setColor(material==2||material==6?255:100,220,material==2||material==6?125:190,a);
+            else if(material==8){int shade=(int)(65+110*power);vertex.setColor(shade,shade+8,shade+10,255);}
+            else vertex.setColor(material==6?255:100,220,material==6?125:190,a);
         };
     }
 }
