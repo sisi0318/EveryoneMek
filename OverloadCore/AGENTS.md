@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.23，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.23.jar`。
+- 0.1.0-alpha.24，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.24.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -17,6 +17,17 @@
 - 用户要求雷印有能量盾感，拒绝实体印章和大面积高饱和蓝色，并进一步明确参考 Mek 装备风格。alpha.14 使用 `art/source/thunder_ward-mek-v5.png`：MekaSuit 风格的深灰底层、分块银灰护板、绿色能源核心与外围白绿雷弧。不能只换颜色而不参考实际装备；参考路径见 art/README。
 - 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_mek.cjs` 仅设置背景 alpha，不更改 RGB。保护实际中性深灰轮廓包围的盾面，绿色雷弧不能被算入盾面跨度；不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
+
+## alpha.24 战术与训练入口
+
+- 本轮实现的是推荐首批：R形态快切、极化联动、Z主动格挡、全息靶场。战斗协议、Robit协同与雷印援护仍是研究建议，不要宣称已实现。
+- TacticalPackets.Input只作用于发送者当前手持与胸甲；快切走原IRadialModuleContainerItem，限制4tick重复；护盾输入有2tick开启防抖、20tick保活期限，客户端每8tick续约，失焦／打开界面发送松开。G是Mek胸甲模式键，不能抢占。Visual带实体ID＋UUID，防止复用ID错画；标记只发给所属玩家。
+- TacticalCombat标记用弱实体身份键＋最多8个玩家UUID，每人最多3层。GearCombat的伤害上下文依据LivingDamageEvent.Post的正伤害确认命中，不能以hurt返回true直接加层。近战普通命中只给下一发额外贯穿，蓄力斩消费自己的标记；训练投影不提供可带走的增益。精准格挡反击只强化下一次蓄力攻击基础伤害。
+- 主动盾在LivingIncomingDamageEvent HIGHEST、Mek被动护甲耗电之前拦截，先确认正面／非友军／有限正伤害并扣真实胸甲电量；绕过护甲／无敌的伤害交原路径。普通伤害的invulnerableTime>10时跳过主动拦截，避免为已拒绝命中收费。ProjectileImpactEvent只偏转Arrow／SpectralArrow，保留同一实体，改方向／归属后取消原碰撞；不处理三叉戟归属。护盾不是雷印次数盾，不修改原保命规则。
+- TrainingContent／TrainingProjector／TrainingTarget／TrainingMenu／TrainingScreen是原Mek机器、六面输入能量、原菜单与无持久化Living投影。controller UUID严格认领唯一靶子；私有权限、结构空位、电量和红石均需满足，关闭／拆除／断电清靶。生命仅供伤害结算，die不掉落，普通kill允许管理员清理，训练靶不会给实战贯穿增益。
+- 靶场读数由LivingDamageEvent.Post与工具真实费用计入。滚动窗口保存每桶tick，不能在方块tick直接清当期桶：实体通常先受伤，随后方块tick会把刚写入的数据擦掉。普通MekaTool.hurtEnemy通过WrapMethod包围原消耗及谐振，不用跨调用全局前值。累计伤害／命中／耗能与enabled进NBT和掉落组件，近期DPS只保留运行期。
+- 56项服务端GameTest通过，新增快切、实际伤害极化、一次性贯穿、正反面护盾／费用／防刷、真实箭矢反弹、真实能量立方供电、靶场菜单／读数／停机，以及私有权限／实际掉落放回。测试靶僵尸需将原生ARMOR设0再断言裸伤害。GameTestServer无GameProfileCache，测试原Mek私有Owner时仅为夹具UUID临时加入UsernameCache，finally拆块并移除缓存；不能改运行时的Mek权限逻辑。
+- TacticalGeometry训练网格静态缓存，护盾／标记各1quad、投影36quads；字段走普通透明混合、显式depth，shader关掉有静态回退。隐藏GL已检查战术状态变化与墙后遮挡，实际机壳预览在art/training-projector-preview.png；未启动客户端。
 
 ## 当前 MekaTool 武器约定
 

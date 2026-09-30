@@ -44,7 +44,7 @@ public final class CoreContent {
         for (var upgrade : dev.everyonemek.overloadcore.gear.GearUpgrade.values()) UPGRADE_ITEMS.put(upgrade, ITEMS.register("module_" + upgrade.id,
               () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.get(upgrade), new Item.Properties().rarity(Rarity.RARE))));
         TABS.register("core", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.overloadcore"))
-              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); output.accept(COMBAT_MODULE); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); }).build());
+              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); output.accept(COMBAT_MODULE); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); output.accept(dev.everyonemek.overloadcore.training.TrainingContent.BLOCK); }).build());
     }
     public static net.minecraft.network.chat.MutableComponent text(String key, Object... args) { return Component.translatable("overloadcore." + key, args); }
     public static void register(IEventBus bus) { ITEMS.register(bus); COMPONENTS.register(bus); TABS.register(bus); }

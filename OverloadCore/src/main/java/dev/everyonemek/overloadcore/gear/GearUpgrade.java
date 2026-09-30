@@ -14,7 +14,9 @@ public enum GearUpgrade {
     MAGAZINE("rail_magazine", 4, 16),
     FOCUS("rail_focus", 4, 16),
     PIERCING("rail_piercing", 3, 16),
-    BLADE_FIELD("blade_field", 3, 16);
+    BLADE_FIELD("blade_field", 3, 16),
+    POLARIZATION("polarization", 3, 16),
+    DEFLECTOR("magnetic_deflector", 1, 1);
 
     public final String id;
     public final int maximum, targets;

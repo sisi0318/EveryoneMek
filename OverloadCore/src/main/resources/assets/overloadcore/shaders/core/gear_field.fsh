@@ -61,6 +61,23 @@ void main() {
             light = mix(vec3(.10,.45,.28),vec3(.30,.95,.57),core*.35+crack*.65);
             alpha *= sin(clamp(flow.x,0.0,1.0)*3.1415927)*(.55+.45*crack);
         }
+        if(material == 10) {
+            vec2 p=flow*2.0-1.0;float h=max(abs(p.y),abs(p.x)*.866025+abs(p.y)*.5);
+            float rim=(1.0-smoothstep(.025,.06,abs(h-.87)));
+            float grid=1.0-smoothstep(.025,.06,min(abs(fract(flow.x*8.0)-.5),abs(fract(flow.y*8.0)-.5)));
+            alpha=powerAlpha.y*(1.0-smoothstep(.88,.94,h))*(.025+.70*rim+.10*grid);
+            light=mix(vec3(.08,.52,.32),vec3(.65,1.0,.80),powerAlpha.x*.6+rim*.3);
+        } else if(material == 11) {
+            float count=floor(powerAlpha.x*3.0+.5),slot=floor(flow.x*3.0);
+            vec2 p=vec2(fract(flow.x*3.0)*2.0-1.0,flow.y*2.0-1.0);
+            float d=abs(p.x)+abs(p.y);
+            alpha=powerAlpha.y*(1.0-smoothstep(.08,.20,abs(d-.6)))*step(slot+.5,count);
+            light=vec3(.16,.95,.55);
+        } else if(material == 12) {
+            float edge=min(min(flow.x,1.0-flow.x),min(flow.y,1.0-flow.y));
+            float rim=1.0-smoothstep(.025,.065,edge),scan=.5+.5*sin(flow.y*60.0-phase*2.0);
+            alpha=powerAlpha.y*(.10+.62*rim+.08*scan);light=mix(vec3(.055,.45,.27),vec3(.30,.95,.63),rim);
+        }
         if(alpha < .004) discard;
     }
     fragColor = linear_fog(vec4(light, alpha) * ColorModulator, vertexDistance, FogStart, FogEnd, FogColor);

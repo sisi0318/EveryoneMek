@@ -23,8 +23,10 @@ public abstract class MekaToolCombatMixin extends mekanism.common.item.ItemEnerg
     @Override public void releaseUsing(ItemStack stack,net.minecraft.world.level.Level level,LivingEntity entity,int remaining){
         MekaCombat.release(stack,level,entity,remaining);super.releaseUsing(stack,level,entity,remaining);
     }
-    @Inject(method="hurtEnemy",at=@At("TAIL"),remap=false)
-    private void overload$resonance(ItemStack stack,LivingEntity target,LivingEntity attacker,CallbackInfoReturnable<Boolean> result){
-        if(attacker instanceof ServerPlayer player)GearCombat.resonate(player,stack,target);
+    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method="hurtEnemy",remap=false)
+    private boolean overload$resonance(ItemStack stack,LivingEntity target,LivingEntity attacker,com.llamalad7.mixinextras.injector.wrapoperation.Operation<Boolean> original){
+        long before=MekaCombat.energy(stack);boolean result=original.call(stack,target,attacker);
+        if(attacker instanceof ServerPlayer player){GearCombat.resonate(player,stack,target);dev.everyonemek.overloadcore.training.TrainingTarget.power(target,player,Math.max(0,before-MekaCombat.energy(stack)));}
+        return result;
     }
 }

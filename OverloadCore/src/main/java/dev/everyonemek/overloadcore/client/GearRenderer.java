@@ -23,10 +23,12 @@ public final class GearRenderer {
     private static ShaderInstance shader;
     private static final RenderType HELD_EFFECT=type(true,false,false),WORLD_FIELD=type(true,true,false),WORLD_EFFECT=type(true,true,true),WORLD_BODY=type(false,true,false);
     private static final RenderType[] WORLD_FALLBACK={fallback(0),fallback(1),fallback(2)};
-    private static RenderType fallback(int pass){boolean body=pass==0;return RenderType.create("overloadcore_effect_fallback_"+pass,DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,8192,false,pass==1,
+    private static final RenderType LOCAL_FALLBACK=fallback(1,false);
+    private static RenderType fallback(int pass){return fallback(pass,true);}
+    private static RenderType fallback(int pass,boolean world){boolean body=pass==0;return RenderType.create("overloadcore_effect_fallback_"+pass+"_"+world,DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,8192,false,pass==1,
         RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeLightningShader))
             .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setTransparencyState(body?RenderStateShard.NO_TRANSPARENCY:pass==1?RenderStateShard.TRANSLUCENT_TRANSPARENCY:RenderStateShard.LIGHTNING_TRANSPARENCY)
-            .setWriteMaskState(body?RenderStateShard.COLOR_DEPTH_WRITE:RenderStateShard.COLOR_WRITE).setCullState(RenderStateShard.NO_CULL).setOutputState(RenderStateShard.PARTICLES_TARGET).createCompositeState(false));}
+            .setWriteMaskState(body?RenderStateShard.COLOR_DEPTH_WRITE:RenderStateShard.COLOR_WRITE).setCullState(RenderStateShard.NO_CULL).setOutputState(world?RenderStateShard.PARTICLES_TARGET:RenderStateShard.MAIN_TARGET).createCompositeState(false));}
     private static final class Trace {
         final GearVisuals.Beam beam;final double received;Vec3 from;double started=Double.NaN;
         Trace(GearVisuals.Beam beam,double received){this.beam=beam;this.received=received;}
@@ -104,7 +106,7 @@ public final class GearRenderer {
         if(mc.level==null||mc.level!=lastLevel){clear();lastLevel=mc.level;return;}
         INVERSE_WORLD_PROJECTION.set(e.getProjectionMatrix()).invert();
         double now=clock();while(!TRACES.isEmpty()&&TRACES.peekFirst().received+16<=now)TRACES.removeFirst();
-        if(TRACES.isEmpty()||!GearVisualConfig.BEAMS.get())return;
+        if((TRACES.isEmpty()&&!TacticalClient.hasWorldEffects())||!GearVisualConfig.BEAMS.get())return;
         boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();var buffers=mc.renderBuffers().bufferSource();
         var camera=e.getCamera().getPosition();var pose=e.getPoseStack();pose.pushPose();pose.translate(-camera.x,-camera.y,-camera.z);double distance=GearVisualConfig.DISTANCE.get();
         for(int pass=0;pass<3;pass++){
@@ -122,9 +124,14 @@ public final class GearRenderer {
             var target=sink(out,pose,custom,phase());
             GearEffectGeometry.shot((x,y,z,u,v,mat,power,a)->{if(GearEffectGeometry.renderPass(mat)==drawPass)target.vertex(x,y,z,u,v,mat,power,a);},beam.kind(),(float)length,(float)(now-trace.started),beam.impact(),!localGun);pose.popPose();
         }
+        if(pass==1)TacticalClient.drawWorld(pose,sink(out,pose,custom,phase()),mc.getTimer().getGameTimeDeltaPartialTick(false));
         buffers.endBatch(type);
         }
         pose.popPose();
+    }
+    public static void renderTrainingTarget(PoseStack pose,MultiBufferSource buffers){
+        boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();var type=custom?HELD_EFFECT:LOCAL_FALLBACK;
+        TacticalGeometry.target(sink(buffers.getBuffer(type),pose,custom,phase()));
     }
     private static GearEffectGeometry.Sink sink(VertexConsumer out,PoseStack pose,boolean custom,float phase){
         return (x,y,z,u,v,material,power,alpha)->{

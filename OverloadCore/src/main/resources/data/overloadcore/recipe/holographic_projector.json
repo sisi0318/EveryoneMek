@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AGA",
+    "CSC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "C": {
+      "item": "mekanism:elite_control_circuit"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    }
+  },
+  "result": {
+    "id": "overloadcore:holographic_projector"
+  }
+}

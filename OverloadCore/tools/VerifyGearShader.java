@@ -1,6 +1,7 @@
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33C.*;
 import dev.everyonemek.overloadcore.client.GearEffectGeometry;
+import dev.everyonemek.overloadcore.client.TacticalGeometry;
 import java.nio.*;
 import java.nio.file.*;
 import java.util.zip.ZipFile;
@@ -38,12 +39,16 @@ public class VerifyGearShader {
         var bytes=BufferUtils.createByteBuffer(64*1024);var transform=new Matrix4f();
         if(front)transform.rotateY((float)java.lang.Math.PI);
         else{transform.translate(0,0,-4).rotateX(.65F).rotateY(-.9F);
-        if(kind<3)transform.translate(0,0,-1.5F).scale(.48F);else transform.translate(0,0,-.2F);}
+        if(kind<3)transform.translate(0,0,-1.5F).scale(.48F);else if(kind==7)transform.translate(0,-.9F,0);else transform.translate(0,0,-.2F);}
         GearEffectGeometry.Sink sink=(x,y,z,u,v,mat,power,alpha)->{
             var p=transform.transformPosition(new Vector3f(x,y,z));bytes.putFloat(p.x).putFloat(p.y).putFloat(p.z).putFloat(u).putFloat(v);
             bytes.put((byte)mat).put((byte)(power*255)).put((byte)(phase/(2*java.lang.Math.PI)*255)).put((byte)(alpha*255));bytes.putInt(0);
         };
-        if(kind<3)GearEffectGeometry.shot(sink,kind,4,age,true,!front);else GearEffectGeometry.toolForm(sink,kind==3,1,1);
+        if(kind<3)GearEffectGeometry.shot(sink,kind,4,age,true,!front);
+        else if(kind<5)GearEffectGeometry.toolForm(sink,kind==3,1,1);
+        else if(kind==5)TacticalGeometry.guard(sink,phase>0);
+        else if(kind==6)TacticalGeometry.mark(sink,phase>0?3:1);
+        else TacticalGeometry.target(sink);
         return bytes.flip();
     }
     static void effects(Path out)throws Exception{
@@ -57,6 +62,13 @@ public class VerifyGearShader {
             save(normal,out.resolve("effect-"+kind+".png"));check(visible>15&&visible<W*H/5,"Blank or oversized effect "+kind+": "+visible);check(changed>10,"Frozen effect "+kind+": "+changed);
             for(int y=0;y<H;y++)for(int x=0;x<W/2;x++)check((blocked[(y*W+x)*4]&255)<15,"Effect ignored wall depth");
             save(normal,out.resolve("effect-"+kind+".png"));System.out.println("PASS effect "+kind+": "+data.limit()/112+" quads, "+visible+" visible pixels, animation and depth");
+        }
+        for(int kind=5;kind<8;kind++){
+            var data=effect(kind,0,0);var normal=drawEffect(data,false);var changedFrame=drawEffect(effect(kind,0,1.1F),false);var blocked=drawEffect(effect(kind,0,0),true);
+            int visible=0,changed=0;for(int i=0;i<normal.length;i+=4){if((normal[i]&255)+(normal[i+1]&255)+(normal[i+2]&255)>90)visible++;for(int c=0;c<3;c++)if(java.lang.Math.abs((normal[i+c]&255)-(changedFrame[i+c]&255))>4){changed++;break;}}
+            save(normal,out.resolve("tactical-"+kind+".png"));check(visible>40&&changed>10,"Tactical geometry blank or state does not update: "+kind);
+            for(int y=0;y<H;y++)for(int x=0;x<W/2;x++)check((blocked[(y*W+x)*4]&255)<15,"Tactical geometry ignored wall depth");
+            System.out.println("PASS tactical "+kind+": "+data.limit()/112+" quads, "+visible+" visible pixels; state and depth");
         }
         save(drawEffect(effect(0,2.2F,0),false),out.resolve("rail-impact.png"));
         matrix("ProjMat",new Matrix4f().perspective((float)java.lang.Math.toRadians(70),1,.05F,100));

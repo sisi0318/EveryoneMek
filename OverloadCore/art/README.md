@@ -71,3 +71,7 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 ### alpha.23 能刃与磁轨脉冲
 
 保留原MekaTool模型。弧形接触刃替代长平面刀光，世界斩击用窄刃沿和单层残影；分段环分别表示聚焦、脉冲约束与命中扩散。普通透明能量面与加色火花分开绘制，隐藏GL检查新增蓝天背景的5阶段输出，防止暗背景预览掩盖过曝。无新位图、全屏效果或服务器粒子实体。
+
+## alpha.24 战术与全息靶场
+
+机壳复用gear_alloy／gear_graphite／gear_circuit的真实16px材质，由generate_equipment.training生成前面、顶部、侧面和工作灯的JSON模型，没有新增位图。静止／工作几何保持一致；预览见training-projector-preview.png。TacticalGeometry静态缓存训练体网格，护盾与标记各一面；gear_field材质10／11／12分别处理六边护盾、层数菱形、全息扫描边框。VerifyGearShader输出tactical-5/6/7.png检查状态与遮挡，不进入游戏JAR。

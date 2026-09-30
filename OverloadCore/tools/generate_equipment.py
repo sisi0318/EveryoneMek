@@ -5,6 +5,8 @@ import json, math
 ROOT=Path(__file__).resolve().parents[1]
 RES=ROOT/'src/main/resources'
 NAMES={
+ 'polarization':('极化联动单元','Polarization Link Unit','远程命中施加极化，蓄力斩击引爆；近战实战命中强化下一发贯穿。','Ranged hits polarize targets; charged slashes detonate marks. Melee combat hits empower the next rail shot.'),
+ 'magnetic_deflector':('磁偏护盾单元','Magnetic Deflector Unit','按住战术格挡键展开正面护盾，消耗胸甲电量；精准格挡强化下一次蓄力攻击。','Hold the tactical guard key for a directional shield powered by the chestplate. A perfect guard empowers the next charged attack.'),
  'phase_heat_sink':('相变热沉单元','Phase-Change Heat Sink Unit','消耗胸甲电量压制劫热；每级提高降温能力。','Consumes bodyarmor energy to suppress heat burden; cooling increases per level.'),
  'magnetic_compensation':('磁荷补偿单元','Magnetic Compensation Unit','消耗护腿电量抵消磁枷负荷；缺电时恢复原负荷。','Uses leggings energy to offset metal burden. Original burden returns without power.'),
  'ward_capacitor':('护命电容单元','Ward Capacitor Unit','储存护命电量，与附近设备合力逆命；每级默认容纳三次消耗。','Stores rescue energy and shares the cost with nearby machines. Holds three rescues per level by default.'),
@@ -25,10 +27,10 @@ def face_vertices(a,b):
 def modules(write):
  for name in ['residual_coupling_unit',*NAMES]:
   textures={'layer0':'mekanism:item/module_base'}
-  if name!='residual_reservoir':textures['layer1']=f'overloadcore:item/module_{name}_panel'
+  if name!='residual_reservoir':textures['layer1']='overloadcore:item/module_'+{'polarization':'resonant_discharge','magnetic_deflector':'ward_capacitor'}.get(name,name)+'_panel'
   write(f'assets/overloadcore/models/item/module_{name}.json',{'parent':'minecraft:item/generated','textures':textures})
   if name in ['residual_coupling_unit','residual_reservoir']:continue
-  special={'ward_capacitor':'minecraft:echo_shard','afterguard_stabilizer':'minecraft:nether_star','residual_reservoir':'mekanism:energy_tablet','resonant_discharge':'mekanism:alloy_atomic','phase_heat_sink':'mekanism:ingot_tin','magnetic_compensation':'mekanism:ingot_steel','charge_accelerator':'minecraft:redstone_block','rail_magazine':'minecraft:iron_ingot','rail_focus':'minecraft:amethyst_shard','rail_piercing':'mekanism:ingot_refined_obsidian','blade_field':'mekanism:ingot_refined_glowstone'}[name]
+  special={'polarization':'mekanism:teleportation_core','magnetic_deflector':'mekanism:basic_induction_provider','ward_capacitor':'minecraft:echo_shard','afterguard_stabilizer':'minecraft:nether_star','residual_reservoir':'mekanism:energy_tablet','resonant_discharge':'mekanism:alloy_atomic','phase_heat_sink':'mekanism:ingot_tin','magnetic_compensation':'mekanism:ingot_steel','charge_accelerator':'minecraft:redstone_block','rail_magazine':'minecraft:iron_ingot','rail_focus':'minecraft:amethyst_shard','rail_piercing':'mekanism:ingot_refined_obsidian','blade_field':'mekanism:ingot_refined_glowstone'}[name]
   write(f'data/overloadcore/recipe/module_{name}.json',{'type':'minecraft:crafting_shaped','pattern':['ASA','CBC','AEA'],'key':{k:{'item':v} for k,v in {'A':'mekanism:alloy_reinforced','S':special,'C':'mekanism:elite_control_circuit','B':'mekanism:module_base','E':'mekanism:energy_tablet'}.items()},'result':{'id':f'overloadcore:module_{name}'}})
 def combat(write):
  # Old IDs remain only to decode and convert existing stacks. Both display Mek's native model.
@@ -61,8 +63,23 @@ def armor():
  out=RES/'assets/overloadcore/models/entity';out.mkdir(parents=True,exist_ok=True)
  (out/'equipment_modules.obj').write_text('\n'.join(lines)+'\n',encoding='utf-8')
  (out/'equipment_modules.mtl').write_text('newmtl metal\nmap_Kd overloadcore:item/gear_alloy\nnewmtl energy\nmap_Kd overloadcore:item/gear_circuit\n',encoding='utf-8')
+def training(write):
+ textures={'side':'overloadcore:item/gear_alloy','front':'overloadcore:item/gear_alloy','top':'overloadcore:item/gear_graphite','front_active':'overloadcore:item/gear_circuit','particle':'overloadcore:item/gear_alloy'}
+ def cube(lo,hi,tex):return {'from':lo,'to':hi,'faces':{side:{'texture':'#'+tex,'uv':[0,0,16,16]} for side in NORMALS}}
+ for active in [False,True]:
+  elements=[cube([0,0,0],[16,8,16],'side'),cube([1,8,1],[15,9,15],'top'),cube([4,9.02,4],[12,9.07,12],'front_active' if active else 'front'),cube([4,3,-.03],[12,5,0],'front_active' if active else 'top')]
+  write('assets/overloadcore/models/block/holographic_projector'+('_active' if active else '')+'.json',{'parent':'minecraft:block/block','textures':textures,'elements':elements})
+ variants={}
+ for direction,y in [('north',0),('east',90),('south',180),('west',270)]:
+  for active in [False,True]:variants[f'active={str(active).lower()},facing={direction}']={'model':'overloadcore:block/holographic_projector'+('_active' if active else ''),'y':y}
+ write('assets/overloadcore/blockstates/holographic_projector.json',{'variants':variants})
+ write('assets/overloadcore/models/item/holographic_projector.json',{'parent':'overloadcore:block/holographic_projector'})
+ write('data/overloadcore/loot_table/blocks/holographic_projector.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'overloadcore:holographic_projector','functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['mekanism:energy','mekanism:owner','mekanism:security','overloadcore:training']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
+ write('data/minecraft/tags/block/mineable/pickaxe.json',{'replace':False,'values':['overloadcore:holographic_projector']})
+ write('data/overloadcore/recipe/holographic_projector.json',{'type':'minecraft:crafting_shaped','pattern':['AGA','CSC','AEA'],'key':{k:{'item':v} for k,v in {'A':'mekanism:alloy_reinforced','G':'minecraft:glass','C':'mekanism:elite_control_circuit','S':'mekanism:steel_casing','E':'mekanism:energy_tablet'}.items()},'result':{'id':'overloadcore:holographic_projector'}})
+
 def generate(write):
- modules(write);combat(write);armor()
+ modules(write);combat(write);armor();training(write)
  uniforms=[]
  for name in ['ModelViewMat','ProjMat']:uniforms.append({'name':name,'type':'matrix4x4','count':16,'values':[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]})
  for name,values,kind in [('ColorModulator',[1,1,1,1],'float'),('FogStart',[0],'float'),('FogEnd',[1000],'float'),('FogColor',[0,0,0,0],'float'),('FogShape',[0],'int')]:uniforms.append({'name':name,'type':kind,'count':len(values),'values':values})
@@ -70,6 +87,23 @@ def generate(write):
  pairs={}
  for k,(z,e,zd,ed) in NAMES.items():pairs['module.overloadcore.'+k]=(z,e);pairs['description.overloadcore.'+k]=(zd,ed)
  for k,pair in {
+  'tactical.guard_unavailable':('需要已启用的磁偏护盾单元和足够的胸甲电量','Enable a Magnetic Deflector Unit and charge the chestplate'),
+  'tactical.swap_hint':('按 %s 快切战斗形态','Press %s to switch combat forms'),
+  'tactical.guard_hint':('按住 %s 展开偏转护盾','Hold %s to deploy the deflection shield'),
+  'tactical.guarding':('偏转护盾已展开','Deflection shield active'),
+  'tactical.counter_ready':('精准格挡 · 反击就绪','Perfect guard · Counter ready'),
+  'tactical.flux_ready':('磁通就绪 · 下一发额外贯穿','Flux ready · Next shot pierces one more target'),
+  'training.state_0':('投影已关闭','Projection disabled'),
+  'training.state_1':('电量不足，请连接供电','Insufficient energy; connect power'),
+  'training.state_2':('上方需要两格空间','Clear two blocks above the projector'),
+  'training.state_3':('训练投影运行中','Training projection active'),
+  'training.last':('本次伤害：%s','Last damage: %s'),
+  'training.total':('累计：%s · 命中：%s','Total: %s · Hits: %s'),
+  'training.dps':('近5秒 DPS：%s','Last 5s DPS: %s'),
+  'training.spent':('工具耗能：%s','Tool energy spent: %s'),
+  'training.start':('开启投影','Enable projection'),
+  'training.stop':('关闭投影','Disable projection'),
+  'training.reset':('重置读数','Reset readings'),
   'gear.energy':('储能：%s / %s','Stored energy: %s / %s'),
   'weapon.charge':('蓄力时间：%s 秒','Charge time: %s s'),
   'weapon.no_energy':('武器电量不足','Weapon energy too low'),
@@ -77,6 +111,12 @@ def generate(write):
  }.items():pairs['overloadcore.'+k]=pair
  pairs.update({'item.overloadcore.rail_lance':('Meka工具','Meka-Tool'),'item.overloadcore.thunder_blade':('Meka工具','Meka-Tool'),'death.attack.overloadcore.rail':('%s被磁轨弹贯穿','%s was pierced by a rail slug'),'death.attack.overloadcore.rail.player':('%s被%s的磁轨弹贯穿','%s was pierced by %s\'s rail slug')})
  pairs.update({
+  'key.overloadcore.combat_swap':('战斗形态快切','Quick-switch combat form'),
+  'key.overloadcore.guard':('战术格挡（按住）','Tactical guard (hold)'),
+  'block.overloadcore.holographic_projector':('全息靶场控制器','Holographic Range Controller'),
+  'container.overloadcore.holographic_projector':('全息靶场','Holographic Range'),
+  'description.overloadcore.holographic_projector':('通电后投射训练靶，记录伤害与工具耗能。','Projects a powered training target and records damage and tool energy use.'),
+  'entity.overloadcore.training_target':('训练投影','Training Projection'),
   'module.overloadcore.combat_form':('战斗形态单元','Combat Form Unit'),
   'description.overloadcore.combat_form':('赋予Meka工具近战与远程形态；使用模式菜单切换，右键蓄力攻击。','Adds melee and ranged forms to the Meka-Tool. Select a form in the mode menu, then hold use to charge.'),
   'module.overloadcore.combat_mode':('战斗形态','Combat form'),

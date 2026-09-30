@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "active=false,facing=north": {
+      "model": "overloadcore:block/holographic_projector",
+      "y": 0
+    },
+    "active=true,facing=north": {
+      "model": "overloadcore:block/holographic_projector_active",
+      "y": 0
+    },
+    "active=false,facing=east": {
+      "model": "overloadcore:block/holographic_projector",
+      "y": 90
+    },
+    "active=true,facing=east": {
+      "model": "overloadcore:block/holographic_projector_active",
+      "y": 90
+    },
+    "active=false,facing=south": {
+      "model": "overloadcore:block/holographic_projector",
+      "y": 180
+    },
+    "active=true,facing=south": {
+      "model": "overloadcore:block/holographic_projector_active",
+      "y": 180
+    },
+    "active=false,facing=west": {
+      "model": "overloadcore:block/holographic_projector",
+      "y": 270
+    },
+    "active=true,facing=west": {
+      "model": "overloadcore:block/holographic_projector_active",
+      "y": 270
+    }
+  }
+}

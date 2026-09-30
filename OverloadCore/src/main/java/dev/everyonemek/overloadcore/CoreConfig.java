@@ -14,6 +14,7 @@ public final class CoreConfig {
     public static final ModConfigSpec.IntValue CAPACITOR_CHARGES, GEAR_CHARGE_RATE, AFTERGUARD_HITS, AFTERGUARD_TICKS;
     public static final ModConfigSpec.IntValue RAIL_COST, RAIL_CHARGE, RAIL_RANGE, BLADE_BURST_COST, BLADE_CHARGE, ARC_COST;
     public static final ModConfigSpec.DoubleValue RAIL_DAMAGE, BLADE_DAMAGE, ARC_DAMAGE;
+    public static final ModConfigSpec.IntValue GUARD_UPKEEP,GUARD_DAMAGE_FE,GUARD_WINDOW,GUARD_REARM,POLAR_TICKS,TRAINING_FE;
     static {
         var b = new ModConfigSpec.Builder();
         RANGE = b.comment("Radius in blocks; only owned or explicitly shared devices.").defineInRange("range", 32, 1, 64);
@@ -44,6 +45,12 @@ public final class CoreConfig {
         BLADE_DAMAGE = b.defineInRange("bladeDamage", 18D, 4D, 10000D);
         ARC_COST = b.defineInRange("resonanceTargetFE", 5000, 1, 100000000);
         ARC_DAMAGE = b.defineInRange("resonanceDamage", 6D, 1D, 10000D);
+        GUARD_UPKEEP=b.defineInRange("guardFEPerTick",200,1,1000000);
+        GUARD_DAMAGE_FE=b.defineInRange("guardFEPerDamage",2500,1,10000000);
+        GUARD_WINDOW=b.defineInRange("perfectGuardTicks",6,1,20);
+        GUARD_REARM=b.defineInRange("perfectGuardRearmTicks",20,20,200);
+        POLAR_TICKS=b.defineInRange("polarizationTicks",100,20,600);
+        TRAINING_FE=b.defineInRange("trainingFEPerTick",200,1,1000000);
         b.pop();
         SOUND_GAIN = b.defineInRange("soundGain", 1.8, 1, 3);
         WARD_COST_FE = b.comment("Thunder Ward: total FE cost per averted fatal incident; no cooldown.")

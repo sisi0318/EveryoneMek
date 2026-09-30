@@ -14,5 +14,7 @@ public final class OverloadCore {
         dev.everyonemek.overloadcore.gear.EquipmentModules.register(bus);
         bus.addListener(dev.everyonemek.overloadcore.gear.GearEnergy::register);
         bus.addListener(dev.everyonemek.overloadcore.gear.GearVisuals::register);
+        bus.addListener(dev.everyonemek.overloadcore.gear.TacticalPackets::register);
+        dev.everyonemek.overloadcore.training.TrainingContent.register(bus);
     }
 }
