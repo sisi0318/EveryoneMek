@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.22，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.22.jar`。
+- 0.1.0-alpha.23，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.23.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -18,16 +18,20 @@
 - 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_mek.cjs` 仅设置背景 alpha，不更改 RGB。保护实际中性深灰轮廓包围的盾面，绿色雷弧不能被算入盾面跨度；不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
 
-## alpha.22 当前武器约定
+## 当前 MekaTool 武器约定
 
 用户明确改为给原 MekaTool 安装战斗模块获得近战／远程双形态，并移除自绘剑枪。下面alpha.17–21的独立武器记录只作历史，不能恢复这些独立装备。
 
-- CombatModule 是原生 ModuleData＋ModuleEnumConfig，通过IMC只支持MekaTool，原改造站安装／拆卸，原径向菜单与配置窗口切换。新模块最大1个；原武器升级目标改为MekaTool。普通近战沿用原攻击增幅，原采掘、农耕不接管。潜行右键交回原工具；远程只在空仓自动装填。
+- CombatModule 是原生 ModuleData＋ModuleEnumConfig，通过IMC只支持MekaTool，原改造站安装／拆卸，原径向菜单与配置窗口切换。新模块最大1个；原武器升级目标改为MekaTool。普通近战沿用原攻击增幅，原采掘、农耕不接管。潜行右键交回原工具；alpha.23起远程仅耗电，不检查／装填／消耗弹药。
 - MekaToolCombatMixin 仅在模块启用且未潜行时接管原use，并补充目标类原本继承的useDuration／releaseUsing。MekaCombat的弱身份玩家会话锁定实际栈、手、形态、开始tick与所需时长；服务端释放时二次验证，原生模式切换直接取消，禁用／换物品也停止。不要允许用近战短蓄力切换为远程绕过时长。
 - 能量只扣StorageUtils取得的原生容器；新MekaTool不注册GearEnergy能力。旧rail_lance／thunder_blade仅作为LegacyWeaponItem读取旧存档，没有配方、创造栏、自绘模型或战斗方法。背包／副手实际栈替换为原MekaTool并保留模块／弹药／组件。GEAR_ENERGY仅作迁移余量，实际insert后扣余量，耗尽移除，不伪造超过原生容量的储能。
 - GearRenderer只做MekaTool局部shader与世界战斗效果，删除WeaponItem、GearGlowMesh、GearPose、GearArmPoses及枚举扩展。MekaToolRenderMixin在ItemRenderer.render最后一个popPose前绘制，放client列表；MekaToolAnchor对应10.7.19.85原左右OBJ，枪口方向是模型-Y。不要注册客户端扩展覆盖Mek原物品renderer或手持变换。
 - generate_equipment维护combat模块配方、旧ID的原MekaTool模型引用、模块图标与防具外装，不再生成枪剑几何。VerifyMekaToolContract检查原ItemRenderer方法／唯一popPose、OBJ工具头与FOV，VerifyGearShader保留局部形态和世界效果。不得把原OBJ或贴图复制进JAR。
 - 验证：50项服务端GameTest通过，包括真实改造站tick安装／移除、原径向模式与采掘菜单并存、真实按住使用／提前释放／换形态取消、原生电量与弹药、超容量旧电量守恒及副手迁移。客户端字节码与原OBJ锚点检查、隐藏GL效果检查通过；未启动游戏客户端。
+
+- alpha.23按用户要求取消铁粒装填与弹仓HUD／提示；移除GearCombat的ammo／magazine／reload方法、客户端缺弹门禁、服务端扣弹及旧弹药标签。RAIL_AMMO仅保留反序列化，不新增或扣减。MAGAZINE枚举／rail_magazine注册ID保留，显示为磁轨复位单元，recoveryTicks为max(2,10-2×启用等级)，禁用恢复默认10tick。
+- GearEffectGeometry.renderPass统一运行时与GPU检查的材质分组：0不透明脉冲、1普通透明字段、2小范围加色火花。月牙不再双面填充40%半径，而是窄刃沿＋单层残影＋侧边／少量电弧，共76面；起点最多前移到0.9格，避免贴眼睛铺满视野。手持近战是16面弧形接触刃、远程28面分段环。
+- alpha.23验证：50项服务端GameTest通过，覆盖空背包发射、背包铁粒不变、真实电量扣款、提前释放／取消、复位模块缩短实际冷却及旧模块数据。隐藏GL检查三种混合通道及5阶段蓝天背景，不能用暗背景通过替代亮背景过曝检查。未启动客户端。
 
 ## 实现入口与数据契约
 

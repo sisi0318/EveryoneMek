@@ -39,7 +39,7 @@ public record CombatModule(Form form) implements ICustomModule<CombatModule> {
         if(next!=form){MekaCombat.cancel(player);container.replaceModuleConfig(player.registryAccess(),stack,module.getDataHolder(),module.<Form>getConfigOrThrow(FORM).with(next));}
     }
     @Override public void addHUDStrings(IModule<CombatModule> module,IModuleContainer container,ItemStack stack,Player player,Consumer<Component> adder){
-        adder.accept(form.getTextComponent());if(form==Form.RANGED)adder.accept(CoreContent.text("weapon.magazine",GearCombat.ammo(stack),GearCombat.magazine(stack)));
+        adder.accept(form.getTextComponent());
     }
     public enum Form implements IRadialMode,IHasTextComponent,StringRepresentable {
         MELEE("melee","blasting_low",EnumColor.BRIGHT_GREEN),RANGED("ranged","blasting_high",EnumColor.AQUA);

@@ -21,11 +21,11 @@ import net.neoforged.neoforge.client.event.*;
 @EventBusSubscriber(modid=OverloadCore.ID,value=Dist.CLIENT)
 public final class GearRenderer {
     private static ShaderInstance shader;
-    private static final RenderType HELD_EFFECT=type(true,false),WORLD_EFFECT=type(true,true),WORLD_BODY=type(false,true);
-    private static final RenderType WORLD_FALLBACK=fallback(false),WORLD_BODY_FALLBACK=fallback(true);
-    private static RenderType fallback(boolean body){return RenderType.create("overloadcore_effect_fallback_"+body,DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,8192,false,false,
+    private static final RenderType HELD_EFFECT=type(true,false,false),WORLD_FIELD=type(true,true,false),WORLD_EFFECT=type(true,true,true),WORLD_BODY=type(false,true,false);
+    private static final RenderType[] WORLD_FALLBACK={fallback(0),fallback(1),fallback(2)};
+    private static RenderType fallback(int pass){boolean body=pass==0;return RenderType.create("overloadcore_effect_fallback_"+pass,DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,8192,false,pass==1,
         RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeLightningShader))
-            .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setTransparencyState(body?RenderStateShard.NO_TRANSPARENCY:RenderStateShard.LIGHTNING_TRANSPARENCY)
+            .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setTransparencyState(body?RenderStateShard.NO_TRANSPARENCY:pass==1?RenderStateShard.TRANSLUCENT_TRANSPARENCY:RenderStateShard.LIGHTNING_TRANSPARENCY)
             .setWriteMaskState(body?RenderStateShard.COLOR_DEPTH_WRITE:RenderStateShard.COLOR_WRITE).setCullState(RenderStateShard.NO_CULL).setOutputState(RenderStateShard.PARTICLES_TARGET).createCompositeState(false));}
     private static final class Trace {
         final GearVisuals.Beam beam;final double received;Vec3 from;double started=Double.NaN;
@@ -40,9 +40,9 @@ public final class GearRenderer {
     private static net.minecraft.client.multiplayer.ClientLevel lastLevel;
     private GearRenderer(){}
     private static ResourceLocation id(String path){return ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,path);}
-    private static RenderType type(boolean translucent,boolean world){return RenderType.create("overloadcore_gear_"+translucent+"_"+world,DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,VertexFormat.Mode.QUADS,8192,false,false,
+    private static RenderType type(boolean translucent,boolean world,boolean additive){return RenderType.create("overloadcore_gear_"+translucent+"_"+world+"_"+additive,DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,VertexFormat.Mode.QUADS,8192,false,translucent&&!additive,
           RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(()->shader)).setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
-                .setTransparencyState(translucent?RenderStateShard.LIGHTNING_TRANSPARENCY:RenderStateShard.NO_TRANSPARENCY)
+                .setTransparencyState(!translucent?RenderStateShard.NO_TRANSPARENCY:additive?RenderStateShard.LIGHTNING_TRANSPARENCY:RenderStateShard.TRANSLUCENT_TRANSPARENCY)
                 .setWriteMaskState(translucent?RenderStateShard.COLOR_WRITE:RenderStateShard.COLOR_DEPTH_WRITE).setCullState(RenderStateShard.NO_CULL)
                 .setOutputState(world?RenderStateShard.PARTICLES_TARGET:RenderStateShard.MAIN_TARGET).createCompositeState(false));}
     @SubscribeEvent public static void shaders(RegisterShadersEvent e){shader=null;try{e.registerShader(new ShaderInstance(e.getResourceProvider(),id("gear_field"),DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),s->shader=s);}catch(IOException error){com.mojang.logging.LogUtils.getLogger().error("Gear shader unavailable; using baked weapons",error);}}
@@ -107,19 +107,20 @@ public final class GearRenderer {
         if(TRACES.isEmpty()||!GearVisualConfig.BEAMS.get())return;
         boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();var buffers=mc.renderBuffers().bufferSource();
         var camera=e.getCamera().getPosition();var pose=e.getPoseStack();pose.pushPose();pose.translate(-camera.x,-camera.y,-camera.z);double distance=GearVisualConfig.DISTANCE.get();
-        for(int pass=0;pass<2;pass++){
-        boolean body=pass==0;var type=body?(custom?WORLD_BODY:WORLD_BODY_FALLBACK):(custom?WORLD_EFFECT:WORLD_FALLBACK);var out=buffers.getBuffer(type);
+        for(int pass=0;pass<3;pass++){
+        int drawPass=pass;var type=custom?(pass==0?WORLD_BODY:pass==1?WORLD_FIELD:WORLD_EFFECT):WORLD_FALLBACK[pass];var out=buffers.getBuffer(type);
         for(var trace:TRACES){var beam=trace.beam;
-            if(body&&beam.kind()!=0)continue;
+            if(pass==0&&beam.kind()!=0||pass==1&&beam.kind()==2)continue;
             if(Double.isNaN(trace.started)){trace.started=now;trace.from=muzzle(beam);}
             Vec3 delta=beam.to().subtract(trace.from);double length=delta.length();if(length<.01)continue;
             double nearest=Math.clamp(camera.subtract(trace.from).dot(delta)/(length*length),0,1);
             if(camera.distanceToSqr(trace.from.add(delta.scale(nearest)))>distance*distance)continue;
             var direction=delta.scale(1/length);pose.pushPose();pose.translate(trace.from.x,trace.from.y,trace.from.z);
             pose.mulPose(new org.joml.Quaternionf().rotationTo(0,0,1,(float)direction.x,(float)direction.y,(float)direction.z));
+            if(beam.kind()==1&&!beam.rightHand())pose.scale(-1,1,1);
             boolean localGun=custom&&beam.kind()==0&&mc.player!=null&&beam.shooter()==mc.player.getId()&&mc.options.getCameraType().isFirstPerson();
             var target=sink(out,pose,custom,phase());
-            GearEffectGeometry.shot((x,y,z,u,v,mat,power,a)->{if((mat==8)==body)target.vertex(x,y,z,u,v,mat,power,a);},beam.kind(),(float)length,(float)(now-trace.started),beam.impact(),!localGun);pose.popPose();
+            GearEffectGeometry.shot((x,y,z,u,v,mat,power,a)->{if(GearEffectGeometry.renderPass(mat)==drawPass)target.vertex(x,y,z,u,v,mat,power,a);},beam.kind(),(float)length,(float)(now-trace.started),beam.impact(),!localGun);pose.popPose();
         }
         buffers.endBatch(type);
         }

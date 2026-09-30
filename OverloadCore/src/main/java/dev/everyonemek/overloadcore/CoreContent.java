@@ -24,6 +24,7 @@ public final class CoreContent {
                 .networkSynchronized(net.minecraft.core.UUIDUtil.STREAM_CODEC).build());
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> GEAR_ENERGY = COMPONENTS.register("gear_energy",
           () -> DataComponentType.<Long>builder().persistent(com.mojang.serialization.Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG).build());
+    // Decode old stacks without data loss; this value no longer gates or pays for firing.
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> RAIL_AMMO = COMPONENTS.register("rail_ammo",
           () -> DataComponentType.<Integer>builder().persistent(com.mojang.serialization.Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
     public static final DeferredItem<CoreItem> CORE = ITEMS.register("overloaded_short_circuit_core",

@@ -5,6 +5,8 @@ public final class GearEffectGeometry {
     @FunctionalInterface public interface Sink {
         void vertex(float x,float y,float z,float u,float v,int material,float power,float alpha);
     }
+    /** Opaque pulse, alpha-blended fields, then small additive sparks. Shared with the GPU check. */
+    public static int renderPass(int material){return material==8?0:material==4||material==6?2:1;}
     private static void v(Sink s,float x,float y,float z,float u,float v,int mat,float power,float a){s.vertex(x,y,z,u,v,mat,power,a);}
     private static void strip(Sink s,float x0,float y0,float z0,float x1,float y1,float z1,float dx,float dy,float dz,int mat,float power,float a){
         v(s,x0-dx,y0-dy,z0-dz,0,0,mat,power,a);v(s,x1-dx,y1-dy,z1-dz,1,0,mat,power,a);
@@ -17,7 +19,19 @@ public final class GearEffectGeometry {
         strip(s,0,0,z-radius,0,0,z+radius,radius,0,0,6,1,alpha);
     }
     public static float flightTime(float length){return Math.max(1.6F,length/24F);}
-    public static void muzzle(Sink s,float age){if(age>=0&&age<1.8F)flash(s,0,.11F+.055F*age,.8F*(1-age/1.8F));}
+    private static void ring(Sink s,float z,float radius,float width,float alpha,int segments){
+        for(int i=0;i<segments;i++){
+            float a=(float)((i+.12)*Math.PI*2/segments),b=(float)((i+.88)*Math.PI*2/segments);
+            float ax=(float)Math.cos(a),ay=(float)Math.sin(a),bx=(float)Math.cos(b),by=(float)Math.sin(b);
+            v(s,ax*radius,ay*radius,z,i/(float)segments,0,5,1,alpha);v(s,bx*radius,by*radius,z,(i+1)/(float)segments,0,5,1,alpha);
+            v(s,bx*(radius+width),by*(radius+width),z,(i+1)/(float)segments,1,5,1,alpha);v(s,ax*(radius+width),ay*(radius+width),z,i/(float)segments,1,5,1,alpha);
+        }
+    }
+    public static void muzzle(Sink s,float age){
+        if(age<0||age>=1.8F)return;
+        float fade=1-age/1.8F;ring(s,.025F,.07F+age*.09F,.018F,fade*.6F,12);
+        flash(s,0,.085F,fade*.3F);
+    }
     private static void slug(Sink s,float head){
         float rear=Math.max(0,head-.48F),shoulder=Math.max(rear,head-.13F),r=.075F;
         // Eight metallic facets and a pointed nose, not a pair of luminous beam planes.
@@ -43,6 +57,7 @@ public final class GearEffectGeometry {
             if(age<flight){
                 float head=length*Math.min(1,(age+.08F)/flight);
                 slug(s,head);
+                ring(s,Math.max(0,head-.16F),.078F,.018F,.65F,12);
                 for(int i=1;i<=3;i++){
                     float z=head-.48F-i*.16F;if(z<0)break;
                     float x=(i%2==0?1:-1)*i*.018F,y=(float)Math.sin(i*3.1F)*.035F;
@@ -51,32 +66,34 @@ public final class GearEffectGeometry {
             }
             if(showMuzzle)muzzle(s,age);
             float elapsed=age-flight;
-            if(impact&&elapsed>=0&&elapsed<4)flash(s,length,.12F+.075F*elapsed,(1-elapsed/4)*.85F);
+            if(impact&&elapsed>=0&&elapsed<4){
+                float fade=1-elapsed/4;flash(s,length,.10F+.04F*elapsed,fade*.55F);
+                ring(s,Math.max(0,length-.02F),.08F+elapsed*.10F,.025F,fade*.50F,16);
+            }
         }else if(kind==1){
             if(age>=7)return;
-            // A crescent in the transverse XY plane; the old XZ fan was edge-on to its shooter.
-            float travel=length*Math.min(1,(age+.7F)/5.5F),radius=.65F+.17F*travel;
-            for(int i=0;i<24;i++){
-                float a=-1.13F+i*2.26F/24,b=-1.13F+(i+1)*2.26F/24;
-                float ax=(float)Math.sin(a),ay=(float)Math.cos(a),bx=(float)Math.sin(b),by=(float)Math.cos(b);
-                float innerA=radius*(1-.40F*(float)Math.sin(i*Math.PI/24)),innerB=radius*(1-.40F*(float)Math.sin((i+1)*Math.PI/24));
-                float alpha=.85F*(1-age/7),back=Math.max(0,travel-.07F);
-                crescent(s,ax*innerA,ay*innerA-radius*.60F,back,i/24F,0,alpha*.65F);
-                crescent(s,bx*innerB,by*innerB-radius*.60F,back,(i+1)/24F,0,alpha*.65F);
-                crescent(s,bx*radius,by*radius-radius*.60F,back,(i+1)/24F,1,alpha*.65F);
-                crescent(s,ax*radius,ay*radius-radius*.60F,back,i/24F,1,alpha*.65F);
-                crescent(s,ax*radius,ay*radius-radius*.60F,travel,i/24F,1,alpha*.65F);
-                crescent(s,bx*radius,by*radius-radius*.60F,travel,(i+1)/24F,1,alpha*.65F);
-                crescent(s,bx*innerB,by*innerB-radius*.60F,travel,(i+1)/24F,0,alpha*.65F);
-                crescent(s,ax*innerA,ay*innerA-radius*.60F,travel,i/24F,0,alpha*.65F);
-                // Outer and inner edges give the slash thickness from observer-side views.
-                for(int edge=0;edge<2;edge++){
-                    float ra=edge==0?radius:innerA,rb=edge==0?radius:innerB;
-                    crescent(s,ax*ra,ay*ra-radius*.60F,back,i/24F,.25F,alpha*.45F);
-                    crescent(s,bx*rb,by*rb-radius*.60F,back,(i+1)/24F,.25F,alpha*.45F);
-                    crescent(s,bx*rb,by*rb-radius*.60F,travel,(i+1)/24F,.75F,alpha*.45F);
-                    crescent(s,ax*ra,ay*ra-radius*.60F,travel,i/24F,.75F,alpha*.45F);
+            float start=Math.min(length,.9F),travel=start+(length-start)*Math.min(1,age/5.5F),radius=.42F+.13F*travel;
+            float fade=(1-age/7),roll=.35F-.50F*Math.min(1,age/5),cs=(float)Math.cos(roll),sn=(float)Math.sin(roll);
+            // A narrow cutting edge and one offset wake. No overlapping front/back luminous panel.
+            for(int layer=1;layer>=0;layer--){
+                float r=radius*(layer==0?1:.93F),z=Math.max(0,travel-layer*.18F);
+                float thickness=layer==0?.13F:.05F,alpha=fade*(layer==0?.78F:.24F);
+                for(int i=0;i<24;i++){
+                    float u=i/24F,U=(i+1)/24F,a=-1.2F+u*2.4F,b=-1.2F+U*2.4F;
+                    float ax=(float)Math.sin(a),ay=(float)Math.cos(a),bx=(float)Math.sin(b),by=(float)Math.cos(b);
+                    float ra=r*(1-thickness*(float)Math.sin(u*Math.PI)),rb=r*(1-thickness*(float)Math.sin(U*Math.PI));
+                    arc(s,ax*ra,ay*ra-r*.65F,z,u,0,alpha,cs,sn);arc(s,bx*rb,by*rb-r*.65F,z,U,0,alpha,cs,sn);
+                    arc(s,bx*r,by*r-r*.65F,z,U,1,alpha,cs,sn);arc(s,ax*r,ay*r-r*.65F,z,u,1,alpha,cs,sn);
+                    if(layer==0){
+                        arc(s,ax*r,ay*r-r*.65F,z,u,.25F,alpha*.35F,cs,sn);arc(s,bx*r,by*r-r*.65F,z,U,.25F,alpha*.35F,cs,sn);
+                        arc(s,bx*r,by*r-r*.65F,Math.max(0,z-.045F),U,.75F,alpha*.35F,cs,sn);arc(s,ax*r,ay*r-r*.65F,Math.max(0,z-.045F),u,.75F,alpha*.35F,cs,sn);
+                    }
                 }
+            }
+            for(int i=0;i<4;i++){
+                float a=-.85F+i*.53F,x=radius*(float)Math.sin(a),y=radius*((float)Math.cos(a)-.65F);
+                float px=x*cs-y*sn,py=x*sn+y*cs;
+                strip(s,px-.04F,py,Math.max(0,travel-.10F),px+.035F,py+.045F,travel,.012F,.012F,0,4,1,fade*.4F);
             }
         }else if(kind==2&&age<5){
             for(int i=0;i<8;i++){
@@ -86,26 +103,25 @@ public final class GearEffectGeometry {
             }
         }
     }
-    private static void crescent(Sink s,float x,float y,float z,float u,float v,float a){
-        // Tilt the slash 22 degrees without changing the forward travel axis.
-        s.vertex(x*.927F-y*.375F,x*.375F+y*.927F,z,u,v,3,1,a);
+    private static void arc(Sink s,float x,float y,float z,float u,float v,float a,float cs,float sn){
+        s.vertex(x*cs-y*sn,x*sn+y*cs,z,u,v,3,1,a);
     }
     public static void toolForm(Sink s,boolean rail,float power,float charge){
         if(power<=0)return;
         if(rail){
-            for(int ring=0;ring<2;ring++)for(int i=0;i<24;i++){
-                float a=(float)(i*Math.PI/12),b=(float)((i+1)*Math.PI/12);
-                float inner=.10F+.025F*charge,outer=inner+.020F,z=.015F+ring*.10F;
-                float ax=(float)Math.cos(a),ay=(float)Math.sin(a),bx=(float)Math.cos(b),by=(float)Math.sin(b),alpha=.20F+.60F*charge;
-                v(s,ax*inner,ay*inner,z,i/24F,0,5,power,alpha);v(s,bx*inner,by*inner,z,(i+1)/24F,0,5,power,alpha);
-                v(s,bx*outer,by*outer,z,(i+1)/24F,1,5,power,alpha);v(s,ax*outer,ay*outer,z,i/24F,1,5,power,alpha);
-            }
+            float radius=.125F-.035F*charge,alpha=.30F+.40F*charge;
+            ring(s,.025F,radius,.022F,alpha,16);ring(s,.14F,radius*.8F,.015F,alpha*.75F,12);
         }else{
-            // A short energized cutting edge extending from the original tool's three-prong head.
-            float tip=.48F+.22F*charge,alpha=.35F+.45F*charge;
-            for(float y:new float[]{-.025F,.025F}){
-                v(s,-.09F,y,.01F,0,0,9,power,alpha);v(s,.09F,y,.01F,0,1,9,power,alpha);
-                v(s,.03F,y,tip,1,1,9,power,alpha);v(s,-.015F,y,tip+.06F,1,0,9,power,alpha);
+            // Curved contact edge bridging the head's prongs, rather than projecting long flat laser fins.
+            float radius=.17F,alpha=.60F+.25F*charge;
+            for(int i=0;i<16;i++){
+                float u=i/16F,U=(i+1)/16F,a=-1.25F+u*2.5F,b=-1.25F+U*2.5F;
+                float ax=(float)Math.sin(a),ay=(float)Math.cos(a),bx=(float)Math.sin(b),by=(float)Math.cos(b);
+                float z=.08F+.14F*charge,inner=radius-.045F;
+                v(s,ax*inner,ay*inner*.8F-.03F,z+ay*.045F,u,0,9,power,alpha);
+                v(s,bx*inner,by*inner*.8F-.03F,z+by*.045F,U,0,9,power,alpha);
+                v(s,bx*radius,by*radius*.8F-.03F,z+by*.045F,U,1,9,power,alpha);
+                v(s,ax*radius,ay*radius*.8F-.03F,z+ay*.045F,u,1,9,power,alpha);
             }
         }
     }

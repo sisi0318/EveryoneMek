@@ -10,6 +10,7 @@ public enum GearUpgrade {
     RESERVOIR("residual_reservoir", 4, 0),
     RESONANCE("resonant_discharge", 4, 16),
     ACCELERATOR("charge_accelerator", 4, 16),
+    // Preserve installed modules and registry ID; this is now the rail recovery unit.
     MAGAZINE("rail_magazine", 4, 16),
     FOCUS("rail_focus", 4, 16),
     PIERCING("rail_piercing", 3, 16),

@@ -40,17 +40,20 @@ public final class MekaCombatGameTests {
     @GameTest(template="empty",timeoutTicks=180)
     public static void actualToolChargeUsesNativeEnergyAndModeChangesCancel(GameTestHelper h){
         var f=ThunderWardGameTests.player(h,new BlockPos(20,4,20));var p=f.player();var stack=new ItemStack(MekanismItems.MEKA_TOOL.get());install(stack,p);
-        p.setItemInHand(InteractionHand.MAIN_HAND,stack);p.getInventory().setItem(1,new ItemStack(Items.IRON_NUGGET,8));
+        p.setItemInHand(InteractionHand.MAIN_HAND,stack);
+        ModuleHelper.get().getModuleContainer(stack).addModule(p.registryAccess(),stack,EquipmentModules.get(GearUpgrade.MAGAZINE),2);
         var item=(IRadialModuleContainerItem)stack.getItem();item.setMode(stack,p,CombatModule.RADIAL.get(),CombatModule.Form.RANGED);
         long initial=GearCombat.joules(300000);StorageUtils.getEnergyContainer(stack,0).setEnergy(initial);
         stack.getItem().use(h.getLevel(),p,InteractionHand.MAIN_HAND);
-        check(p.isUsingItem()&&stack.getUseDuration(p)==72000&&GearCombat.ammo(stack)==2,"Native use hook/duration/automatic reload failed");
+        check(p.isUsingItem()&&stack.getUseDuration(p)==72000&&!stack.has(CoreContent.RAIL_AMMO),"Energy-only use with an empty inventory failed");
         h.startSequence().thenIdle(2).thenExecute(()->{
-            p.releaseUsingItem();check(MekaCombat.energy(stack)==initial&&GearCombat.ammo(stack)==2,"Short charge paid or fired");
-            stack.getItem().use(h.getLevel(),p,InteractionHand.MAIN_HAND);
+            p.releaseUsingItem();check(MekaCombat.energy(stack)==initial&&!stack.has(CoreContent.RAIL_AMMO),"Short charge paid or fired");
+            p.getInventory().setItem(1,new ItemStack(Items.IRON_NUGGET,8));stack.getItem().use(h.getLevel(),p,InteractionHand.MAIN_HAND);
         }).thenIdle(35).thenExecute(()->{
-            p.releaseUsingItem();check(MekaCombat.energy(stack)==initial-GearCombat.joules(CoreConfig.RAIL_COST.get())&&GearCombat.ammo(stack)==1,"Ranged release did not use native energy exactly once");
-        }).thenIdle(11).thenExecute(()->{
+            p.releaseUsingItem();check(MekaCombat.energy(stack)==initial-GearCombat.joules(CoreConfig.RAIL_COST.get())&&p.getInventory().getItem(1).getCount()==8&&!stack.has(CoreContent.RAIL_AMMO),"Ranged release did not use native energy exactly once");
+        }).thenIdle(3).thenExecute(()->check(p.getCooldowns().isOnCooldown(stack.getItem()),"Recovery unit removed the firing delay entirely"))
+          .thenIdle(4).thenExecute(()->{
+            check(!p.getCooldowns().isOnCooldown(stack.getItem())&&GearCombat.recoveryTicks(stack)==6,"Installed recovery units did not shorten actual cooldown");
             item.setMode(stack,p,CombatModule.RADIAL.get(),CombatModule.Form.MELEE);stack.getItem().use(h.getLevel(),p,InteractionHand.MAIN_HAND);
         }).thenIdle(26).thenExecute(()->{
             p.releaseUsingItem();check(MekaCombat.energy(stack)==initial-GearCombat.joules(CoreConfig.RAIL_COST.get()+CoreConfig.BLADE_BURST_COST.get()),"Melee release paid wrong amount");
@@ -58,7 +61,7 @@ public final class MekaCombatGameTests {
         }).thenIdle(17).thenExecute(()->{
             stack.getItem().use(h.getLevel(),p,InteractionHand.MAIN_HAND);item.setMode(stack,p,CombatModule.RADIAL.get(),CombatModule.Form.RANGED);check(!p.isUsingItem(),"Changing forms did not cancel charge");
         }).thenIdle(35).thenExecute(()->{try{
-            stack.getItem().releaseUsing(stack,h.getLevel(),p,0);check(GearCombat.ammo(stack)==1,"Canceled charge fired ranged attack");
+            stack.getItem().releaseUsing(stack,h.getLevel(),p,0);check(MekaCombat.energy(stack)==initial-GearCombat.joules(CoreConfig.RAIL_COST.get()+CoreConfig.BLADE_BURST_COST.get()),"Canceled charge fired ranged attack");
             p.setShiftKeyDown(true);var result=stack.getItem().use(h.getLevel(),p,InteractionHand.MAIN_HAND);check(result.getResult()==InteractionResult.PASS&&!p.isUsingItem(),"Sneak-use did not pass to original Meka-Tool");
             var container=ModuleHelper.get().getModuleContainer(stack);var mod=container.get(EquipmentModules.COMBAT);
             container.replaceModuleConfig(p.registryAccess(),stack,EquipmentModules.COMBAT,mod.<Boolean>getConfigOrThrow(ModuleConfig.ENABLED_KEY).with(false));
@@ -72,7 +75,7 @@ public final class MekaCombatGameTests {
             old.set(CoreContent.GEAR_ENERGY,37000000000L);old.set(CoreContent.RAIL_AMMO,7);old.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Preserved"));
             p.setItemInHand(InteractionHand.OFF_HAND,old);old.getItem().inventoryTick(old,h.getLevel(),p,0,false);
             var tool=p.getOffhandItem();check(tool.is(MekanismItems.MEKA_TOOL)&&tool.getCount()==1&&MekaCombat.form(tool)==CombatModule.Form.RANGED,"Old gun did not convert in offhand");
-            check(GearCombat.ammo(tool)==7&&GearEffects.level(tool,GearUpgrade.MAGAZINE)==2&&tool.getHoverName().getString().equals("Preserved"),"Conversion lost module/ammo/name");
+            check(tool.getOrDefault(CoreContent.RAIL_AMMO,0)==7&&GearEffects.level(tool,GearUpgrade.MAGAZINE)==2&&GearCombat.recoveryTicks(tool)==6&&tool.getHoverName().getString().equals("Preserved"),"Conversion lost module/ammo/name");
             check(MekaCombat.energy(tool)+tool.getOrDefault(CoreContent.GEAR_ENERGY,0L)==37000000000L,"Conversion discarded excess native-capacity charge");
             check(LegacyWeaponItem.convert(tool,p)==tool,"Conversion ran again");
             var restored=ItemStack.parse(p.registryAccess(),tool.save(p.registryAccess())).orElseThrow();

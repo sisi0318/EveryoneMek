@@ -10,7 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.*;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
@@ -19,25 +18,17 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.*;
 
 public final class GearCombat {
-    public static final TagKey<Item> AMMO = TagKey.create(Registries.ITEM,ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,"rail_ammunition"));
     public static long joules(long fe){return EnergyUnit.FORGE_ENERGY.convertFrom(fe);}
     public static boolean pay(ItemStack stack,long fe){var tank=StorageUtils.getEnergyContainer(stack,0);long cost=joules(fe);
         return tank!=null&&tank.extract(cost,Action.SIMULATE,AutomationType.MANUAL)==cost&&tank.extract(cost,Action.EXECUTE,AutomationType.MANUAL)==cost;}
-    public static int ammo(ItemStack stack){return Math.clamp(stack.getOrDefault(CoreContent.RAIL_AMMO,0),0,64);}
-    public static int magazine(ItemStack stack){return 2+4*GearEffects.level(stack,GearUpgrade.MAGAZINE);}
-    public static void reload(ServerPlayer p,ItemStack stack){int current=ammo(stack),needed=Math.max(0,magazine(stack)-current);if(needed==0)return;
-        for(var slot:p.getInventory().items){if(!slot.is(AMMO))continue;int used=Math.min(needed,slot.getCount());slot.shrink(used);current+=used;needed-=used;if(needed==0)break;}
-        stack.set(CoreContent.RAIL_AMMO,current);p.getInventory().setChanged();p.displayClientMessage(CoreContent.text(current>0?"weapon.loaded":"weapon.no_ammo",current,magazine(stack)),true);
-    }
+    public static int recoveryTicks(ItemStack stack){return Math.max(2,10-2*GearEffects.level(stack,GearUpgrade.MAGAZINE));}
     private static boolean target(ServerPlayer p,LivingEntity entity){return entity!=p&&entity.isAlive()&&!entity.isSpectator()&&!entity.isAlliedTo(p)
           && (!(entity instanceof Player other)||p.canHarmPlayer(other)&&p.server.isPvpAllowed());}
     private static boolean visible(ServerPlayer p,Vec3 a,Vec3 b){var delta=b.subtract(a);return endLoaded(p,a,delta.normalize(),delta.length()).distanceToSqr(b)<.001&&p.level().clip(new ClipContext(a,b,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,p)).getType()==HitResult.Type.MISS;}
     private static Vec3 endLoaded(ServerPlayer p,Vec3 start,Vec3 direction,double range){Vec3 end=start;
         for(int i=1;i<=Math.ceil(range);i++){var next=start.add(direction.scale(Math.min(i,range)));if(!p.level().hasChunkAt(BlockPos.containing(next)))break;end=next;}return end;}
     public static boolean shoot(ServerPlayer p,ItemStack stack){
-        if(ammo(stack)==0){p.displayClientMessage(CoreContent.text("weapon.no_ammo"),true);return false;}
         if(!pay(stack,CoreConfig.RAIL_COST.get())){p.displayClientMessage(CoreContent.text("weapon.no_energy"),true);return false;}
-        stack.set(CoreContent.RAIL_AMMO,ammo(stack)-1);
         Vec3 start=p.getEyePosition(),end=endLoaded(p,start,p.getLookAngle(),Math.min(192,CoreConfig.RAIL_RANGE.get()+16*GearEffects.level(stack,GearUpgrade.FOCUS)));
         var hit=p.level().clip(new ClipContext(start,end,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,p));if(hit.getType()!=HitResult.Type.MISS)end=hit.getLocation();
         final Vec3 destination=end;

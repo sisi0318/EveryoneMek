@@ -12,19 +12,25 @@ import org.lwjgl.opengl.GL;
 
 /** Actual Meka-Tool form accents and combat GLSL in a hidden context; no Minecraft client. */
 public class VerifyGearShader {
-    static final int W=384,H=384;static int program;
+    static final int W=384,H=384;static int program;static boolean daylight;
     static void check(boolean ok,String message){if(!ok)throw new AssertionError(message);}
     static int compile(int type,String code){int s=glCreateShader(type);glShaderSource(s,code);glCompileShader(s);check(glGetShaderi(s,GL_COMPILE_STATUS)!=0,glGetShaderInfoLog(s));return s;}
     static void matrix(String name,Matrix4f m){glUniformMatrix4fv(glGetUniformLocation(program,name),false,m.get(new float[16]));}
     static byte[] draw(ByteBuffer data,boolean occlude){return draw(data,occlude,true);}
     static byte[] draw(ByteBuffer data,boolean occlude,boolean clear){int quads=data.remaining()/112;glBufferData(GL_ARRAY_BUFFER,data,GL_STATIC_DRAW);var indices=BufferUtils.createIntBuffer(quads*6);for(int q=0;q<quads;q++){int i=q*4;indices.put(i).put(i+1).put(i+2).put(i).put(i+2).put(i+3);}indices.flip();glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices,GL_STATIC_DRAW);boolean depthWrite=glGetBoolean(GL_DEPTH_WRITEMASK);
-        if(clear){glDepthMask(true);glClearColor(.035F,.045F,.055F,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        if(clear){glDepthMask(true);if(daylight)glClearColor(.52F,.70F,.92F,1);else glClearColor(.035F,.045F,.055F,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         if(occlude){glEnable(GL_SCISSOR_TEST);glScissor(0,0,W/2,H);glClearDepth(.1);glClear(GL_DEPTH_BUFFER_BIT);glClearDepth(1);glDisable(GL_SCISSOR_TEST);}}glDepthMask(depthWrite);glDrawElements(GL_TRIANGLES,quads*6,GL_UNSIGNED_INT,0L);var b=BufferUtils.createByteBuffer(W*H*4);glReadPixels(0,0,W,H,GL_RGBA,GL_UNSIGNED_BYTE,b);byte[] result=new byte[b.remaining()];b.get(result);return result;
     }
-    static ByteBuffer filter(ByteBuffer data,boolean body){var out=BufferUtils.createByteBuffer(data.limit());for(int i=0;i<data.limit();i+=112)if(((data.get(i+20)&255)==8)==body)for(int j=0;j<112;j++)out.put(data.get(i+j));return out.flip();}
+    static ByteBuffer filter(ByteBuffer data,int pass){var out=BufferUtils.createByteBuffer(data.limit());var quads=new java.util.ArrayList<Integer>();
+        for(int i=0;i<data.limit();i+=112)if(GearEffectGeometry.renderPass(data.get(i+20)&255)==pass)quads.add(i);
+        if(pass==1)quads.sort(java.util.Comparator.comparingDouble((Integer i)->{
+            float x=0,y=0,z=0;for(int v=0;v<4;v++){x+=data.getFloat(i+v*28);y+=data.getFloat(i+v*28+4);z+=data.getFloat(i+v*28+8);}return -(x*x+y*y+z*z);
+        }));
+        for(int i:quads)for(int j=0;j<112;j++)out.put(data.get(i+j));return out.flip();}
     static byte[] drawEffect(ByteBuffer data,boolean occlude){
-        glDepthMask(true);glDisable(GL_BLEND);draw(filter(data,true),occlude);
-        glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE);glDepthMask(false);return draw(filter(data,false),false,false);
+        glDepthMask(true);glDisable(GL_BLEND);draw(filter(data,0),occlude);
+        glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);glDepthMask(false);draw(filter(data,1),false,false);
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE);return draw(filter(data,2),false,false);
     }
     static void save(byte[] b,Path file)throws Exception{var image=new BufferedImage(W,H,BufferedImage.TYPE_INT_RGB);for(int y=0;y<H;y++)for(int x=0;x<W;x++){int i=(y*W+x)*4;image.setRGB(x,H-y-1,(b[i]&255)<<16|(b[i+1]&255)<<8|b[i+2]&255);}ImageIO.write(image,"png",file.toFile());}
     static ByteBuffer effect(int kind,float age,float phase){return effect(kind,age,phase,false);}
@@ -45,7 +51,9 @@ public class VerifyGearShader {
         for(int kind=0;kind<5;kind++){
             var data=effect(kind,kind==0?.75F:1.7F,0);var normal=drawEffect(data,false);var moving=drawEffect(effect(kind,kind==0?.9F:1.7F,1.1F),false);
             var blocked=drawEffect(effect(kind,kind==0?.75F:1.7F,0),true);int visible=0,changed=0;
-            for(int i=0;i<normal.length;i+=4){if((normal[i]&255)+(normal[i+1]&255)+(normal[i+2]&255)>90)visible++;if(java.lang.Math.abs((normal[i]&255)-(moving[i]&255))>4)changed++;}
+            for(int i=0;i<normal.length;i+=4){if((normal[i]&255)+(normal[i+1]&255)+(normal[i+2]&255)>90)visible++;
+                int difference=0;for(int c=0;c<3;c++)difference=java.lang.Math.max(difference,java.lang.Math.abs((normal[i+c]&255)-(moving[i+c]&255)));if(difference>4)changed++;
+            }
             save(normal,out.resolve("effect-"+kind+".png"));check(visible>15&&visible<W*H/5,"Blank or oversized effect "+kind+": "+visible);check(changed>10,"Frozen effect "+kind+": "+changed);
             for(int y=0;y<H;y++)for(int x=0;x<W/2;x++)check((blocked[(y*W+x)*4]&255)<15,"Effect ignored wall depth");
             save(normal,out.resolve("effect-"+kind+".png"));System.out.println("PASS effect "+kind+": "+data.limit()/112+" quads, "+visible+" visible pixels, animation and depth");
@@ -58,6 +66,19 @@ public class VerifyGearShader {
             save(front,out.resolve("shooter-"+kind+".png"));check(visible>(kind==0?30:500)&&maxY-minY>(kind==0?7:30),"Effect collapsed to a line from shooter's view: "+kind+" / "+visible+" / "+(maxY-minY));
             System.out.println("PASS shooter's perspective "+kind+": "+visible+" pixels, "+(maxY-minY)+" px high");
         }
+        daylight=true;
+        for(float age:new float[]{0,.8F,1.7F,3.5F,5.6F}){
+            var front=drawEffect(effect(1,age,age*.2F,true),false);int changed=0,white=0,green=0;
+            for(int i=0;i<front.length;i+=4){int r=front[i]&255,g=front[i+1]&255,b=front[i+2]&255;
+                if(java.lang.Math.max(java.lang.Math.abs(r-133),java.lang.Math.max(java.lang.Math.abs(g-179),java.lang.Math.abs(b-235)))>5)changed++;
+                if(r>245&&g>245&&b>245)white++;if(g>r+25&&g>b+5)green++;
+            }
+            save(front,out.resolve("slash-day-"+age+".png"));
+            check(changed>40&&changed<W*H/8,"Slash vanished or became a solid panel against the sky");
+            check(white<30,"Slash overexposed to a white sheet: "+white);if(age<2)check(green>15,"Slash lost its green cutting edge in daylight");
+            System.out.println("PASS daylight slash "+age+": "+changed+" silhouette pixels, "+white+" white pixels");
+        }
+        daylight=false;
         for(float length:new float[]{.1F,8,48,192})for(float age:new float[]{0,.08F,.5F,1.5F,4,8,14,15}){
             final float[] bounds={Float.MAX_VALUE,-Float.MAX_VALUE};final int[] count={0};
             GearEffectGeometry.shot((x,y,z,u,v,mat,power,a)->{count[0]++;check(mat!=2,"Rail still emits a continuous beam");if(mat==8){bounds[0]=java.lang.Math.min(bounds[0],z);bounds[1]=java.lang.Math.max(bounds[1],z);}},0,length,age,false);

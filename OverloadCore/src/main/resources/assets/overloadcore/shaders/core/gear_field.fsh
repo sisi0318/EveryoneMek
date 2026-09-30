@@ -25,11 +25,12 @@ void main() {
         light = mix(tint, vec3(0.87,1.0,0.96), core);
         alpha *= band;
         if (material == 3) {
-            alpha *= sin(clamp(flow.x,0.0,1.0) * 3.1415927);
-            light = mix(vec3(.06,.46,.24),vec3(.74,1.0,.84),smoothstep(.1,.75,flow.y));
-            float leading = 1.0-smoothstep(.025,.10,abs(flow.y-.78));
-            light = mix(light,vec3(.90,1.0,.94),leading*.85);
-            light *= 0.9 + 0.1 * sin(flow.x*12.0-phase*2.0);
+            float taper = sin(clamp(flow.x,0.0,1.0) * 3.1415927);
+            float leading = 1.0-smoothstep(.035,.16,abs(flow.y-.72));
+            float current = .5+.5*sin(flow.x*35.0-phase*3.0);
+            light = mix(vec3(.10,.55,.33),vec3(.38,.90,.62),leading);
+            light += vec3(.025,.10,.055)*current*leading;
+            alpha *= taper*(.60+.40*leading);
         } else if (material == 4 || material == 7) {
             float arc = abs(flow.y-.5-.22*sin(flow.x*32.0+phase*3.0));
             float filament = 1.0-smoothstep(.02,.06+fwidth(arc),arc);
@@ -41,8 +42,8 @@ void main() {
             }
         } else if (material == 5) {
             float pulse = .5+.5*sin(flow.x*18.84956-phase*2.0);
-            alpha *= .3+.7*pulse;
-            light *= .6+.4*powerAlpha.x;
+            alpha *= .45+.55*pulse;
+            light = mix(vec3(.025,.36,.22),vec3(.32,.88,.62),core*(.6+.4*pulse));
         } else if (material == 6) {
             vec2 p = flow*2.0-1.0;
             float r = length(p);
@@ -50,14 +51,15 @@ void main() {
             alpha = powerAlpha.y*(1.0-smoothstep(.08,1.0,r))*(.3+.7*spark);
             light = mix(vec3(1.0,.44,.07),vec3(1.0,.97,.8),1.0-smoothstep(0.0,.4,r));
         } else if (material == 8) {
-            // Opaque faceted steel projectile. Shading is supplied per face, with a hot copper base.
-            light = mix(vec3(.12,.15,.17),vec3(.64,.72,.75),powerAlpha.x);
-            light = mix(vec3(.46,.25,.10),light,smoothstep(0.0,.22,flow.x));
+            // Dense rail pulse with a dark center and a teal induction band.
+            light = mix(vec3(.09,.14,.15),vec3(.46,.62,.60),powerAlpha.x);
+            float collar = 1.0-smoothstep(.05,.12,abs(flow.x-.25));
+            light = mix(light,vec3(.18,.78,.48),collar*.8);
             alpha = 1.0;
         } else if (material == 9) {
-            // Compact cutting edge on the native Meka-Tool head, with a traveling charge highlight.
-            light = mix(vec3(.06,.48,.24),vec3(.72,1.0,.84),core*.55+wave*.45);
-            alpha *= smoothstep(0.0,.10,flow.x)*(1.0-smoothstep(.86,1.0,flow.x));
+            float crack = 1.0-smoothstep(.03,.10+fwidth(flow.y),abs(flow.y-.5-.10*sin(flow.x*28.0-phase*2.0)));
+            light = mix(vec3(.10,.45,.28),vec3(.30,.95,.57),core*.35+crack*.65);
+            alpha *= sin(clamp(flow.x,0.0,1.0)*3.1415927)*(.55+.45*crack);
         }
         if(alpha < .004) discard;
     }

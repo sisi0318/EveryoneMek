@@ -12,7 +12,7 @@ NAMES={
  'residual_reservoir':('旧式余雷蓄能单元','Retired Residual Reservoir Unit','已停用的旧式单元。','This old module has been retired.'),
  'resonant_discharge':('谐振放电单元','Resonant Discharge Unit','命中后额外耗电，向附近敌人释放连锁电弧。','Uses additional energy after a hit to arc toward nearby hostile targets.'),
  'charge_accelerator':('充能加速单元','Charge Accelerator Unit','缩短武器蓄力时间。','Shortens weapon charge time.'),
- 'rail_magazine':('磁轨弹仓单元','Rail Magazine Unit','每级增加四发弹仓容量。','Adds four magazine rounds per level.'),
+ 'rail_magazine':('磁轨复位单元','Rail Recovery Unit','每级缩短0.1秒射击恢复时间，最低0.1秒。','Shortens the delay after firing by 0.1 seconds per level, down to 0.1 seconds.'),
  'rail_focus':('磁轨聚焦单元','Rail Focus Unit','每级提高十六格射程。','Adds sixteen blocks of range per level.'),
  'rail_piercing':('磁轨贯穿单元','Rail Piercing Unit','每级多贯穿一个目标，后续伤害递减；不能穿墙。','Pierces one additional target per level with diminishing damage. Does not pass through walls.'),
  'blade_field':('刃场扩展单元','Blade Field Unit','提高蓄力斩击的距离与伤害。','Increases the reach and damage of charged slashes.'),
@@ -39,7 +39,7 @@ def combat(write):
  (RES/'overloadcore.enumextensions.json').unlink(missing_ok=True)
  write('assets/overloadcore/models/item/module_combat_form.json',{'parent':'minecraft:item/generated','textures':{'layer0':'mekanism:item/module_base','layer1':'overloadcore:item/module_resonant_discharge_panel'}})
  write('data/overloadcore/recipe/module_combat_form.json',{'type':'minecraft:crafting_shaped','pattern':['APA','CBC','AEA'],'key':{k:{'item':v} for k,v in {'A':'mekanism:alloy_atomic','P':'mekanism:pellet_polonium','C':'mekanism:ultimate_control_circuit','B':'mekanism:module_base','E':'mekanism:energy_tablet'}.items()},'result':{'id':'overloadcore:module_combat_form'}})
- write('data/overloadcore/tags/item/rail_ammunition.json',{'replace':False,'values':['minecraft:iron_nugget']})
+ (RES/'data/overloadcore/tags/item/rail_ammunition.json').unlink(missing_ok=True)
  write('data/overloadcore/damage_type/rail.json',{'message_id':'overloadcore.rail','scaling':'never','exhaustion':.1})
  write('data/minecraft/tags/damage_type/is_projectile.json',{'replace':False,'values':['overloadcore:rail']})
 
@@ -71,10 +71,8 @@ def generate(write):
  for k,(z,e,zd,ed) in NAMES.items():pairs['module.overloadcore.'+k]=(z,e);pairs['description.overloadcore.'+k]=(zd,ed)
  for k,pair in {
   'gear.energy':('储能：%s / %s','Stored energy: %s / %s'),
-  'weapon.rail_hint':('按住右键蓄力，松开发射。潜行右键装填铁粒。','Hold use to charge; release to fire. Sneak-use to load iron nuggets.'),
-  'weapon.blade_hint':('有电时强化挥砍；按住右键蓄力，松开释放刃场。','Powered strikes deal extra damage. Hold use, then release a charged blade field.'),
-  'weapon.magazine':('弹仓：%s / %s','Magazine: %s / %s'), 'weapon.charge':('蓄力时间：%s 秒','Charge time: %s s'),
-  'weapon.loaded':('已装填：%s / %s','Loaded: %s / %s'),'weapon.no_ammo':('缺少弹药，请携带铁粒','No ammunition; carry iron nuggets'),'weapon.no_energy':('武器电量不足','Weapon energy too low'),
+  'weapon.charge':('蓄力时间：%s 秒','Charge time: %s s'),
+  'weapon.no_energy':('武器电量不足','Weapon energy too low'),
   'ward.capacitor_hud':('护命电容：%s FE','Ward capacitor: %s FE'),'hud.compensation':('磁荷补偿：-%s','Magnetic offset: -%s'),
  }.items():pairs['overloadcore.'+k]=pair
  pairs.update({'item.overloadcore.rail_lance':('Meka工具','Meka-Tool'),'item.overloadcore.thunder_blade':('Meka工具','Meka-Tool'),'death.attack.overloadcore.rail':('%s被磁轨弹贯穿','%s was pierced by a rail slug'),'death.attack.overloadcore.rail.player':('%s被%s的磁轨弹贯穿','%s was pierced by %s\'s rail slug')})
@@ -87,7 +85,7 @@ def generate(write):
   'overloadcore.combat.ranged':('远程形态','Ranged form'),
   'overloadcore.combat.selected':('形态：%s','Form: %s'),
   'overloadcore.combat.melee_hint':('按住右键蓄力，松开释放月牙斩击。','Hold use to charge; release a crescent slash.'),
-  'overloadcore.combat.ranged_hint':('按住右键蓄力，松开发射磁轨弹。空仓自动装填铁粒。','Hold use to charge; release a rail slug. An empty magazine reloads iron nuggets automatically.'),
+  'overloadcore.combat.ranged_hint':('按住右键蓄力，松开发射磁轨脉冲，仅消耗电量。','Hold use to charge; release a rail pulse using energy only.'),
   'overloadcore.combat.controls':('使用Mek模式菜单切换形态；潜行右键使用原工具功能。','Switch forms with the Mek mode menu; sneak-use retains the original tool action.'),
  })
  print('Generated native Meka-Tool combat module and MekaSuit attachments.')

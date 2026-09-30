@@ -32,11 +32,6 @@ public final class MekaCombat {
         if(!level.isClientSide)LegacyWeaponItem.feedReserve(stack);
         long cost=GearCombat.joules(form==CombatModule.Form.RANGED?CoreConfig.RAIL_COST.get():CoreConfig.BLADE_BURST_COST.get());
         if(energy(stack)<cost){if(!level.isClientSide)player.displayClientMessage(CoreContent.text("weapon.no_energy"),true);return InteractionResultHolder.fail(stack);}
-        if(form==CombatModule.Form.RANGED&&GearCombat.ammo(stack)==0&&player instanceof ServerPlayer server){
-            GearCombat.reload(server,stack);if(GearCombat.ammo(stack)==0)return InteractionResultHolder.fail(stack);
-        }
-        if(level.isClientSide&&form==CombatModule.Form.RANGED&&GearCombat.ammo(stack)==0&&player.getInventory().items.stream().noneMatch(s->s.is(GearCombat.AMMO)))
-            return InteractionResultHolder.fail(stack);
         if(!level.isClientSide)USES.put(player,new Use(stack,form,hand,level.getGameTime(),chargeTicks(stack,form)));
         player.startUsingItem(hand);return InteractionResultHolder.consume(stack);
     }
@@ -46,7 +41,7 @@ public final class MekaCombat {
         if(use==null||use.stack!=stack||player.getItemInHand(use.hand)!=stack||form(stack)!=use.form||!player.isAlive()||player.isSpectator()
             ||level.getGameTime()-use.start<use.charge||USE_DURATION-remaining<use.charge||player.getCooldowns().isOnCooldown(stack.getItem()))return;
         boolean fired=use.form==CombatModule.Form.RANGED?GearCombat.shoot(player,stack):GearCombat.burst(player,stack);
-        if(fired)player.getCooldowns().addCooldown(stack.getItem(),use.form==CombatModule.Form.RANGED?10:16);
+        if(fired)player.getCooldowns().addCooldown(stack.getItem(),use.form==CombatModule.Form.RANGED?GearCombat.recoveryTicks(stack):16);
     }
     public static void cancel(Player player){USES.remove(player);if(player.isUsingItem()&&player.getUseItem().is(MekanismItems.MEKA_TOOL))player.stopUsingItem();}
     @net.neoforged.bus.api.SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event){
@@ -62,7 +57,6 @@ public final class MekaCombat {
         event.getToolTip().add(CoreContent.text("combat.selected",form.getTextComponent()));
         event.getToolTip().add(CoreContent.text(form==CombatModule.Form.RANGED?"combat.ranged_hint":"combat.melee_hint"));
         event.getToolTip().add(CoreContent.text("combat.controls"));
-        if(form==CombatModule.Form.RANGED)event.getToolTip().add(CoreContent.text("weapon.magazine",GearCombat.ammo(stack),GearCombat.magazine(stack)));
     }
     @net.neoforged.bus.api.SubscribeEvent public static void logout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event){cancel(event.getEntity());}
     private MekaCombat(){}
