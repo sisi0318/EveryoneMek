@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.26，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.26.jar`。
+- 0.1.0-alpha.27，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.27.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -36,6 +36,7 @@
 - TrainingTargetRenderer单独管理模型、18tick浮字和近距离准星读数。浮字最多一条／靶、32格内、Font.DisplayMode.NORMAL，不能用穿墙字体；精准标记在2.1格，伤害浮字从2.32格上移避免重叠。反馈音最短间隔3tick。世界模型随控制器朝向，材质12表示轮廓扫描及命中强度，13用于靶心／底环。
 - TrainingScreen保留原Mek控件，230×270；物品栏标签(28,174)、菜单玩家槽起点(29,185)。状态／两个主读数／累计统计分开；无命中显示“—”，重置按钮等待服务器零值才显示确认。status=4红石暂停，5生成失败重试，不合并为关闭。
 - 56项GameTest通过，既有靶场用例增加真实伤害→显示字段→原生同步快照、无效命中、同tick合并、菜单重置和新槽位坐标检查。隐藏GL实测87面投影、受击状态、动画、墙体遮挡及亮天空预览；未启动客户端，实际UI／声音仍由用户验收。
+- alpha.27用户截图出现头顶仅背景无文字。1.21.1 Font.StringRenderOutput.finish把背景白字形放在局部z=+.01，普通字形z=0；NORMAL字体写深度，背景先于其他字形批次绘制时会遮住文字。TrainingTargetRenderer改为drawInBatch(shadow=true, NORMAL, background=0)，原生主字形由SHADOW_OFFSET前移+.03，不用SEE_THROUGH解决遮字。VerifyTrainingText用真实原版文字shader／数字图集复现旧背景故障，并检查两种顺序、2.5／8格和墙体深度。classes／jar与专项隐藏GL通过，未重复服务端测试或启动客户端；显示计时与伤害逻辑未改。
 
 ## 当前 MekaTool 武器约定
 

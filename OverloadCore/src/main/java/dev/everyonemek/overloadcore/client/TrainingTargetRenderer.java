@@ -25,7 +25,9 @@ public final class TrainingTargetRenderer extends EntityRenderer<TrainingTarget>
             if(alpha>8){
                 Component text=CoreContent.text("training.hit",TrainingReadout.number(target.feedbackDamage()));
                 pose.pushPose();pose.translate(0,2.32+age*.018,0);pose.mulPose(entityRenderDispatcher.cameraOrientation());pose.scale(.024F,-.024F,.024F);
-                getFont().drawInBatch(text,-getFont().width(text)/2F,0,(alpha<<24)|0xE9FFC1,false,pose.last().pose(),buffers,Font.DisplayMode.NORMAL,(alpha/3)<<24,LightTexture.FULL_BRIGHT);
+                // Font's filled background sits in front of the glyphs and can occlude later atlas batches.
+                // Native text shadow separates the glyph depths without a depth-writing background rectangle.
+                getFont().drawInBatch(text,-getFont().width(text)/2F,0,(alpha<<24)|0xE9FFC1,true,pose.last().pose(),buffers,Font.DisplayMode.NORMAL,0,LightTexture.FULL_BRIGHT);
                 pose.popPose();
             }
         }

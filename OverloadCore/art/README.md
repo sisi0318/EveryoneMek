@@ -87,3 +87,7 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 原控制器材质不变。训练体使用87面缓存网格，增加分段手臂、腰带、单面胸前靶心、投射底环和连接线；靶心仅留一面以避免半透明前后两圈重叠。原生朝向跟随控制器，局部shader负责轮廓扫描和短暂受击亮起；关闭shader后仍保留几何与颜色反馈。无需新位图素材。
 
 VerifyGearShader输出tactical-7.png、training-hit.png、training-day.png、training-day-hit.png，检查完整底环、受击状态、明暗背景与深度。保存的[待机预览](training-idle-preview.png)和[命中预览](training-hit-preview.png)来自实际几何／GLSL离线渲染，不是游戏内截图。
+
+### alpha.27 浮字深度修复
+
+伤害浮字改用原生文字阴影，去掉深度写入的背景矩形。`tools/VerifyTrainingText.java` 从当前Minecraft资源JAR读取文字shader和数字图集，在隐藏GL中复现原背景遮字，检查修复后的批次顺序与墙体遮挡；输出到`build/training-text-check/`。上游字体仅供本地验证，不复制到运行资源或美术目录。
