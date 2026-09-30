@@ -5,7 +5,6 @@ license="MIT"
 modId="overloadcore"
 version="${version}"
 displayName="Overload Core"
-enumExtensions="overloadcore.enumextensions.json"
 authors="EveryoneMek"
 description='''A permanently bound industrial core with Mekanism curses and controlled production benefits.'''
 [[mixins]]

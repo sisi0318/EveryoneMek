@@ -12,7 +12,7 @@ public final class CoreConfig {
     public static final java.util.List<ModConfigSpec.IntValue> COUPLING_RATES;
     public static final ModConfigSpec.IntValue HEAT_SINK_COST_FE, HEAT_SINK_PER_LEVEL, MAGNETIC_COST_FE, MAGNETIC_PER_LEVEL;
     public static final ModConfigSpec.IntValue CAPACITOR_CHARGES, GEAR_CHARGE_RATE, AFTERGUARD_HITS, AFTERGUARD_TICKS;
-    public static final ModConfigSpec.IntValue RAIL_COST, RAIL_CHARGE, RAIL_RANGE, BLADE_COST, BLADE_BURST_COST, BLADE_CHARGE, ARC_COST;
+    public static final ModConfigSpec.IntValue RAIL_COST, RAIL_CHARGE, RAIL_RANGE, BLADE_BURST_COST, BLADE_CHARGE, ARC_COST;
     public static final ModConfigSpec.DoubleValue RAIL_DAMAGE, BLADE_DAMAGE, ARC_DAMAGE;
     static {
         var b = new ModConfigSpec.Builder();
@@ -39,7 +39,6 @@ public final class CoreConfig {
         RAIL_CHARGE = b.defineInRange("railChargeTicks", 32, 8, 200);
         RAIL_RANGE = b.defineInRange("railRange", 48, 8, 128);
         RAIL_DAMAGE = b.defineInRange("railDamage", 32D, 1D, 10000D);
-        BLADE_COST = b.defineInRange("bladeHitFE", 4000, 1, 100000000);
         BLADE_BURST_COST = b.defineInRange("bladeBurstFE", 25000, 1, 100000000);
         BLADE_CHARGE = b.defineInRange("bladeChargeTicks", 24, 8, 200);
         BLADE_DAMAGE = b.defineInRange("bladeDamage", 18D, 4D, 10000D);

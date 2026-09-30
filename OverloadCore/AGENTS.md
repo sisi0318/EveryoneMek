@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.21，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.21.jar`。
+- 0.1.0-alpha.22，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.22.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -18,6 +18,17 @@
 - 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_mek.cjs` 仅设置背景 alpha，不更改 RGB。保护实际中性深灰轮廓包围的盾面，绿色雷弧不能被算入盾面跨度；不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
 
+## alpha.22 当前武器约定
+
+用户明确改为给原 MekaTool 安装战斗模块获得近战／远程双形态，并移除自绘剑枪。下面alpha.17–21的独立武器记录只作历史，不能恢复这些独立装备。
+
+- CombatModule 是原生 ModuleData＋ModuleEnumConfig，通过IMC只支持MekaTool，原改造站安装／拆卸，原径向菜单与配置窗口切换。新模块最大1个；原武器升级目标改为MekaTool。普通近战沿用原攻击增幅，原采掘、农耕不接管。潜行右键交回原工具；远程只在空仓自动装填。
+- MekaToolCombatMixin 仅在模块启用且未潜行时接管原use，并补充目标类原本继承的useDuration／releaseUsing。MekaCombat的弱身份玩家会话锁定实际栈、手、形态、开始tick与所需时长；服务端释放时二次验证，原生模式切换直接取消，禁用／换物品也停止。不要允许用近战短蓄力切换为远程绕过时长。
+- 能量只扣StorageUtils取得的原生容器；新MekaTool不注册GearEnergy能力。旧rail_lance／thunder_blade仅作为LegacyWeaponItem读取旧存档，没有配方、创造栏、自绘模型或战斗方法。背包／副手实际栈替换为原MekaTool并保留模块／弹药／组件。GEAR_ENERGY仅作迁移余量，实际insert后扣余量，耗尽移除，不伪造超过原生容量的储能。
+- GearRenderer只做MekaTool局部shader与世界战斗效果，删除WeaponItem、GearGlowMesh、GearPose、GearArmPoses及枚举扩展。MekaToolRenderMixin在ItemRenderer.render最后一个popPose前绘制，放client列表；MekaToolAnchor对应10.7.19.85原左右OBJ，枪口方向是模型-Y。不要注册客户端扩展覆盖Mek原物品renderer或手持变换。
+- generate_equipment维护combat模块配方、旧ID的原MekaTool模型引用、模块图标与防具外装，不再生成枪剑几何。VerifyMekaToolContract检查原ItemRenderer方法／唯一popPose、OBJ工具头与FOV，VerifyGearShader保留局部形态和世界效果。不得把原OBJ或贴图复制进JAR。
+- 验证：50项服务端GameTest通过，包括真实改造站tick安装／移除、原径向模式与采掘菜单并存、真实按住使用／提前释放／换形态取消、原生电量与弹药、超容量旧电量守恒及副手迁移。客户端字节码与原OBJ锚点检查、隐藏GL效果检查通过；未启动游戏客户端。
+
 ## 实现入口与数据契约
 
 - alpha.19用户明确：过载核心不需要升级；雷印可正常手动摘下，只用Mek原改造站。已删除ServiceMenu/ServiceScreen/GearMenus及“饰”入口，不再替换原GUI。真实Curios摘下释放seal，原装备槽接收雷印、原tick安装/耗能、原removeModule返还，重新佩戴按新组件登记。不要恢复佩戴中改装页面或给核心加模块支持。
@@ -30,9 +41,9 @@
 - GearEffects在原Workplace半秒采样处处理热沉／磁荷，按真实盔甲储能先模拟再扣款；金属load保留真实值，compensation单独同步，heavy继续用原恢复滞后。模块仅放背包、禁用或缺电不得生效。
 - GearEnergy实现IMekanismStrictEnergyHandler和IEnergyContainer，通过gear_energy保存唯一J余额；FE复用ForgeEnergyIntegration。WardCustody.energyAccess只读核对live身份、seal、完整快照及真实槽，SIMULATE不修复；合法能量／模块改动走update，只允许MODULE_CONTAINER与GEAR_ENERGY并同步新快照。直接写组件仍被原Mixin拦截；不能放宽整个ItemStack防护。
 - WardPower先预检电容，再检查剩余设备费用。设备不足时电容不扣；全由电容支付时不扫描区块。设备预检通过才扣电容与原生设备；设备权限／留电／极限模式沿用原规则。AFTERGUARD每级增加次数／时限，但原wardShieldHits=0优先。WardRuntime状态附电容读数。
-- WeaponItem/GearCombat：新枪用rail_ammo计弹仓，GEAR_ENERGY计能量；蓄力/冷却服务器复核，reload消耗rail_ammunition标签物品。射线先限制已加载区块，再裁墙；贯穿实体按距离排序。刃场最多16候选，谐振只伤敌对/交战者、最多模块等级个。MekaToolCombatMixin只在原hurtEnemy TAIL追加电弧，二次hurt不会再触发自身。WeaponEnergyModuleMixin只取消新WeaponItem在原ModuleEnergyUnit.onRemoved中的裁能，其他Mek装备不变。
-- GearRenderer为客户端：机壳使用烘焙模型，shader发光面使用静态GearGlowMesh，状态编码顶点，禁止逐物品改uniform。材质分类flat int防透视串色；1.21.1 fog_distance签名为(vec3,int)，不能套旧三参数。战斗队列最多96组／16tick，GearEffectGeometry分别绘制短弹迹、刃场、电弧和命中闪光，按线段距离裁剪，退出清理强世界引用；开关与静态回退由GearVisualConfig控制。MekaSuit外装用原ModuleModelSpec与OBJ，组名必须同时含spec名和body/left_leg/right_leg，led组沿原发光管线。
-- 资源统一由generate_resources调用generate_equipment生成：11个新增模块各自几何、两种武器的base/fallback/动态面、外装OBJ和语言配方；surface_boxes对壳体+能量部件一起求外表面，再拆分渲染，避免共面闪烁。只复用现有原创16px位图，不新增脚本绘制贴图。预览和原稿不进JAR；按实际材料归一化检查配方唯一性，不能只比较字母pattern。
+- 历史 alpha.17–21 WeaponItem/GearCombat：新枪用rail_ammo计弹仓，GEAR_ENERGY计能量；蓄力/冷却服务器复核，reload消耗rail_ammunition标签物品。射线先限制已加载区块，再裁墙；贯穿实体按距离排序。刃场最多16候选，谐振只伤敌对/交战者、最多模块等级个。MekaToolCombatMixin只在原hurtEnemy TAIL追加电弧，二次hurt不会再触发自身。WeaponEnergyModuleMixin只取消新WeaponItem在原ModuleEnergyUnit.onRemoved中的裁能，其他Mek装备不变。
+- 历史 alpha.17–21 GearRenderer为客户端：机壳使用烘焙模型，shader发光面使用静态GearGlowMesh，状态编码顶点，禁止逐物品改uniform。材质分类flat int防透视串色；1.21.1 fog_distance签名为(vec3,int)，不能套旧三参数。战斗队列最多96组／16tick，GearEffectGeometry分别绘制短弹迹、刃场、电弧和命中闪光，按线段距离裁剪，退出清理强世界引用；开关与静态回退由GearVisualConfig控制。MekaSuit外装用原ModuleModelSpec与OBJ，组名必须同时含spec名和body/left_leg/right_leg，led组沿原发光管线。
+- 历史 alpha.17–21 资源统一由generate_resources调用generate_equipment生成：11个新增模块各自几何、两种武器的base/fallback/动态面、外装OBJ和语言配方；surface_boxes对壳体+能量部件一起求外表面，再拆分渲染，避免共面闪烁。只复用现有原创16px位图，不新增脚本绘制贴图。预览和原稿不进JAR；按实际材料归一化检查配方唯一性，不能只比较字母pattern。
 
 - alpha.16新增gear/EquipmentModules与ResidualCouplingUnit；ModuleDeferredRegister + MekanismIMC只注册胸甲支持，原生ItemModule提供支持列表／4级上限与描述，安装保存由Mek MODULE_CONTAINER负责。高速充能只在CoreBinding.charge唯一入口执行，模块tick不得再次扣电；先验证真实核心槽及已穿戴胸甲，再根据启用等级优先充胸甲。只按实际接收量扣原余雷，已转移量占用原基础预算，满胸甲仅保留剩余基础预算供给其他物品。基础范围改为recovery_chargeable标签（默认原5件），不遍历任意Curios充电，后续分配交原ModuleChargeDistributionUnit。四级4k/16k/64k/256k FE/t可配置，原100k FE缓冲不变，不保证瞬时达到配置上限。
 - alpha.16 build、41项GameTest、3项JUnit与JAR检查通过；EquipmentModuleGameTests覆盖真实改装站tick、安装4退回4余1、支持列表／序列化、四级实际能量和满仓/零余量、关模块/放背包/无绑定、原生充电分配实际玩家tick守恒。改装站无侧面ItemHandler也是只读：测试必须提供真实Direction，不能把null拒绝当作模块不能安装。未启动客户端。

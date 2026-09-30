@@ -2,7 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "APA",
-    "ECE",
+    "CBC",
     "AEA"
   ],
   "key": {
@@ -12,14 +12,17 @@
     "P": {
       "item": "mekanism:pellet_polonium"
     },
-    "E": {
-      "item": "mekanism:energy_tablet"
-    },
     "C": {
       "item": "mekanism:ultimate_control_circuit"
+    },
+    "B": {
+      "item": "mekanism:module_base"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
     }
   },
   "result": {
-    "id": "overloadcore:thunder_blade"
+    "id": "overloadcore:module_combat_form"
   }
 }

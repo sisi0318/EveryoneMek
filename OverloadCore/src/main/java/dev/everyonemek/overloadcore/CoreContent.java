@@ -33,15 +33,17 @@ public final class CoreContent {
     public static final DeferredItem<mekanism.common.item.ItemModule> COUPLING_MODULE = ITEMS.register("module_residual_coupling_unit",
           () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.RESIDUAL_COUPLING,
                 new Item.Properties().rarity(Rarity.UNCOMMON)));
-    public static final DeferredItem<dev.everyonemek.overloadcore.gear.WeaponItem> RAILGUN = ITEMS.register("rail_lance", () -> new dev.everyonemek.overloadcore.gear.WeaponItem(true));
-    public static final DeferredItem<dev.everyonemek.overloadcore.gear.WeaponItem> BLADE = ITEMS.register("thunder_blade", () -> new dev.everyonemek.overloadcore.gear.WeaponItem(false));
+    public static final DeferredItem<mekanism.common.item.ItemModule> COMBAT_MODULE=ITEMS.register("module_combat_form",
+        ()->new mekanism.common.item.ItemModule(()->dev.everyonemek.overloadcore.gear.EquipmentModules.COMBAT,new Item.Properties().rarity(Rarity.RARE)));
+    public static final DeferredItem<dev.everyonemek.overloadcore.gear.LegacyWeaponItem> RAILGUN = ITEMS.register("rail_lance", () -> new dev.everyonemek.overloadcore.gear.LegacyWeaponItem(true));
+    public static final DeferredItem<dev.everyonemek.overloadcore.gear.LegacyWeaponItem> BLADE = ITEMS.register("thunder_blade", () -> new dev.everyonemek.overloadcore.gear.LegacyWeaponItem(false));
     public static final java.util.Map<dev.everyonemek.overloadcore.gear.GearUpgrade, DeferredItem<mekanism.common.item.ItemModule>> UPGRADE_ITEMS =
           new java.util.EnumMap<>(dev.everyonemek.overloadcore.gear.GearUpgrade.class);
     static {
         for (var upgrade : dev.everyonemek.overloadcore.gear.GearUpgrade.values()) UPGRADE_ITEMS.put(upgrade, ITEMS.register("module_" + upgrade.id,
               () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.get(upgrade), new Item.Properties().rarity(Rarity.RARE))));
         TABS.register("core", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.overloadcore"))
-              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); output.accept(RAILGUN); output.accept(BLADE); }).build());
+              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); output.accept(COMBAT_MODULE); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); }).build());
     }
     public static net.minecraft.network.chat.MutableComponent text(String key, Object... args) { return Component.translatable("overloadcore." + key, args); }
     public static void register(IEventBus bus) { ITEMS.register(bus); COMPONENTS.register(bus); TABS.register(bus); }

@@ -40,7 +40,6 @@
     "NetworkAccess",
     "EnergyNetworkMixin",
     "MekaToolCombatMixin",
-    "WeaponEnergyModuleMixin",
     "FluidNetworkMixin",
     "ChemicalNetworkMixin",
     "EnergyTargetMixin",
@@ -51,7 +50,8 @@
     "LongPullMixin"
   ],
   "client": [
-    "MachineSoundMixin"
+    "MachineSoundMixin",
+    "MekaToolRenderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

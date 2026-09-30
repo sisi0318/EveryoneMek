@@ -110,8 +110,18 @@
   "overloadcore.weapon.no_energy": "Weapon energy too low",
   "overloadcore.ward.capacitor_hud": "Ward capacitor: %s FE",
   "overloadcore.hud.compensation": "Magnetic offset: -%s",
-  "item.overloadcore.rail_lance": "Rail Lance",
-  "item.overloadcore.thunder_blade": "Thunder-Forged Blade",
+  "item.overloadcore.rail_lance": "Meka-Tool",
+  "item.overloadcore.thunder_blade": "Meka-Tool",
   "death.attack.overloadcore.rail": "%s was pierced by a rail slug",
-  "death.attack.overloadcore.rail.player": "%s was pierced by %s's rail slug"
+  "death.attack.overloadcore.rail.player": "%s was pierced by %s's rail slug",
+  "module.overloadcore.combat_form": "Combat Form Unit",
+  "description.overloadcore.combat_form": "Adds melee and ranged forms to the Meka-Tool. Select a form in the mode menu, then hold use to charge.",
+  "module.overloadcore.combat_mode": "Combat form",
+  "overloadcore.combat.form": "Combat form",
+  "overloadcore.combat.melee": "Melee form",
+  "overloadcore.combat.ranged": "Ranged form",
+  "overloadcore.combat.selected": "Form: %s",
+  "overloadcore.combat.melee_hint": "Hold use to charge; release a crescent slash.",
+  "overloadcore.combat.ranged_hint": "Hold use to charge; release a rail slug. An empty magazine reloads iron nuggets automatically.",
+  "overloadcore.combat.controls": "Switch forms with the Mek mode menu; sneak-use retains the original tool action."
 }

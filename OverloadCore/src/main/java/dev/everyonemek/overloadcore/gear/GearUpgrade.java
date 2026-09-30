@@ -8,12 +8,12 @@ public enum GearUpgrade {
     AFTERGUARD("afterguard_stabilizer", 4, 4),
     // Decode old stacks only. No installation target, recipe or creative entry.
     RESERVOIR("residual_reservoir", 4, 0),
-    RESONANCE("resonant_discharge", 4, 16 | 64),
-    ACCELERATOR("charge_accelerator", 4, 32 | 64),
-    MAGAZINE("rail_magazine", 4, 32),
-    FOCUS("rail_focus", 4, 32),
-    PIERCING("rail_piercing", 3, 32),
-    BLADE_FIELD("blade_field", 3, 64);
+    RESONANCE("resonant_discharge", 4, 16),
+    ACCELERATOR("charge_accelerator", 4, 16),
+    MAGAZINE("rail_magazine", 4, 16),
+    FOCUS("rail_focus", 4, 16),
+    PIERCING("rail_piercing", 3, 16),
+    BLADE_FIELD("blade_field", 3, 16);
 
     public final String id;
     public final int maximum, targets;

@@ -14,6 +14,9 @@ public final class EquipmentModules {
     public static final ModuleRegistryObject<ResidualCouplingUnit> RESIDUAL_COUPLING = MODULES.registerInstanced(
           "residual_coupling_unit", ResidualCouplingUnit::new, () -> CoreContent.COUPLING_MODULE,
           builder -> builder.maxStackSize(4).rendersHUD());
+    public static final ModuleRegistryObject<CombatModule> COMBAT=MODULES.register("combat_form",CombatModule::new,()->CoreContent.COMBAT_MODULE,
+        b->b.handlesModeChange().rendersHUD().addConfig(mekanism.api.gear.config.ModuleEnumConfig.create(CombatModule.FORM,CombatModule.Form.MELEE),
+            mekanism.api.gear.config.ModuleEnumConfig.codec(CombatModule.Form.CODEC),mekanism.api.gear.config.ModuleEnumConfig.streamCodec(CombatModule.Form.STREAM_CODEC)));
     static {
         for (var upgrade : GearUpgrade.values()) UPGRADES.put(upgrade, MODULES.registerInstanced(upgrade.id,
               () -> new GearModule(upgrade), () -> CoreContent.UPGRADE_ITEMS.get(upgrade), b -> b.maxStackSize(upgrade.maximum)));
@@ -28,10 +31,7 @@ public final class EquipmentModules {
     private static void enqueue(InterModEnqueueEvent event) {
         MekanismIMC.addMekaSuitBodyarmorModules(RESIDUAL_COUPLING);
         container(CoreContent.WARD, "overloadcore_ward", 4);
-        container(CoreContent.RAILGUN, "overloadcore_rail", 32);
-        container(CoreContent.BLADE, "overloadcore_blade", 64);
-        net.neoforged.fml.InterModComms.sendTo("mekanism", "overloadcore_rail", () -> mekanism.common.registries.MekanismModules.ENERGY_UNIT);
-        net.neoforged.fml.InterModComms.sendTo("mekanism", "overloadcore_blade", () -> mekanism.common.registries.MekanismModules.ENERGY_UNIT);
+        MekanismIMC.addMekaToolModules(COMBAT);
         for (var upgrade : GearUpgrade.values()) {
             var module = get(upgrade);
             if ((upgrade.targets & 1) != 0) MekanismIMC.addMekaSuitBodyarmorModules(module);

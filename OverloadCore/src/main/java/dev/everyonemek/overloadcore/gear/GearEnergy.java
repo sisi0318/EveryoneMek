@@ -30,7 +30,7 @@ public final class GearEnergy implements IMekanismStrictEnergyHandler, IEnergyCo
             if (n == 0) return 0;
             return EnergyUnit.FORGE_ENERGY.convertFrom((long) CoreConfig.WARD_COST_FE.get() * n * CoreConfig.CAPACITOR_CHARGES.get());
         }
-        if (stack.getItem() instanceof WeaponItem weapon) {
+        if (stack.getItem() instanceof LegacyWeaponItem weapon) {
             int n = energyUnits(stack);
             return EnergyUnit.FORGE_ENERGY.convertFrom((weapon.rail ? 2000000L : 1000000L) << n);
         }
@@ -55,7 +55,7 @@ public final class GearEnergy implements IMekanismStrictEnergyHandler, IEnergyCo
     @Override public void setEnergy(long energy) { write(energy); }
     @Override public long insert(long amount, Action action, AutomationType type) {
         if (amount <= 0 || !available()) return amount;
-        long rate = CoreConfig.GEAR_CHARGE_RATE.get().longValue() << (stack.getItem() instanceof WeaponItem ? energyUnits(stack) : 0);
+        long rate = CoreConfig.GEAR_CHARGE_RATE.get().longValue() << (stack.getItem() instanceof LegacyWeaponItem ? energyUnits(stack) : 0);
         long accepted = Math.min(amount, Math.min(getNeeded(), EnergyUnit.FORGE_ENERGY.convertFrom(rate)));
         return accepted > 0 && (!action.execute() || write(getEnergy() + accepted)) ? amount - accepted : amount;
     }

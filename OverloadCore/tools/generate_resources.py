@@ -32,8 +32,8 @@ def generate(mek_jar):
                      'CachedRecipeAccess', 'MachineEnergyOwner', 'RecipeMonitorMixin', 'CachedEnergyMixin', 'RecipeOutputMixin',
                      'MachineTickMixin', 'TransmitterTickMixin', 'ManualEnergyMixin', 'MachineDataMixin', 'PlayerSprintMixin', 'GeneratorMixin',
                      'GeneratorHeatMixin', 'GeneratorTurbineMixin', 'GeneratorFusionMixin', 'NetworkAccess', 'EnergyNetworkMixin',
-                     'MekaToolCombatMixin', 'WeaponEnergyModuleMixin', 'FluidNetworkMixin', 'ChemicalNetworkMixin', 'EnergyTargetMixin', 'FluidTargetMixin', 'ChemicalTargetMixin', 'ItemTransportMixin', 'FluidPullMixin', 'LongPullMixin'],
-          'client': ['MachineSoundMixin'], 'injectors': {'defaultRequire': 1}})
+                     'MekaToolCombatMixin', 'FluidNetworkMixin', 'ChemicalNetworkMixin', 'EnergyTargetMixin', 'FluidTargetMixin', 'ChemicalTargetMixin', 'ItemTransportMixin', 'FluidPullMixin', 'LongPullMixin'],
+          'client': ['MachineSoundMixin', 'MekaToolRenderMixin'], 'injectors': {'defaultRequire': 1}})
     write(f'data/{MOD}/curios/slots/overload_core.json', {'size': 1, 'operation': 'SET', 'order': 30, 'icon': 'curios:slot/empty_necklace_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
     write(f'data/{MOD}/curios/slots/overload_ward.json', {'size': 1, 'operation': 'SET', 'order': 31, 'icon': 'curios:slot/empty_bracelet_slot', 'add_cosmetic': False, 'drop_rule': 'ALWAYS_KEEP'})
     write(f'data/{MOD}/curios/entities/player.json', {'entities': ['minecraft:player'], 'slots': ['overload_core', 'overload_ward']})

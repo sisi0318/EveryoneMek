@@ -1,6 +1,5 @@
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33C.*;
-import dev.everyonemek.overloadcore.client.GearGlowMesh;
 import dev.everyonemek.overloadcore.client.GearEffectGeometry;
 import java.nio.*;
 import java.nio.file.*;
@@ -11,18 +10,12 @@ import org.joml.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL;
 
-/** Actual generated item meshes and GLSL in a hidden context; no Minecraft client. */
+/** Actual Meka-Tool form accents and combat GLSL in a hidden context; no Minecraft client. */
 public class VerifyGearShader {
     static final int W=384,H=384;static int program;
     static void check(boolean ok,String message){if(!ok)throw new AssertionError(message);}
     static int compile(int type,String code){int s=glCreateShader(type);glShaderSource(s,code);glCompileShader(s);check(glGetShaderi(s,GL_COMPILE_STATUS)!=0,glGetShaderInfoLog(s));return s;}
     static void matrix(String name,Matrix4f m){glUniformMatrix4fv(glGetUniformLocation(program,name),false,m.get(new float[16]));}
-    static ByteBuffer mesh(int kind,double phase,float charge){float[] vertices=(kind==0?GearGlowMesh.RAIL:GearGlowMesh.BLADE);var bytes=BufferUtils.createByteBuffer(vertices.length/6*28);var rotate=new Matrix3f().rotationX(.25F).rotateY(.6F);
-        for(int i=0;i<vertices.length;i+=6){float x=vertices[i],y=vertices[i+1],z=vertices[i+2];var p=rotate.transform(new Vector3f(x-.5F,y-.8F,z-.4F));var n=rotate.transform(new Vector3f(vertices[i+3],vertices[i+4],vertices[i+5]));bytes.putFloat(p.x).putFloat(p.y).putFloat(p.z-2);bytes.putFloat(y+z).putFloat((float)phase);
-            bytes.put((byte)kind).put((byte)(charge*255)).put((byte)0).put((byte)255);bytes.put((byte)(n.x*127)).put((byte)(n.y*127)).put((byte)(n.z*127)).put((byte)0);
-        }return bytes.flip();
-    }
-    static byte[] render(int kind,double phase,float charge,boolean occlude){return draw(mesh(kind,phase,charge),occlude);}
     static byte[] draw(ByteBuffer data,boolean occlude){return draw(data,occlude,true);}
     static byte[] draw(ByteBuffer data,boolean occlude,boolean clear){int quads=data.remaining()/112;glBufferData(GL_ARRAY_BUFFER,data,GL_STATIC_DRAW);var indices=BufferUtils.createIntBuffer(quads*6);for(int q=0;q<quads;q++){int i=q*4;indices.put(i).put(i+1).put(i+2).put(i).put(i+2).put(i+3);}indices.flip();glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices,GL_STATIC_DRAW);boolean depthWrite=glGetBoolean(GL_DEPTH_WRITEMASK);
         if(clear){glDepthMask(true);glClearColor(.035F,.045F,.055F,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -39,12 +32,12 @@ public class VerifyGearShader {
         var bytes=BufferUtils.createByteBuffer(64*1024);var transform=new Matrix4f();
         if(front)transform.rotateY((float)java.lang.Math.PI);
         else{transform.translate(0,0,-4).rotateX(.65F).rotateY(-.9F);
-        if(kind<3)transform.translate(0,0,-1.5F).scale(.48F);else transform.translate(-.5F,-.6F,0);}
+        if(kind<3)transform.translate(0,0,-1.5F).scale(.48F);else transform.translate(0,0,-.2F);}
         GearEffectGeometry.Sink sink=(x,y,z,u,v,mat,power,alpha)->{
             var p=transform.transformPosition(new Vector3f(x,y,z));bytes.putFloat(p.x).putFloat(p.y).putFloat(p.z).putFloat(u).putFloat(v);
             bytes.put((byte)mat).put((byte)(power*255)).put((byte)(phase/(2*java.lang.Math.PI)*255)).put((byte)(alpha*255));bytes.putInt(0);
         };
-        if(kind<3)GearEffectGeometry.shot(sink,kind,4,age,true,!front);else GearEffectGeometry.charge(sink,kind==3,1);
+        if(kind<3)GearEffectGeometry.shot(sink,kind,4,age,true,!front);else GearEffectGeometry.toolForm(sink,kind==3,1,1);
         return bytes.flip();
     }
     static void effects(Path out)throws Exception{
@@ -78,8 +71,7 @@ public class VerifyGearShader {
             var dir=root.resolve("src/main/resources/assets/overloadcore/shaders/core");int vs=compile(GL_VERTEX_SHADER,Files.readString(dir.resolve("gear_field.vsh")).replace("#moj_import <fog.glsl>",fog)),fs=compile(GL_FRAGMENT_SHADER,Files.readString(dir.resolve("gear_field.fsh")).replace("#moj_import <fog.glsl>",fog));program=glCreateProgram();glAttachShader(program,vs);glAttachShader(program,fs);String[] attributes={"Position","UV0","Color","Normal"};for(int i=0;i<4;i++)glBindAttribLocation(program,i,attributes[i]);glLinkProgram(program);check(glGetProgrami(program,GL_LINK_STATUS)!=0,glGetProgramInfoLog(program));glUseProgram(program);for(var name:new String[]{"Position","UV0","Color"})check(glGetAttribLocation(program,name)>=0,"Missing "+name);
             matrix("ModelViewMat",new Matrix4f());matrix("ProjMat",new Matrix4f().ortho(-1.05F,1.05F,-1.05F,1.05F,.1F,10));glUniform4f(glGetUniformLocation(program,"ColorModulator"),1,1,1,1);glUniform1f(glGetUniformLocation(program,"FogStart"),8);glUniform1f(glGetUniformLocation(program,"FogEnd"),10);glUniform4f(glGetUniformLocation(program,"FogColor"),0,0,0,1);glUniform1i(glGetUniformLocation(program,"FogShape"),0);
             int vao=glGenVertexArrays(),vbo=glGenBuffers(),ebo=glGenBuffers();glBindVertexArray(vao);glBindBuffer(GL_ARRAY_BUFFER,vbo);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);glVertexAttribPointer(0,3,GL_FLOAT,false,28,0L);glVertexAttribPointer(1,2,GL_FLOAT,false,28,12L);glVertexAttribPointer(2,4,GL_UNSIGNED_BYTE,true,28,20L);glVertexAttribPointer(3,3,GL_BYTE,true,28,24L);for(int i=0;i<4;i++)glEnableVertexAttribArray(i);glEnable(GL_DEPTH_TEST);glEnable(GL_CULL_FACE);glViewport(0,0,W,H);
-            for(int kind=0;kind<2;kind++){var active=render(kind,0,1,false);var flowing=render(kind,1.1,1,false);var blocked=render(kind,0,1,true);int visible=0,changed=0;for(int i=0;i<active.length;i+=4){if((active[i]&255)+(active[i+1]&255)+(active[i+2]&255)>90)visible++;if(java.lang.Math.abs((active[i]&255)-(flowing[i]&255))>6)changed++;}check(visible>600&&changed>40,"Blank/frozen material "+kind+": "+visible+"/"+changed);for(int y=0;y<H;y++)for(int x=0;x<W/2;x++)check((blocked[(y*W+x)*4]&255)<15,"Material ignored depth");save(active,out.resolve("material-"+kind+".png"));System.out.println("PASS material "+kind+": "+(kind==0?GearGlowMesh.RAIL:GearGlowMesh.BLADE).length/24+" glow quads, animation and occlusion");}
-            var full=render(1,0,1,false);var empty=render(1,0,0,false);int dimmed=0;for(int i=0;i<full.length;i+=4)if((full[i]&255)>(empty[i]&255)+20)dimmed++;check(dimmed>300,"Unpowered weapon did not dim");save(empty,out.resolve("blade-empty.png"));effects(out);check(glGetError()==GL_NO_ERROR,"GL error");glDeleteBuffers(vbo);glDeleteBuffers(ebo);glDeleteVertexArrays(vao);glDeleteProgram(program);glDeleteShader(vs);glDeleteShader(fs);
+            effects(out);check(glGetError()==GL_NO_ERROR,"GL error");glDeleteBuffers(vbo);glDeleteBuffers(ebo);glDeleteVertexArrays(vao);glDeleteProgram(program);glDeleteShader(vs);glDeleteShader(fs);
         }finally{glfwDestroyWindow(window);glfwTerminate();}
     }
 }

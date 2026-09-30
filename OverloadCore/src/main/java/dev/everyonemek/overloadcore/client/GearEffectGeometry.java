@@ -90,20 +90,23 @@ public final class GearEffectGeometry {
         // Tilt the slash 22 degrees without changing the forward travel axis.
         s.vertex(x*.927F-y*.375F,x*.375F+y*.927F,z,u,v,3,1,a);
     }
-    public static void charge(Sink s,boolean rail,float amount){
-        if(amount<=0)return;
+    public static void toolForm(Sink s,boolean rail,float power,float charge){
+        if(power<=0)return;
         if(rail){
             for(int ring=0;ring<2;ring++)for(int i=0;i<24;i++){
                 float a=(float)(i*Math.PI/12),b=(float)((i+1)*Math.PI/12);
-                float inner=.10F+.045F*amount+ring*.015F,outer=inner+.032F,z=-.79F-ring*.14F;
-                float ax=(float)Math.cos(a),ay=(float)Math.sin(a),bx=(float)Math.cos(b),by=(float)Math.sin(b);
-                v(s,.5F+ax*inner,7/16F+ay*inner,z,i/24F,0,5,amount,amount*.8F);
-                v(s,.5F+bx*inner,7/16F+by*inner,z,(i+1)/24F,0,5,amount,amount*.8F);
-                v(s,.5F+bx*outer,7/16F+by*outer,z,(i+1)/24F,1,5,amount,amount*.8F);
-                v(s,.5F+ax*outer,7/16F+ay*outer,z,i/24F,1,5,amount,amount*.8F);
+                float inner=.10F+.025F*charge,outer=inner+.020F,z=.015F+ring*.10F;
+                float ax=(float)Math.cos(a),ay=(float)Math.sin(a),bx=(float)Math.cos(b),by=(float)Math.sin(b),alpha=.20F+.60F*charge;
+                v(s,ax*inner,ay*inner,z,i/24F,0,5,power,alpha);v(s,bx*inner,by*inner,z,(i+1)/24F,0,5,power,alpha);
+                v(s,bx*outer,by*outer,z,(i+1)/24F,1,5,power,alpha);v(s,ax*outer,ay*outer,z,i/24F,1,5,power,alpha);
             }
-        }else for(float z:new float[]{.43F,.57F}){
-            strip(s,.585F,.51F,z,.535F,1.70F,z,.08F*amount,0,0,7,amount,amount*.72F);
+        }else{
+            // A short energized cutting edge extending from the original tool's three-prong head.
+            float tip=.48F+.22F*charge,alpha=.35F+.45F*charge;
+            for(float y:new float[]{-.025F,.025F}){
+                v(s,-.09F,y,.01F,0,0,9,power,alpha);v(s,.09F,y,.01F,0,1,9,power,alpha);
+                v(s,.03F,y,tip,1,1,9,power,alpha);v(s,-.015F,y,tip+.06F,1,0,9,power,alpha);
+            }
         }
     }
     private GearEffectGeometry(){}

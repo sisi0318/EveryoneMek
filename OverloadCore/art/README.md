@@ -46,7 +46,7 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 - `tools/preview_equipment.cjs` 用原PNG最近邻采样和深度缓存离线渲染，不代表游戏内验收。
 - `tools/VerifyGearShader.java` 在隐藏GL上下文编译实际GLSL并核对动画、空电量变暗和遮挡；不启动Minecraft客户端。
 
-## alpha.19 Mek 风格修订（当前）
+## alpha.19 Mek 风格修订（历史）
 
 - 模块使用 Mek 的原生 `mekanism:item/module_base` 作为模型底层，原创功能窗口作为第二层；只引用上游资源，不将上游PNG复制进JAR。
 - 内置 ImageGen 原稿：[功能窗口图集](source/mek-module-panels-v2.png)、[装备材质图集](source/mek-equipment-materials-v2.png)。完整提示词和工具记录：[mek-gear-v2-prompts.json](mek-gear-v2-prompts.json)。
@@ -63,3 +63,7 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 ### alpha.21 造型修订
 
 不新增位图。金属尖头弹丸采用8边外壳、收尖与底面，shader做钢色面光和少量铜色尾缘，火花独立绘制；月牙剑气改为横截面上的宽弧刃，并封闭侧边。`VerifyGearShader` 的 `shooter-0.png`／`shooter-1.png` 检查射手视角，补齐此前仅斜侧面预览的缺口。大剑的第一／第三人称预览沿用 `VerifyGearPoses` 和 `preview_weapon_poses`。
+
+## alpha.22 当前武器外观
+
+直接复用原MekaTool左右OBJ与显示变换，原自绘枪剑模型、握持类和专用预览脚本已移除；此前图稿仅作历史。新战斗模块图标引用Mek原模块基板＋现有谐振绿色窗口，不新增位图。原模型上的短能刃／聚焦环由shader绘制。`VerifyMekaToolContract.java` 核对原OBJ与客户端挂接点，`VerifyGearShader.java`检查实际形态及攻击效果。

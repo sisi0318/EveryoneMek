@@ -110,8 +110,18 @@
   "overloadcore.weapon.no_energy": "武器电量不足",
   "overloadcore.ward.capacitor_hud": "护命电容：%s FE",
   "overloadcore.hud.compensation": "磁荷补偿：-%s",
-  "item.overloadcore.rail_lance": "磁轨长枪",
-  "item.overloadcore.thunder_blade": "雷铸刃",
+  "item.overloadcore.rail_lance": "Meka工具",
+  "item.overloadcore.thunder_blade": "Meka工具",
   "death.attack.overloadcore.rail": "%s被磁轨弹贯穿",
-  "death.attack.overloadcore.rail.player": "%s被%s的磁轨弹贯穿"
+  "death.attack.overloadcore.rail.player": "%s被%s的磁轨弹贯穿",
+  "module.overloadcore.combat_form": "战斗形态单元",
+  "description.overloadcore.combat_form": "赋予Meka工具近战与远程形态；使用模式菜单切换，右键蓄力攻击。",
+  "module.overloadcore.combat_mode": "战斗形态",
+  "overloadcore.combat.form": "战斗形态",
+  "overloadcore.combat.melee": "近战形态",
+  "overloadcore.combat.ranged": "远程形态",
+  "overloadcore.combat.selected": "形态：%s",
+  "overloadcore.combat.melee_hint": "按住右键蓄力，松开释放月牙斩击。",
+  "overloadcore.combat.ranged_hint": "按住右键蓄力，松开发射磁轨弹。空仓自动装填铁粒。",
+  "overloadcore.combat.controls": "使用Mek模式菜单切换形态；潜行右键使用原工具功能。"
 }

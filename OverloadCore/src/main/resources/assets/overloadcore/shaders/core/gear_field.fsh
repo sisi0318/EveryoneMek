@@ -54,6 +54,10 @@ void main() {
             light = mix(vec3(.12,.15,.17),vec3(.64,.72,.75),powerAlpha.x);
             light = mix(vec3(.46,.25,.10),light,smoothstep(0.0,.22,flow.x));
             alpha = 1.0;
+        } else if (material == 9) {
+            // Compact cutting edge on the native Meka-Tool head, with a traveling charge highlight.
+            light = mix(vec3(.06,.48,.24),vec3(.72,1.0,.84),core*.55+wave*.45);
+            alpha *= smoothstep(0.0,.10,flow.x)*(1.0-smoothstep(.86,1.0,flow.x));
         }
         if(alpha < .004) discard;
     }
