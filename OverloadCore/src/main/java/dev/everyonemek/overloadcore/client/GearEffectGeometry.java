@@ -72,28 +72,22 @@ public final class GearEffectGeometry {
             }
         }else if(kind==1){
             if(age>=7)return;
-            float start=Math.min(length,.9F),travel=start+(length-start)*Math.min(1,age/5.5F),radius=.42F+.13F*travel;
-            float fade=(1-age/7),roll=.35F-.50F*Math.min(1,age/5),cs=(float)Math.cos(roll),sn=(float)Math.sin(roll);
-            // A narrow cutting edge and one offset wake. No overlapping front/back luminous panel.
-            for(int layer=1;layer>=0;layer--){
-                float r=radius*(layer==0?1:.93F),z=Math.max(0,travel-layer*.18F);
-                float thickness=layer==0?.13F:.05F,alpha=fade*(layer==0?.78F:.24F);
-                for(int i=0;i<24;i++){
-                    float u=i/24F,U=(i+1)/24F,a=-1.2F+u*2.4F,b=-1.2F+U*2.4F;
-                    float ax=(float)Math.sin(a),ay=(float)Math.cos(a),bx=(float)Math.sin(b),by=(float)Math.cos(b);
-                    float ra=r*(1-thickness*(float)Math.sin(u*Math.PI)),rb=r*(1-thickness*(float)Math.sin(U*Math.PI));
-                    arc(s,ax*ra,ay*ra-r*.65F,z,u,0,alpha,cs,sn);arc(s,bx*rb,by*rb-r*.65F,z,U,0,alpha,cs,sn);
-                    arc(s,bx*r,by*r-r*.65F,z,U,1,alpha,cs,sn);arc(s,ax*r,ay*r-r*.65F,z,u,1,alpha,cs,sn);
-                    if(layer==0){
-                        arc(s,ax*r,ay*r-r*.65F,z,u,.25F,alpha*.35F,cs,sn);arc(s,bx*r,by*r-r*.65F,z,U,.25F,alpha*.35F,cs,sn);
-                        arc(s,bx*r,by*r-r*.65F,Math.max(0,z-.045F),U,.75F,alpha*.35F,cs,sn);arc(s,ax*r,ay*r-r*.65F,Math.max(0,z-.045F),u,.75F,alpha*.35F,cs,sn);
-                    }
+            float start=Math.min(length,.9F),travel=start+(length-start)*Math.min(1,age/4.5F);
+            float span=.48F+.15F*travel,width=.065F+.024F*travel,fade=1-age/7;
+            float cs=(float)Math.cos(.62F),sn=(float)Math.sin(.62F);
+            // One straight, pointed slash across the travel axis, with a short folded wake.
+            // Keep the front face visible to the shooter and every vertex behind the clipped endpoint.
+            for(int i=0;i<12;i++){
+                float u=i/12F,U=(i+1)/12F,t=1-Math.abs(2*u-1),T=1-Math.abs(2*U-1);
+                float x=span*(2*u-1),X=span*(2*U-1),w=width*t,W=width*T;
+                float z=Math.max(0,travel-.07F*(1-t)),Z=Math.max(0,travel-.07F*(1-T));
+                slash(s,x,-w,z,u,0,fade*.9F,cs,sn);slash(s,X,-W,Z,U,0,fade*.9F,cs,sn);
+                slash(s,X,W,Z,U,1,fade*.9F,cs,sn);slash(s,x,w,z,u,1,fade*.9F,cs,sn);
+                float tail=Math.max(0,z-.18F-.30F*t),Tail=Math.max(0,Z-.18F-.30F*T);
+                for(int side=-1;side<=1;side+=2){
+                    slash(s,x,w*side,z,u,.5F,fade*.28F,cs,sn);slash(s,X,W*side,Z,U,.5F,fade*.28F,cs,sn);
+                    slash(s,X,0,Tail,U,side<0?0:1,0,cs,sn);slash(s,x,0,tail,u,side<0?0:1,0,cs,sn);
                 }
-            }
-            for(int i=0;i<4;i++){
-                float a=-.85F+i*.53F,x=radius*(float)Math.sin(a),y=radius*((float)Math.cos(a)-.65F);
-                float px=x*cs-y*sn,py=x*sn+y*cs;
-                strip(s,px-.04F,py,Math.max(0,travel-.10F),px+.035F,py+.045F,travel,.012F,.012F,0,4,1,fade*.4F);
             }
         }else if(kind==2&&age<5){
             for(int i=0;i<8;i++){
@@ -103,7 +97,7 @@ public final class GearEffectGeometry {
             }
         }
     }
-    private static void arc(Sink s,float x,float y,float z,float u,float v,float a,float cs,float sn){
+    private static void slash(Sink s,float x,float y,float z,float u,float v,float a,float cs,float sn){
         s.vertex(x*cs-y*sn,x*sn+y*cs,z,u,v,3,1,a);
     }
     public static void toolForm(Sink s,boolean rail,float power,float charge){

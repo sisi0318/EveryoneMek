@@ -25,12 +25,12 @@ void main() {
         light = mix(tint, vec3(0.87,1.0,0.96), core);
         alpha *= band;
         if (material == 3) {
-            float taper = sin(clamp(flow.x,0.0,1.0) * 3.1415927);
-            float leading = 1.0-smoothstep(.035,.16,abs(flow.y-.72));
-            float current = .5+.5*sin(flow.x*35.0-phase*3.0);
-            light = mix(vec3(.10,.55,.33),vec3(.38,.90,.62),leading);
-            light += vec3(.025,.10,.055)*current*leading;
-            alpha *= taper*(.60+.40*leading);
+            float tip = smoothstep(0.0,.12,min(flow.x,1.0-flow.x));
+            float current = .5+.5*sin(flow.x*42.0-phase*5.0);
+            float edgeLight = 1.0-smoothstep(.035,.20,abs(flow.y-.5));
+            light = mix(vec3(.06,.48,.25),vec3(.66,.96,.78),edgeLight*.8);
+            light += vec3(.025,.12,.06)*current*(.35+.65*edgeLight);
+            alpha *= tip*(.68+.32*edgeLight);
         } else if (material == 4 || material == 7) {
             float arc = abs(flow.y-.5-.22*sin(flow.x*32.0+phase*3.0));
             float filament = 1.0-smoothstep(.02,.06+fwidth(arc),arc);

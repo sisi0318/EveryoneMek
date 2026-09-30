@@ -75,3 +75,9 @@ alpha.16 原创双线圈电路匣，参考原生 Mek 模块轮廓。使用内置
 ## alpha.24 战术与全息靶场
 
 机壳复用gear_alloy／gear_graphite／gear_circuit的真实16px材质，由generate_equipment.training生成前面、顶部、侧面和工作灯的JSON模型，没有新增位图。静止／工作几何保持一致；预览见training-projector-preview.png。TacticalGeometry静态缓存训练体网格，护盾与标记各一面；gear_field材质10／11／12分别处理六边护盾、层数菱形、全息扫描边框。VerifyGearShader输出tactical-5/6/7.png检查状态与遮挡，不进入游戏JAR。
+
+## alpha.25 剑气
+
+世界近战效果从月牙改为两端收尖的斜向刃面，带向后折叠、渐隐的短尾迹；使用36个quad和原material=3局部shader，无新位图。射手正面可见完整剑气，斜侧面可见尾迹厚度，沿服务端给出的终点前移。保留原MekaTool模型和工具头接触刃。VerifyGearShader的shooter-1.png、effect-1.png与slash-day系列检查正面、斜侧面、时间变化和亮天空背景。
+
+[剑气离线预览](sword-energy-preview.png)来自上述工具对实际几何与GLSL的渲染，不是游戏内截图。

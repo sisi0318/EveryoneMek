@@ -124,7 +124,7 @@ def generate(write):
   'overloadcore.combat.melee':('近战形态','Melee form'),
   'overloadcore.combat.ranged':('远程形态','Ranged form'),
   'overloadcore.combat.selected':('形态：%s','Form: %s'),
-  'overloadcore.combat.melee_hint':('按住右键蓄力，松开释放月牙斩击。','Hold use to charge; release a crescent slash.'),
+  'overloadcore.combat.melee_hint':('按住右键蓄力，松开斩出一道剑气。','Hold use to charge; release a blade of energy.'),
   'overloadcore.combat.ranged_hint':('按住右键蓄力，松开发射磁轨脉冲，仅消耗电量。','Hold use to charge; release a rail pulse using energy only.'),
   'overloadcore.combat.controls':('使用Mek模式菜单切换形态；潜行右键使用原工具功能。','Switch forms with the Mek mode menu; sneak-use retains the original tool action.'),
  })

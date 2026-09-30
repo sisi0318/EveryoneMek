@@ -143,7 +143,7 @@
   "overloadcore.combat.melee": "近战形态",
   "overloadcore.combat.ranged": "远程形态",
   "overloadcore.combat.selected": "形态：%s",
-  "overloadcore.combat.melee_hint": "按住右键蓄力，松开释放月牙斩击。",
+  "overloadcore.combat.melee_hint": "按住右键蓄力，松开斩出一道剑气。",
   "overloadcore.combat.ranged_hint": "按住右键蓄力，松开发射磁轨脉冲，仅消耗电量。",
   "overloadcore.combat.controls": "使用Mek模式菜单切换形态；潜行右键使用原工具功能。"
 }

@@ -143,7 +143,7 @@
   "overloadcore.combat.melee": "Melee form",
   "overloadcore.combat.ranged": "Ranged form",
   "overloadcore.combat.selected": "Form: %s",
-  "overloadcore.combat.melee_hint": "Hold use to charge; release a crescent slash.",
+  "overloadcore.combat.melee_hint": "Hold use to charge; release a blade of energy.",
   "overloadcore.combat.ranged_hint": "Hold use to charge; release a rail pulse using energy only.",
   "overloadcore.combat.controls": "Switch forms with the Mek mode menu; sneak-use retains the original tool action."
 }

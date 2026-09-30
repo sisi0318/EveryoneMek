@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.24，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.24.jar`。
+- 0.1.0-alpha.25，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.25.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -33,6 +33,8 @@
 
 用户明确改为给原 MekaTool 安装战斗模块获得近战／远程双形态，并移除自绘剑枪。下面alpha.17–21的独立武器记录只作历史，不能恢复这些独立装备。
 
+- alpha.25用户要求近战飞行效果体现剑气，移除月牙轮廓。GearEffectGeometry的kind=1改为固定斜角、两端收尖的刃面与短尾迹，共36面；沿前进轴横截面展开，不能放进包含视点的纵向平面而退化成线。material=3使用中心细刃光与流动纹理，普通透明混合；所有顶点不超过服务端裁墙终点。工具头接触刃保持原样，战斗逻辑与消息未改。
+- alpha.25验证：classes／jar、现有隐藏OpenGL实际shader检查通过，正面、斜侧面、动画、遮挡与5阶段天空预览可见且无大片白光；JAR与alpha.24比较只有GearEffectGeometry的类字节变化，玩法／网络类及全部16px贴图未变。未重复服务端GameTest，未启动客户端。持久预览见art/sword-energy-preview.png。
 - CombatModule 是原生 ModuleData＋ModuleEnumConfig，通过IMC只支持MekaTool，原改造站安装／拆卸，原径向菜单与配置窗口切换。新模块最大1个；原武器升级目标改为MekaTool。普通近战沿用原攻击增幅，原采掘、农耕不接管。潜行右键交回原工具；alpha.23起远程仅耗电，不检查／装填／消耗弹药。
 - MekaToolCombatMixin 仅在模块启用且未潜行时接管原use，并补充目标类原本继承的useDuration／releaseUsing。MekaCombat的弱身份玩家会话锁定实际栈、手、形态、开始tick与所需时长；服务端释放时二次验证，原生模式切换直接取消，禁用／换物品也停止。不要允许用近战短蓄力切换为远程绕过时长。
 - 能量只扣StorageUtils取得的原生容器；新MekaTool不注册GearEnergy能力。旧rail_lance／thunder_blade仅作为LegacyWeaponItem读取旧存档，没有配方、创造栏、自绘模型或战斗方法。背包／副手实际栈替换为原MekaTool并保留模块／弹药／组件。GEAR_ENERGY仅作迁移余量，实际insert后扣余量，耗尽移除，不伪造超过原生容量的储能。
