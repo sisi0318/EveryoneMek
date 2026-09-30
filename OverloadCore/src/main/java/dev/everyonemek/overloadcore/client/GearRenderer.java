@@ -129,15 +129,16 @@ public final class GearRenderer {
         }
         pose.popPose();
     }
-    public static void renderTrainingTarget(PoseStack pose,MultiBufferSource buffers){
+    public static void renderTrainingTarget(PoseStack pose,MultiBufferSource buffers,float hit,float appear){
         boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();var type=custom?HELD_EFFECT:LOCAL_FALLBACK;
-        TacticalGeometry.target(sink(buffers.getBuffer(type),pose,custom,phase()));
+        TacticalGeometry.target(sink(buffers.getBuffer(type),pose,custom,phase()),hit,appear);
     }
     private static GearEffectGeometry.Sink sink(VertexConsumer out,PoseStack pose,boolean custom,float phase){
         return (x,y,z,u,v,material,power,alpha)->{
             var vertex=out.addVertex(pose.last().pose(),x,y,z);int a=(int)(255*Math.clamp(alpha,0,1));
             if(custom)vertex.setUv(u,v).setColor(material,(int)(power*255),(int)(phase/(2*Math.PI)*255),a).setNormal(0,1,0);
             else if(material==8){int shade=(int)(65+110*power);vertex.setColor(shade,shade+8,shade+10,255);}
+            else if(material==12||material==13){int bright=material==13?150:60;vertex.setColor((int)(bright+(240-bright)*power),(int)(210+35*power),160,a);}
             else vertex.setColor(material==6?255:100,220,material==6?125:190,a);
         };
     }

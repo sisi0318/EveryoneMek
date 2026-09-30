@@ -91,15 +91,27 @@ public final class TacticalGameTests {
         var config=cube.getConfig().getConfig(mekanism.common.lib.transmitter.TransmissionType.ENERGY);config.setDataType(mekanism.common.tile.component.config.DataType.OUTPUT,mekanism.api.RelativeSide.fromDirections(cube.getDirection(),Direction.EAST));config.setEjecting(true);cube.invalidateCapabilitiesFull();
         tile.getBlockState().useWithoutItem(h.getLevel(),p,new BlockHitResult(h.absolutePos(pos).getCenter(),Direction.NORTH,h.absolutePos(pos),false));
         check(p.containerMenu instanceof TrainingMenu&&p.containerMenu.clickMenuButton(p,0),"Projector native GUI did not open/start");
+        check(p.containerMenu.slots.getFirst().y==185,"Projector inventory slots did not follow the taller screen");
         var tool=tool(p);module(p,tool,GearUpgrade.POLARIZATION,1);p.setItemInHand(InteractionHand.MAIN_HAND,tool);
         h.startSequence().thenWaitUntil(()->check(tile.getActive()&&tile.energy.getEnergy()>0,"Cube did not power projector through its real output"))
             .thenExecute(()->{
                 var targets=h.getLevel().getEntitiesOfClass(TrainingTarget.class,new AABB(h.absolutePos(pos)).inflate(3));check(targets.size()==1,"Projector did not maintain exactly one target");
                 check(GearCombat.shoot(p,tool)&&tile.hits==1&&Math.abs(tile.lastDamage-CoreConfig.RAIL_DAMAGE.get())<.01,"Projection did not record resolved damage");
                 check(tile.spent==GearCombat.joules(CoreConfig.RAIL_COST.get())&&TacticalCombat.consumeFlux(p,tool)==0,"Training energy accounting or reward isolation failed");
+                var projection=targets.getFirst();
+                check(projection.hits()==1&&Math.abs(projection.lastDamage()-tile.lastDamage)<.01&&Math.abs(projection.dps()-tile.dps)<.01&&projection.hitAge(0)==0,"Projection did not synchronize confirmed hit feedback");
+                var replica=TrainingContent.TARGET.get().create(h.getLevel());replica.getEntityData().assignValues(projection.getEntityData().getNonDefaultValues());
+                check(replica.hits()==1&&replica.lastDamage()==projection.lastDamage()&&replica.feedbackDamage()==projection.feedbackDamage(),"Tracking snapshot lost projection feedback");
+                projection.setInvulnerable(true);check(!projection.hurt(p.damageSources().playerAttack(p),9),"Invulnerable projection accepted damage");projection.setInvulnerable(false);
+                projection.recordHit(p.damageSources().playerAttack(p),Float.NaN);projection.recordHit(p.damageSources().playerAttack(p),0);
+                check(projection.hits()==1&&projection.feedbackDamage()==projection.lastDamage(),"Rejected hits changed projection feedback");
+                float firstDamage=projection.feedbackDamage();projection.hurt(p.damageSources().playerAttack(p),5);projection.hurt(p.damageSources().playerAttack(p),7);
+                check(projection.hits()==3&&projection.lastDamage()==7&&Math.abs(projection.feedbackDamage()-firstDamage-12)<.01,"Same-tick hits did not combine the floating number while retaining the last-hit reading");
             }).thenIdle(2).thenExecute(()->{
                 check(tile.dps>0,"Tile tick erased same-tick damage bucket");
                 check(p.containerMenu.clickMenuButton(p,1)&&tile.hits==0&&tile.spent==0,"Native menu reset failed");
+                var projection=h.getLevel().getEntitiesOfClass(TrainingTarget.class,new AABB(h.absolutePos(pos)).inflate(3)).getFirst();
+                check(projection.hits()==0&&projection.dps()==0&&projection.feedbackDamage()==0&&projection.hitAge(0)>18,"Reset left a stale floating hit/readout");
                 cube.getEnergyContainer().setEnergy(0);tile.energy.setEnergy(0);
             }).thenWaitUntil(()->check(!tile.getActive()&&h.getLevel().getEntitiesOfClass(TrainingTarget.class,new AABB(h.absolutePos(pos)).inflate(3)).isEmpty(),"Unpowered projection remained attackable"))
             .thenExecute(()->{tile.enabled=false;ThunderWardGameTests.close(f);}).thenSucceed();

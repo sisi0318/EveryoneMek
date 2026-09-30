@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.25，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.25.jar`。
+- 0.1.0-alpha.26，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.26.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -27,7 +27,15 @@
 - TrainingContent／TrainingProjector／TrainingTarget／TrainingMenu／TrainingScreen是原Mek机器、六面输入能量、原菜单与无持久化Living投影。controller UUID严格认领唯一靶子；私有权限、结构空位、电量和红石均需满足，关闭／拆除／断电清靶。生命仅供伤害结算，die不掉落，普通kill允许管理员清理，训练靶不会给实战贯穿增益。
 - 靶场读数由LivingDamageEvent.Post与工具真实费用计入。滚动窗口保存每桶tick，不能在方块tick直接清当期桶：实体通常先受伤，随后方块tick会把刚写入的数据擦掉。普通MekaTool.hurtEnemy通过WrapMethod包围原消耗及谐振，不用跨调用全局前值。累计伤害／命中／耗能与enabled进NBT和掉落组件，近期DPS只保留运行期。
 - 56项服务端GameTest通过，新增快切、实际伤害极化、一次性贯穿、正反面护盾／费用／防刷、真实箭矢反弹、真实能量立方供电、靶场菜单／读数／停机，以及私有权限／实际掉落放回。测试靶僵尸需将原生ARMOR设0再断言裸伤害。GameTestServer无GameProfileCache，测试原Mek私有Owner时仅为夹具UUID临时加入UsernameCache，finally拆块并移除缓存；不能改运行时的Mek权限逻辑。
-- TacticalGeometry训练网格静态缓存，护盾／标记各1quad、投影36quads；字段走普通透明混合、显式depth，shader关掉有静态回退。隐藏GL已检查战术状态变化与墙后遮挡，实际机壳预览在art/training-projector-preview.png；未启动客户端。
+- TacticalGeometry训练网格静态缓存，护盾／标记各1quad；投影在alpha.26增至87quads。字段走普通透明混合、显式depth，shader关掉有静态回退。隐藏GL已检查战术状态变化与墙后遮挡，实际机壳预览在art/training-projector-preview.png；未启动客户端。
+
+## alpha.26 全息显示与反馈
+
+- TrainingTarget通过自身原生SynchedEntityData同步本次伤害、DPS、次数、命中时刻和同tick浮字伤害；仅LivingDamageEvent.Post正伤害更新，拒绝／零／非有限伤害不触发。相同tick的多段命中合并浮字，本次伤害仍取最后一次；DPS每5tick补充更新。原ServerEntity在data dirty时会立即同步，不必降低entity updateInterval。
+- 重置读数同时清除实体浮字与显示快照；新投影读取旧累计读数但不补播旧命中。目标不持久保存显示字段，不新增第二份累计统计；原控制器NBT／物品组件不变。
+- TrainingTargetRenderer单独管理模型、18tick浮字和近距离准星读数。浮字最多一条／靶、32格内、Font.DisplayMode.NORMAL，不能用穿墙字体；精准标记在2.1格，伤害浮字从2.32格上移避免重叠。反馈音最短间隔3tick。世界模型随控制器朝向，材质12表示轮廓扫描及命中强度，13用于靶心／底环。
+- TrainingScreen保留原Mek控件，230×270；物品栏标签(28,174)、菜单玩家槽起点(29,185)。状态／两个主读数／累计统计分开；无命中显示“—”，重置按钮等待服务器零值才显示确认。status=4红石暂停，5生成失败重试，不合并为关闭。
+- 56项GameTest通过，既有靶场用例增加真实伤害→显示字段→原生同步快照、无效命中、同tick合并、菜单重置和新槽位坐标检查。隐藏GL实测87面投影、受击状态、动画、墙体遮挡及亮天空预览；未启动客户端，实际UI／声音仍由用户验收。
 
 ## 当前 MekaTool 武器约定
 

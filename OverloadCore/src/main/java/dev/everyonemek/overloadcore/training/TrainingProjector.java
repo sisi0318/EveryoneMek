@@ -37,7 +37,7 @@ public final class TrainingProjector extends TileEntityMekanism {
     public boolean accepts(TrainingTarget entity,Player p){return owns(entity)&&permitted(p);}
     @Override protected boolean onUpdateServer(){boolean changed=super.onUpdateServer();
         updateDps();
-        if(!enabled||!canFunction()){status=0;stopTarget();setActive(false);return changed;}
+        if(!enabled||!canFunction()){status=enabled?4:0;stopTarget();setActive(false);return changed;}
         long cost=GearCombat.joules(CoreConfig.TRAINING_FE.get());
         if(energy.extract(cost,Action.SIMULATE,AutomationType.INTERNAL)<cost){status=1;stopTarget();setActive(false);return changed;}
         if(!level.hasChunkAt(worldPosition.above(2))||!level.getBlockState(worldPosition.above()).isAir()||!level.getBlockState(worldPosition.above(2)).isAir()){
@@ -45,9 +45,10 @@ public final class TrainingProjector extends TileEntityMekanism {
         }
         var server=(ServerLevel)level;var entity=target==null?null:server.getEntity(target);
         if(!(entity instanceof TrainingTarget)){
-            var fresh=TrainingContent.TARGET.get().create(server);if(fresh==null)return changed;
+            var fresh=TrainingContent.TARGET.get().create(server);if(fresh==null){status=5;setActive(false);return changed;}
             fresh.anchor=worldPosition.immutable();fresh.setPos(worldPosition.getX()+.5,worldPosition.getY()+1.05,worldPosition.getZ()+.5);
-            if(!server.addFreshEntity(fresh))return changed;target=fresh.getUUID();
+            fresh.setYRot(getDirection().toYRot());fresh.syncReadings(this,true);
+            if(!server.addFreshEntity(fresh)){status=5;setActive(false);return changed;}target=fresh.getUUID();
         }
         energy.extract(cost,Action.EXECUTE,AutomationType.INTERNAL);status=3;setActive(true);return changed;
     }
@@ -58,8 +59,10 @@ public final class TrainingProjector extends TileEntityMekanism {
     private void updateDps(){long now=level.getGameTime();double sum=0;for(int i=0;i<100;i++)if(now-windowTicks[i]<100)sum+=window[i];dps=sum/5;}
     public void recordPower(long joules){if(joules>0){spent=spent>Long.MAX_VALUE-joules?Long.MAX_VALUE:spent+joules;markForSave();}}
     public boolean command(Player p,int action){if(!permitted(p)||p.distanceToSqr(Vec3.atCenterOf(worldPosition))>64)return false;
-        if(action==0){enabled=!enabled;if(!enabled){stopTarget();setActive(false);}}
-        else if(action==1){hits=0;lastDamage=totalDamage=dps=0;spent=0;java.util.Arrays.fill(window,0);}else return false;
+        if(action==0){enabled=!enabled;if(!enabled){status=0;stopTarget();setActive(false);}}
+        else if(action==1){hits=0;lastDamage=totalDamage=dps=0;spent=0;java.util.Arrays.fill(window,0);
+            if(level instanceof ServerLevel server&&target!=null&&server.getEntity(target) instanceof TrainingTarget projection)projection.syncReadings(this,true);
+        }else return false;
         markForSave();return true;
     }
     private CompoundTag data(){var t=new CompoundTag();t.putBoolean("enabled",enabled);t.putInt("hits",hits);t.putDouble("last",lastDamage);t.putDouble("damage",totalDamage);t.putLong("spent",spent);return t;}

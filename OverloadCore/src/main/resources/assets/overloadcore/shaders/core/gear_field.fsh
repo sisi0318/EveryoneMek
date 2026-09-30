@@ -75,8 +75,14 @@ void main() {
             light=vec3(.16,.95,.55);
         } else if(material == 12) {
             float edge=min(min(flow.x,1.0-flow.x),min(flow.y,1.0-flow.y));
-            float rim=1.0-smoothstep(.025,.065,edge),scan=.5+.5*sin(flow.y*60.0-phase*2.0);
-            alpha=powerAlpha.y*(.10+.62*rim+.08*scan);light=mix(vec3(.055,.45,.27),vec3(.30,.95,.63),rim);
+            float rim=1.0-smoothstep(.025,.065,edge),scan=.5+.5*sin(flow.y*45.0-phase*2.0);
+            float sweep=pow(.5+.5*sin(flow.y*6.283185-phase),12.0);
+            alpha=powerAlpha.y*(.18+.62*rim+.05*scan+.12*sweep+.12*powerAlpha.x);
+            light=mix(vec3(.035,.30,.19),vec3(.30,.86,.58),rim*.8+sweep*.2);
+            light=mix(light,vec3(.90,.96,.65),powerAlpha.x*(.5+.5*rim));
+        } else if(material == 13) {
+            alpha=powerAlpha.y*(.85+.15*sin(phase*2.0+flow.x*6.283185));
+            light=mix(vec3(.32,.90,.62),vec3(.96,1.0,.80),powerAlpha.x);
         }
         if(alpha < .004) discard;
     }

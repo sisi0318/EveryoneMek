@@ -27,7 +27,7 @@ public final class TacticalClient {
     private static boolean guardHeld;
     @SubscribeEvent public static void keys(RegisterKeyMappingsEvent e){e.register(SWAP);e.register(GUARD);}
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent e){e.register(TrainingContent.MENU.get(),TrainingScreen::new);}
-    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){e.registerEntityRenderer(TrainingContent.TARGET.get(),TargetRenderer::new);}
+    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){e.registerEntityRenderer(TrainingContent.TARGET.get(),TrainingTargetRenderer::new);}
     @SubscribeEvent public static void setup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e){e.enqueueWork(()->TacticalPackets.client=p->{
         var mc=Minecraft.getInstance();if(mc.level==null)return;if(world!=mc.level){FX.clear();world=mc.level;}
         long key=((long)p.entity()<<3)|p.kind();if(p.ticks()==0)FX.remove(key);else{if(FX.size()>=256)FX.remove(FX.keySet().iterator().next());FX.put(key,new Fx(p,time(),time()+p.ticks()));}
@@ -59,15 +59,11 @@ public final class TacticalClient {
         }
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post e){var mc=Minecraft.getInstance();if(mc.player==null||mc.screen!=null||mc.options.hideGui||!mc.player.isAlive())return;
+        TrainingTargetRenderer.hud(e.getGuiGraphics());
         int y=e.getGuiGraphics().guiHeight()-65;
         for(int kind:new int[]{0,2,3}){var f=FX.get(((long)mc.player.getId()<<3)|kind);if(f==null||f.until<=time())continue;
             var text=CoreContent.text(kind==0?"tactical.guarding":kind==2?"tactical.counter_ready":"tactical.flux_ready");
             e.getGuiGraphics().drawString(mc.font,text,(e.getGuiGraphics().guiWidth()-mc.font.width(text))/2,y,0xFF8CE5B3,true);y-=11;
         }
-    }
-    private static final class TargetRenderer extends EntityRenderer<TrainingTarget>{
-        TargetRenderer(EntityRendererProvider.Context c){super(c);shadowRadius=0;}
-        @Override public void render(TrainingTarget e,float yaw,float partial,PoseStack pose,MultiBufferSource buffers,int light){GearRenderer.renderTrainingTarget(pose,buffers);super.render(e,yaw,partial,pose,buffers,light);}
-        @Override public ResourceLocation getTextureLocation(TrainingTarget e){return ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,"textures/item/gear_alloy.png");}
     }
 }
