@@ -47,6 +47,18 @@ with ZipFile(args.oritech) as upstream:
         namespace, item = ingredient['item'].split(':', 1)
         assert namespace == 'oritech' and f'assets/oritech/models/item/{item}.json' in names, ingredient
     assert recipe['result'] == {'id': 'oritechmekanism:universal_processor', 'count': 1}
+    for tier in range(2, 8):
+        model = json.loads((resources / f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json').read_text(encoding='utf-8'))
+        assert model['textures']['layer0'] == f'oritech:block/machine_core_{tier}'
+        png = upstream.read(f'assets/oritech/textures/block/machine_core_{tier}.png')
+        assert struct.unpack('>II', png[16:24]) == (16, 16)
+        upgrade = json.loads((resources / f'data/oritechmekanism/recipe/capacity_upgrade_{tier}.json').read_text(encoding='utf-8'))
+        assert upgrade['key']['K']['item'] == f'oritech:machine_core_{tier}'
+        for value in upgrade['key'].values():
+            assert value['item'].startswith('oritech:')
+            assert f"assets/oritech/models/item/{value['item'].split(':')[1]}.json" in names
+    for part in ['center'] + [f'ring_{i}' for i in range(1, 7)]:
+        assert f'assets/oritech/textures/gui/modular/machine_core/{part}.png' in names
 zh = json.loads((resources / 'assets/oritechmekanism/lang/zh_cn.json').read_text(encoding='utf-8'))
 en = json.loads((resources / 'assets/oritechmekanism/lang/en_us.json').read_text(encoding='utf-8'))
 assert zh.keys() == en.keys()
@@ -59,6 +71,7 @@ if args.jar:
         assert 'META-INF/neoforge.mods.toml' in files
         assert 'dev/everyonemek/oritech/Processor.class' in files
         assert 'dev/everyonemek/oritech/client/ProcessorRenderer.class' in files
-        for path in ['assets/oritechmekanism/models/block/universal_processor.json', 'data/oritechmekanism/recipe/universal_processor.json']:
-            assert json.loads(jar.read(path)) == json.loads((resources / path).read_text(encoding='utf-8')), path
+        for local in resources.rglob('*.json'):
+            path=local.relative_to(resources).as_posix()
+            assert json.loads(jar.read(path)) == json.loads(local.read_text(encoding='utf-8')), path
 print(f'PASS: {len(profiles)} original model/texture/animation sets, Oritech shell and crafting ingredients, native GUI assets, {len(zh)} paired language keys' + (' and release JAR' if args.jar else ''))

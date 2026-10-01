@@ -26,6 +26,10 @@ public final class ProcessorBlock extends BaseEntityBlock {
     static InteractionResult open(Level l,BlockPos p,Player player){if(!l.isClientSide&&l.getBlockEntity(p) instanceof Processor be&&player instanceof ServerPlayer sp)
         dev.architectury.registry.menu.MenuRegistry.openExtendedMenu(sp,be);return InteractionResult.SUCCESS;}
     @Override protected InteractionResult useWithoutItem(BlockState s,Level l,BlockPos p,Player player,BlockHitResult hit){return open(l,p,player);}
+    @Override protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
+        if(stack.getItem() instanceof ProcessorUpgrade&&level.getBlockEntity(pos) instanceof Processor processor)return ProcessorUpgrade.interact(stack,player,processor);
+        return super.useItemOn(stack,state,level,pos,player,hand,hit);
+    }
     @Override protected void onRemove(BlockState s,Level l,BlockPos p,BlockState n,boolean moving){if(!s.is(n.getBlock())&&l.getBlockEntity(p) instanceof Processor be)be.removeParts();super.onRemove(s,l,p,n,moving);}
     @Override protected BlockState rotate(BlockState s,Rotation r){return s.setValue(FACING,r.rotate(s.getValue(FACING)));}
     @Override protected BlockState mirror(BlockState s,Mirror m){return s.rotate(m.getRotation(s.getValue(FACING)));}

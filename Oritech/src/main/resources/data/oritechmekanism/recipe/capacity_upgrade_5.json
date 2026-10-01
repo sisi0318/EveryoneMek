@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PEP",
+    "CKC",
+    "PEP"
+  ],
+  "key": {
+    "P": {
+      "item": "oritech:machine_plating_block"
+    },
+    "E": {
+      "item": "oritech:machine_extender"
+    },
+    "C": {
+      "item": "oritech:processing_unit"
+    },
+    "K": {
+      "item": "oritech:machine_core_5"
+    }
+  },
+  "result": {
+    "id": "oritechmekanism:capacity_upgrade_5",
+    "count": 1
+  }
+}

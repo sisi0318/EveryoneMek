@@ -83,14 +83,19 @@ public final class ProcessorGameTests {
         h.succeed();
     }
     @GameTest(template="empty",timeoutTicks=50)
-    public static void sidebarInstallsNativeAndThingsAddonsAndAppliesRealSideControls(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.WEST);var player=player(h,p);try{
+    public static void loaderInstallsNativeAndThingsAddonsWithAutomaticItemRoles(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.WEST);var player=player(h,p);try{
         var menu=new ProcessorMenu(3,player.getInventory(),p);player.containerMenu=menu;
-        menu.setCarried(new ItemStack(BlockContent.MACHINE_SPEED_ADDON));menu.clicked(menu.sideStart+1,0,ClickType.PICKUP,player);p.refreshEquipment();
-        check(menu.getCarried().isEmpty()&&p.getBaseAddonData().speed()<1,"Native sidebar addon did not install/apply");
+        check(menu.clickMenuButton(player,ProcessorMenu.OPEN_ADDONS)&&player.containerMenu instanceof AddonMenu,"Addon manager did not open from the real machine menu");
+        var manager=(AddonMenu)player.containerMenu;manager.setCarried(new ItemStack(BlockContent.MACHINE_SPEED_ADDON));manager.clicked(0,0,ClickType.PICKUP,player);p.loadAddons();
+        check(manager.getCarried().isEmpty()&&p.getBaseAddonData().speed()<1,"Load slot did not install/apply addon");
+        check(manager.clickMenuButton(player,0)&&player.containerMenu instanceof ProcessorMenu,"Return to native machine menu failed");menu=(ProcessorMenu)player.containerMenu;
         var handler=h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,p.getBlockPos(),Direction.WEST);check(handler!=null&&handler.insertItem(0,new ItemStack(Items.RAW_IRON,2),false).isEmpty(),"Initial input failed");
         check(handler.insertItem(0,new ItemStack(Items.RAW_IRON,3),false).isEmpty()&&p.inventory.getItem(0).getCount()==5,"Stack refill failed");
-        check(menu.clickMenuButton(player,0)&&menu.clickMenuButton(player,0)&&p.sides[0]==2,"Real menu side packet did not select output");
-        check(handler.insertItem(0,new ItemStack(Items.RAW_IRON),false).getCount()==1,"Output face still accepted input");
+        check(!menu.clickMenuButton(player,0),"Obsolete side-control packet was still accepted");
+        for(var side:Direction.values()){var auto=h.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,p.getBlockPos(),side);
+            check(auto.insertItem(0,new ItemStack(Items.RAW_IRON),true).isEmpty()&&auto.insertItem(4,new ItemStack(Items.IRON_INGOT),true).getCount()==1&&auto.extractItem(0,1,true).isEmpty(),"Automatic input/output roles failed on "+side);
+            var energy=h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,p.getBlockPos(),side);check(energy.receiveEnergy(1,true)==1,"Automatic energy input failed on "+side);
+        }
         p.inventory.setItem(4,new ItemStack(Items.IRON_INGOT,2));check(handler.extractItem(4,2,true).getCount()==2&&p.inventory.getItem(4).getCount()==2,"SIMULATE mutated output");
         check(!menu.slots.get(menu.sideStart).mayPickup(player),"Host could be removed with materials present");
         var things=BuiltInRegistries.BLOCK.stream().filter(b->BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals("oritechthings")&&Processor.validAddon(new ItemStack(b))).toList();
@@ -129,14 +134,15 @@ public final class ProcessorGameTests {
             var placed=(Processor)h.getBlockEntity(place);placed.refreshEquipment();check(placed.paid==paid&&placed.energyStorage.amount==amount,"Placed item lost escrow/power");check(!placed.identity.equals(p.identity),"Placed item reused deployment identity");clear(placed);
         }finally{close(player);}h.succeed();
     }
-    @GameTest(template="empty",timeoutTicks=250)
-    public static void realHopperFeedsAndConfiguredSurfaceEjectsWhileServerTicks(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.NORTH);p.eject=true;
+    @GameTest(template="empty",timeoutTicks=300)
+    public static void realHopperFeedsAndAutomaticOutputEjectsWhileServerTicks(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.NORTH);p.eject=true;
         // The furnace has an upper occupied core; choose the north controller face for the chest.
         var box=p.getBlockPos().north();h.getLevel().setBlockAndUpdate(box,Blocks.CHEST.defaultBlockState());var chest=(ChestBlockEntity)h.getLevel().getBlockEntity(box);
         var hopperPos=p.getBlockPos().south();h.getLevel().setBlockAndUpdate(hopperPos,Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING,Direction.NORTH));var hopper=(HopperBlockEntity)h.getLevel().getBlockEntity(hopperPos);hopper.setItem(0,new ItemStack(Items.RAW_IRON,4));
-        p.energyStorage.amount=500_000;p.sides[0]=2;
+        p.energyStorage.amount=500_000;
         h.startSequence().thenIdle(35).thenExecute(()->check(p.inventory.getItem(0).getCount()>=2,"Real hopper did not refill existing stack"))
-            .thenIdle(90).thenExecute(()->{try{check(chest.getItem(0).is(Items.IRON_INGOT),"Auto eject did not reach configured chest");check(hopper.getItem(0).isEmpty(),"Hopper input did not finish refilling");}finally{clear(p);h.getLevel().removeBlock(hopperPos,false);h.getLevel().removeBlock(box,false);}}).thenSucceed();
+            .thenIdle(90).thenExecute(()->{check(chest.getItem(0).is(Items.IRON_INGOT),"Auto eject did not reach chest");check(hopper.getItem(0).isEmpty(),"Hopper input did not finish refilling");for(int i=0;i<chest.getContainerSize();i++)chest.setItem(i,new ItemStack(Items.COBBLESTONE,64));})
+            .thenIdle(110).thenExecute(()->{try{check(!p.inventory.getItem(4).isEmpty()&&hopper.getItem(0).isEmpty(),"Auto eject fed products back into the input hopper");}finally{h.getLevel().removeBlock(hopperPos,false);h.getLevel().removeBlock(box,false);clear(p);}}).thenSucceed();
     }
     @GameTest(template="empty",timeoutTicks=50)
     public static void functionalAddonsPreserveNativeRefineryRulesAndGuardFluidClicks(GameTestHelper h){var p=place(h,Profiles.REFINERY,Direction.NORTH);try{
@@ -165,4 +171,46 @@ public final class ProcessorGameTests {
             check(!p.canInstallAddon(new ItemStack(BlockContent.MACHINE_SPEED_ADDON),10),"Combined addon mixed with another stat addon");
         }finally{close(player);clear(p);}h.succeed();
     }
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void qualityUpgradesConsumeOneKeepWorkAndExpandInstalledCapacity(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.NORTH);var player=player(h,p);try{
+        p.inventory.setItem(0,new ItemStack(Items.RAW_IRON,8));p.energyStorage.amount=500_000;tick(p);int progress=p.progress;long energy=p.energyStorage.amount;var identity=p.identity;
+        for(int tier=2;tier<=Processor.MAX_TIER;tier++){
+            var item=Content.UPGRADES.get(tier-2).get();var held=new ItemStack(item,2);player.setItemInHand(InteractionHand.MAIN_HAND,held);
+            var hit=new BlockHitResult(p.getBlockPos().getCenter(),Direction.NORTH,p.getBlockPos(),false);
+            var result=p.getBlockState().useItemOn(held,h.getLevel(),player,InteractionHand.MAIN_HAND,hit);
+            check(result.consumesAction()&&p.tier==tier&&p.addonSlots()==tier*9&&held.getCount()==1,"Real held upgrade failed at tier "+tier);
+            p.getBlockState().useItemOn(held,h.getLevel(),player,InteractionHand.MAIN_HAND,hit);check(held.getCount()==1,"Same-tier upgrade consumed another item");
+            check(p.progress==progress&&p.energyStorage.amount==energy&&p.identity.equals(identity)&&p.complete(),"Capacity upgrade changed work/resources/deployment");
+            var recipe=h.getLevel().getRecipeManager().byKey(Content.id("capacity_upgrade_"+tier));check(recipe.isPresent(),"Upgrade recipe missing");
+        }
+        var named=new ItemStack(BlockContent.MACHINE_SPEED_ADDON,64);named.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("kept-components"));
+        var menu=new AddonMenu(8,player.getInventory(),p);player.containerMenu=menu;menu.setCarried(named);menu.clicked(0,0,ClickType.PICKUP,player);p.loadAddons();
+        check(p.countAddons()==63&&p.inventory.getItem(Processor.LOAD_SLOT).getCount()==1,"Tier 7 did not install exactly 63 and retain remainder");
+        check(p.getBaseAddonData().speed()<.04F,"Hidden installed addons did not affect native stats");
+        menu.setCarried(ItemStack.EMPTY);menu.clicked(AddonMenu.HIDDEN_START,0,ClickType.PICKUP,player);check(menu.getCarried().isEmpty()&&p.countAddons()==63,"Hidden installed slot could be picked up");
+        var saved=p.saveWithFullMetadata(h.getLevel().registryAccess());var copy=new Processor(p.getBlockPos(),p.getBlockState());copy.setLevel(h.getLevel());copy.loadWithComponents(saved,h.getLevel().registryAccess());h.getLevel().setBlockEntity(copy);p=copy;
+        check(p.tier==7&&p.countAddons()==63&&p.inventory.getItem(Processor.LOAD_SLOT).getCount()==1,"Expanded inventory failed NBT round trip");
+        var data=Block.getDrops(p.getBlockState(),h.getLevel(),p.getBlockPos(),p).getFirst().get(Content.DATA.get());check(data.getInt("tier")==7&&data.getList("Items",net.minecraft.nbt.Tag.TAG_COMPOUND).size()==66,"Drop omitted expanded inventory/queued addon");
+    }finally{close(player);clear(p);}h.succeed();}
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void legacyNineSlotsMigrateAndUninstallPacketsConserveRealItems(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.NORTH);var player=player(h,p);try{
+        var named=new ItemStack(BlockContent.MACHINE_SPEED_ADDON);named.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("legacy-addon"));
+        for(int i=9;i<18;i++)p.inventory.setItem(i,named.copy());p.refreshEquipment();p.energyStorage.amount=42000;p.progress=4;p.eject=false;
+        var old=p.saveWithFullMetadata(h.getLevel().registryAccess());old.remove("tier");old.putIntArray("sides",new int[]{3,3,3,3,3,3});
+        var restored=new Processor(p.getBlockPos(),p.getBlockState());restored.setLevel(h.getLevel());restored.loadWithComponents(old,h.getLevel().registryAccess());h.getLevel().setBlockEntity(restored);p=restored;p.refreshEquipment();
+        check(p.tier==1&&p.addonSlots()==9&&p.countAddons()==9&&p.energyStorage.amount==42000&&p.progress==4&&!p.eject,"Legacy migration changed saved resources/settings/work");
+        for(var side:Direction.values())check(h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,p.getBlockPos(),side).receiveEnergy(1,true)==1,"Legacy face setting blocked automatic input");
+        var menu=new AddonMenu(12,player.getInventory(),p);player.containerMenu=menu;
+        var wrong=new AddonPackets.Unload(13,named.copy(),true);check(AddonPackets.handle(wrong,player)==0,"Wrong menu ID uninstalled addons");
+        var mismatch=named.copy();mismatch.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("different"));check(AddonPackets.handle(new AddonPackets.Unload(12,mismatch,true),player)==0,"Component-mismatched request removed a different item");
+        var packet=new AddonPackets.Unload(12,named.copy(),false);player.setPos(player.position().add(100,0,0));check(AddonPackets.handle(packet,player)==0,"Distant player uninstalled addons");player.setPos(p.getBlockPos().getCenter().add(0,0,3));
+        player.gameMode.changeGameModeForPlayer(net.minecraft.world.level.GameType.SPECTATOR);check(AddonPackets.handle(packet,player)==0,"Spectator uninstalled addons");player.gameMode.changeGameModeForPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        var bytes=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());AddonPackets.Unload.CODEC.encode(bytes,packet);var decoded=AddonPackets.Unload.CODEC.decode(bytes);bytes.release();
+        check(AddonPackets.handle(decoded,player)==1&&p.countAddons()==8&&ItemStack.isSameItemSameComponents(p.inventory.getItem(Processor.UNLOAD_SLOT),named),"Uninstall did not return exact installed item");
+        p.inventory.setItem(Processor.UNLOAD_SLOT,new ItemStack(Items.COBBLESTONE));check(AddonPackets.handle(decoded,player)==0&&p.countAddons()==8,"Blocked retrieval slot deleted installed item");p.inventory.setItem(Processor.UNLOAD_SLOT,ItemStack.EMPTY);
+        check(AddonPackets.handle(new AddonPackets.Unload(12,named.copy(),true),player)==8&&p.countAddons()==0&&p.inventory.getItem(Processor.UNLOAD_SLOT).getCount()==8,"Batch uninstall duplicated/lost items");
+        var taken=menu.quickMoveStack(player,1);check(!taken.isEmpty()&&p.inventory.getItem(Processor.UNLOAD_SLOT).isEmpty(),"Unloaded addons could not be retrieved");
+        check(p.getBaseAddonData().speed()==1,"Uninstall left stale speed multiplier");
+        player.getInventory().setItem(0,new ItemStack(Content.UPGRADES.get(1).get(),2));check(!menu.quickMoveStack(player,AddonMenu.PLAYER_START+27).isEmpty()&&p.tier==3&&player.getInventory().getItem(0).getCount()==1,"Shift-click capacity upgrade failed");
+    }finally{close(player);clear(p);}h.succeed();}
 }

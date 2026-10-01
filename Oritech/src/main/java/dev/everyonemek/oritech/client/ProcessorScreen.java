@@ -12,9 +12,10 @@ import rearth.oritech.api.screen.data.*;
 import rearth.oritech.client.ui.OritechMachineScreen;
 
 public final class ProcessorScreen extends OritechMachineScreen<ProcessorMenu> {
-    private final ButtonWidget[] sideButtons=new ButtonWidget[6];
-    private LabelWidget speed,efficiency,status;
-    private ButtonWidget eject;
+    private LabelWidget speed,efficiency,status,capacity;
+    private ButtonWidget eject,addons;
+    private final List<UIComponent> qualityWidgets=new ArrayList<>();
+    private int shownTier;
     public ProcessorScreen(ProcessorMenu menu,Inventory inv,Component title){super(menu,inv,title);}
     private static Component tr(String key,Object... args){return Component.translatable("gui.oritechmekanism."+key,args);}
     @Override protected void addExtraComponents(){
@@ -32,26 +33,35 @@ public final class ProcessorScreen extends OritechMachineScreen<ProcessorMenu> {
         if(menu.layout==Profiles.REFINERY)for(int i=menu.layoutModules+1;i<3;i++){
             var blocker=new SurfaceWidget(92+27*i,6,21,74,OritechSurface.PANEL_DARK);blocker.withTooltip(Component.translatable("tooltip.oritech.refinery_module_missing")).withZIndex(1);addComponent(blocker);
         }
-        var panel=new SurfaceWidget(-72,0,70,145);panel.withSurface(OritechSurface.PANEL);panel.withZIndex(-10);addComponent(panel);
-        addComponent(new LabelWidget(-65,7,58,10,tr("host")).withAlignment(LabelWidget.Alignment.CENTER));
-        addComponent(new ItemSlotWidget(-45,20).withTooltip(tr("host_hint")));
-        addComponent(new LabelWidget(-65,41,58,10,tr("addons")).withAlignment(LabelWidget.Alignment.CENTER));
-        for(int i=0;i<9;i++)addComponent(new ItemSlotWidget(-63+i%3*18,54+i/3*18).withTooltip(tr("addon_hint")));
-        status=new LabelWidget(-65,112,58,26,tr("status."+menu.processor.status)).withWrap(true);addComponent(status);
+        var panel=new SurfaceWidget(-72,0,70,99);panel.withSurface(OritechSurface.PANEL);panel.withZIndex(-10);addComponent(panel);
+        addComponent(new LabelWidget(-38,7,34,10,tr("host")).withAlignment(LabelWidget.Alignment.CENTER).withDarkColor());
+        addComponent(new ItemSlotWidget(ProcessorMenu.HOST_X,20).withTooltip(tr("host_hint")));
+        qualityWidgets.clear();addQualityBadge();
+        capacity=new LabelWidget(-65,47,58,10,Component.empty()).withAlignment(LabelWidget.Alignment.CENTER).withDarkColor();addComponent(capacity);
+        status=new LabelWidget(-65,65,58,26,tr("status."+menu.processor.status)).withWrap(true).withDarkColor();addComponent(status);
+    }
+    private void addQualityBadge(){shownTier=menu.processor.tier;int rings=shownTier-1;
+        if(rings==6){qualityTexture("ring_6");rings=5;}qualityTexture("center");for(int i=1;i<=rings;i++)qualityTexture("ring_"+i);
+    }
+    private void qualityTexture(String name){var icon=new TextureWidget(-67,15,25,25,rearth.oritech.Oritech.id("textures/gui/modular/machine_core/"+name+".png"),0,0,64,64,64,64);
+        icon.withTooltip(tr("quality",menu.processor.tier,menu.processor.addonSlots()));qualityWidgets.add(icon);addComponent(icon);
     }
     @Override protected void addExtensionContent(List<UIComponent> content){
-        content.add(new LabelWidget(0,0,60,10,tr("settings")).withAlignment(LabelWidget.Alignment.CENTER));
+        content.add(new LabelWidget(0,0,60,10,Component.translatable("title.oritech.details")).withAlignment(LabelWidget.Alignment.CENTER));
         speed=new LabelWidget(0,0,60,10,Component.empty());efficiency=new LabelWidget(0,0,60,10,Component.empty());content.add(speed);content.add(efficiency);
-        for(int i=0;i<6;i++){final int action=i;var button=ButtonWidget.panel(0,0,60,14,Component.empty(),b->minecraft.gameMode.handleInventoryButtonClick(menu.containerId,action)).withTextColor(LabelWidget.DARK_TEXT);sideButtons[i]=button;content.add(button);}
+        addons=ButtonWidget.panel(0,0,60,14,tr("addons"),b->minecraft.gameMode.handleInventoryButtonClick(menu.containerId,ProcessorMenu.OPEN_ADDONS)).withTextColor(LabelWidget.DARK_TEXT);
+        addons.withTooltip(tr("manage_addons"));content.add(addons);
         eject=ButtonWidget.panel(0,0,60,14,Component.empty(),b->minecraft.gameMode.handleInventoryButtonClick(menu.containerId,6)).withTextColor(LabelWidget.DARK_TEXT);content.add(eject);
     }
     @Override protected void tickExtra(){var p=menu.processor;var a=p.getBaseAddonData();
         if(speed!=null)speed.setText(tr("speed",String.format(Locale.ROOT,"%.2f",1/a.speed())));
         if(efficiency!=null)efficiency.setText(tr("energy",String.format(Locale.ROOT,"%.2f",a.efficiency())));
         if(status!=null){status.setText(tr("status."+p.status));status.withTooltip(tr("status."+p.status));}
-        for(int i=0;i<6;i++)if(sideButtons[i]!=null)sideButtons[i].setLabel(tr("side."+i).copy().append(": ").append(tr("mode."+p.sides[i])));
         if(eject!=null)eject.setLabel(tr(p.eject?"eject_on":"eject_off"));
+        if(capacity!=null)capacity.setText(tr("capacity",p.addonCount,p.addonSlots()));
+        if(addons!=null)addons.setActive(menu.getCarried().isEmpty());
+        if(shownTier!=p.tier){for(var widget:qualityWidgets)removeComponent(widget);qualityWidgets.clear();addQualityBadge();}
     }
-    @Override public List<Rect2i> getExclusionZones(){var list=new ArrayList<>(super.getExclusionZones());list.add(new Rect2i(leftPos-72,topPos,70,145));return list;}
+    @Override public List<Rect2i> getExclusionZones(){var list=new ArrayList<>(super.getExclusionZones());list.add(new Rect2i(leftPos-72,topPos,70,99));return list;}
     @Override public BlockState getTitleState(){return menu.layout.block().defaultBlockState();}
 }

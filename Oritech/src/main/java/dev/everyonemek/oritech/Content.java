@@ -26,14 +26,17 @@ public final class Content {
     private static final DeferredRegister<DataComponentType<?>> COMPONENTS=DeferredRegister.create(Registries.DATA_COMPONENT_TYPE,ID);
     public static final Supplier<ProcessorBlock> BLOCK=BLOCKS.register("universal_processor",()->new ProcessorBlock());
     public static final Supplier<PartBlock> PART=BLOCKS.register("processor_part",()->new PartBlock());
-    public static final Supplier<BlockItem> ITEM=ITEMS.registerSimpleBlockItem("universal_processor",BLOCK,new Item.Properties().stacksTo(1));
+    public static final Supplier<ProcessorItem> ITEM=ITEMS.register("universal_processor",ProcessorItem::new);
+    public static final java.util.List<Supplier<ProcessorUpgrade>> UPGRADES=new java.util.ArrayList<>();
+    static{for(int tier=2;tier<=Processor.MAX_TIER;tier++){final int target=tier;UPGRADES.add(ITEMS.register("capacity_upgrade_"+tier,()->new ProcessorUpgrade(target)));}}
     public static final Supplier<BlockEntityType<Processor>> TILE=TILES.register("universal_processor",()->BlockEntityType.Builder.of(Processor::new,BLOCK.get()).build(null));
     public static final Supplier<BlockEntityType<Part>> PART_TILE=TILES.register("processor_part",()->BlockEntityType.Builder.of(Part::new,PART.get()).build(null));
     public static final Supplier<MenuType<ProcessorMenu>> MENU=MENUS.register("universal_processor",()->IMenuTypeExtension.create(ProcessorMenu::new));
+    public static final Supplier<MenuType<AddonMenu>> ADDON_MENU=MENUS.register("processor_addons",()->IMenuTypeExtension.create(AddonMenu::new));
     public static final Supplier<DataComponentType<CompoundTag>> DATA=COMPONENTS.register("processor",()->DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
-    public Content(IEventBus bus){BLOCKS.register(bus);ITEMS.register(bus);TILES.register(bus);MENUS.register(bus);COMPONENTS.register(bus);bus.addListener(Content::capabilities);
+    public Content(IEventBus bus){BLOCKS.register(bus);ITEMS.register(bus);TILES.register(bus);MENUS.register(bus);COMPONENTS.register(bus);bus.addListener(Content::capabilities);bus.addListener(AddonPackets::register);
         bus.addListener((net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent e)->{
-            if(e.getTab()==rearth.oritech.init.ItemGroups.MACHINE_GROUP||e.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS)e.accept(ITEM.get());
+            if(e.getTab()==rearth.oritech.init.ItemGroups.MACHINE_GROUP||e.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS){e.accept(ITEM.get());for(var upgrade:UPGRADES)e.accept(upgrade.get());}
         });}
     private static void capabilities(RegisterCapabilitiesEvent e){
         e.registerBlockEntity(Capabilities.ItemHandler.BLOCK,TILE.get(),(p,s)->new Ports.Items(()->p,s));

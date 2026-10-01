@@ -12,23 +12,18 @@ import rearth.oritech.client.ui.OritechScreenHandler;
 import rearth.oritech.util.ScreenProvider;
 
 public final class ProcessorMenu extends OritechScreenHandler {
+    public static final int HOST_X=-29,OPEN_ADDONS=7;
     public final Processor processor;
     public final Profiles layout;
     public final int mainSlots,sideStart,layoutModules;
     public final boolean layoutFluid;
     public ProcessorMenu(int id,Inventory inv,FriendlyByteBuf buf){this(id,inv,read(inv,buf));}
-    private static Processor read(Inventory inv,FriendlyByteBuf buf){var p=(Processor)Objects.requireNonNull(inv.player.level().getBlockEntity(buf.readBlockPos()));p.profileIndex=buf.readVarInt();p.modules=buf.readVarInt();p.fluidAddon=buf.readBoolean();return p;}
+    private static Processor read(Inventory inv,FriendlyByteBuf buf){var p=(Processor)Objects.requireNonNull(inv.player.level().getBlockEntity(buf.readBlockPos()));p.profileIndex=buf.readVarInt();p.modules=buf.readVarInt();p.fluidAddon=buf.readBoolean();p.tier=Math.clamp(buf.readVarInt(),1,Processor.MAX_TIER);return p;}
     public ProcessorMenu(int id,Inventory inv,Processor p){super(id,inv,p);processor=p;layout=p.profile();layoutModules=p.modules;layoutFluid=p.fluidAddon;mainSlots=layout.slots().size();sideStart=slots.size();
-        addSlot(new Slot(p.inventory,Processor.HOST,-45,20){@Override public int getMaxStackSize(){return 1;}
+        addSlot(new Slot(p.inventory,Processor.HOST,HOST_X,20){@Override public int getMaxStackSize(){return 1;}
             @Override public boolean mayPlace(ItemStack s){return p.canInstallHost(s);}
             @Override public boolean mayPickup(Player player){return p.canChangeHost();}
             @Override public void setChanged(){super.setChanged();if(!p.getLevel().isClientSide)p.refreshEquipment();}});
-        for(int i=0;i<9;i++){final int slot=Processor.ADDON_START+i;addSlot(new Slot(p.inventory,slot,-63+i%3*18,54+i/3*18){
-            @Override public int getMaxStackSize(){return 1;}
-            @Override public boolean mayPlace(ItemStack s){if(!p.canInstallAddon(s,slot))return false;if(s.getItem() instanceof net.minecraft.world.item.BlockItem b&&b.getBlock()==rearth.oritech.init.BlockContent.REFINERY_MODULE_BLOCK){int count=0;for(int a=Processor.ADDON_START;a<Processor.SIZE;a++)if(a!=slot&&p.inventory.getItem(a).is(s.getItem()))count++;return count<2;}return true;}
-            @Override public boolean mayPickup(Player player){return p.canRemoveAddon(slot);}
-            @Override public void setChanged(){super.setChanged();if(!p.getLevel().isClientSide)p.refreshEquipment();}});}
-        for(int i=0;i<6;i++){final int side=i;addDataSlot(new DataSlot(){@Override public int get(){return p.sides[side];}@Override public void set(int value){p.sides[side]=Math.clamp(value,0,3);}});}
         bindFluids();
     }
     @Override public void addMachineSlot(int inventorySlot,int x,int y,boolean output){
@@ -67,15 +62,34 @@ public final class ProcessorMenu extends OritechScreenHandler {
         super.broadcastChanges();
     }
     @Override public boolean stillValid(Player p){return !processor.isRemoved()&&p.level()==processor.getLevel()&&p.level().getBlockEntity(blockPos)==processor&&p.distanceToSqr(Vec3.atCenterOf(blockPos))<=64;}
-    @Override public boolean clickMenuButton(Player p,int button){if(!stillValid(p)||p.containerMenu!=this)return false;if(button>=0&&button<6)processor.sides[button]=(processor.sides[button]+1)%4;else if(button==6)processor.eject=!processor.eject;else return false;processor.setChanged();return true;}
+    @Override public boolean clickMenuButton(Player p,int button){
+        if(!stillValid(p)||p.containerMenu!=this)return false;
+        if(button==6){if(p.isSpectator())return false;processor.eject=!processor.eject;processor.setChanged();return true;}
+        if(button!=OPEN_ADDONS||!getCarried().isEmpty()||!(p instanceof net.minecraft.server.level.ServerPlayer server))return false;
+        AddonMenu.open(server,processor);return true;
+    }
+    @Override public boolean canDragTo(Slot slot){return slot.isActive()&&super.canDragTo(slot);}
+    @Override public boolean canTakeItemForPickAll(ItemStack stack,Slot slot){return slot.isActive()&&super.canTakeItemForPickAll(stack,slot);}
+    @Override public void clicked(int slot,int button,ClickType type,Player p){
+        if(p.isSpectator()||!stillValid(p)||p.containerMenu!=this||(slot>=0&&slot<slots.size()&&!slots.get(slot).isActive()))return;
+        super.clicked(slot,button,type,p);
+    }
     @Override public int getPlayerInvStartSlot(ItemStack stack){return mainSlots;}
     @Override public int getPlayerInvEndSlot(ItemStack stack){return mainSlots+36;}
     @Override public int getMachineInvEndSlot(ItemStack stack){return mainSlots;}
-    @Override public ItemStack quickMoveStack(Player p,int index){if(!stillValid(p)||index<0||index>=slots.size())return ItemStack.EMPTY;var slot=slots.get(index);if(!slot.hasItem()||!slot.mayPickup(p))return ItemStack.EMPTY;
+    @Override public ItemStack quickMoveStack(Player p,int index){if(p.isSpectator()||!stillValid(p)||p.containerMenu!=this||index<0||index>=slots.size())return ItemStack.EMPTY;var slot=slots.get(index);if(!slot.isActive()||!slot.hasItem()||!slot.mayPickup(p))return ItemStack.EMPTY;
         var stack=slot.getItem();var copy=stack.copy();boolean moved;
+        if(index>=mainSlots&&index<mainSlots+36&&stack.getItem() instanceof ProcessorUpgrade upgrade){
+            if(!upgrade.apply(processor,p,stack))return ItemStack.EMPTY;
+            if(stack.isEmpty())slot.setByPlayer(ItemStack.EMPTY);else slot.setChanged();return copy;
+        }
         if(index<mainSlots||index>=sideStart)moved=moveItemStackTo(stack,mainSlots,mainSlots+36,true);
         else if(Profiles.of(stack)!=Profiles.EMPTY)moved=moveItemStackTo(stack,sideStart,sideStart+1,false);
-        else if(Processor.validAddon(stack))moved=moveItemStackTo(stack,sideStart+1,slots.size(),false);
+        else if(Processor.validAddon(stack)){
+            if(!getCarried().isEmpty()||!(p instanceof net.minecraft.server.level.ServerPlayer server))return ItemStack.EMPTY;
+            int playerSlot=slot.getContainerSlot();AddonMenu.open(server,processor);
+            return p.containerMenu.quickMoveStack(p,AddonMenu.PLAYER_START+(playerSlot<9?27+playerSlot:playerSlot-9));
+        }
         else moved=moveItemStackTo(stack,0,mainSlots,false);
         if(!moved)return ItemStack.EMPTY;if(stack.isEmpty())slot.setByPlayer(ItemStack.EMPTY);else slot.setChanged();slot.onTake(p,stack);return copy;
     }
