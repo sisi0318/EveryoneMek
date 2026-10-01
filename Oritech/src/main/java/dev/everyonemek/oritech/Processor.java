@@ -231,10 +231,15 @@ public final class Processor extends UpgradableMachineBlockEntity {
     public boolean fluidEnabled(){return profile()==Profiles.REFINERY||profile()==Profiles.COOLER||(profile()==Profiles.CENTRIFUGE&&fluidAddon);}
     public int outputTanks(){return profile()==Profiles.REFINERY?1+modules:profile()==Profiles.CENTRIFUGE&&fluidAddon?1:0;}
     void syncWorld(){if(level!=null&&!level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);}
-    @Override public CompoundTag getUpdateTag(HolderLookup.Provider r){var t=new CompoundTag();t.putInt("profile",profileIndex);t.putInt("modules",modules);t.putBoolean("fluidAddon",fluidAddon);t.putLong("deployedAt",deployedAt);t.putInt("tier",tier);return t;}
+    @Override public CompoundTag getUpdateTag(HolderLookup.Provider r){var t=super.getUpdateTag(r);t.putInt("profile",profileIndex);t.putInt("modules",modules);t.putBoolean("fluidAddon",fluidAddon);t.putLong("deployedAt",deployedAt);t.putInt("tier",tier);return t;}
     @Override public void handleUpdateTag(CompoundTag t,HolderLookup.Provider r){int previous=profileIndex;profileIndex=Profiles.index(t.getInt("profile")).ordinal();modules=Math.clamp(t.getInt("modules"),0,2);fluidAddon=t.getBoolean("fluidAddon");deployedAt=t.getLong("deployedAt");tier=Math.clamp(t.getInt("tier"),1,MAX_TIER);
         if(previous!=profileIndex&&animationController!=null){var manager=animatableInstanceCache.getManagerForId(0);manager.removeController("machine");manager.addController(newController());}}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
+    @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registry){
+        // This packet contains only render metadata. NeoForge's default handler loads a complete save,
+        // which would clear inventory and read the absent addon multipliers as zero.
+        if(!packet.getTag().isEmpty())handleUpdateTag(packet.getTag(),registry);
+    }
     @Override protected void saveAdditional(CompoundTag t,HolderLookup.Provider r){super.saveAdditional(t,r);writeState(t,r);t.putUUID("identity",identity);t.putLongArray("occupied",occupied.stream().mapToLong(BlockPos::asLong).toArray());t.putInt("deployedFacing",deployedFacing.get2DDataValue());}
     private void writeState(CompoundTag t,HolderLookup.Provider r){t.putInt("profile",profileIndex);t.putInt("modules",modules);t.putLong("paid",paid);t.put("signature",signature.copy());t.putBoolean("eject",eject);t.putInt("tier",tier);t.putInt("burst",remainingBurstTicks);
         for(int i=0;i<4;i++)tanks().get(i).writeNbt(t,"tank"+i);

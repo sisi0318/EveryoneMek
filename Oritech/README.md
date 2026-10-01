@@ -1,6 +1,6 @@
 # Oritech Mekanism · 奥瑞机械扩展
 
-0.1.0-alpha.3。通用奥瑞处理器接收原机器主方块，保留原尺寸展开外形、动画与加工界面，支持七级扩容、插件装载／卸载及 OritechThings 高级插件。
+0.1.0-alpha.4。通用奥瑞处理器接收原机器主方块，保留原尺寸展开外形、动画与加工界面，支持七级扩容、插件装载／卸载及 OritechThings 高级插件。
 
 依赖 Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 10.7.19.85、Oritech 1.2.12、Architectury 13.0.11、GeckoLib 4.6.6；客户端需要 Athena 4.0.0。JEI 可选。
 
@@ -63,6 +63,6 @@
 
 ## 开发验证
 
-`./gradlew build runGameTestServer` 检查原生环境；`./gradlew -PwithThings=true -PgameTestDirectory=gametest-with-things runGameTestServer` 检查可选兼容。九项服务端用例涵盖九机型、四朝向、原配方守恒、48 种高级插件、装载／卸载、七级扩容、旧存档迁移、流体点击、精炼倍率、真实漏斗与拆装保存。
+`./gradlew build runGameTestServer` 检查原生环境；`./gradlew -PwithThings=true -PgameTestDirectory=gametest-with-things runGameTestServer` 检查可选兼容。十项服务端用例涵盖九机型、四朝向、原配方守恒、48 种高级插件、装载／卸载、七级扩容、旧存档迁移、流体点击、精炼倍率、真实漏斗、拆装保存及客户端数据包回放。
 
 `tools/verify_resources.py` 核对原模型、贴图、动画、界面资源和发行包。没有启动游戏客户端；界面观感、展开动画与音效仍需游戏内验收。实现入口见 [AGENTS.md](AGENTS.md)。

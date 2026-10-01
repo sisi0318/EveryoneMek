@@ -2,7 +2,7 @@
 
 先遵循根目录 AGENTS.md，再读 README、CHANGELOG、DESIGN。
 
-- 模组 `oritechmekanism`，包 `dev.everyonemek.oritech`，目录 Oritech，JAR OritechMekanism，0.1.0-alpha.3。
+- 模组 `oritechmekanism`，包 `dev.everyonemek.oritech`，目录 Oritech，JAR OritechMekanism，0.1.0-alpha.4。
 - Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 10.7.19.85、Java 21。目标是实际发布的 Oritech 1.2.12；开发分支 1.2.13 不替代发布契约。
 - Architectury 13.0.11、GeckoLib 4.6.6、客户端 Athena 4.0.0；Oritech 已内嵌 GrandPower。没有 owo-lib 依赖。JEI 可选。
 - 用户明确指定显示名“通用奥瑞处理器”，主机槽放入原机器主方块，不是 machine_core_N。物品保留，按其类型加工原配方。
@@ -27,6 +27,8 @@
 - 打开插件窗口或返回主界面要求鼠标未持物。主界面 Shift 点击插件会打开管理界面并放入装载槽；Shift 点击扩容件应用品质升级。原主机／流体布局变化仍在鼠标未持物时重开主菜单。
 - 原菜单的流体点击消息只有菜单类型与索引检查。`ProcessorMenu` 使用与当前菜单、距离、机型、流体插件和罐室数绑定的视图；不把裸储罐放进 `fluidStorages`。显示用真实储罐，操作用安全视图，两者索引对应。
 - 原 `addonData` 只在 `GUI_OPEN` 同步；侧栏安装后主动发送此类型，否则倍率显示会滞后。工作动画所需 `duration` 同时通过 TICK／SPARSE 同步，不能只同步给已打开菜单的玩家。
+- `getUpdateTag`／`getUpdatePacket` 仅携带外观元数据，必须同时覆写 `handleUpdateTag` 和 NeoForge `onDataPacket`，后者转发到前者。NeoForge 默认 `onDataPacket` 调用完整 `loadWithComponents`，会清空未携带的客户端库存，并让原 `loadAddonNbtData` 把缺省速度／效率读成零；GUI_TICK 又不会同步私有 addonData，导致 Infinity 长期显示。该故障已通过真实 GUI_OPEN 编解码后回放外观数据包复现并修复。
+- `getUpdateTag` 从 `super.getUpdateTag` 的空标签开始填充，保留原 `NetworkedBlockEntity` 安排 INITIAL 同步的标记。不要改为完整库存 NBT 来掩盖包类型混用，也不要将错误倍率硬改成 1。
 - 装备变更检测缓存各已安装物品的副本，每 tick 仅比较物品、数量、组件；不要给 63 个已安装槽每 tick 重编码 NBT。装载／取出缓冲不在加工装备快照中，只有真正安装或卸载才使加工签名变化。
 - 原进度 tooltip 会再乘一次原生速度，原能量条会缓存创建时容量。客户端保留原进度／能量控件，改用已调整时间、锻造已充 FE 及动态容量读数；整批锻造预算不能显示为每 tick 耗电。
 - `Engine` 普通耗能采用 `ceil(功率 × 效率 ÷ 速度)`，时间采用 `ceil(原时间 × 速度 × 机型修正)`；电炉功率公式另除以 2。爆发同时影响原生速度／效率，处理室逐批检查物品与流体并消耗真实材料。
@@ -38,7 +40,7 @@
 
 ## 验证
 
-- `src/gameTest/.../ProcessorGameTests.java` 共 9 项：原七类验收扩展为自动物流与真实管理菜单；新增七级右键升级／63 插件／余量保存，以及旧九槽迁移／C2S 卸载校验／组件守恒／Shift 扩容。真实漏斗还检查输出堵塞时不倒灌。
+- `src/gameTest/.../ProcessorGameTests.java` 共 10 项：原七类验收扩展为自动物流与真实管理菜单；七级右键升级／63 插件／余量保存，旧九槽迁移／C2S 卸载校验／组件守恒／Shift 扩容，以及真实同步包回放。真实漏斗还检查输出堵塞时不倒灌。数据包回放覆盖 GUI_OPEN、GUI_TICK、SPARSE_TICK 与 onDataPacket 交错，确认倍率和客户端物品不会被外观数据覆盖。
 - 已在不安装 OritechThings 与安装 0.0.46 的服务端环境验证。兼容用例枚举 48 个真实 TierAddonBlock，核对六类参数及实际提速；不硬编码注册名来模拟高级插件。
 - `build` 依赖 `compileGameTestJava`，不会执行服务器，按需显式调用 `runGameTestServer`。`-PwithThings=true` 加载可选插件，`-PgameTestDirectory=gametest-with-things` 隔离测试目录。
 - `tools/verify_resources.py --oritech <发布JAR> --jar <发行JAR>` 核对十组原机／罐室资源、空机三张 16×16 原材质、六级扩容件与配方、原品质图标、语言配对及发行包边界。原资源和 GameTest 不进发行 JAR。

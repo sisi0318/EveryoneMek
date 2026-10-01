@@ -54,8 +54,8 @@ public final class ProcessorScreen extends OritechMachineScreen<ProcessorMenu> {
         eject=ButtonWidget.panel(0,0,60,14,Component.empty(),b->minecraft.gameMode.handleInventoryButtonClick(menu.containerId,6)).withTextColor(LabelWidget.DARK_TEXT);content.add(eject);
     }
     @Override protected void tickExtra(){var p=menu.processor;var a=p.getBaseAddonData();
-        if(speed!=null)speed.setText(tr("speed",String.format(Locale.ROOT,"%.2f",1/a.speed())));
-        if(efficiency!=null)efficiency.setText(tr("energy",String.format(Locale.ROOT,"%.2f",a.efficiency())));
+        if(speed!=null)speed.setText(tr("speed",AddonReadout.multiplier(a.speed(),true)));
+        if(efficiency!=null)efficiency.setText(tr("energy",AddonReadout.multiplier(a.efficiency(),false)));
         if(status!=null){status.setText(tr("status."+p.status));status.withTooltip(tr("status."+p.status));}
         if(eject!=null)eject.setLabel(tr(p.eject?"eject_on":"eject_off"));
         if(capacity!=null)capacity.setText(tr("capacity",p.addonCount,p.addonSlots()));

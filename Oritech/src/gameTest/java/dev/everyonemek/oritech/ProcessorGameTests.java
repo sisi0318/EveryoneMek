@@ -213,4 +213,33 @@ public final class ProcessorGameTests {
         check(p.getBaseAddonData().speed()==1,"Uninstall left stale speed multiplier");
         player.getInventory().setItem(0,new ItemStack(Content.UPGRADES.get(1).get(),2));check(!menu.quickMoveStack(player,AddonMenu.PLAYER_START+27).isEmpty()&&p.tier==3&&player.getInventory().getItem(0).getCount()==1,"Shift-click capacity upgrade failed");
     }finally{close(player);clear(p);}h.succeed();}
+    @GameTest(template="empty",timeoutTicks=40)
+    public static void blockUpdatesPreserveSyncedAddonStatsAndContents(GameTestHelper h){var p=place(h,Profiles.CENTRIFUGE,Direction.NORTH);try{
+        install(p,BlockContent.MACHINE_SPEED_ADDON,9);install(p,BlockContent.MACHINE_CAPACITOR_ADDON,10);install(p,BlockContent.MACHINE_FLUID_ADDON,11);
+        p.energyStorage.amount=123456;p.progress=7;p.paid=37;p.eject=false;p.inventory.setItem(0,new ItemStack(Items.IRON_INGOT,12));
+        p.fluidIn.setStack(FluidStack.create(net.minecraft.world.level.material.Fluids.WATER,1000));
+        var replica=new Processor(p.getBlockPos(),p.getBlockState());replica.setLevel(h.getLevel());replica.loadWithComponents(p.saveWithFullMetadata(h.getLevel().registryAccess()),h.getLevel().registryAccess());
+        var expected=p.getBaseAddonData();var identity=replica.identity;
+        var network=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        try{
+            rearth.oritech.api.networking.NetworkManager.encodeFields(p,rearth.oritech.api.networking.SyncType.GUI_OPEN,network,h.getLevel());
+            rearth.oritech.api.networking.NetworkManager.decodeFields(replica,rearth.oritech.api.networking.SyncType.GUI_OPEN,network,h.getLevel());
+            check(!network.isReadable()&&replica.getBaseAddonData().equals(expected),"Native GUI_OPEN did not synchronize real addon parameters");
+        }finally{network.release();}
+        var packet=p.getUpdatePacket();check(!packet.getTag().contains("Items")&&!packet.getTag().contains("speed"),"Visual update unexpectedly contains a full machine save");
+        replica.onDataPacket(null,packet,h.getLevel().registryAccess());
+        check(replica.getBaseAddonData().equals(expected),"Visual block update reset synchronized speed/efficiency");
+        check(replica.energyStorage.amount==123456&&replica.inventory.getItem(0).getCount()==12&&replica.inventory.getItem(9).is(BlockContent.MACHINE_SPEED_ADDON.asItem()),"Visual update wiped client energy/inventory");
+        check(replica.progress==7&&replica.paid==37&&!replica.eject&&replica.fluidIn.getAmount()==1000&&replica.identity.equals(identity),"Visual update overwrote unrelated client state");
+        replica.handleUpdateTag(p.getUpdateTag(h.getLevel().registryAccess()),h.getLevel().registryAccess());check(replica.getBaseAddonData().equals(expected),"Initial chunk tag reset addon parameters");
+        for(var type:List.of(rearth.oritech.api.networking.SyncType.GUI_TICK,rearth.oritech.api.networking.SyncType.SPARSE_TICK)){
+            var bytes=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());try{
+                rearth.oritech.api.networking.NetworkManager.encodeFields(p,type,bytes,h.getLevel());rearth.oritech.api.networking.NetworkManager.decodeFields(replica,type,bytes,h.getLevel());
+                check(!bytes.isReadable(),"Native "+type+" left unread bytes");replica.onDataPacket(null,packet,h.getLevel().registryAccess());check(replica.getBaseAddonData().equals(expected),"Mixed update order reset addon factors");
+            }finally{bytes.release();}
+        }
+        check(AddonReadout.multiplier(.5F,true).equals("2.00")&&AddonReadout.multiplier(1.2F,false).equals("1.20"),"Valid multipliers changed display meaning");
+        for(float invalid:new float[]{0,-1,Float.NaN,Float.POSITIVE_INFINITY})check(AddonReadout.multiplier(invalid,true).equals("—")&&AddonReadout.multiplier(invalid,false).equals("—"),"Invalid factor rendered as Infinity/zero cost");
+        check(Double.isFinite(Double.parseDouble(AddonReadout.multiplier(Float.MIN_VALUE,true)))&&Double.parseDouble(AddonReadout.multiplier(.000001F,false))>0,"Extreme valid factor overflowed or rounded to zero");
+    }finally{clear(p);}h.succeed();}
 }
