@@ -71,7 +71,7 @@ public final class AddonScreen extends OritechWidgetScreen<AddonMenu> {
         if(canUnload){var out=p.inventory.getItem(Processor.UNLOAD_SLOT);
             if(!out.isEmpty()&&(!ItemStack.isSameItemSameComponents(out,selected)||out.getCount()>=selected.getMaxStackSize())){canUnload=false;issue=tr("retrieve_first");}
             else {boolean removable=false;for(int i=Processor.ADDON_START;i<Processor.ADDON_END;i++)if(ItemStack.isSameItemSameComponents(p.inventory.getItem(i),selected)&&p.canRemoveAddon(i)){removable=true;break;}
-                if(!removable){canUnload=false;issue=tr("empty_fluid");}}
+                if(!removable){canUnload=false;issue=tr(selected.is(Content.FLUID_CAPACITY.get())?"drain_for_capacity":"empty_fluid");}}
         }
         unload.setActive(canUnload);back.setActive(menu.getCarried().isEmpty());status.setText(issue);status.withTooltip(issue);
     }

@@ -47,6 +47,16 @@ with ZipFile(args.oritech) as upstream:
         namespace, item = ingredient['item'].split(':', 1)
         assert namespace == 'oritech' and f'assets/oritech/models/item/{item}.json' in names, ingredient
     assert recipe['result'] == {'id': 'oritechmekanism:universal_processor', 'count': 1}
+    fluid_model = json.loads((resources / 'assets/oritechmekanism/models/item/fluid_capacity_addon.json').read_text(encoding='utf-8'))
+    assert fluid_model['parent'] == 'oritech:item/machine_fluid_addon'
+    assert 'assets/oritech/models/item/machine_fluid_addon.json' in names
+    assert fluid_model['textures']['0'] == 'oritech:block/machine_fluid_addon_on'
+    assert 'assets/oritech/textures/block/machine_fluid_addon_on.png' in names
+    fluid_recipe = json.loads((resources / 'data/oritechmekanism/recipe/fluid_capacity_addon.json').read_text(encoding='utf-8'))
+    assert fluid_recipe['result'] == {'id': 'oritechmekanism:fluid_capacity_addon', 'count': 1}
+    for value in fluid_recipe['key'].values():
+        assert value['item'].startswith('oritech:')
+        assert f"assets/oritech/models/item/{value['item'].split(':')[1]}.json" in names
     for tier in (2, 3):
         assert not (resources / f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json').exists()
         assert not (resources / f'data/oritechmekanism/recipe/capacity_upgrade_{tier}.json').exists()

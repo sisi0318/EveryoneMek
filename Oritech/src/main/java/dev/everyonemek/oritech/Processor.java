@@ -33,10 +33,11 @@ public final class Processor extends UpgradableMachineBlockEntity {
     @SyncField({SyncType.INITIAL,SyncType.TICK,SyncType.SPARSE_TICK,SyncType.GUI_OPEN,SyncType.GUI_TICK}) public int duration=1;
     @SyncField({SyncType.GUI_OPEN,SyncType.GUI_TICK}) public long usage,paid,rate;
     @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK}) public boolean fluidAddon,yieldAddon,eject=true;
-    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidIn=new SimpleFluidStorage(8000L,this::setChanged);
-    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidA=new SimpleFluidStorage(8000L,this::setChanged);
-    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidB=new SimpleFluidStorage(4000L,this::setChanged);
-    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidC=new SimpleFluidStorage(4000L,this::setChanged);
+    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public int fluidCapacityAddons;
+    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidIn=new ProcessorTank(0,()->fluidCapacityAddons,this::setChanged);
+    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidA=new ProcessorTank(1,()->fluidCapacityAddons,this::setChanged);
+    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidB=new ProcessorTank(2,()->fluidCapacityAddons,this::setChanged);
+    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public final SimpleFluidStorage fluidC=new ProcessorTank(3,()->fluidCapacityAddons,this::setChanged);
     public boolean removingParts;
     private final List<BlockPos> occupied=new ArrayList<>();
     private List<ItemStack> equipment=List.of();
@@ -87,6 +88,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
     }
     @Override public void initAddons(BlockPos ignored){refresh=true;}
     public static boolean validAddon(ItemStack stack){
+        if(stack.is(Content.FLUID_CAPACITY.get()))return true;
         if(!(stack.getItem() instanceof BlockItem item))return false;
         if(item.getBlock()==BlockContent.REFINERY_MODULE_BLOCK)return true;
         if(item.getBlock() instanceof rearth.oritech.block.blocks.addons.CombiAddonBlock)return stack.has(ComponentContent.ADDON_DATA.get());
@@ -96,6 +98,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
             ||block==BlockContent.MACHINE_FLUID_ADDON||block==BlockContent.MACHINE_YIELD_ADDON);
     }
     public boolean canInstallAddon(ItemStack stack,int slot){if(slot<ADDON_START||slot>=ADDON_START+addonSlots()||!validAddon(stack))return false;
+        if(stack.is(Content.FLUID_CAPACITY.get()))return countFluidCapacityAddons(slot)<FluidCapacityAddon.LIMIT;
         if(stack.getItem() instanceof BlockItem module&&module.getBlock()==BlockContent.REFINERY_MODULE_BLOCK){int count=0;for(int i=ADDON_START;i<ADDON_END;i++)if(i!=slot&&inventory.getItem(i).is(stack.getItem()))count+=inventory.getItem(i).getCount();return count<2;}
         if(profile()==Profiles.ATOMIC&&chambers(stack)>0)return false;
         boolean combined=stack.getItem() instanceof BlockItem b&&b.getBlock() instanceof rearth.oritech.block.blocks.addons.CombiAddonBlock;
@@ -107,7 +110,10 @@ public final class Processor extends UpgradableMachineBlockEntity {
     private static int chambers(ItemStack stack){var data=stack.get(ComponentContent.ADDON_DATA.get());if(data!=null)return data.data().extraChambers();return stack.getItem() instanceof BlockItem b&&b.getBlock() instanceof MachineAddonBlock a?a.getAddonSettings().chamberCount():0;}
     public boolean canInstallHost(ItemStack stack){if(!canChangeHost()||Profiles.of(stack)==Profiles.EMPTY)return false;if(Profiles.of(stack)==Profiles.ATOMIC)for(int i=ADDON_START;i<ADDON_END;i++)if(chambers(inventory.getItem(i))>0)return false;return true;}
     public boolean canChangeHost(){for(int i=0;i<8;i++)if(!inventory.getItem(i).isEmpty())return false;return tanks().stream().allMatch(t->t.getAmount()==0);}
-    public boolean canRemoveAddon(int slot){var stack=inventory.getItem(slot);if(!(stack.getItem() instanceof BlockItem b))return true;
+    private int countFluidCapacityAddons(int excluded){int count=0;for(int i=ADDON_START;i<ADDON_START+addonSlots();i++)if(i!=excluded&&inventory.getItem(i).is(Content.FLUID_CAPACITY.get()))count+=inventory.getItem(i).getCount();return count;}
+    public boolean canRemoveAddon(int slot){var stack=inventory.getItem(slot);
+        if(stack.is(Content.FLUID_CAPACITY.get())){int remaining=Math.max(0,countFluidCapacityAddons(-1)-1);for(int i=0;i<4;i++)if(tanks().get(i).getAmount()>FluidCapacityAddon.capacity(i,remaining))return false;return true;}
+        if(!(stack.getItem() instanceof BlockItem b))return true;
         if(hasFluidFeature(stack)&&!anotherFluidAddon(slot))return fluidIn.getAmount()==0&&fluidA.getAmount()==0;
         if(b.getBlock()==BlockContent.REFINERY_MODULE_BLOCK)return fluidB.getAmount()==0&&fluidC.getAmount()==0;
         return true;
@@ -117,6 +123,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
     public String loadStatus(){var stack=inventory.getItem(LOAD_SLOT);if(stack.isEmpty())return "";
         if(countAddons()>=addonSlots())return "capacity_full";
         if(!validAddon(stack))return "load_unsupported";
+        if(stack.is(Content.FLUID_CAPACITY.get())&&countFluidCapacityAddons(-1)>=FluidCapacityAddon.LIMIT)return "load_fluid_limit";
         if(profile()==Profiles.ATOMIC&&chambers(stack)>0)return "load_atomic";
         if(stack.getItem() instanceof BlockItem b&&b.getBlock()==BlockContent.REFINERY_MODULE_BLOCK&&modules>=2)return "load_modules";
         for(int i=ADDON_START;i<ADDON_START+addonSlots();i++)if(inventory.getItem(i).isEmpty()&&canInstallAddon(stack,i))return "load_pending";
@@ -149,6 +156,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
         if(changed)cancelWork();
         equipment=equipmentSnapshot();refresh=false;
         addonCount=countAddons();
+        fluidCapacityAddons=Math.min(FluidCapacityAddon.LIMIT,countFluidCapacityAddons(-1));
         var newProfile=Profiles.of(inventory.getItem(HOST));
         int oldModules=modules;var oldProfile=profile();profileIndex=newProfile.ordinal();
         modules=0;fluidAddon=false;yieldAddon=false;
@@ -256,6 +264,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
         // Slots 0-17 keep their old meaning. Additional slots are appended, never reindexed.
         for(int i=ADDON_START;i<ADDON_END;i++)if(!inventory.getItem(i).isEmpty())tier=Math.max(tier,(i-ADDON_START)/ADDONS_PER_TIER+1);
         addonCount=countAddons();
+        fluidCapacityAddons=Math.min(FluidCapacityAddon.LIMIT,countFluidCapacityAddons(-1));
         for(int i=0;i<4;i++){if(t.contains("fluidtank"+i))tanks().get(i).readNbt(t,"tank"+i);if(tanks().get(i).getAmount()<0)tanks().get(i).setAmount(0);}
         progress=Math.max(0,progress);energyStorage.amount=Math.max(0,energyStorage.amount);remainingBurstTicks=Math.clamp(t.getInt("burst"),-1_000_000,1_000_000);
     }

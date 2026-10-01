@@ -36,6 +36,15 @@ write(f'data/{ID}/recipe/universal_processor.json', {'type': 'minecraft:crafting
 zh = {'block.oritechmekanism.universal_processor': '通用奥瑞处理器', 'block.oritechmekanism.processor_part': '奥瑞处理器部件'}
 en = {'block.oritechmekanism.universal_processor': 'Universal Oritech Processor', 'block.oritechmekanism.processor_part': 'Oritech Processor Part'}
 grades = [('原始', 'Primitive'), ('基础', 'Basic'), ('中级', 'Improved'), ('高级', 'Advanced'), ('精良', 'Elite'), ('极致', 'Ultra'), ('终极', 'Ultimate')]
+zh[f'item.{ID}.fluid_capacity_addon'] = '流体扩容插件'
+en[f'item.{ID}.fluid_capacity_addon'] = 'Fluid Capacity Addon'
+write(f'assets/{ID}/models/item/fluid_capacity_addon.json', {'parent': 'oritech:item/machine_fluid_addon',
+    'textures': {'0': 'oritech:block/machine_fluid_addon_on'}})
+write(f'data/{ID}/recipe/fluid_capacity_addon.json', {'type': 'minecraft:crafting_shaped', 'category': 'misc',
+    'pattern': ['PTP', 'CAC', 'PTP'],
+    'key': {'P': {'item': 'oritech:machine_plating_block'}, 'T': {'item': 'oritech:small_tank_block'},
+            'C': {'item': 'oritech:processing_unit'}, 'A': {'item': 'oritech:machine_fluid_addon'}},
+    'result': {'id': f'{ID}:fluid_capacity_addon', 'count': 1}})
 # Test-stage redesign: retire the lower upgrades entirely, including previously generated files.
 for tier in (2, 3):
     for path in (f'assets/{ID}/models/item/capacity_upgrade_{tier}.json', f'data/{ID}/recipe/capacity_upgrade_{tier}.json'):
@@ -53,6 +62,8 @@ for key, pair in {
     'tooltip.processor_tier': ('机器品质：%s · 插件容量：%s', 'Machine quality: %s · Addon capacity: %s'),
     'tooltip.capacity_upgrade': ('右键处理器，将插件容量提升至 %s。', 'Use on a processor to increase its addon capacity to %s.'),
     'tooltip.upgrade_menu': ('也可在机器界面中 Shift 点击使用。', 'You can also shift-click this item in a processor menu.'),
+    'tooltip.fluid_capacity': ('装入处理器，使所有流体储罐容量翻倍。', 'Install in a processor to double all fluid tank capacities.'),
+    'tooltip.fluid_capacity_limit': ('最多 %s 个，每个占用一个插件位。', 'Up to %s addons; each uses one addon slot.'),
     'message.upgraded': ('机器品质提升至 %s，插件容量 %s。', 'Machine quality upgraded to %s. Addon capacity: %s.'),
     'message.upgrade_lower': ('需要更高等级的扩容升级。', 'Use a capacity upgrade above the current machine quality.'),
 }.items():
@@ -68,13 +79,16 @@ pairs = {
     'not_selected': ('未选择', 'No selection'), 'unload': ('卸载', 'Uninstall'),
     'unload_hint': ('卸载一个；按住 Shift 卸载全部同类插件。', 'Uninstall one. Hold Shift to uninstall all matching addons.'),
     'load': ('装载', 'Load'), 'retrieve': ('取出', 'Take'),
-    'load_hint': ('自动安装奥瑞或 OritechThings 加工插件。容量不足或不兼容的物品会留在槽内。', 'Automatically install Oritech or OritechThings processing addons. Excess or incompatible addons stay in this slot.'),
+    'load_hint': ('自动安装奥瑞、OritechThings 或流体扩容插件。容量不足或不兼容的物品会留在槽内。', 'Automatically install Oritech, OritechThings or fluid capacity addons. Excess or incompatible addons stay in this slot.'),
     'retrieve_hint': ('从这里取回已卸载的插件。', 'Retrieve uninstalled addons here.'),
     'no_addons': ('尚未安装插件', 'No addons installed'), 'installed_count': ('已安装：%s', 'Installed: %s'),
     'capacity_full': ('插件容量已满', 'Capacity full'), 'load_pending': ('等待装载', 'Load pending'),
     'load_unsupported': ('不支持此插件', 'Unsupported addon'), 'load_atomic': ('原子锻造不支持处理室', 'No chambers here'),
     'load_modules': ('罐室已达上限', 'Module limit'), 'load_combined': ('组合插件需独立安装', 'Combined conflict'),
     'retrieve_first': ('先取出已卸载插件', 'Retrieve first'), 'empty_fluid': ('先排空相关储罐', 'Drain tanks'),
+    'load_fluid_limit': ('流体扩容已达上限', 'Tank addon limit'),
+    'drain_for_capacity': ('流体超过缩容上限', 'Drain excess fluid'),
+    'tank_capacity': ('容量：%s 毫桶', 'Capacity: %s mB'),
     'speed': ('速度 ×%s', 'Spd ×%s'), 'energy': ('耗能 ×%s', 'FE ×%s'),
     'progress': ('加工：%s / %s tick', 'Processing: %s / %s ticks'), 'charge': ('已充能：%s / %s FE', 'Charged: %s / %s FE'),
     'eject_on': ('自动输出：开', 'Eject: on'), 'eject_off': ('自动输出：关', 'Eject: off'),

@@ -20,8 +20,19 @@ public final class ProcessorScreen extends OritechMachineScreen<ProcessorMenu> {
     private static Component tr(String key,Object... args){return Component.translatable("gui.oritechmekanism."+key,args);}
     @Override protected void addExtraComponents(){
         // Keep native widgets while supplying the processor's already-adjusted progress and live capacity.
-        components.removeIf(c->c instanceof ProgressDisplayWidget||c instanceof EnergyDisplayWidget);
+        components.removeIf(c->c instanceof ProgressDisplayWidget||c instanceof EnergyDisplayWidget||c instanceof FluidDisplayWidget);
         var p=menu.processor;
+        for(var source:menu.getDataDisplays())if(source instanceof DisplayDataSource.FluidDataSource data){
+            var tank=data.getStorage();
+            var fluid=new FluidDisplayWidget(data,p.getBlockPos()){
+                @Override protected long getTargetAmount(){return Math.clamp(tank.getStack().getAmount(),0,tank.getCapacity());}
+                @Override protected long getCapacity(){return tank.getCapacity();}
+                @Override protected float getFillRatio(){return (float)Math.clamp(displayedAmount/Math.max(1,tank.getCapacity()),0,1);}
+                @Override public void tick(){super.tick();setTooltip(List.of(DisplayDataSource.getFluidTooltip(tank.getStack()),
+                    tr("tank_capacity",tank.getCapacity())));}
+            };
+            addComponent(fluid);
+        }
         var energy=new EnergyDisplayWidget(DisplayDataSource.CreateEnergy(p.energyStorage,p.getEnergyConfiguration(),p)){
             @Override protected long getTargetAmount(){return Math.clamp(p.energyStorage.amount,0,p.energyStorage.capacity);}
             @Override protected long getCapacity(){return p.energyStorage.capacity;}

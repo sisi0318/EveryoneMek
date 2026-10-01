@@ -1,0 +1,6 @@
+{
+  "parent": "oritech:item/machine_fluid_addon",
+  "textures": {
+    "0": "oritech:block/machine_fluid_addon_on"
+  }
+}

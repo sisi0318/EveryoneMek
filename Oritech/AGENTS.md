@@ -2,7 +2,7 @@
 
 先遵循根目录 AGENTS.md，再读 README、CHANGELOG、DESIGN。
 
-- 模组 `oritechmekanism`，包 `dev.everyonemek.oritech`，目录 Oritech，JAR OritechMekanism，0.1.0-alpha.5。
+- 模组 `oritechmekanism`，包 `dev.everyonemek.oritech`，目录 Oritech，JAR OritechMekanism，0.1.0-alpha.6。
 - Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 10.7.19.85、Java 21。目标是实际发布的 Oritech 1.2.12；开发分支 1.2.13 不替代发布契约。
 - Architectury 13.0.11、GeckoLib 4.6.6、客户端 Athena 4.0.0；Oritech 已内嵌 GrandPower。没有 owo-lib 依赖。JEI 可选。
 - 用户明确指定显示名“通用奥瑞处理器”，主机槽放入原机器主方块，不是 machine_core_N。物品保留，按其类型加工原配方。
@@ -25,6 +25,9 @@
 - 主界面继承 `OritechScreenHandler`／`OritechMachineScreen`，176×166、玩家槽原位置，侧栏只显示主机、品质与容量。插件窗口 276×245：装载／取出菜单槽 0/1，玩家槽 2–37，38 起为仅同步的已安装槽。隐藏槽必须同时拒绝点击、快捷移动、拖拽与双击收集；列表是显示视图。
 - `ProcessorUpgrade.apply` 校验世界、实体、距离及玩家建造权限，只接受更高等级；升级只加容量，不改加工签名、不重建结构。等级、安装库存、两缓冲槽随 NBT 和掉落组件保存。`ProcessorItem` 显示保存等级与额度。
 - `loadAddons` 从装载槽逐个移动到已解锁空位，余量保留；`unloadAddon` 把原物品移动到取出槽。取出槽不匹配或已满、最后一个流体插件对应罐非空时禁止卸载。`AddonPackets.Unload` 携带菜单 ID 与物品组件模板，服务器验证当前菜单／距离并匹配实际物品，不接受客户端声明数量。
+- `FluidCapacityAddon` 是独立物品插件 `fluid_capacity_addon`，每个占一插件位、使四罐容量翻倍，最多 8 个；与原生组合插件共存，不参与 `gatherAddonStats`。输入／A 基础 8000 mB，B／C 基础 4000 mB，最高分别 2,048,000／1,024,000 mB。容量插件不启用离心机流体加工。
+- `ProcessorTank` 继承 `SimpleFluidStorage`，同时覆写 `getCapacity` 和 `insert`：原 `insert` 直接使用私有 final 容量，只改 getter 会导致显示扩容而仍只能插入原容量。保留原流体 NBT 与同步 codec，字段仍声明为 `SimpleFluidStorage`；`fluidCapacityAddons` 随 INITIAL／GUI_OPEN／GUI_TICK／SPARSE_TICK 同步，存档读取立即从安装库存重新计算。
+- 缩容逐个从当前安装库存计数，不能用尚未刷新的缓存计数；任何一罐超过缩容后容量就拒绝该次卸载，Shift 批量卸载允许停在安全数量，保留插件和流体组件。沿用已取得的 capability、菜单视图、精炼液面均读取同一动态容量。
 - 打开插件窗口或返回主界面要求鼠标未持物。主界面 Shift 点击插件会打开管理界面并放入装载槽；Shift 点击扩容件应用品质升级。原主机／流体布局变化仍在鼠标未持物时重开主菜单。
 - 原菜单的流体点击消息只有菜单类型与索引检查。`ProcessorMenu` 使用与当前菜单、距离、机型、流体插件和罐室数绑定的视图；不把裸储罐放进 `fluidStorages`。显示用真实储罐，操作用安全视图，两者索引对应。
 - 原 `addonData` 只在 `GUI_OPEN` 同步；侧栏安装后主动发送此类型，否则倍率显示会滞后。工作动画所需 `duration` 同时通过 TICK／SPARSE 同步，不能只同步给已打开菜单的玩家。
@@ -32,6 +35,7 @@
 - `getUpdateTag` 从 `super.getUpdateTag` 的空标签开始填充，保留原 `NetworkedBlockEntity` 安排 INITIAL 同步的标记。不要改为完整库存 NBT 来掩盖包类型混用，也不要将错误倍率硬改成 1。
 - 装备变更检测缓存各已安装物品的副本，每 tick 仅比较物品、数量、组件；不要给 63 个已安装槽每 tick 重编码 NBT。装载／取出缓冲不在加工装备快照中，只有真正安装或卸载才使加工签名变化。
 - 原进度 tooltip 会再乘一次原生速度，原能量条会缓存创建时容量。客户端保留原进度／能量控件，改用已调整时间、锻造已充 FE 及动态容量读数；整批锻造预算不能显示为每 tick 耗电。
+- 原 `FluidDataSource` 和 `AbstractDataDisplayWidget` 同样缓存容量，液罐控件须覆写目标量、容量、填充比例，提示加入实际最大容量；保留原控件外观与流体点击。新插件模型引用原流体插件模型及其亮灯材质，不复制素材、不使用 `builtin/entity` 的小储罐物品模型。
 - `Engine` 普通耗能采用 `ceil(功率 × 效率 ÷ 速度)`，时间采用 `ceil(原时间 × 速度 × 机型修正)`；电炉功率公式另除以 2。爆发同时影响原生速度／效率，处理室逐批检查物品与流体并消耗真实材料。
 - 原子锻造预算为 `ceil(原机功率 × 配方时间 × 插件效率)`，按速度提高每 tick 充能量。已付费 `paid` 单独持久化，取消工作退回储能；不支持处理室。回读装备快照后再检查变化，不能将正常重载误判为插件更换而重置进度。
 - 原组合插件读取 `ComponentContent.ADDON_DATA`，通过原 `gatherAddonStats` 的单组合插件分支使用已汇总参数；不得把这些参数再次当普通插件加算。组合插件与其他数值插件互斥，可加精炼罐室。
@@ -41,7 +45,7 @@
 
 ## 验证
 
-- `src/gameTest/.../ProcessorGameTests.java` 共 10 项：原七类验收扩展为自动物流与真实管理菜单；中级初始／四档右键升级／已移除低级注册及配方／63 插件／余量保存，存储读取／C2S 卸载校验／组件守恒／Shift 扩容，以及真实同步包回放。真实漏斗还检查输出堵塞时不倒灌。数据包回放覆盖 GUI_OPEN、GUI_TICK、SPARSE_TICK 与 onDataPacket 交错，确认倍率和客户端物品不会被外观数据覆盖。
+- `src/gameTest/.../ProcessorGameTests.java` 共 11 项：原七类验收扩展为自动物流与真实管理菜单；中级初始／四档右键升级／已移除低级注册及配方／63 插件／余量保存，存储读取／C2S 卸载校验／组件守恒／Shift 扩容，以及真实同步包回放。真实漏斗还检查输出堵塞时不倒灌。新增流体扩容用例经过菜单装载、原组合插件、8 个上限与余量、旧部件 capability 模拟／真实填充、逐个安全批量缩容、NBT／真实掉落再放置及四类同步包；原精炼用例验证突破旧容量后实际继续加工。
 - 已在不安装 OritechThings 与安装 0.0.46 的服务端环境验证。兼容用例枚举 48 个真实 TierAddonBlock，核对六类参数及实际提速；不硬编码注册名来模拟高级插件。
 - `build` 依赖 `compileGameTestJava`，不会执行服务器，按需显式调用 `runGameTestServer`。`-PwithThings=true` 加载可选插件，`-PgameTestDirectory=gametest-with-things` 隔离测试目录。
 - `tools/verify_resources.py --oritech <发布JAR> --jar <发行JAR>` 核对十组原机／罐室资源、空机三张 16×16 原材质、四级扩容件与配方、低级资源已移除、原品质图标、语言配对及发行包边界。原资源和 GameTest 不进发行 JAR。

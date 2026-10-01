@@ -155,6 +155,10 @@ public final class ProcessorGameTests {
         check(one.fluids().size()==2&&one.fluids().get(1).getAmount()==two.fluids().get(1).getAmount()*2,"One-module refinery did not double B");
         if(!two.items().isEmpty())check(zero.items().getFirst().getCount()==two.items().getFirst().getCount()*2,"Zero-module item multiplier missing");
         long input=p.fluidIn.getAmount();p.fluidA.setStack(two.fluids().getFirst().copyWithAmount(8000));check(!Engine.canOutput(p,two)&&p.fluidIn.getAmount()==input,"Full output tank consumed fluid");
+        p.inventory.setItem(11,new ItemStack(Content.FLUID_CAPACITY.get()));p.refreshEquipment();var expanded=Engine.find(p);
+        check(expanded!=null&&Engine.canOutput(p,expanded)&&expanded.duration()==two.duration()&&expanded.perTick()==two.perTick(),"Tank expansion changed recipe cost/speed or did not unblock output");
+        p.energyStorage.amount=10_000_000;for(int i=0;i<expanded.duration();i++)tick(p);
+        check(p.fluidA.getAmount()==8000+expanded.fluids().getFirst().getAmount()&&p.fluidIn.getAmount()==input-expanded.fluid().amount(),"Actual processing did not consume/produce beyond the old tank limit");
     }finally{clear(p);}
         p=place(h,Profiles.CENTRIFUGE,Direction.NORTH);var player=player(h,p);try{
             var port=h.getLevel().getCapability(Capabilities.FluidHandler.BLOCK,p.getBlockPos(),Direction.UP);var water=new net.neoforged.neoforge.fluids.FluidStack(net.minecraft.world.level.material.Fluids.WATER,1000);
@@ -215,6 +219,51 @@ public final class ProcessorGameTests {
         var taken=menu.quickMoveStack(player,1);check(!taken.isEmpty()&&p.inventory.getItem(Processor.UNLOAD_SLOT).isEmpty(),"Unloaded addons could not be retrieved");
         check(p.getBaseAddonData().speed()==1,"Uninstall left stale speed multiplier");
         player.getInventory().setItem(0,new ItemStack(Content.UPGRADES.getFirst().get(),2));check(!menu.quickMoveStack(player,AddonMenu.PLAYER_START+27).isEmpty()&&p.tier==4&&player.getInventory().getItem(0).getCount()==1,"Shift-click capacity upgrade failed");
+    }finally{close(player);clear(p);}h.succeed();}
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void fluidCapacityLoadingPortsUnloadingAndPersistenceConserveFluids(GameTestHelper h){var p=place(h,Profiles.REFINERY,Direction.NORTH);var player=player(h,p);try{
+        install(p,BlockContent.REFINERY_MODULE_BLOCK,9);install(p,BlockContent.REFINERY_MODULE_BLOCK,10);
+        var port=h.getLevel().getCapability(Capabilities.FluidHandler.BLOCK,p.positions().getFirst(),Direction.UP);
+        check(port!=null&&port.getTankCapacity(0)==8000&&port.getTankCapacity(3)==4000,"Base tanks changed");
+        var combo=new ItemStack(BlockContent.MACHINE_COMBI_ADDON);var stats=new rearth.oritech.util.MachineAddonController.BaseAddonData(.1F,.8F,1234,99,2,20);
+        combo.set(ComponentContent.ADDON_DATA.get(),new rearth.oritech.block.entity.interaction.ShrinkerBlockEntity.ShrunkAddonData(stats,true,0,1,false,false));
+        p.inventory.setItem(11,combo);p.refreshEquipment();
+        var addon=new ItemStack(Content.FLUID_CAPACITY.get(),9);addon.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("tank-upgrade"));
+        var menu=new AddonMenu(18,player.getInventory(),p);player.containerMenu=menu;menu.setCarried(addon.copy());menu.clicked(0,0,ClickType.PICKUP,player);p.loadAddons();
+        check(p.fluidCapacityAddons==8&&p.countAddons()==11&&p.inventory.getItem(Processor.LOAD_SLOT).getCount()==1&&p.loadStatus().equals("load_fluid_limit"),"Addon limit lost queued items or conflicts with combined addon");
+        check(p.getBaseAddonData().equals(stats)&&p.fluidAddon&&p.modules==2,"Tank addon changed processing stats/features");
+        check(port.getTankCapacity(0)==2_048_000&&port.getTankCapacity(1)==2_048_000&&port.getTankCapacity(2)==1_024_000&&port.getTankCapacity(3)==1_024_000,"Existing port did not see expanded capacities");
+        var patch=net.minecraft.core.component.DataComponentPatch.builder().set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("fluid-components")).build();
+        var water=FluidStack.create(net.minecraft.world.level.material.Fluids.WATER,14000,patch);var neo=Ports.neo(water);
+        check(port.fill(neo,net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.SIMULATE)==14000&&p.fluidIn.getAmount()==0,"Simulated large fill mutated storage or kept old capacity");
+        check(port.fill(neo,net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE)==14000,"Real port fill could not exceed 8000 mB");
+        p.fluidA.setStack(water.copyWithAmount(9000));p.fluidB.setStack(water.copyWithAmount(7000));p.fluidC.setStack(water.copyWithAmount(2200));
+        check(port.drain(1000,net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.SIMULATE).getAmount()==1000&&p.fluidA.getAmount()==9000,"Simulated output drain mutated fluid");
+        menu.quickMoveStack(player,0); // Retrieve the ninth addon so a later tick cannot reinstall it.
+        var request=new AddonPackets.Unload(18,addon.copyWithCount(1),true);
+        check(AddonPackets.handle(request,player)==7&&p.fluidCapacityAddons==1&&p.fluidIn.getAmount()==14000&&p.fluidB.getAmount()==7000,"Batch uninstall did not stop at the safe capacity");
+        check(ItemStack.isSameItemSameComponents(p.inventory.getItem(Processor.UNLOAD_SLOT),addon)&&p.inventory.getItem(Processor.UNLOAD_SLOT).getCount()==7,"Uninstall lost addon components/count");
+        check(port.getTankCapacity(0)==16000&&AddonPackets.handle(request,player)==0,"Unsafe shrink was accepted");
+        var replica=new Processor(p.getBlockPos(),p.getBlockState());replica.setLevel(h.getLevel());
+        for(var type:List.of(rearth.oritech.api.networking.SyncType.INITIAL,rearth.oritech.api.networking.SyncType.GUI_OPEN,rearth.oritech.api.networking.SyncType.GUI_TICK,rearth.oritech.api.networking.SyncType.SPARSE_TICK)){
+            replica.fluidCapacityAddons=0;var bytes=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());try{
+                rearth.oritech.api.networking.NetworkManager.encodeFields(p,type,bytes,h.getLevel());rearth.oritech.api.networking.NetworkManager.decodeFields(replica,type,bytes,h.getLevel());
+                check(!bytes.isReadable()&&replica.fluidIn.getCapacity()==16000&&replica.fluidIn.getAmount()==14000&&replica.fluidB.getCapacity()==8000,"Native sync lost expanded capacity or contents: "+type);
+                replica.onDataPacket(null,p.getUpdatePacket(),h.getLevel().registryAccess());check(replica.fluidIn.getCapacity()==16000,"Visual packet reset capacity");
+            }finally{bytes.release();}
+        }
+        var saved=p.saveWithFullMetadata(h.getLevel().registryAccess());var restored=new Processor(p.getBlockPos(),p.getBlockState());restored.setLevel(h.getLevel());restored.loadWithComponents(saved,h.getLevel().registryAccess());h.getLevel().setBlockEntity(restored);p=restored;
+        check(p.fluidCapacityAddons==1&&p.fluidIn.getAmount()==14000&&p.fluidIn.getCapacity()==16000&&p.fluidIn.getChanges().equals(patch),"NBT round trip lost upgraded storage/components");
+        var drop=Block.getDrops(p.getBlockState(),h.getLevel(),p.getBlockPos(),p).getFirst();clear(p);var pos=new BlockPos(6,3,6);h.setBlock(pos.below(),Blocks.STONE);
+        player.setItemInHand(InteractionHand.MAIN_HAND,drop);var hit=new BlockHitResult(h.absolutePos(pos.below()).getCenter().add(0,.5,0),Direction.UP,h.absolutePos(pos.below()),false);
+        check(((BlockItem)drop.getItem()).place(new net.minecraft.world.item.context.BlockPlaceContext(player,InteractionHand.MAIN_HAND,drop,hit)).consumesAction(),"Expanded processor drop did not place");
+        p=(Processor)h.getBlockEntity(pos);p.refreshEquipment();check(p.fluidIn.getAmount()==14000&&p.fluidA.getAmount()==9000&&p.fluidB.getAmount()==7000&&p.fluidC.getAmount()==2200&&p.fluidIn.getCapacity()==16000&&p.fluidIn.getChanges().equals(patch),"Drop placement lost expanded fluids");
+        menu=new AddonMenu(19,player.getInventory(),p);player.containerMenu=menu;
+        p.fluidIn.extract(water.copyWithAmount(8000),false);p.fluidA.extract(water.copyWithAmount(1000),false);p.fluidB.extract(water.copyWithAmount(2000),false);
+        request=new AddonPackets.Unload(19,addon.copyWithCount(1),true);check(AddonPackets.handle(request,player)==0,"Auxiliary output tank was ignored during shrink");
+        p.fluidB.extract(water.copyWithAmount(1000),false);check(AddonPackets.handle(request,player)==1&&p.fluidCapacityAddons==0&&p.fluidIn.getCapacity()==8000&&p.fluidIn.getAmount()==6000&&p.fluidA.getAmount()==8000&&p.fluidB.getAmount()==4000,"Safe shrink lost fluid or kept stale capacity");
+        check(p.canInstallAddon(addon,12),"Capacity addon could not reinstall alongside combined addon");
+        check(h.getLevel().getRecipeManager().byKey(Content.id("fluid_capacity_addon")).isPresent(),"Fluid addon crafting recipe missing");
     }finally{close(player);clear(p);}h.succeed();}
     @GameTest(template="empty",timeoutTicks=40)
     public static void blockUpdatesPreserveSyncedAddonStatsAndContents(GameTestHelper h){var p=place(h,Profiles.CENTRIFUGE,Direction.NORTH);try{

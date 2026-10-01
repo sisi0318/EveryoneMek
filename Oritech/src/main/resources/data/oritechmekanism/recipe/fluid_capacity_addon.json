@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PTP",
+    "CAC",
+    "PTP"
+  ],
+  "key": {
+    "P": {
+      "item": "oritech:machine_plating_block"
+    },
+    "T": {
+      "item": "oritech:small_tank_block"
+    },
+    "C": {
+      "item": "oritech:processing_unit"
+    },
+    "A": {
+      "item": "oritech:machine_fluid_addon"
+    }
+  },
+  "result": {
+    "id": "oritechmekanism:fluid_capacity_addon",
+    "count": 1
+  }
+}
