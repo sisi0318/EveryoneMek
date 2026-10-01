@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ACA",
+    "ESE",
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:alloys/advanced"
+    },
+    "C": {
+      "tag": "c:circuits/advanced"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    },
+    "S": {
+      "item": "mekanism:steel_casing"
+    }
+  },
+  "result": {
+    "id": "oritechmekanism:universal_processor",
+    "count": 1
+  }
+}

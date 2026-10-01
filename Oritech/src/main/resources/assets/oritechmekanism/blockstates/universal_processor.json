@@ -1,0 +1,36 @@
+{
+  "variants": {
+    "facing=north,deployed=false": {
+      "model": "oritechmekanism:block/universal_processor",
+      "y": 0
+    },
+    "facing=north,deployed=true": {
+      "model": "oritechmekanism:block/empty",
+      "y": 0
+    },
+    "facing=east,deployed=false": {
+      "model": "oritechmekanism:block/universal_processor",
+      "y": 90
+    },
+    "facing=east,deployed=true": {
+      "model": "oritechmekanism:block/empty",
+      "y": 90
+    },
+    "facing=south,deployed=false": {
+      "model": "oritechmekanism:block/universal_processor",
+      "y": 180
+    },
+    "facing=south,deployed=true": {
+      "model": "oritechmekanism:block/empty",
+      "y": 180
+    },
+    "facing=west,deployed=false": {
+      "model": "oritechmekanism:block/universal_processor",
+      "y": 270
+    },
+    "facing=west,deployed=true": {
+      "model": "oritechmekanism:block/empty",
+      "y": 270
+    }
+  }
+}
