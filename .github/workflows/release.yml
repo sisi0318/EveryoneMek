@@ -17,6 +17,7 @@ on:
           - OverloadCore
           - MekFactory
           - MekGravity
+          - Oritech
       draft:
         description: 仅创建草稿（勾选后不会公开发布）
         type: boolean

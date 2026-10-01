@@ -10,6 +10,13 @@ from zipfile import ZipFile
 
 # Add new projects here and to build.yml/release.yml's module choices.
 MODULES = {
+    "Oritech": {
+        "directory": "Oritech",
+        "name": "Oritech Mekanism",
+        "archive": "OritechMekanism",
+        "mod_id": "oritechmekanism",
+        "java": "21",
+    },
     "MekGravity": {
         "directory": "MekGravity",
         "name": "Mek Gravity",
