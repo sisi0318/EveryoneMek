@@ -18,7 +18,7 @@ public final class ProcessorMenu extends OritechScreenHandler {
     public final int mainSlots,sideStart,layoutModules;
     public final boolean layoutFluid;
     public ProcessorMenu(int id,Inventory inv,FriendlyByteBuf buf){this(id,inv,read(inv,buf));}
-    private static Processor read(Inventory inv,FriendlyByteBuf buf){var p=(Processor)Objects.requireNonNull(inv.player.level().getBlockEntity(buf.readBlockPos()));p.profileIndex=buf.readVarInt();p.modules=buf.readVarInt();p.fluidAddon=buf.readBoolean();p.tier=Math.clamp(buf.readVarInt(),1,Processor.MAX_TIER);return p;}
+    private static Processor read(Inventory inv,FriendlyByteBuf buf){var p=(Processor)Objects.requireNonNull(inv.player.level().getBlockEntity(buf.readBlockPos()));p.profileIndex=buf.readVarInt();p.modules=buf.readVarInt();p.fluidAddon=buf.readBoolean();p.tier=Processor.clampTier(buf.readVarInt());return p;}
     public ProcessorMenu(int id,Inventory inv,Processor p){super(id,inv,p);processor=p;layout=p.profile();layoutModules=p.modules;layoutFluid=p.fluidAddon;mainSlots=layout.slots().size();sideStart=slots.size();
         addSlot(new Slot(p.inventory,Processor.HOST,HOST_X,20){@Override public int getMaxStackSize(){return 1;}
             @Override public boolean mayPlace(ItemStack s){return p.canInstallHost(s);}

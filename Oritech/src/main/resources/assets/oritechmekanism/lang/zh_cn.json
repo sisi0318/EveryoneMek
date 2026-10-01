@@ -1,8 +1,6 @@
 {
   "block.oritechmekanism.universal_processor": "通用奥瑞处理器",
   "block.oritechmekanism.processor_part": "奥瑞处理器部件",
-  "item.oritechmekanism.capacity_upgrade_2": "基础处理器扩容升级",
-  "item.oritechmekanism.capacity_upgrade_3": "中级处理器扩容升级",
   "item.oritechmekanism.capacity_upgrade_4": "高级处理器扩容升级",
   "item.oritechmekanism.capacity_upgrade_5": "精良处理器扩容升级",
   "item.oritechmekanism.capacity_upgrade_6": "极致处理器扩容升级",

@@ -1,8 +1,6 @@
 {
   "block.oritechmekanism.universal_processor": "Universal Oritech Processor",
   "block.oritechmekanism.processor_part": "Oritech Processor Part",
-  "item.oritechmekanism.capacity_upgrade_2": "Basic Processor Capacity Upgrade",
-  "item.oritechmekanism.capacity_upgrade_3": "Improved Processor Capacity Upgrade",
   "item.oritechmekanism.capacity_upgrade_4": "Advanced Processor Capacity Upgrade",
   "item.oritechmekanism.capacity_upgrade_5": "Elite Processor Capacity Upgrade",
   "item.oritechmekanism.capacity_upgrade_6": "Ultra Processor Capacity Upgrade",

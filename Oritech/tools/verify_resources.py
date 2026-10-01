@@ -47,7 +47,10 @@ with ZipFile(args.oritech) as upstream:
         namespace, item = ingredient['item'].split(':', 1)
         assert namespace == 'oritech' and f'assets/oritech/models/item/{item}.json' in names, ingredient
     assert recipe['result'] == {'id': 'oritechmekanism:universal_processor', 'count': 1}
-    for tier in range(2, 8):
+    for tier in (2, 3):
+        assert not (resources / f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json').exists()
+        assert not (resources / f'data/oritechmekanism/recipe/capacity_upgrade_{tier}.json').exists()
+    for tier in range(4, 8):
         model = json.loads((resources / f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json').read_text(encoding='utf-8'))
         assert model['textures']['layer0'] == f'oritech:block/machine_core_{tier}'
         png = upstream.read(f'assets/oritech/textures/block/machine_core_{tier}.png')
@@ -71,6 +74,9 @@ if args.jar:
         assert 'META-INF/neoforge.mods.toml' in files
         assert 'dev/everyonemek/oritech/Processor.class' in files
         assert 'dev/everyonemek/oritech/client/ProcessorRenderer.class' in files
+        for tier in (2, 3):
+            assert f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json' not in files
+            assert f'data/oritechmekanism/recipe/capacity_upgrade_{tier}.json' not in files
         for local in resources.rglob('*.json'):
             path=local.relative_to(resources).as_posix()
             assert json.loads(jar.read(path)) == json.loads(local.read_text(encoding='utf-8')), path

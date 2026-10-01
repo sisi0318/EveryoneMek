@@ -16,7 +16,7 @@ public final class AddonMenu extends AbstractContainerMenu {
     public final Processor processor;
     public final Inventory playerInventory;
     public AddonMenu(int id,Inventory inventory,FriendlyByteBuf buf){this(id,inventory,read(inventory,buf));}
-    private static Processor read(Inventory inventory,FriendlyByteBuf buf){var p=(Processor)Objects.requireNonNull(inventory.player.level().getBlockEntity(buf.readBlockPos()));p.tier=Math.clamp(buf.readVarInt(),1,Processor.MAX_TIER);return p;}
+    private static Processor read(Inventory inventory,FriendlyByteBuf buf){var p=(Processor)Objects.requireNonNull(inventory.player.level().getBlockEntity(buf.readBlockPos()));p.tier=Processor.clampTier(buf.readVarInt());return p;}
     public AddonMenu(int id,Inventory inventory,Processor p){super(Content.ADDON_MENU.get(),id);processor=p;playerInventory=inventory;
         addSlot(new Slot(p.inventory,Processor.LOAD_SLOT,LOAD_X,LOAD_Y){@Override public boolean mayPlace(ItemStack stack){return Processor.validAddon(stack);}});
         addSlot(new Slot(p.inventory,Processor.UNLOAD_SLOT,LOAD_X,UNLOAD_Y){@Override public boolean mayPlace(ItemStack stack){return false;}});

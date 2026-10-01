@@ -28,7 +28,9 @@ public final class Content {
     public static final Supplier<PartBlock> PART=BLOCKS.register("processor_part",()->new PartBlock());
     public static final Supplier<ProcessorItem> ITEM=ITEMS.register("universal_processor",ProcessorItem::new);
     public static final java.util.List<Supplier<ProcessorUpgrade>> UPGRADES=new java.util.ArrayList<>();
-    static{for(int tier=2;tier<=Processor.MAX_TIER;tier++){final int target=tier;UPGRADES.add(ITEMS.register("capacity_upgrade_"+tier,()->new ProcessorUpgrade(target)));}}
+    static{
+        for(int tier=Processor.BASE_TIER+1;tier<=Processor.MAX_TIER;tier++){final int target=tier;UPGRADES.add(ITEMS.register("capacity_upgrade_"+tier,()->new ProcessorUpgrade(target)));}
+    }
     public static final Supplier<BlockEntityType<Processor>> TILE=TILES.register("universal_processor",()->BlockEntityType.Builder.of(Processor::new,BLOCK.get()).build(null));
     public static final Supplier<BlockEntityType<Part>> PART_TILE=TILES.register("processor_part",()->BlockEntityType.Builder.of(Part::new,PART.get()).build(null));
     public static final Supplier<MenuType<ProcessorMenu>> MENU=MENUS.register("universal_processor",()->IMenuTypeExtension.create(ProcessorMenu::new));

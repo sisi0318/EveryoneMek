@@ -173,9 +173,12 @@ public final class ProcessorGameTests {
     }
     @GameTest(template="empty",timeoutTicks=60)
     public static void qualityUpgradesConsumeOneKeepWorkAndExpandInstalledCapacity(GameTestHelper h){var p=place(h,Profiles.FURNACE,Direction.NORTH);var player=player(h,p);try{
+        check(p.tier==3&&p.getCoreQuality()==3&&p.addonSlots()==27,"Intermediate-core processor did not start at quality 3 with 27 capacity");
+        check(Content.UPGRADES.size()==4,"Unexpected lower-tier upgrade registration");
+        for(int retired:new int[]{2,3})check(!BuiltInRegistries.ITEM.containsKey(Content.id("capacity_upgrade_"+retired))&&h.getLevel().getRecipeManager().byKey(Content.id("capacity_upgrade_"+retired)).isEmpty(),"Retired upgrade still exists");
         p.inventory.setItem(0,new ItemStack(Items.RAW_IRON,8));p.energyStorage.amount=500_000;tick(p);int progress=p.progress;long energy=p.energyStorage.amount;var identity=p.identity;
-        for(int tier=2;tier<=Processor.MAX_TIER;tier++){
-            var item=Content.UPGRADES.get(tier-2).get();var held=new ItemStack(item,2);player.setItemInHand(InteractionHand.MAIN_HAND,held);
+        for(int tier=Processor.BASE_TIER+1;tier<=Processor.MAX_TIER;tier++){
+            var item=Content.UPGRADES.get(tier-Processor.BASE_TIER-1).get();var held=new ItemStack(item,2);player.setItemInHand(InteractionHand.MAIN_HAND,held);
             var hit=new BlockHitResult(p.getBlockPos().getCenter(),Direction.NORTH,p.getBlockPos(),false);
             var result=p.getBlockState().useItemOn(held,h.getLevel(),player,InteractionHand.MAIN_HAND,hit);
             check(result.consumesAction()&&p.tier==tier&&p.addonSlots()==tier*9&&held.getCount()==1,"Real held upgrade failed at tier "+tier);
@@ -198,7 +201,7 @@ public final class ProcessorGameTests {
         for(int i=9;i<18;i++)p.inventory.setItem(i,named.copy());p.refreshEquipment();p.energyStorage.amount=42000;p.progress=4;p.eject=false;
         var old=p.saveWithFullMetadata(h.getLevel().registryAccess());old.remove("tier");old.putIntArray("sides",new int[]{3,3,3,3,3,3});
         var restored=new Processor(p.getBlockPos(),p.getBlockState());restored.setLevel(h.getLevel());restored.loadWithComponents(old,h.getLevel().registryAccess());h.getLevel().setBlockEntity(restored);p=restored;p.refreshEquipment();
-        check(p.tier==1&&p.addonSlots()==9&&p.countAddons()==9&&p.energyStorage.amount==42000&&p.progress==4&&!p.eject,"Legacy migration changed saved resources/settings/work");
+        check(p.tier==3&&p.addonSlots()==27&&p.countAddons()==9&&p.energyStorage.amount==42000&&p.progress==4&&!p.eject,"Tier floor changed saved resources/settings/work");
         for(var side:Direction.values())check(h.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,p.getBlockPos(),side).receiveEnergy(1,true)==1,"Legacy face setting blocked automatic input");
         var menu=new AddonMenu(12,player.getInventory(),p);player.containerMenu=menu;
         var wrong=new AddonPackets.Unload(13,named.copy(),true);check(AddonPackets.handle(wrong,player)==0,"Wrong menu ID uninstalled addons");
@@ -211,7 +214,7 @@ public final class ProcessorGameTests {
         check(AddonPackets.handle(new AddonPackets.Unload(12,named.copy(),true),player)==8&&p.countAddons()==0&&p.inventory.getItem(Processor.UNLOAD_SLOT).getCount()==8,"Batch uninstall duplicated/lost items");
         var taken=menu.quickMoveStack(player,1);check(!taken.isEmpty()&&p.inventory.getItem(Processor.UNLOAD_SLOT).isEmpty(),"Unloaded addons could not be retrieved");
         check(p.getBaseAddonData().speed()==1,"Uninstall left stale speed multiplier");
-        player.getInventory().setItem(0,new ItemStack(Content.UPGRADES.get(1).get(),2));check(!menu.quickMoveStack(player,AddonMenu.PLAYER_START+27).isEmpty()&&p.tier==3&&player.getInventory().getItem(0).getCount()==1,"Shift-click capacity upgrade failed");
+        player.getInventory().setItem(0,new ItemStack(Content.UPGRADES.getFirst().get(),2));check(!menu.quickMoveStack(player,AddonMenu.PLAYER_START+27).isEmpty()&&p.tier==4&&player.getInventory().getItem(0).getCount()==1,"Shift-click capacity upgrade failed");
     }finally{close(player);clear(p);}h.succeed();}
     @GameTest(template="empty",timeoutTicks=40)
     public static void blockUpdatesPreserveSyncedAddonStatsAndContents(GameTestHelper h){var p=place(h,Profiles.CENTRIFUGE,Direction.NORTH);try{

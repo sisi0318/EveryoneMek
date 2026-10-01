@@ -36,7 +36,11 @@ write(f'data/{ID}/recipe/universal_processor.json', {'type': 'minecraft:crafting
 zh = {'block.oritechmekanism.universal_processor': '通用奥瑞处理器', 'block.oritechmekanism.processor_part': '奥瑞处理器部件'}
 en = {'block.oritechmekanism.universal_processor': 'Universal Oritech Processor', 'block.oritechmekanism.processor_part': 'Oritech Processor Part'}
 grades = [('原始', 'Primitive'), ('基础', 'Basic'), ('中级', 'Improved'), ('高级', 'Advanced'), ('精良', 'Elite'), ('极致', 'Ultra'), ('终极', 'Ultimate')]
-for tier in range(2, 8):
+# Test-stage redesign: retire the lower upgrades entirely, including previously generated files.
+for tier in (2, 3):
+    for path in (f'assets/{ID}/models/item/capacity_upgrade_{tier}.json', f'data/{ID}/recipe/capacity_upgrade_{tier}.json'):
+        (RES / path).unlink(missing_ok=True)
+for tier in range(4, 8):
     item = f'capacity_upgrade_{tier}'
     zh[f'item.{ID}.{item}'] = grades[tier - 1][0] + '处理器扩容升级'
     en[f'item.{ID}.{item}'] = grades[tier - 1][1] + ' Processor Capacity Upgrade'

@@ -24,10 +24,10 @@ import rearth.oritech.util.*;
 import software.bernie.geckolib.animation.*;
 
 public final class Processor extends UpgradableMachineBlockEntity {
-    public static final int HOST=8,ADDON_START=9,MAX_TIER=7,ADDONS_PER_TIER=9,MAX_ADDONS=MAX_TIER*ADDONS_PER_TIER,
+    public static final int HOST=8,ADDON_START=9,BASE_TIER=3,MAX_TIER=7,ADDONS_PER_TIER=9,MAX_ADDONS=MAX_TIER*ADDONS_PER_TIER,
         ADDON_END=ADDON_START+MAX_ADDONS,LOAD_SLOT=ADDON_END,UNLOAD_SLOT=LOAD_SLOT+1,SIZE=UNLOAD_SLOT+1;
     public UUID identity=UUID.randomUUID();
-    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public int tier=1;
+    @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public int tier=BASE_TIER;
     @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK}) public int addonCount;
     @SyncField({SyncType.INITIAL,SyncType.GUI_OPEN,SyncType.GUI_TICK,SyncType.SPARSE_TICK}) public int profileIndex,modules,status;
     @SyncField({SyncType.INITIAL,SyncType.TICK,SyncType.SPARSE_TICK,SyncType.GUI_OPEN,SyncType.GUI_TICK}) public int duration=1;
@@ -50,9 +50,10 @@ public final class Processor extends UpgradableMachineBlockEntity {
     public Processor(BlockPos p,BlockState s){super(Content.TILE.get(),p,s,32);}
     public Profiles profile(){return Profiles.index(profileIndex);}
     public Direction facing(){return getBlockState().getValue(ProcessorBlock.FACING);}
-    public int addonSlots(){return Math.clamp(tier,1,MAX_TIER)*ADDONS_PER_TIER;}
+    public static int clampTier(int value){return Math.clamp(value,BASE_TIER,MAX_TIER);}
+    public int addonSlots(){return clampTier(tier)*ADDONS_PER_TIER;}
     public int countAddons(){int count=0;for(int i=ADDON_START;i<ADDON_END;i++)count+=inventory.getItem(i).getCount();return count;}
-    @Override public float getCoreQuality(){return Math.clamp(tier,1,MAX_TIER);}
+    @Override public float getCoreQuality(){return clampTier(tier);}
     public void upgradeTier(int target){
         if(level==null||level.isClientSide||target<=tier||target>MAX_TIER)return;
         tier=target;setChanged();syncWorld();sendUpdate(SyncType.GUI_OPEN);
@@ -232,7 +233,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
     public int outputTanks(){return profile()==Profiles.REFINERY?1+modules:profile()==Profiles.CENTRIFUGE&&fluidAddon?1:0;}
     void syncWorld(){if(level!=null&&!level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider r){var t=super.getUpdateTag(r);t.putInt("profile",profileIndex);t.putInt("modules",modules);t.putBoolean("fluidAddon",fluidAddon);t.putLong("deployedAt",deployedAt);t.putInt("tier",tier);return t;}
-    @Override public void handleUpdateTag(CompoundTag t,HolderLookup.Provider r){int previous=profileIndex;profileIndex=Profiles.index(t.getInt("profile")).ordinal();modules=Math.clamp(t.getInt("modules"),0,2);fluidAddon=t.getBoolean("fluidAddon");deployedAt=t.getLong("deployedAt");tier=Math.clamp(t.getInt("tier"),1,MAX_TIER);
+    @Override public void handleUpdateTag(CompoundTag t,HolderLookup.Provider r){int previous=profileIndex;profileIndex=Profiles.index(t.getInt("profile")).ordinal();modules=Math.clamp(t.getInt("modules"),0,2);fluidAddon=t.getBoolean("fluidAddon");deployedAt=t.getLong("deployedAt");tier=clampTier(t.getInt("tier"));
         if(previous!=profileIndex&&animationController!=null){var manager=animatableInstanceCache.getManagerForId(0);manager.removeController("machine");manager.addController(newController());}}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registry){
@@ -251,7 +252,7 @@ public final class Processor extends UpgradableMachineBlockEntity {
         deployedFacing=Direction.from2DDataValue(Math.clamp(t.getInt("deployedFacing"),0,3));equipment=equipmentSnapshot();refresh=true;
     }
     private void readState(CompoundTag t){profileIndex=Profiles.index(t.getInt("profile")).ordinal();modules=Math.clamp(t.getInt("modules"),0,2);paid=Math.max(0,t.getLong("paid"));signature=t.getCompound("signature").copy();
-        eject=!t.contains("eject")||t.getBoolean("eject");tier=Math.clamp(t.getInt("tier"),1,MAX_TIER);
+        eject=!t.contains("eject")||t.getBoolean("eject");tier=clampTier(t.getInt("tier"));
         // Slots 0-17 keep their old meaning. Additional slots are appended, never reindexed.
         for(int i=ADDON_START;i<ADDON_END;i++)if(!inventory.getItem(i).isEmpty())tier=Math.max(tier,(i-ADDON_START)/ADDONS_PER_TIER+1);
         addonCount=countAddons();
