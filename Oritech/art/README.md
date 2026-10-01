@@ -6,6 +6,8 @@
 - 原展开动画保持正常速度，工作动画按实际处理时间播放，视觉倍率限制在 0.25–4；离心机原工作循环为 9 秒，其余主机为 3 秒。磨粉机没有展开动画。
 - 精炼罐室按实际安装数量显示原 `refinery_module_block` 模型；这些客户端渲染视图不保存库存、不执行加工、不暴露能力。主模型液面来自控制器实际储罐快照。
 - 原主界面 176×166，原加工槽、能量条、进度和液罐位置不变；左侧 70 像素插件面板，右侧原样式设置面板。物品栏仍在原坐标。
-- 未安装主机时用自有方块模型引用 `mekanism:block/steel_casing` 贴图。没有新增运行 PNG。
+- 未安装主机时使用自有六面方块模型：正面引用 `oritech:block/machine_core_3`，顶部引用 `oritech:block/machine_plating_block/particle`，侧面、背面、底部和粒子引用 `oritech:block/iron_plating_block/particle`。物品图标引用同一模型。三张原贴图均为 16×16；没有新增或复制运行 PNG。
 
 `tools/verify_resources.py` 核对实际依赖 JAR 的十组模型／动画／贴图、界面资源和发行包边界。该检查及服务端菜单坐标验证不能替代游戏内视觉、音效验收；按仓库要求不运行客户端。
+
+运行 `python tools/preview_shell.py --oritech <原版发布JAR>` 可将当前模型引用的三张原贴图机械投影为等距预览。预览位于忽略的 `build/style-reference/processor-preview.png`，不提交或打包原素材的派生图片。

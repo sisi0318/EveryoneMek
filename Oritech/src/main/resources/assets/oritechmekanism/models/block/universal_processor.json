@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "all": "mekanism:block/steel_casing"
+    "particle": "oritech:block/iron_plating_block/particle",
+    "north": "oritech:block/machine_core_3",
+    "south": "oritech:block/iron_plating_block/particle",
+    "east": "oritech:block/iron_plating_block/particle",
+    "west": "oritech:block/iron_plating_block/particle",
+    "down": "oritech:block/iron_plating_block/particle",
+    "up": "oritech:block/machine_plating_block/particle"
   }
 }

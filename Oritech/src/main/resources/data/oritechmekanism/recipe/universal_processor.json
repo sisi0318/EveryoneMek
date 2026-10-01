@@ -1,22 +1,23 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "redstone",
   "pattern": [
-    "ACA",
-    "ESE",
-    "ACA"
+    "PCP",
+    "MKM",
+    "PCP"
   ],
   "key": {
-    "A": {
-      "tag": "c:alloys/advanced"
+    "P": {
+      "item": "oritech:machine_plating_block"
     },
     "C": {
-      "tag": "c:circuits/advanced"
+      "item": "oritech:processing_unit"
     },
-    "E": {
-      "item": "mekanism:energy_tablet"
+    "M": {
+      "item": "oritech:motor"
     },
-    "S": {
-      "item": "mekanism:steel_casing"
+    "K": {
+      "item": "oritech:machine_core_3"
     }
   },
   "result": {

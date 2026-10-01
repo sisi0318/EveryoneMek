@@ -1,5 +1,5 @@
 {
   "textures": {
-    "particle": "mekanism:block/steel_casing"
+    "particle": "oritech:block/iron_plating_block/particle"
   }
 }

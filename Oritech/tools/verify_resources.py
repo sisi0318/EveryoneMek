@@ -3,10 +3,10 @@ from pathlib import Path
 from zipfile import ZipFile
 import argparse
 import json
+import struct
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--oritech', type=Path, required=True)
-parser.add_argument('--mekanism', type=Path, required=True)
 parser.add_argument('--jar', type=Path)
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
@@ -33,8 +33,20 @@ with ZipFile(args.oritech) as upstream:
             assert 'deploy' not in animations
     for path in ['gui_base.png', 'arrow_empty.png', 'arrow_full.png']:
         assert f'assets/oritech/textures/gui/modular/{path}' in names
-with ZipFile(args.mekanism) as upstream:
-    assert 'assets/mekanism/textures/block/steel_casing.png' in upstream.namelist()
+    shell = json.loads((resources / 'assets/oritechmekanism/models/block/universal_processor.json').read_text(encoding='utf-8'))
+    assert shell['parent'] == 'minecraft:block/cube'
+    assert {'north', 'south', 'east', 'west', 'up', 'down', 'particle'} <= shell['textures'].keys()
+    for reference in set(shell['textures'].values()):
+        namespace, path = reference.split(':', 1)
+        assert namespace == 'oritech', reference
+        png = upstream.read(f'assets/{namespace}/textures/{path}.png')
+        assert struct.unpack('>II', png[16:24]) == (16, 16), reference
+    recipe = json.loads((resources / 'data/oritechmekanism/recipe/universal_processor.json').read_text(encoding='utf-8'))
+    assert recipe['pattern'] == ['PCP', 'MKM', 'PCP']
+    for ingredient in recipe['key'].values():
+        namespace, item = ingredient['item'].split(':', 1)
+        assert namespace == 'oritech' and f'assets/oritech/models/item/{item}.json' in names, ingredient
+    assert recipe['result'] == {'id': 'oritechmekanism:universal_processor', 'count': 1}
 zh = json.loads((resources / 'assets/oritechmekanism/lang/zh_cn.json').read_text(encoding='utf-8'))
 en = json.loads((resources / 'assets/oritechmekanism/lang/en_us.json').read_text(encoding='utf-8'))
 assert zh.keys() == en.keys()
@@ -47,4 +59,6 @@ if args.jar:
         assert 'META-INF/neoforge.mods.toml' in files
         assert 'dev/everyonemek/oritech/Processor.class' in files
         assert 'dev/everyonemek/oritech/client/ProcessorRenderer.class' in files
-print(f'PASS: {len(profiles)} original model/texture/animation sets, native GUI assets, {len(zh)} paired language keys' + (' and release JAR' if args.jar else ''))
+        for path in ['assets/oritechmekanism/models/block/universal_processor.json', 'data/oritechmekanism/recipe/universal_processor.json']:
+            assert json.loads(jar.read(path)) == json.loads((resources / path).read_text(encoding='utf-8')), path
+print(f'PASS: {len(profiles)} original model/texture/animation sets, Oritech shell and crafting ingredients, native GUI assets, {len(zh)} paired language keys' + (' and release JAR' if args.jar else ''))

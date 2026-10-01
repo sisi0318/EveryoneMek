@@ -1,4 +1,4 @@
-"""Generate owned data and models; original Oritech and Mekanism textures remain in their JARs."""
+"""Generate owned data and models; original Oritech textures remain in its JAR."""
 from pathlib import Path
 import json
 import gzip
@@ -18,12 +18,21 @@ write(f'assets/{ID}/blockstates/universal_processor.json', {'variants': {
     f'facing={f},deployed={str(d).lower()}': {'model': f'{ID}:block/' + ('empty' if d else 'universal_processor'), 'y': y}
     for f, y in [('north', 0), ('east', 90), ('south', 180), ('west', 270)] for d in [False, True]}})
 write(f'assets/{ID}/blockstates/processor_part.json', {'variants': {'': {'model': f'{ID}:block/empty'}}})
-write(f'assets/{ID}/models/block/empty.json', {'textures': {'particle': 'mekanism:block/steel_casing'}})
-write(f'assets/{ID}/models/block/universal_processor.json', {'parent': 'minecraft:block/cube_all', 'textures': {'all': 'mekanism:block/steel_casing'}})
+shell = 'oritech:block/iron_plating_block/particle'
+write(f'assets/{ID}/models/block/empty.json', {'textures': {'particle': shell}})
+write(f'assets/{ID}/models/block/universal_processor.json', {
+    'parent': 'minecraft:block/cube',
+    'textures': {'particle': shell, 'north': 'oritech:block/machine_core_3',
+                 'south': shell, 'east': shell, 'west': shell, 'down': shell,
+                 'up': 'oritech:block/machine_plating_block/particle'}})
 write(f'assets/{ID}/models/item/universal_processor.json', {'parent': f'{ID}:block/universal_processor'})
 write(f'data/{ID}/loot_table/blocks/universal_processor.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'{ID}:universal_processor', 'functions': [{'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': [f'{ID}:processor']}]}]}]})
 write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': [f'{ID}:universal_processor', f'{ID}:processor_part']})
-write(f'data/{ID}/recipe/universal_processor.json', {'type': 'minecraft:crafting_shaped', 'pattern': ['ACA', 'ESE', 'ACA'], 'key': {'A': {'tag': 'c:alloys/advanced'}, 'C': {'tag': 'c:circuits/advanced'}, 'E': {'item': 'mekanism:energy_tablet'}, 'S': {'item': 'mekanism:steel_casing'}}, 'result': {'id': f'{ID}:universal_processor', 'count': 1}})
+write(f'data/{ID}/recipe/universal_processor.json', {'type': 'minecraft:crafting_shaped', 'category': 'redstone',
+    'pattern': ['PCP', 'MKM', 'PCP'],
+    'key': {'P': {'item': 'oritech:machine_plating_block'}, 'C': {'item': 'oritech:processing_unit'},
+            'M': {'item': 'oritech:motor'}, 'K': {'item': 'oritech:machine_core_3'}},
+    'result': {'id': f'{ID}:universal_processor', 'count': 1}})
 zh = {'block.oritechmekanism.universal_processor': '通用奥瑞处理器', 'block.oritechmekanism.processor_part': '奥瑞处理器部件'}
 en = {'block.oritechmekanism.universal_processor': 'Universal Oritech Processor', 'block.oritechmekanism.processor_part': 'Oritech Processor Part'}
 pairs = {

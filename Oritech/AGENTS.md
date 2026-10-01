@@ -2,11 +2,12 @@
 
 先遵循根目录 AGENTS.md，再读 README、CHANGELOG、DESIGN。
 
-- 模组 `oritechmekanism`，包 `dev.everyonemek.oritech`，目录 Oritech，JAR OritechMekanism，0.1.0-alpha.1。
+- 模组 `oritechmekanism`，包 `dev.everyonemek.oritech`，目录 Oritech，JAR OritechMekanism，0.1.0-alpha.2。
 - Minecraft 1.21.1、NeoForge 21.1.241、Mekanism 10.7.19.85、Java 21。目标是实际发布的 Oritech 1.2.12；开发分支 1.2.13 不替代发布契约。
 - Architectury 13.0.11、GeckoLib 4.6.6、客户端 Athena 4.0.0；Oritech 已内嵌 GrandPower。没有 owo-lib 依赖。JEI 可选。
 - 用户明确指定显示名“通用奥瑞处理器”，主机槽放入原机器主方块，不是 machine_core_N。物品保留，按其类型加工原配方。
 - **外观例外：保留 Oritech 原尺寸模型、原贴图、展开和工作动画。** 不能退回纯机内加工的灰色方块或只展示缩小预览。引用依赖资源，不复制原素材。
+- 空机和物品图标也使用奥瑞原生机芯／装甲板贴图；配方只用奥瑞铜强化护板、处理器组件、马达、中级机器核心。创造入口为 `ItemGroups.MACHINE_GROUP` 及原版功能方块，不能只放进原版分类。
 - 原磨粉机只有 idle/working，没有 deploy/packaged；不能强播不存在的动画。精炼厂另有液面显示。
 - 展开占位不能覆盖方块或强加载区块；点击部件打开同一安全菜单，资源只保存在控制器。碰撞、物流、拆除须与实际占地一致。
 - **用户后续明确：界面也保留 Oritech 原样式，仅侧栏接入插件安装。升级使用奥瑞原版插件，并兼容 OritechThings 高级插件，不采用此前建议的 Mek 速度／能量升级。** 优先继承 OritechScreenHandler／OritechMachineScreen 和原控件，使用原主机槽位、进度与储罐布局。
@@ -36,5 +37,5 @@
 - `src/gameTest/.../ProcessorGameTests.java` 共 7 项：四朝向 × 九机型布局与占位、九机型原配方守恒、真实菜单与高级插件、阻塞与失效句柄、NBT／掉落物重放、真实漏斗／自动输出、功能插件及受校验的流体点击。
 - 已在不安装 OritechThings 与安装 0.0.46 的服务端环境验证。兼容用例枚举 48 个真实 TierAddonBlock，核对六类参数及实际提速；不硬编码注册名来模拟高级插件。
 - `build` 依赖 `compileGameTestJava`，不会执行服务器，按需显式调用 `runGameTestServer`。`-PwithThings=true` 加载可选插件，`-PgameTestDirectory=gametest-with-things` 隔离测试目录。
-- `tools/verify_resources.py --oritech <发布JAR> --mekanism <发布JAR> --jar <发行JAR>` 核对十组原机／罐室资源、原 GUI、语言配对及发行包边界。原资源和 GameTest 不进发行 JAR。
+- `tools/verify_resources.py --oritech <发布JAR> --jar <发行JAR>` 核对十组原机／罐室资源、空机三张 16×16 原材质、配方材料、原 GUI、语言配对及发行包边界。原资源和 GameTest 不进发行 JAR。
 - 新测试世界首次启动的 `server.properties` 缺失信息会由 Minecraft 自动创建配置；以服务器最终测试结果为准。未进行游戏内视觉／音效验收。

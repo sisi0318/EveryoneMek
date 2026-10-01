@@ -32,7 +32,9 @@ public final class Content {
     public static final Supplier<MenuType<ProcessorMenu>> MENU=MENUS.register("universal_processor",()->IMenuTypeExtension.create(ProcessorMenu::new));
     public static final Supplier<DataComponentType<CompoundTag>> DATA=COMPONENTS.register("processor",()->DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
     public Content(IEventBus bus){BLOCKS.register(bus);ITEMS.register(bus);TILES.register(bus);MENUS.register(bus);COMPONENTS.register(bus);bus.addListener(Content::capabilities);
-        bus.addListener((net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent e)->{if(e.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS)e.accept(ITEM.get());});}
+        bus.addListener((net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent e)->{
+            if(e.getTab()==rearth.oritech.init.ItemGroups.MACHINE_GROUP||e.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS)e.accept(ITEM.get());
+        });}
     private static void capabilities(RegisterCapabilitiesEvent e){
         e.registerBlockEntity(Capabilities.ItemHandler.BLOCK,TILE.get(),(p,s)->new Ports.Items(()->p,s));
         e.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,TILE.get(),(p,s)->new Ports.Energy(()->p,s));
