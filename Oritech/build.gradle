@@ -45,6 +45,7 @@ dependencies {
     runtimeOnly 'earth.terrarium.athena:athena-neoforge-1.21:4.0.0'
     compileOnly 'mezz.jei:jei-1.21.1-common-api:19.25.0.322'
     runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.25.0.322'
+    compileOnly 'maven.modrinth:oritech-things:vt3nmngK'
     if (withThings) runtimeOnly 'maven.modrinth:oritech-things:vt3nmngK'
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'

@@ -23,7 +23,16 @@ public final class Track {
         public double gap(long speed){return Math.min(maxGap,Math.max(2,Math.sqrt(Math.max(1,speed))/2));}
         public double bend(long speed){return bendFactor>0?Math.sqrt(Math.max(1,speed))/bendFactor:Double.POSITIVE_INFINITY;}
     }
-    public enum Fault { NONE,MISSING_GATE,WRONG_FACING,NO_MEETING,NO_MOTOR,BEND_TOO_TIGHT,GAP_TOO_WIDE,INVALID_LAYOUT }
+    public enum Fault { NONE,MISSING_GATE,WRONG_FACING,NO_MEETING,NO_MOTOR,BEND_TOO_TIGHT,GAP_TOO_WIDE,INVALID_LAYOUT,MAGNET_CAPACITY }
+    public record Magnet(boolean enabled,float base,float divisor,float efficiency,long capacity){
+        public static final Magnet NONE=new Magnet(false,0,1,1,0);
+        public long cost(long speed,double missing){
+            if(!enabled||!Float.isFinite(base)||base<0||!Float.isFinite(divisor)||divisor<=0||!Float.isFinite(efficiency)||efficiency<0)return Long.MAX_VALUE;
+            float v=speed,d=(float)Math.max(0,missing);
+            // Match the published Things float calculation and Math.round(float) saturation.
+            return Math.max(0,Math.round((base+v*v/divisor+d*d)*Math.max(.1f,efficiency)));
+        }
+    }
     public record Segment(int from,int to,int direction,double length,int nextDirection,Node target){}
     public record Plan(List<Segment> segments,int loopStart,Fault fault,int problem){
         public boolean valid(){return fault==Fault.NONE;}
@@ -65,31 +74,41 @@ public final class Track {
     }
     private static Plan invalid(Fault fault,int pos){return new Plan(List.of(),-1,fault,pos);}
 
-    public record Validation(Fault fault,int problem,boolean collision){public boolean valid(){return fault==Fault.NONE&&collision;}}
+    public record Validation(Fault fault,int problem,boolean collision,long magnetNeeded){
+        public Validation(Fault fault,int problem,boolean collision){this(fault,problem,collision,0);}
+        public boolean valid(){return fault==Fault.NONE&&collision;}
+    }
     private static final class Probe {long speed=1;double bend=15000,previous=15000;}
     /** Check the first and last required laps. Intermediate laps only relax gaps and tighten bends. */
     public static Validation preflight(Plan plan,Rules rules,long required){
+        return preflight(plan,rules,required,Magnet.NONE);
+    }
+    public static Validation preflight(Plan plan,Rules rules,long required,Magnet magnet){
         if(!plan.valid())return new Validation(plan.fault(),plan.problem(),false);
-        var probe=new Probe();var first=probe(plan,0,probe,rules,required);if(first.fault()!=Fault.NONE||first.collision())return first;
+        var probe=new Probe();var first=probe(plan,0,probe,rules,required,magnet);if(first.fault()!=Fault.NONE||first.collision())return first;
         int meeting=-1,motors=0,beforeMeeting=0;
         for(int i=plan.loopStart();i<plan.segments().size();i++){var node=plan.segments().get(i).target();if(node.kind()==B&&meeting<0){meeting=i;beforeMeeting=motors;}if(node.kind()==MOTOR)motors++;}
         if(meeting<0)return new Validation(Fault.NO_MEETING,plan.segments().getLast().to(),false);
         if(motors==0)return new Validation(Fault.NO_MOTOR,plan.segments().get(meeting).to(),false);
         // This warm-up makes both bend distances independent of any leading path into the loop.
-        var warm=probe(plan,plan.loopStart(),probe,rules,required);if(warm.fault()!=Fault.NONE||warm.collision())return warm;
+        var warm=probe(plan,plan.loopStart(),probe,rules,required,magnet);if(warm.fault()!=Fault.NONE||warm.collision())return warm;
         long missing=Math.max(0,required-1-probe.speed-beforeMeeting),skip=(missing+motors-1)/motors;
         if(skip>0){
             probe.speed=Math.min(Integer.MAX_VALUE,probe.speed+(skip-1)*motors);
-            var last=probe(plan,plan.loopStart(),probe,rules,required);if(last.fault()!=Fault.NONE||last.collision())return last;
+            var last=probe(plan,plan.loopStart(),probe,rules,required,magnet);if(last.fault()!=Fault.NONE||last.collision())return last;
         }
-        return probe(plan,plan.loopStart(),probe,rules,required);
+        return probe(plan,plan.loopStart(),probe,rules,required,magnet);
     }
-    private static Validation probe(Plan plan,int start,Probe p,Rules rules,long required){
+    private static Validation probe(Plan plan,int start,Probe p,Rules rules,long required,Magnet magnet){
         for(int i=start;i<plan.segments().size();i++){var s=plan.segments().get(i);
             if(Math.max(Math.abs(x(s.to())-x(s.from())),Math.abs(y(s.to())-y(s.from())))>rules.gap(p.speed)+1e-7)return new Validation(Fault.GAP_TOO_WIDE,s.from(),false);
             p.bend+=s.length();if(s.target().kind()==B&&p.speed+1>=required)return new Validation(Fault.NONE,-1,true);
             if(s.direction()!=s.nextDirection()){
-                if(p.bend+p.previous<=rules.bend(p.speed))return new Validation(Fault.BEND_TOO_TIGHT,s.to(),false);
+                if(p.bend+p.previous<=rules.bend(p.speed)){
+                    if(!magnet.enabled())return new Validation(Fault.BEND_TOO_TIGHT,s.to(),false);
+                    long cost=magnet.cost(p.speed,rules.bend(p.speed)-p.bend-p.previous);
+                    if(cost>magnet.capacity())return new Validation(Fault.MAGNET_CAPACITY,s.to(),false,cost);
+                }
                 p.previous=p.bend;p.bend=0;
             }
             if(s.target().kind()==MOTOR&&p.speed<Integer.MAX_VALUE)p.speed++;
@@ -107,10 +126,24 @@ public final class Track {
         public boolean valid(Plan p){return p.valid()&&segment>=0&&segment<p.segments().size()&&Double.isFinite(offset)&&offset>=0&&offset<=p.segments().get(segment).length()+1e-7
             &&Double.isFinite(bendDistance)&&bendDistance>=0&&Double.isFinite(previousBend)&&previousBend>=0&&speed>=1&&speed<=Integer.MAX_VALUE;}
     }
-    public record Step(long spent,boolean collision,boolean needsPower,Fault fault,int problem){}
+    public record Step(long spent,boolean collision,boolean needsPower,Fault fault,int problem,long magneticSpent,boolean needsMagnet,long magnetNeeded){
+        public Step(long spent,boolean collision,boolean needsPower,Fault fault,int problem){this(spent,collision,needsPower,fault,problem,0,false,0);}
+    }
+    private static final class MagneticBudget {
+        final Magnet magnet;final long available;boolean used,waiting;long spent,needed;
+        MagneticBudget(Magnet magnet,long available){this.magnet=magnet;this.available=available;}
+        boolean pay(long speed,double missing){if(used)return true;needed=magnet.cost(speed,missing);if(needed>available){waiting=true;return false;}spent=needed;used=true;return true;}
+    }
 
     /** Pay at each real virtual motor; a power shortage preserves the beam at that motor. */
     public static Step advance(Plan plan,Beam beam,Rules rules,long available,long required){
+        return advance(plan,beam,rules,available,required,Magnet.NONE,0);
+    }
+    public static Step advance(Plan plan,Beam beam,Rules rules,long available,long required,Magnet magnet,long magneticEnergy){
+        var budget=new MagneticBudget(magnet,Math.max(0,magneticEnergy));var step=advance(plan,beam,rules,available,required,budget);
+        return new Step(step.spent(),step.collision(),step.needsPower(),step.fault(),step.problem(),budget.spent,budget.waiting,budget.needed);
+    }
+    private static Step advance(Plan plan,Beam beam,Rules rules,long available,long required,MagneticBudget magnet){
         if(!beam.valid(plan))return new Step(0,false,false,Fault.INVALID_LAYOUT,-1);
         long spent=0;double distance=beam.speed/20.0;
         for(int steps=0;steps<2048;steps++){
@@ -123,7 +156,11 @@ public final class Track {
             // Its initial speed is 1, so the real relative collision speed is A + 1.
             if(s.target().kind()==B&&beam.speed+1>=required)return new Step(spent,true,false,Fault.NONE,s.to());
             boolean turn=s.direction()!=s.nextDirection();
-            if(turn&&beam.bendDistance+beam.previousBend<=rules.bend(beam.speed))return new Step(spent,false,false,Fault.BEND_TOO_TIGHT,s.to());
+            if(turn&&beam.bendDistance+beam.previousBend<=rules.bend(beam.speed)){
+                if(!magnet.magnet.enabled())return new Step(spent,false,false,Fault.BEND_TOO_TIGHT,s.to());
+                if(!magnet.used&&magnet.magnet.cost(beam.speed,rules.bend(beam.speed)-beam.bendDistance-beam.previousBend)>magnet.magnet.capacity())return new Step(spent,false,false,Fault.MAGNET_CAPACITY,s.to());
+                if(!magnet.pay(beam.speed,rules.bend(beam.speed)-beam.bendDistance-beam.previousBend))return new Step(spent,false,false,Fault.NONE,s.to());
+            }
             long cost=s.target().kind()==MOTOR?saturatedMultiply(beam.speed,rules.accelerationCost()):0;
             if(cost>Math.max(0,available-spent))return new Step(spent,false,true,Fault.NONE,s.to());
             spent+=cost;

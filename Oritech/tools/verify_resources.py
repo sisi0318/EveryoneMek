@@ -94,12 +94,14 @@ for path in resources.rglob('*.json'):
 if args.jar:
     with ZipFile(args.jar) as jar:
         files = jar.namelist()
-        assert not any('GameTest' in f or f.startswith(('art/', 'tools/', 'assets/oritech/', 'assets/mekanism/')) for f in files)
+        assert not any('GameTest' in f or f.startswith(('art/', 'tools/', 'assets/oritech/', 'assets/mekanism/', 'com/lumengrid/')) for f in files)
         assert 'META-INF/neoforge.mods.toml' in files
         assert 'dev/everyonemek/oritech/Processor.class' in files
         assert 'dev/everyonemek/oritech/client/ProcessorRenderer.class' in files
         assert 'dev/everyonemek/oritech/collider/Track.class' in files
         assert 'dev/everyonemek/oritech/client/ColliderScreen.class' in files
+        assert 'dev/everyonemek/oritech/collider/SmartTrack.class' in files
+        assert 'dev/everyonemek/oritech/collider/MagnetSupport.class' in files
         for tier in (2, 3):
             assert f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json' not in files
             assert f'data/oritechmekanism/recipe/capacity_upgrade_{tier}.json' not in files

@@ -21,16 +21,20 @@ public final class ColliderPackets {
         public static final StreamCodec<RegistryFriendlyByteBuf,Snapshot> CODEC=StreamCodec.of((b,p)->{b.writeVarInt(p.menu);b.writeNbt(p.data);},b->new Snapshot(b.readVarInt(),b.readNbt()));
         @Override public Type<Snapshot> type(){return TYPE;}
     }
-    public record Paint(int menu,int revision,int[] cells,int direction,int bend,boolean remove) implements CustomPacketPayload {
+    public record Paint(int menu,int revision,int[] cells,int direction,int bend,boolean remove,boolean smart) implements CustomPacketPayload {
+        public Paint(int menu,int revision,int[] cells,int direction,int bend,boolean remove){this(menu,revision,cells,direction,bend,remove,false);}
         public static final Type<Paint> TYPE=new Type<>(Content.id("collider_paint"));
-        public static final StreamCodec<RegistryFriendlyByteBuf,Paint> CODEC=StreamCodec.of((b,p)->{b.writeVarInt(p.menu);b.writeVarInt(p.revision);b.writeVarIntArray(p.cells);b.writeVarInt(p.direction);b.writeVarInt(p.bend);b.writeBoolean(p.remove);},
-            b->new Paint(b.readVarInt(),b.readVarInt(),b.readVarIntArray(256),b.readVarInt(),b.readVarInt(),b.readBoolean()));
+        public static final StreamCodec<RegistryFriendlyByteBuf,Paint> CODEC=StreamCodec.of((b,p)->{b.writeVarInt(p.menu);b.writeVarInt(p.revision);b.writeVarIntArray(p.cells);b.writeVarInt(p.direction);b.writeVarInt(p.bend);b.writeBoolean(p.remove);b.writeBoolean(p.smart);},
+            b->new Paint(b.readVarInt(),b.readVarInt(),b.readVarIntArray(256),b.readVarInt(),b.readVarInt(),b.readBoolean(),b.readBoolean()));
         @Override public Type<Paint> type(){return TYPE;}
     }
     public static int paint(Paint packet,Player player){
         if(!(player.containerMenu instanceof ColliderMenu menu)||menu.containerId!=packet.menu||!menu.canControl(player)||!menu.getCarried().isEmpty()||packet.cells.length>256
             ||menu.collider.revision!=packet.revision||!menu.collider.editable()||packet.direction<0||packet.direction>7||packet.bend<0||packet.bend>2)return 0;
-        int changed=0;var visited=new java.util.HashSet<Integer>();for(int pos:packet.cells)if(visited.add(pos)&&menu.collider.edit(packet.remove?1:0,pos,packet.direction,packet.bend))changed++;
+        if(menu.page!=0)return 0;menu.editFailure=0;menu.editRequired=0;
+        int changed=0;
+        if(packet.smart&&!packet.remove){var result=menu.collider.smartPaint(packet.cells,packet.direction);menu.editFailure=result.failure().ordinal();menu.editRequired=result.required();if(result.valid())changed=result.nodes().size();}
+        else {var visited=new java.util.HashSet<Integer>();for(int pos:packet.cells)if(visited.add(pos)&&menu.collider.edit(packet.remove?1:0,pos,packet.direction,packet.bend))changed++;}
         menu.broadcastChanges();return changed;
     }
     public static boolean handle(Control packet,Player player){
@@ -41,15 +45,16 @@ public final class ColliderPackets {
             case 1->collider.cancel();
             case 2->collider.eject=!collider.eject;
             case 3->{if(packet.cell<0||packet.cell>=6||packet.direction<Collider.CLOSED||packet.direction>Collider.EJECT)return false;collider.sides[packet.cell]=packet.direction;}
-            case 4,5,6,7->{if(packet.revision!=collider.revision)return false;changed=collider.edit(packet.action-4,packet.cell,packet.direction,packet.bend);}
+            case 4,5,6,7->{if(menu.page!=0||packet.revision!=collider.revision)return false;changed=collider.edit(packet.action-4,packet.cell,packet.direction,packet.bend);}
             case 8->{var id=ResourceLocation.tryParse(packet.recipe);if(id==null)return false;changed=collider.selectRecipe(id);}
             case 9->changed=collider.selectRecipe(null);
             case 10->changed=collider.lockDetected();
+            case 11->{if(packet.cell<0||packet.cell>3||packet.cell==3&&!MagnetSupport.loaded())return false;menu.page=packet.cell;menu.editFailure=0;}
             default->{return false;}
         }
-        if(changed){collider.setChanged();menu.broadcastChanges();}return changed;
+        if(changed){menu.editFailure=0;menu.editRequired=0;collider.setChanged();menu.broadcastChanges();}return changed;
     }
-    public static void register(RegisterPayloadHandlersEvent event){var registrar=event.registrar("1");
+    public static void register(RegisterPayloadHandlersEvent event){var registrar=event.registrar("2");
         registrar.playToServer(Control.TYPE,Control.CODEC,(packet,context)->context.enqueueWork(()->handle(packet,context.player())));
         registrar.playToServer(Paint.TYPE,Paint.CODEC,(packet,context)->context.enqueueWork(()->paint(packet,context.player())));
         registrar.playToClient(Snapshot.TYPE,Snapshot.CODEC,(packet,context)->context.enqueueWork(()->{if(context.player().containerMenu instanceof ColliderMenu menu&&menu.containerId==packet.menu&&packet.data!=null)menu.readView(packet.data);}));

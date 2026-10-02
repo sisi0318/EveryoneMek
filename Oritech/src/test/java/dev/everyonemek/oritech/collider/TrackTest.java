@@ -32,4 +32,17 @@ class TrackTest {
         assertEquals(Track.Fault.BEND_TOO_TIGHT,Track.preflight(tiny,rules,15000).fault());
         cells=loop(3,60);cells.remove(Track.cell(58,3));assertFalse(Track.plan(cells,rules).valid());
     }
+    @Test void magneticAssistancePaysRealPowerAndStopsAtAnUnfundedBend(){var rules=new Track.Rules(10,2.5,10);var small=Track.plan(loop(3,12),rules);
+        var field=new Track.Magnet(true,10000,50,1,500000);
+        assertTrue(Track.preflight(small,rules,500,field).valid());assertEquals(Track.Fault.MAGNET_CAPACITY,Track.preflight(small,rules,15000,field).fault());
+        var beam=new Track.Beam();Track.Step waiting=null;
+        for(int i=0;i<1000;i++){waiting=Track.advance(small,beam,rules,Long.MAX_VALUE,500,field,0);assertEquals(Track.Fault.NONE,waiting.fault());if(waiting.needsMagnet())break;}
+        assertTrue(waiting.needsMagnet());assertEquals(0,waiting.magneticSpent());int segment=beam.segment;double offset=beam.offset;long speed=beam.speed;
+        long charge=waiting.magnetNeeded();var stillWaiting=Track.advance(small,beam,rules,Long.MAX_VALUE,500,field,charge-1);
+        assertTrue(stillWaiting.needsMagnet());assertEquals(segment,beam.segment);assertEquals(offset,beam.offset);assertEquals(speed,beam.speed);
+        var paid=Track.advance(small,beam,rules,Long.MAX_VALUE,500,field,charge);assertEquals(charge,paid.magneticSpent());assertFalse(paid.needsMagnet());
+        long used=charge;boolean collided=false;for(int i=0;i<1000;i++){var step=Track.advance(small,beam,rules,Long.MAX_VALUE,500,field,500000);assertEquals(Track.Fault.NONE,step.fault());assertTrue(step.magneticSpent()<=500000);used+=step.magneticSpent();if(step.collision()){collided=true;break;}}
+        assertTrue(collided);assertTrue(used>0);
+        var efficient=new Track.Magnet(true,10000,50,.1f,500000);assertTrue(Track.preflight(small,rules,15000,efficient).valid());
+    }
 }

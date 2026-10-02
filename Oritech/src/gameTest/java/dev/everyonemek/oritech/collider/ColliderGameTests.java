@@ -39,13 +39,16 @@ public final class ColliderGameTests {
     private static void close(ServerPlayer player){player.closeContainer();player.connection.getConnection().channel().close();}
     private static void clear(Collider p){p.getLevel().removeBlock(p.getBlockPos(),false);for(var drop:p.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new AABB(p.getBlockPos()).inflate(4)))drop.discard();}
     private static ColliderPackets.Control control(Collider p,int action,int cell,int direction,int bend,String recipe){return new ColliderPackets.Control(21,action,p.revision,cell,direction,bend,recipe);}
-    private static Map<Integer,Track.Node> loop(){int low=3,high=60;var cells=new TreeMap<Integer,Track.Node>();
+    private static Map<Integer,Track.Node> loop(){return loop(3,60);}
+    private static Map<Integer,Track.Node> loop(int low,int high){var cells=new TreeMap<Integer,Track.Node>();
         for(int n=low+2;n<=high-2;n++){cells.put(Track.cell(n,low),new Track.Node(Track.MOTOR,0,0));cells.put(Track.cell(high,n),new Track.Node(Track.MOTOR,2,0));cells.put(Track.cell(n,high),new Track.Node(Track.MOTOR,4,0));cells.put(Track.cell(low,n),new Track.Node(Track.MOTOR,6,0));}
-        int[][] turns={{58,3,0,2},{59,4,1,0},{60,5,6,1},{60,58,2,2},{59,59,3,0},{58,60,0,1},{5,60,4,2},{4,59,5,0},{3,58,2,1},{3,5,6,2},{4,4,7,0},{5,3,4,1}};
+        int[][] turns={{high-2,low,0,2},{high-1,low+1,1,0},{high,low+2,6,1},{high,high-2,2,2},{high-1,high-1,3,0},{high-2,high,0,1},
+            {low+2,high,4,2},{low+1,high-1,5,0},{low,high-2,2,1},{low,low+2,6,2},{low+1,low+1,7,0},{low+2,low,4,1}};
         for(var c:turns)cells.put(Track.cell(c[0],c[1]),new Track.Node(Track.RING,c[2],c[3]));
-        cells.put(Track.cell(7,3),new Track.Node(Track.A,0,0));cells.put(Track.cell(56,3),new Track.Node(Track.B,4,0));return cells;
+        cells.put(Track.cell(low+4,low),new Track.Node(Track.A,0,0));cells.put(Track.cell(high-4,low),new Track.Node(Track.B,4,0));return cells;
     }
-    private static void build(Collider p,ServerPlayer player){var cells=loop();
+    private static void build(Collider p,ServerPlayer player){build(p,player,loop());}
+    private static void build(Collider p,ServerPlayer player,Map<Integer,Track.Node> cells){
         for(var entry:cells.entrySet())if(entry.getValue().kind()==Track.A||entry.getValue().kind()==Track.B)check(ColliderPackets.handle(control(p,entry.getValue().kind()==Track.A?6:7,entry.getKey(),entry.getValue().direction(),0,""),player),"Emitter move rejected");
         for(var entry:cells.entrySet()){var n=entry.getValue();if(n.kind()>=Track.A)continue;var item=new ItemStack(n.kind()==Track.MOTOR?BlockContent.ACCELERATOR_MOTOR:BlockContent.ACCELERATOR_RING);item.set(DataComponents.CUSTOM_NAME,Component.literal("kept-part"));p.inventory.setItem(Collider.PART_IN,item);
             check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{entry.getKey()},n.direction(),n.bend(),false),player)==1,"Real packet did not install part");check(p.inventory.getItem(Collider.PART_IN).isEmpty(),"Placement failed to consume part");}
@@ -111,4 +114,52 @@ public final class ColliderGameTests {
                 check(chest.getItem(0).is(result.getItem()),"Native collision result did not reach configured output");check(p.energy<Collider.CAPACITY,"Accelerator produced results without consuming energy");
             }finally{h.getLevel().removeBlock(a,false);h.getLevel().removeBlock(b,false);h.getLevel().removeBlock(out,false);clear(p);}}).thenSucceed();
     }
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void smartStrokePacketsAreAtomicAndKeepOldPartsAndEmitters(GameTestHelper h){var p=place(h,Direction.NORTH);var player=player(h,p);try{
+        int[] stroke={Track.cell(2,2),Track.cell(3,2),Track.cell(4,2),Track.cell(4,3),Track.cell(4,4)};
+        var material=new ItemStack(BlockContent.ACCELERATOR_RING,3);material.set(DataComponents.CUSTOM_NAME,Component.literal("smart-part"));p.inventory.setItem(Collider.PART_IN,material.copy());
+        var request=new ColliderPackets.Paint(21,p.revision,stroke,0,0,false,true);var bytes=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        ColliderPackets.Paint decoded;try{ColliderPackets.Paint.CODEC.encode(bytes,request);decoded=ColliderPackets.Paint.CODEC.decode(bytes);}finally{bytes.release();}
+        check(ColliderPackets.paint(decoded,player)==0&&p.parts.isEmpty()&&p.inventory.getItem(Collider.PART_IN).getCount()==3,"Insufficient smart stroke partially consumed materials");
+        check(((ColliderMenu)player.containerMenu).editFailure==SmartTrack.Failure.NOT_ENOUGH_PARTS.ordinal(),"Rejected brush has no actionable response");
+        p.inventory.setItem(Collider.PART_IN,material.copyWithCount(5));int a=p.emitterA,b=p.emitterB;
+        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,stroke,0,0,false,true),player)==4&&p.parts.size()==4&&p.inventory.getItem(Collider.PART_IN).getCount()==1,"Smart bevel did not commit exactly four paid cells");
+        check(p.emitterA==a&&p.emitterB==b&&p.parts.values().stream().allMatch(part->part.item().has(DataComponents.CUSTOM_NAME)),"Smart brush changed emitters or lost components");
+        check(!p.parts.containsKey(Track.cell(4,2))&&p.parts.get(Track.cell(3,2)).node().exit(0)==1&&p.parts.get(Track.cell(4,3)).node().exit(1)==2,"Smart brush produced an illegal sharp corner");
+        var before=p.saveWithFullMetadata(h.getLevel().registryAccess());check(ColliderPackets.paint(decoded,player)==0&&p.saveWithFullMetadata(h.getLevel().registryAccess()).equals(before),"Stale smart packet changed the machine");
+        var loaded=new Collider(p.getBlockPos(),p.getBlockState());loaded.setLevel(h.getLevel());loaded.loadWithComponents(before,h.getLevel().registryAccess());check(loaded.parts.size()==4&&loaded.emitterA==a,"Smart layout failed NBT round-trip");
+    }finally{close(player);clear(p);}h.succeed();}
+
+    @GameTest(template="empty",timeoutTicks=80)
+    public static void optionalThingsMagnetUsesNativeUpgradesAndItsItemsStoredEnergy(GameTestHelper h){var p=place(h,Direction.NORTH);var player=player(h,p);try{
+        if(!MagnetSupport.loaded()){
+            check(p.magnet().equals(MagnetSupport.Settings.NONE)&&p.magneticEnergy()==0,"Absent optional mod enabled magnetic assistance");
+            check(!ColliderPackets.handle(control(p,11,3,0,0,""),player),"Unavailable magnet page could be opened");h.succeed();return;
+        }
+        var field=net.minecraft.core.registries.BuiltInRegistries.ITEM.stream().map(ItemStack::new).filter(MagnetSupport::isField).findFirst().orElseThrow();field.set(DataComponents.CUSTOM_NAME,Component.literal("saved-magnet"));MagnetSupport.energy(field,123456);
+        var menu=(ColliderMenu)player.containerMenu;menu.setCarried(field.copy());menu.clicked(ColliderMenu.MAGNET_MENU,0,ClickType.PICKUP,player);
+        check(p.inventory.getItem(Collider.MAGNET_SLOT).isEmpty()&&ItemStack.matches(menu.getCarried(),field),"Hidden magnet slot was interactive");menu.setCarried(ItemStack.EMPTY);
+        check(ColliderPackets.handle(control(p,11,3,0,0,""),player),"Magnet page selection failed");menu.setCarried(field.copyWithCount(2));menu.clicked(ColliderMenu.MAGNET_MENU,0,ClickType.PICKUP,player);
+        check(p.inventory.getItem(Collider.MAGNET_SLOT).getCount()==1&&menu.getCarried().getCount()==1,"More than one field was installed");menu.setCarried(ItemStack.EMPTY);
+        check(!menu.getSlot(ColliderMenu.UPGRADE_MENU).mayPlace(new ItemStack(BlockContent.MACHINE_SPEED_ADDON)),"Field accepted an unsupported speed addon");
+        menu.setCarried(new ItemStack(BlockContent.MACHINE_EFFICIENCY_ADDON));menu.clicked(ColliderMenu.UPGRADE_MENU,0,ClickType.PICKUP,player);
+        menu.setCarried(new ItemStack(BlockContent.MACHINE_CAPACITOR_ADDON));menu.clicked(ColliderMenu.UPGRADE_MENU+1,0,ClickType.PICKUP,player);
+        var advanced=net.minecraft.core.registries.BuiltInRegistries.BLOCK.stream().filter(block->net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).getNamespace().equals("oritechthings"))
+            .filter(block->block instanceof rearth.oritech.block.blocks.addons.MachineAddonBlock addon&&addon.getAddonSettings().efficiencyMultiplier()!=1&&MagnetSupport.isUpgrade(new ItemStack(block))).findFirst().orElseThrow();
+        menu.setCarried(new ItemStack(advanced));menu.clicked(ColliderMenu.UPGRADE_MENU+2,0,ClickType.PICKUP,player);
+        var settings=p.magnet();check(settings.enabled()&&settings.efficiency()<1&&settings.capacity()>500000,"Native or Things efficiency/capacitor parameters were ignored");
+        p.energy=1_000_000;long before=p.energy+p.magneticEnergy();p.tick();check(p.magneticEnergy()>123456&&p.energy+p.magneticEnergy()==before,"Charging created or deleted field energy");
+        check(ColliderPackets.handle(control(p,11,0,0,0,""),player),"Could not return to beamline");build(p,player,loop(3,12));
+        var noField=Track.preflight(p.plan(),Collider.rules(),500);check(!noField.valid()&&Track.preflight(p.plan(),Collider.rules(),500,p.magnet().physics()).valid(),"Native field did not make the tight ring viable");
+        p.inventory.setItem(0,ingredient(p,"diamond",0,1));p.inventory.setItem(1,ingredient(p,"diamond",0,1));p.energy=Collider.CAPACITY;before=p.energy+p.magneticEnergy();
+        check(ColliderPackets.handle(control(p,0,0,0,0,""),player),"Magnetic run did not start");
+        for(int i=0;i<1500&&p.magneticSpent==0;i++)p.tick();check(p.busy()&&p.magneticSpent>0,"Magnet gave no paid assistance");
+        check(before-p.energy-p.magneticEnergy()==p.spent,"Field charging was counted as consumption or assistance was free");
+        var saved=p.saveWithFullMetadata(h.getLevel().registryAccess());long stored=p.magneticEnergy(),spent=p.spent;var restored=new Collider(p.getBlockPos(),p.getBlockState());restored.setLevel(h.getLevel());restored.loadWithComponents(saved,h.getLevel().registryAccess());h.getLevel().setBlockEntity(restored);p=restored;
+        check(p.magneticEnergy()==stored&&p.spent==spent&&p.inventory.getItem(Collider.MAGNET_SLOT).has(DataComponents.CUSTOM_NAME)&&p.magnet().equals(settings),"Reload lost field charge, native upgrades or work");
+        for(int i=0;i<1500&&p.inventory.getItem(Collider.OUTPUT).isEmpty();i++)p.tick();check(p.inventory.getItem(Collider.OUTPUT).is(Items.DIAMOND)&&!p.busy(),"Compact magnetic ring did not complete its native collision");
+        menu=new ColliderMenu(21,player.getInventory(),p);player.containerMenu=menu;check(ColliderPackets.handle(control(p,0,0,0,0,""),player),"Could not stop collider");check(ColliderPackets.handle(control(p,11,3,0,0,""),player),"Could not reopen magnet page");
+        stored=p.magneticEnergy();long mainEnergy=p.energy;var removed=menu.quickMoveStack(player,ColliderMenu.MAGNET_MENU);
+        check(MagnetSupport.isField(removed)&&MagnetSupport.energy(removed)==stored&&removed.has(DataComponents.CUSTOM_NAME)&&p.magneticEnergy()==0&&p.energy==mainEnergy,"Uninstall duplicated or lost the field's own energy");
+    }finally{close(player);clear(p);}h.succeed();}
 }

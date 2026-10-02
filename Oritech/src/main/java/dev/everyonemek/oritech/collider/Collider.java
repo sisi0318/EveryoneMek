@@ -21,7 +21,7 @@ import rearth.oritech.init.*;
 import rearth.oritech.init.recipes.*;
 
 public final class Collider extends BlockEntity implements ExtendedMenuProvider {
-    public static final int INPUT_A=0,INPUT_B=1,OUTPUT=2,PART_IN=3,PART_OUT=4,WORK_A=5,WORK_B=6,SLOTS=7;
+    public static final int INPUT_A=0,INPUT_B=1,OUTPUT=2,PART_IN=3,PART_OUT=4,WORK_A=5,WORK_B=6,MAGNET_SLOT=7,MAGNET_ADDONS=8,SLOTS=13;
     public static final long CAPACITY=20_000_000,RECEIVE=1_000_000;
     public static final int CLOSED=0,FEED_A=1,FEED_B=2,FEED_BOTH=3,EJECT=4;
     public final SimpleContainer inventory=new SimpleContainer(SLOTS){@Override public void setChanged(){super.setChanged();Collider.this.setChanged();}};
@@ -31,9 +31,9 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     public final int[] sides={EJECT,FEED_A,FEED_B,FEED_BOTH,FEED_BOTH,EJECT};
     public boolean enabled,eject=true,lockedSwapped;
     public ResourceLocation lockedRecipe;
-    public long energy,spent;
+    public long energy,spent,magnetNeeded,magneticSpent;
     public int revision,status,problem=-1;
-    public static final int IDLE=0,NEED_A=1,NEED_B=2,NO_RECIPE=3,OUTPUT_FULL=4,NO_POWER=5,ACCELERATING=6,COLLISION=7,PAUSED=8,RETURN_SPACE=9,RECIPE_CHANGED=10,TRACK_BASE=20;
+    public static final int IDLE=0,NEED_A=1,NEED_B=2,NO_RECIPE=3,OUTPUT_FULL=4,NO_POWER=5,ACCELERATING=6,COLLISION=7,PAUSED=8,RETURN_SPACE=9,RECIPE_CHANGED=10,MAGNET_CHARGING=11,TRACK_BASE=20;
     public Track.Beam beam;
     public ResourceLocation taskRecipe;
     public ItemStack taskResult=ItemStack.EMPTY;
@@ -43,6 +43,8 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     private Track.Plan cachedPlan;
     private Track.Rules cachedRules;
     private Track.Rules taskRules;
+    private MagnetSupport.Settings taskMagnet=MagnetSupport.Settings.NONE,magnetSettings=MagnetSupport.Settings.NONE;
+    private List<Object> magnetKey=List.of();
     private int plannedRevision=-1;
 
     public Collider(BlockPos pos,BlockState state){super(Content.COLLIDER_TILE.get(),pos,state);}
@@ -50,6 +52,11 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     public boolean busy(){return taskRecipe!=null||!inventory.getItem(WORK_A).isEmpty()||!inventory.getItem(WORK_B).isEmpty();}
     public boolean editable(){return !enabled&&!busy();}
     public int mode(Direction worldSide){return worldSide==null?CLOSED:sides[RelativeSide.fromDirections(facing(),worldSide).ordinal()];}
+    public MagnetSupport.Settings magnet(){var addons=new ArrayList<ItemStack>();for(int i=MAGNET_ADDONS;i<SLOTS;i++)addons.add(inventory.getItem(i));var key=MagnetSupport.key(inventory.getItem(MAGNET_SLOT),addons);
+        if(!key.equals(magnetKey)){magnetKey=key;magnetSettings=MagnetSupport.settings(inventory.getItem(MAGNET_SLOT),addons);}return magnetSettings;}
+    public long magneticEnergy(){return MagnetSupport.energy(inventory.getItem(MAGNET_SLOT));}
+    private void chargeMagnet(){var settings=magnet();if(settings.capacity()<=0)return;long charge=Math.min(energy,Math.min(settings.insert(),Math.max(0,settings.capacity()-magneticEnergy())));
+        if(charge>0){energy-=charge;MagnetSupport.energy(inventory.getItem(MAGNET_SLOT),magneticEnergy()+charge);setChanged();}}
     public Map<Integer,Track.Node> nodes(){var nodes=new TreeMap<Integer,Track.Node>();parts.forEach((pos,part)->nodes.put(pos,part.node()));nodes.put(emitterA,new Track.Node(Track.A,directionA,0));nodes.put(emitterB,new Track.Node(Track.B,directionB,0));return nodes;}
     public static int partKind(ItemStack stack){
         if(stack.is(BlockContent.ACCELERATOR_RING.asItem()))return Track.RING;
@@ -80,6 +87,18 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
         }
         layoutChanged();return true;
     }
+    public SmartTrack.Result smartPaint(int[] cells,int fallback){
+        if(!editable())return new SmartTrack.Result(Map.of(),0,SmartTrack.Failure.BAD_PATH,-1);
+        var input=inventory.getItem(PART_IN);int kind=partKind(input);var result=SmartTrack.plan(nodes(),cells,kind==0?Track.RING:kind,fallback,rules().maxGap());if(!result.valid())return result;
+        if(result.required()>input.getCount()||result.required()>0&&kind==0)return new SmartTrack.Result(result.nodes(),result.required(),SmartTrack.Failure.NOT_ENOUGH_PARTS,-1);
+        // Commit only after the entire stroke, all orientations and all materials have been checked.
+        var item=input.copyWithCount(1);
+        for(var entry:result.nodes().entrySet()){
+            int pos=entry.getKey();if(pos==emitterA||pos==emitterB)continue;
+            var original=parts.get(pos);parts.put(pos,new Placed(entry.getValue(),original==null?item.copy():original.item()));
+        }
+        input.shrink(result.required());layoutChanged();return result;
+    }
     public List<RecipeHolder<OritechRecipe>> recipes(){if(level==null)return List.of();return level.getRecipeManager().getAllRecipesFor(RecipeContent.PARTICLE_COLLISION).stream()
         .filter(r->r.value().getInputs().size()==2&&r.value().getResults().size()==1&&!r.value().getResults().getFirst().isEmpty()&&r.value().getTime()>0)
         .sorted(Comparator.comparing(r->r.id().toString())).toList();}
@@ -106,12 +125,13 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     public void cancel(){if(!busy())return;enabled=false;returning=true;setChanged();}
     private boolean canMerge(int slot,ItemStack stack){var current=inventory.getItem(slot);return stack.isEmpty()||(current.isEmpty()||ItemStack.isSameItemSameComponents(current,stack))&&current.getCount()+stack.getCount()<=Math.min(64,stack.getMaxStackSize());}
     private void merge(int slot,ItemStack stack){if(stack.isEmpty())return;var old=inventory.getItem(slot);inventory.setItem(slot,stack.copyWithCount(old.getCount()+stack.getCount()));}
-    private void clearTask(){taskRecipe=null;taskResult=ItemStack.EMPTY;requiredSpeed=0;beam=null;collisionTicks=0;returning=false;spent=0;taskRules=null;setChanged();}
+    private void clearTask(){taskRecipe=null;taskResult=ItemStack.EMPTY;requiredSpeed=0;beam=null;collisionTicks=0;returning=false;spent=0;magneticSpent=0;magnetNeeded=0;taskRules=null;taskMagnet=MagnetSupport.Settings.NONE;setChanged();}
     private boolean restoreInputs(){
         for(int i=0;i<2;i++){var work=inventory.getItem(WORK_A+i);if(!work.isEmpty()&&canMerge(i,work)){merge(i,work);inventory.setItem(WORK_A+i,ItemStack.EMPTY);}}
         if(!inventory.getItem(WORK_A).isEmpty()||!inventory.getItem(WORK_B).isEmpty()){status=RETURN_SPACE;return false;}clearTask();status=IDLE;return true;
     }
     public void tick(){if(level==null||level.isClientSide)return;
+        chargeMagnet();
         if(eject&&level.getGameTime()%5==0)ColliderPorts.eject(this);
         if(returning){restoreInputs();return;}
         if(!enabled||level.hasNeighborSignal(worldPosition)){if(status<TRACK_BASE&&status!=RECIPE_CHANGED)status=busy()?PAUSED:IDLE;return;}
@@ -121,9 +141,9 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
             var match=match();if(match==null){status=NO_RECIPE;return;}
             var result=match.recipe().value().getResults().getFirst();if(!canMerge(OUTPUT,result)){status=OUTPUT_FULL;return;}
             var plan=plan();if(!plan.valid()){status=TRACK_BASE+plan.fault().ordinal();problem=plan.problem();return;}
-            var validation=Track.preflight(plan,rules(),match.recipe().value().getTime());if(!validation.valid()){status=TRACK_BASE+validation.fault().ordinal();problem=validation.problem();enabled=false;setChanged();return;}
+            var validation=Track.preflight(plan,rules(),match.recipe().value().getTime(),magnet().physics());if(!validation.valid()){status=TRACK_BASE+validation.fault().ordinal();problem=validation.problem();magnetNeeded=validation.magnetNeeded();enabled=false;setChanged();return;}
             inventory.setItem(WORK_A,inventory.getItem(INPUT_A).split(1));inventory.setItem(WORK_B,inventory.getItem(INPUT_B).split(1));
-            taskRecipe=match.recipe().id();taskResult=result.copy();requiredSpeed=match.recipe().value().getTime();taskRules=rules();beam=new Track.Beam();spent=0;setChanged();
+            taskRecipe=match.recipe().id();taskResult=result.copy();requiredSpeed=match.recipe().value().getTime();taskRules=rules();taskMagnet=magnet();beam=new Track.Beam();spent=0;magneticSpent=0;magnetNeeded=0;setChanged();
         }
         if(!taskStillValid()){status=RECIPE_CHANGED;enabled=false;setChanged();return;}
         if(collisionTicks>0){
@@ -131,14 +151,16 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
             if(!canMerge(OUTPUT,taskResult)){status=OUTPUT_FULL;return;}
             merge(OUTPUT,taskResult);inventory.setItem(WORK_A,ItemStack.EMPTY);inventory.setItem(WORK_B,ItemStack.EMPTY);clearTask();return;
         }
-        var plan=plan();var result=Track.advance(plan,beam,rules(),energy,requiredSpeed);energy-=result.spent();spent=spent>Long.MAX_VALUE-result.spent()?Long.MAX_VALUE:spent+result.spent();
+        var plan=plan();var result=Track.advance(plan,beam,rules(),energy,requiredSpeed,magnet().physics(),magneticEnergy());energy-=result.spent();
+        if(result.magneticSpent()>0)MagnetSupport.energy(inventory.getItem(MAGNET_SLOT),magneticEnergy()-result.magneticSpent());magnetNeeded=result.magnetNeeded();
+        magneticSpent=safeAdd(magneticSpent,result.magneticSpent());spent=safeAdd(spent,safeAdd(result.spent(),result.magneticSpent()));
         problem=result.problem();
         if(result.fault()!=Track.Fault.NONE){status=TRACK_BASE+result.fault().ordinal();enabled=false;}
         else if(result.collision()){collisionTicks=1;status=COLLISION;}
-        else status=result.needsPower()?NO_POWER:ACCELERATING;
+        else status=result.needsMagnet()?MAGNET_CHARGING:result.needsPower()?NO_POWER:ACCELERATING;
         setChanged();
     }
-    private boolean taskStillValid(){var found=recipe(taskRecipe);if(found.isEmpty()||taskRules==null||!taskRules.equals(rules())||found.get().value().getTime()!=requiredSpeed||!ItemStack.matches(found.get().value().getResults().getFirst(),taskResult))return false;
+    private boolean taskStillValid(){var found=recipe(taskRecipe);if(found.isEmpty()||taskRules==null||!taskRules.equals(rules())||!taskMagnet.equals(magnet())||found.get().value().getTime()!=requiredSpeed||!ItemStack.matches(found.get().value().getResults().getFirst(),taskResult))return false;
         var in=found.get().value().getInputs();var a=inventory.getItem(WORK_A);var b=inventory.getItem(WORK_B);
         return a.getCount()==1&&b.getCount()==1&&(in.get(0).test(a)&&in.get(1).test(b)||in.get(1).test(a)&&in.get(0).test(b));
     }
@@ -147,6 +169,8 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     @Override public void saveExtraData(FriendlyByteBuf buf){buf.writeBlockPos(worldPosition);}
 
     public CompoundTag view(boolean layout){var tag=new CompoundTag();tag.putInt("revision",revision);tag.putInt("status",status);tag.putInt("problem",problem);tag.putLong("energy",energy);tag.putLong("spent",spent);
+        tag.putInt("maxGap",rules().maxGap());
+        tag.put("magnet",magnet().save());tag.putLong("magneticEnergy",magneticEnergy());tag.putLong("magnetNeeded",magnetNeeded);tag.putLong("magneticSpent",magneticSpent);
         tag.putBoolean("enabled",enabled);tag.putBoolean("busy",busy());tag.putBoolean("eject",eject);tag.putLong("required",requiredSpeed);tag.putIntArray("sides",sides);
         if(lockedRecipe!=null)tag.putString("locked",lockedRecipe.toString());tag.putBoolean("swapped",lockedSwapped);var found=taskRecipe!=null?taskRecipe:lockedRecipe!=null?lockedRecipe:detectedRecipe();if(found!=null)tag.putString("recipe",found.toString());
         if(beam!=null&&beam.valid(plan())){tag.putDouble("x",beam.x(plan()));tag.putDouble("y",beam.y(plan()));tag.putLong("speed",beam.speed);}
@@ -159,6 +183,7 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
         tag.putInt("a",emitterA);tag.putInt("b",emitterB);tag.putInt("dirA",directionA);tag.putInt("dirB",directionB);tag.putLong("energy",energy);tag.putBoolean("enabled",enabled);tag.putBoolean("eject",eject);tag.putIntArray("sides",sides);
         if(lockedRecipe!=null)tag.putString("locked",lockedRecipe.toString());tag.putBoolean("swapped",lockedSwapped);
         if(taskRecipe!=null){tag.putString("task",taskRecipe.toString());tag.put("result",taskResult.saveOptional(lookup));tag.putLong("required",requiredSpeed);tag.putLong("spent",spent);tag.putInt("collision",collisionTicks);tag.putBoolean("returning",returning);
+            tag.put("taskMagnet",taskMagnet.save());tag.putLong("magneticSpent",magneticSpent);
             if(taskRules!=null){var rules=new CompoundTag();rules.putInt("gap",taskRules.maxGap());rules.putDouble("bend",taskRules.bendFactor());rules.putLong("cost",taskRules.accelerationCost());tag.put("rules",rules);}
             if(beam!=null){var data=new CompoundTag();data.putInt("segment",beam.segment);data.putDouble("offset",beam.offset);data.putLong("speed",beam.speed);data.putDouble("bend",beam.bendDistance);data.putDouble("previous",beam.previousBend);tag.put("beam",data);}}
     }
@@ -172,6 +197,7 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
         energy=Math.max(0,tag.getLong("energy"));enabled=tag.getBoolean("enabled");eject=!tag.contains("eject")||tag.getBoolean("eject");var savedSides=tag.getIntArray("sides");if(savedSides.length==6)for(int i=0;i<6;i++)sides[i]=Math.clamp(savedSides[i],CLOSED,EJECT);
         lockedRecipe=readId(tag.getString("locked"));lockedSwapped=tag.getBoolean("swapped");taskRecipe=readId(tag.getString("task"));taskResult=ItemStack.parseOptional(lookup,tag.getCompound("result"));requiredSpeed=Math.clamp(tag.getLong("required"),0,Integer.MAX_VALUE);spent=Math.max(0,tag.getLong("spent"));collisionTicks=Math.clamp(tag.getInt("collision"),0,5);returning=tag.getBoolean("returning");beam=null;taskRules=null;
         if(tag.contains("rules")){var rules=tag.getCompound("rules");taskRules=new Track.Rules(rules.getInt("gap"),rules.getDouble("bend"),rules.getLong("cost"));}
+        taskMagnet=MagnetSupport.Settings.load(tag.getCompound("taskMagnet"));magneticSpent=Math.max(0,tag.getLong("magneticSpent"));magnetNeeded=0;magnetKey=List.of();
         if(tag.contains("beam")){var data=tag.getCompound("beam");beam=new Track.Beam();beam.segment=data.getInt("segment");beam.offset=data.getDouble("offset");beam.speed=data.getLong("speed");beam.bendDistance=data.getDouble("bend");beam.previousBend=data.getDouble("previous");}
         if(busy()&&(taskRecipe==null||beam==null)){returning=true;enabled=false;}
         revision++;cachedPlan=null;
@@ -179,4 +205,5 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     @Override protected void collectImplicitComponents(DataComponentMap.Builder builder){super.collectImplicitComponents(builder);var tag=new CompoundTag();write(tag,level.registryAccess());builder.set(Content.COLLIDER_DATA.get(),tag);}
     @Override protected void applyImplicitComponents(DataComponentInput input){super.applyImplicitComponents(input);var tag=input.get(Content.COLLIDER_DATA.get());if(tag!=null)loadAdditional(tag,level.registryAccess());}
     private static ResourceLocation readId(String value){return value.isEmpty()?null:ResourceLocation.tryParse(value);}
+    private static long safeAdd(long a,long b){return a>Long.MAX_VALUE-b?Long.MAX_VALUE:a+b;}
 }
