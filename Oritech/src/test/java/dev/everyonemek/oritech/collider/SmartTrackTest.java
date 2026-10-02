@@ -33,4 +33,17 @@ class SmartTrackTest {
         var built=new TreeMap<>(nodes);built.putAll(result.nodes());assertTrue(Track.plan(built,new Track.Rules(10,2.5,10)).valid());
         assertEquals(nodes.get(p(4,2)),built.get(p(4,2)));assertEquals(nodes.get(p(7,2)),built.get(p(7,2)));assertEquals(Track.MOTOR,built.get(p(6,9)).kind());
     }
+    @Test void mixedStrokeUsesMotorsForStraightsAndGuidesForBothBevels(){
+        var result=SmartTrack.mixed(Map.of(),new int[]{p(2,2),p(3,2),p(4,2),p(4,3),p(4,4)},0,10);
+        assertTrue(result.valid(),result.toString());assertEquals(Track.MOTOR,result.nodes().get(p(2,2)).kind());assertEquals(Track.MOTOR,result.nodes().get(p(4,4)).kind());
+        assertEquals(Track.RING,result.nodes().get(p(3,2)).kind());assertEquals(Track.RING,result.nodes().get(p(4,3)).kind());
+        assertEquals(2,result.needed(Map.of(),Track.MOTOR));assertEquals(2,result.needed(Map.of(),Track.RING));
+    }
+    @Test void extendingMotorEndpointUsesOneNewGuideAndReusesTheOldMotor(){
+        var existing=Map.of(p(1,2),new Track.Node(Track.A,0,0),p(2,2),new Track.Node(Track.MOTOR,0,0));
+        var result=SmartTrack.mixed(existing,new int[]{p(3,3)},0,10);assertTrue(result.valid(),result.toString());
+        assertEquals(Track.RING,result.nodes().get(p(2,2)).kind());assertEquals(1,result.nodes().get(p(2,2)).exit(0));assertEquals(Track.MOTOR,result.nodes().get(p(3,3)).kind());
+        assertEquals(0,result.needed(existing,Track.MOTOR));assertEquals(1,result.needed(existing,Track.RING));assertFalse(result.nodes().containsKey(p(1,2)));
+        var sharp=SmartTrack.mixed(existing,new int[]{p(2,2),p(2,3),p(2,4)},0,10);assertEquals(SmartTrack.Failure.SHARP_TURN,sharp.failure(),"An unsupported 90-degree continuation must not disconnect the existing incoming beamline");
+    }
 }

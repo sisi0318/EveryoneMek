@@ -4,11 +4,30 @@ import java.util.*;
 
 /** Plans a complete edit without touching inventory or the caller's beamline. */
 public final class SmartTrack {
-    public enum Failure { NONE,BAD_PATH,SHARP_TURN,OCCUPIED_CORNER,NEED_RING,EMITTER_DIRECTION,AMBIGUOUS,NOT_ENOUGH_PARTS }
+    public enum Failure { NONE,BAD_PATH,SHARP_TURN,OCCUPIED_CORNER,NEED_RING,EMITTER_DIRECTION,AMBIGUOUS,NOT_ENOUGH_PARTS,RETURN_FULL }
     public record Result(Map<Integer,Track.Node> nodes,int required,Failure failure,int problem){
         public boolean valid(){return failure==Failure.NONE;}
+        public int needed(Map<Integer,Track.Node> existing,int kind){int used=0,recycled=0;for(var entry:nodes.entrySet()){
+            var old=existing.get(entry.getKey());if(old==null||old.kind()!=entry.getValue().kind()){if(entry.getValue().kind()==kind)used++;if(old!=null&&old.kind()==kind)recycled++;}
+        }return Math.max(0,used-recycled);}
     }
     private record Link(int direction,int target,Track.Node adjustment){}
+    /** Solve guide geometry first, then choose motors for new straight segments and guides for bends. */
+    public static Result mixed(Map<Integer,Track.Node> existing,int[] stroke,int fallback,int maxGap){
+        var geometry=new TreeMap<Integer,Track.Node>(existing);
+        existing.forEach((pos,node)->{if(node.kind()==Track.MOTOR)geometry.put(pos,new Track.Node(Track.RING,node.direction(),0));});
+        // Legacy motors can have cosmetic orientations unrelated to the actual beam direction.
+        var route=Track.plan(existing,new Track.Rules(maxGap,2.5,0));
+        if(route.valid())for(var segment:route.segments())if(segment.target().kind()==Track.MOTOR)geometry.put(segment.to(),new Track.Node(Track.RING,segment.direction(),0));
+        var planned=plan(geometry,stroke,Track.RING,fallback,maxGap);if(!planned.valid())return planned;
+        var result=new LinkedHashMap<Integer,Track.Node>();
+        for(var entry:planned.nodes().entrySet()){
+            var node=entry.getValue();var old=existing.get(entry.getKey());
+            if((old==null||old.kind()==Track.MOTOR)&&node.kind()==Track.RING&&node.bend()==0)node=new Track.Node(Track.MOTOR,node.direction(),0);
+            result.put(entry.getKey(),node);
+        }
+        return new Result(Collections.unmodifiableMap(result),planned.required(),Failure.NONE,-1);
+    }
     public static Result plan(Map<Integer,Track.Node> existing,int[] stroke,int kind,int fallback,int maxGap){
         if(stroke.length==0||stroke.length>256||kind<Track.RING||kind>Track.SENSOR||fallback<0||fallback>7)return fail(Failure.BAD_PATH,-1);
         var path=new ArrayList<Integer>();for(int pos:stroke){if(!Track.inBounds(pos))return fail(Failure.BAD_PATH,pos);if(path.isEmpty()||path.getLast()!=pos)path.add(pos);}
@@ -46,7 +65,9 @@ public final class SmartTrack {
             if(type>=Track.A){if(fixed.isEmpty()||hasPort(current,fixed.getFirst())){changes.put(pos,current);continue;}return fail(Failure.EMITTER_DIRECTION,pos);}
             var links=links(existing,selected,pos,fixed,maxGap);
             if(fixed.size()==1){
+                boolean hadConnection=current!=null&&links.stream().anyMatch(link->link.adjustment()==null&&hasPort(current,link.direction()));
                 int port=fixed.getFirst();links.removeIf(link->fromPorts(type,port,link.direction())==null);
+                if(hadConnection&&links.isEmpty())return fail(type==Track.RING?Failure.SHARP_TURN:Failure.NEED_RING,pos);
                 Link selectedLink=null;
                 if(current!=null)for(var link:links)if(hasPort(current,port)&&hasPort(current,link.direction())){selectedLink=link;break;}
                 if(selectedLink==null)for(var link:links)if(link.direction()==((port+4)&7)){selectedLink=link;break;}

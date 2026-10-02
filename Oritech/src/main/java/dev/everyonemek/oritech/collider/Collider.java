@@ -21,7 +21,7 @@ import rearth.oritech.init.*;
 import rearth.oritech.init.recipes.*;
 
 public final class Collider extends BlockEntity implements ExtendedMenuProvider {
-    public static final int INPUT_A=0,INPUT_B=1,OUTPUT=2,PART_IN=3,PART_OUT=4,WORK_A=5,WORK_B=6,MAGNET_SLOT=7,MAGNET_ADDONS=8,SLOTS=13;
+    public static final int INPUT_A=0,INPUT_B=1,OUTPUT=2,PART_IN=3,PART_OUT=4,WORK_A=5,WORK_B=6,MAGNET_SLOT=7,MAGNET_ADDONS=8,STRAIGHT_PARTS=13,SLOTS=14;
     public static final long CAPACITY=20_000_000,RECEIVE=1_000_000;
     public static final int CLOSED=0,FEED_A=1,FEED_B=2,FEED_BOTH=3,EJECT=4;
     public final SimpleContainer inventory=new SimpleContainer(SLOTS){@Override public void setChanged(){super.setChanged();Collider.this.setChanged();}};
@@ -52,7 +52,7 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     public boolean busy(){return taskRecipe!=null||!inventory.getItem(WORK_A).isEmpty()||!inventory.getItem(WORK_B).isEmpty();}
     public boolean editable(){return !enabled&&!busy();}
     public int mode(Direction worldSide){return worldSide==null?CLOSED:sides[RelativeSide.fromDirections(facing(),worldSide).ordinal()];}
-    public MagnetSupport.Settings magnet(){var addons=new ArrayList<ItemStack>();for(int i=MAGNET_ADDONS;i<SLOTS;i++)addons.add(inventory.getItem(i));var key=MagnetSupport.key(inventory.getItem(MAGNET_SLOT),addons);
+    public MagnetSupport.Settings magnet(){var addons=new ArrayList<ItemStack>();for(int i=MAGNET_ADDONS;i<MAGNET_ADDONS+5;i++)addons.add(inventory.getItem(i));var key=MagnetSupport.key(inventory.getItem(MAGNET_SLOT),addons);
         if(!key.equals(magnetKey)){magnetKey=key;magnetSettings=MagnetSupport.settings(inventory.getItem(MAGNET_SLOT),addons);}return magnetSettings;}
     public long magneticEnergy(){return MagnetSupport.energy(inventory.getItem(MAGNET_SLOT));}
     private void chargeMagnet(){var settings=magnet();if(settings.capacity()<=0)return;long charge=Math.min(energy,Math.min(settings.insert(),Math.max(0,settings.capacity()-magneticEnergy())));
@@ -70,7 +70,12 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
 
     /** Edits move real components; the two recipe-funded emitters are only moved/rotated. */
     public boolean edit(int operation,int pos,int direction,int bend){
-        if(!editable()||!Track.inBounds(pos)||direction<0||direction>7||bend<0||bend>2)return false;
+        return edit(operation,pos,direction,bend,PART_IN);
+    }
+    public static boolean partSource(int slot){return slot==PART_IN||slot==STRAIGHT_PARTS;}
+    public int partCount(int kind){int count=0;for(int slot:new int[]{PART_IN,STRAIGHT_PARTS})if(partKind(inventory.getItem(slot))==kind)count+=inventory.getItem(slot).getCount();return count;}
+    public boolean edit(int operation,int pos,int direction,int bend,int source){
+        if(!editable()||!partSource(source)||!Track.inBounds(pos)||direction<0||direction>7||bend<0||bend>2)return false;
         if(operation==2||operation==3){
             if(parts.containsKey(pos)||(operation==2?pos==emitterB:pos==emitterA))return false;
             if(operation==2){emitterA=pos;directionA=direction;}else {emitterB=pos;directionB=direction;}
@@ -82,23 +87,39 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
                 merge(PART_OUT,current.item());parts.remove(pos);
             }else if(operation==0){
                 if(current!=null){parts.put(pos,new Placed(new Track.Node(current.node().kind(),direction,current.node().kind()==Track.RING?bend:0),current.item()));}
-                else {var input=inventory.getItem(PART_IN);int kind=partKind(input);if(kind==0)return false;parts.put(pos,new Placed(new Track.Node(kind,direction,kind==Track.RING?bend:0),input.split(1)));}
+                else {var input=inventory.getItem(source);int kind=partKind(input);if(kind==0)return false;parts.put(pos,new Placed(new Track.Node(kind,direction,kind==Track.RING?bend:0),input.split(1)));}
             }else return false;
         }
         layoutChanged();return true;
     }
     public SmartTrack.Result smartPaint(int[] cells,int fallback){
         if(!editable())return new SmartTrack.Result(Map.of(),0,SmartTrack.Failure.BAD_PATH,-1);
-        var input=inventory.getItem(PART_IN);int kind=partKind(input);var result=SmartTrack.plan(nodes(),cells,kind==0?Track.RING:kind,fallback,rules().maxGap());if(!result.valid())return result;
-        if(result.required()>input.getCount()||result.required()>0&&kind==0)return new SmartTrack.Result(result.nodes(),result.required(),SmartTrack.Failure.NOT_ENOUGH_PARTS,-1);
-        // Commit only after the entire stroke, all orientations and all materials have been checked.
-        var item=input.copyWithCount(1);
+        var originalNodes=nodes();var result=SmartTrack.mixed(originalNodes,cells,fallback,rules().maxGap());if(!result.valid())return result;
+        for(int kind:new int[]{Track.RING,Track.MOTOR})if(result.needed(originalNodes,kind)>partCount(kind))return editFailure(result,SmartTrack.Failure.NOT_ENOUGH_PARTS);
+        // Work on copies, including replacement refunds, before committing either inventory or layout.
+        var guides=inventory.getItem(PART_IN).copy();var straight=inventory.getItem(STRAIGHT_PARTS).copy();var returned=inventory.getItem(PART_OUT).copy();
+        var recycled=new ArrayList<ItemStack>();
+        for(var entry:result.nodes().entrySet()){var old=parts.get(entry.getKey());if(old!=null&&old.node().kind()!=entry.getValue().kind())recycled.add(old.item().copy());}
+        var pool=new ArrayList<>(recycled);pool.add(guides);pool.add(straight);var replacements=new TreeMap<Integer,Placed>();
         for(var entry:result.nodes().entrySet()){
             int pos=entry.getKey();if(pos==emitterA||pos==emitterB)continue;
-            var original=parts.get(pos);parts.put(pos,new Placed(entry.getValue(),original==null?item.copy():original.item()));
+            var original=parts.get(pos);ItemStack item;
+            if(original!=null&&original.node().kind()==entry.getValue().kind())item=original.item();
+            else {item=ItemStack.EMPTY;for(var available:pool)if(!available.isEmpty()&&partKind(available)==entry.getValue().kind()){item=available.split(1);break;}
+                if(item.isEmpty())return editFailure(result,SmartTrack.Failure.NOT_ENOUGH_PARTS);}
+            replacements.put(pos,new Placed(entry.getValue(),item));
         }
-        input.shrink(result.required());layoutChanged();return result;
+        for(var refund:recycled)if(!refund.isEmpty()){
+            if(partKind(refund)==Track.RING)guides=mergeCopy(guides,refund);else straight=mergeCopy(straight,refund);
+            if(!refund.isEmpty())returned=mergeCopy(returned,refund);
+            if(!refund.isEmpty())return editFailure(result,SmartTrack.Failure.RETURN_FULL);
+        }
+        inventory.setItem(PART_IN,guides);inventory.setItem(STRAIGHT_PARTS,straight);inventory.setItem(PART_OUT,returned);parts.putAll(replacements);layoutChanged();return result;
     }
+    private static SmartTrack.Result editFailure(SmartTrack.Result result,SmartTrack.Failure reason){return new SmartTrack.Result(result.nodes(),result.required(),reason,-1);}
+    private static ItemStack mergeCopy(ItemStack destination,ItemStack source){if(source.isEmpty()||!destination.isEmpty()&&!ItemStack.isSameItemSameComponents(destination,source))return destination;
+        int moved=Math.min(source.getCount(),Math.min(64,source.getMaxStackSize())-destination.getCount());if(moved<=0)return destination;
+        var result=source.copyWithCount(destination.getCount()+moved);source.shrink(moved);return result;}
     public List<RecipeHolder<OritechRecipe>> recipes(){if(level==null)return List.of();return level.getRecipeManager().getAllRecipesFor(RecipeContent.PARTICLE_COLLISION).stream()
         .filter(r->r.value().getInputs().size()==2&&r.value().getResults().size()==1&&!r.value().getResults().getFirst().isEmpty()&&r.value().getTime()>0)
         .sorted(Comparator.comparing(r->r.id().toString())).toList();}
@@ -178,6 +199,7 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider lookup){super.saveAdditional(tag,lookup);write(tag,lookup);}
     private void write(CompoundTag tag,HolderLookup.Provider lookup){
+        tag.putInt("partsVersion",1);
         var items=new ListTag();for(int i=0;i<SLOTS;i++){var stack=inventory.getItem(i);if(stack.isEmpty())continue;var entry=new CompoundTag();entry.putInt("slot",i);entry.put("item",stack.save(lookup));items.add(entry);}tag.put("inventory",items);
         var grid=new ListTag();parts.forEach((pos,part)->{var entry=new CompoundTag();entry.putInt("node",Track.pack(pos,part.node()));entry.put("item",part.item().save(lookup));grid.add(entry);});tag.put("parts",grid);
         tag.putInt("a",emitterA);tag.putInt("b",emitterB);tag.putInt("dirA",directionA);tag.putInt("dirB",directionB);tag.putLong("energy",energy);tag.putBoolean("enabled",enabled);tag.putBoolean("eject",eject);tag.putIntArray("sides",sides);
@@ -189,6 +211,9 @@ public final class Collider extends BlockEntity implements ExtendedMenuProvider 
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider lookup){super.loadAdditional(tag,lookup);
         inventory.clearContent();for(var raw:tag.getList("inventory",Tag.TAG_COMPOUND)){var entry=(CompoundTag)raw;int slot=entry.getInt("slot");if(slot>=0&&slot<SLOTS)inventory.setItem(slot,ItemStack.parseOptional(lookup,entry.getCompound("item")));}
+        if(!tag.contains("partsVersion")&&partKind(inventory.getItem(PART_IN))>Track.RING&&inventory.getItem(STRAIGHT_PARTS).isEmpty()){
+            inventory.setItem(STRAIGHT_PARTS,inventory.getItem(PART_IN));inventory.setItem(PART_IN,ItemStack.EMPTY);
+        }
         parts.clear();for(var raw:tag.getList("parts",Tag.TAG_COMPOUND)){var entry=(CompoundTag)raw;int packed=entry.getInt("node"),pos=packed&4095;var item=ItemStack.parseOptional(lookup,entry.getCompound("item"));int kind=partKind(item);
             if(kind>0&&!item.isEmpty()&&parts.size()<Track.MAX_CELLS)parts.put(pos,new Placed(new Track.Node(kind,(packed>>15)&7,Math.min(2,(packed>>18)&3)),item.copyWithCount(1)));}
         emitterA=tag.contains("a")?Math.clamp(tag.getInt("a"),0,Track.MAX_CELLS-1):Track.cell(26,32);emitterB=tag.contains("b")?Math.clamp(tag.getInt("b"),0,Track.MAX_CELLS-1):Track.cell(38,32);

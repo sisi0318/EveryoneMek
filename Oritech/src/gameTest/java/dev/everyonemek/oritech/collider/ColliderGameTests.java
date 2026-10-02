@@ -50,8 +50,8 @@ public final class ColliderGameTests {
     private static void build(Collider p,ServerPlayer player){build(p,player,loop());}
     private static void build(Collider p,ServerPlayer player,Map<Integer,Track.Node> cells){
         for(var entry:cells.entrySet())if(entry.getValue().kind()==Track.A||entry.getValue().kind()==Track.B)check(ColliderPackets.handle(control(p,entry.getValue().kind()==Track.A?6:7,entry.getKey(),entry.getValue().direction(),0,""),player),"Emitter move rejected");
-        for(var entry:cells.entrySet()){var n=entry.getValue();if(n.kind()>=Track.A)continue;var item=new ItemStack(n.kind()==Track.MOTOR?BlockContent.ACCELERATOR_MOTOR:BlockContent.ACCELERATOR_RING);item.set(DataComponents.CUSTOM_NAME,Component.literal("kept-part"));p.inventory.setItem(Collider.PART_IN,item);
-            check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{entry.getKey()},n.direction(),n.bend(),false),player)==1,"Real packet did not install part");check(p.inventory.getItem(Collider.PART_IN).isEmpty(),"Placement failed to consume part");}
+        for(var entry:cells.entrySet()){var n=entry.getValue();if(n.kind()>=Track.A)continue;var item=new ItemStack(n.kind()==Track.MOTOR?BlockContent.ACCELERATOR_MOTOR:BlockContent.ACCELERATOR_RING);item.set(DataComponents.CUSTOM_NAME,Component.literal("kept-part"));int source=n.kind()==Track.RING?Collider.PART_IN:Collider.STRAIGHT_PARTS;p.inventory.setItem(source,item);
+            check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{entry.getKey()},n.direction(),n.bend(),false,false,source),player)==1,"Real packet did not install part");check(p.inventory.getItem(source).isEmpty(),"Placement failed to consume part");}
         check(p.plan().valid(),"Fixture did not form a valid real beamline: "+p.plan().fault());
     }
     private static ItemStack ingredient(Collider p,String name,int input,int amount){return p.recipes().stream().filter(r->r.id().equals(ResourceLocation.fromNamespaceAndPath("oritech","particle/"+name))).findFirst().orElseThrow().value().getInputs().get(input).getItems()[0].copyWithCount(amount);}
@@ -87,6 +87,7 @@ public final class ColliderGameTests {
     @GameTest(template="empty",timeoutTicks=80)
     public static void activeBeamAndRealComponentsSurviveSaveAndDroppedPlacement(GameTestHelper h){var p=place(h,Direction.NORTH);var player=player(h,p);try{
         build(p,player);var coal=ingredient(p,"diamond",0,1);p.inventory.setItem(0,coal.copy());p.inventory.setItem(1,coal.copy());p.energy=Collider.CAPACITY;
+        p.inventory.setItem(Collider.PART_IN,new ItemStack(BlockContent.ACCELERATOR_RING,6));p.inventory.setItem(Collider.STRAIGHT_PARTS,new ItemStack(BlockContent.ACCELERATOR_MOTOR,5));
         check(ColliderPackets.handle(control(p,0,0,0,0,""),player),"Start packet failed");for(int i=0;i<25;i++)p.tick();check(p.busy()&&p.beam!=null&&p.collisionTicks==0,"Expected an in-flight beam: status="+p.status+", speed="+(p.beam==null?0:p.beam.speed)+", result="+p.inventory.getItem(Collider.OUTPUT));
         check(!ColliderPackets.handle(control(p,4,Track.cell(20,20),0,0,""),player),"Active beamline could be edited");long energy=p.energy,spent=p.spent,speed=p.beam.speed;double bend=p.beam.bendDistance;int count=p.parts.size();
         var saved=p.saveWithFullMetadata(h.getLevel().registryAccess());var restored=new Collider(p.getBlockPos(),p.getBlockState());restored.setLevel(h.getLevel());restored.loadWithComponents(saved,h.getLevel().registryAccess());h.getLevel().setBlockEntity(restored);p=restored;
@@ -95,6 +96,7 @@ public final class ColliderGameTests {
         var pos=new BlockPos(5,3,5);h.setBlock(pos.below(),Blocks.STONE);player.setItemInHand(InteractionHand.MAIN_HAND,drop);var hit=new BlockHitResult(h.absolutePos(pos.below()).getCenter().add(0,.5,0),Direction.UP,h.absolutePos(pos.below()),false);
         check(((BlockItem)drop.getItem()).place(new net.minecraft.world.item.context.BlockPlaceContext(player,InteractionHand.MAIN_HAND,drop,hit)).consumesAction(),"Saved collider failed actual placement");p=(Collider)h.getBlockEntity(pos);
         check(p.parts.size()==count&&p.parts.values().stream().allMatch(part->part.item().has(DataComponents.CUSTOM_NAME))&&p.beam.speed==speed&&p.energy==energy&&p.spent==spent,"Item placement lost component data or resumed beam");
+        check(p.inventory.getItem(Collider.PART_IN).getCount()==6&&p.inventory.getItem(Collider.STRAIGHT_PARTS).getCount()==5,"Dropped placement lost one of the two component supplies");
         for(int i=0;i<1600&&p.inventory.getItem(Collider.OUTPUT).isEmpty();i++){p.energy=Math.min(Collider.CAPACITY,p.energy+Collider.RECEIVE);p.tick();}
         check(p.inventory.getItem(Collider.OUTPUT).is(Items.DIAMOND)&&p.inventory.getItem(Collider.OUTPUT).getCount()==1&&!p.busy(),"Resumed physical collision did not produce exactly one native result");
         check(p.inventory.getItem(Collider.WORK_A).isEmpty()&&p.inventory.getItem(Collider.WORK_B).isEmpty()&&p.inventory.getItem(0).isEmpty()&&p.inventory.getItem(1).isEmpty(),"Completed collision duplicated reserved ingredients");
@@ -122,12 +124,37 @@ public final class ColliderGameTests {
         ColliderPackets.Paint decoded;try{ColliderPackets.Paint.CODEC.encode(bytes,request);decoded=ColliderPackets.Paint.CODEC.decode(bytes);}finally{bytes.release();}
         check(ColliderPackets.paint(decoded,player)==0&&p.parts.isEmpty()&&p.inventory.getItem(Collider.PART_IN).getCount()==3,"Insufficient smart stroke partially consumed materials");
         check(((ColliderMenu)player.containerMenu).editFailure==SmartTrack.Failure.NOT_ENOUGH_PARTS.ordinal(),"Rejected brush has no actionable response");
-        p.inventory.setItem(Collider.PART_IN,material.copyWithCount(5));int a=p.emitterA,b=p.emitterB;
-        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,stroke,0,0,false,true),player)==4&&p.parts.size()==4&&p.inventory.getItem(Collider.PART_IN).getCount()==1,"Smart bevel did not commit exactly four paid cells");
+        p.inventory.setItem(Collider.PART_IN,material.copyWithCount(5));var motors=new ItemStack(BlockContent.ACCELERATOR_MOTOR,2);motors.set(DataComponents.CUSTOM_NAME,Component.literal("smart-motor"));p.inventory.setItem(Collider.STRAIGHT_PARTS,motors);int a=p.emitterA,b=p.emitterB;
+        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,stroke,0,0,false,true),player)==4&&p.parts.size()==4&&p.inventory.getItem(Collider.PART_IN).getCount()==3&&p.inventory.getItem(Collider.STRAIGHT_PARTS).isEmpty(),"Mixed stroke did not consume exactly two motors and two guides");
         check(p.emitterA==a&&p.emitterB==b&&p.parts.values().stream().allMatch(part->part.item().has(DataComponents.CUSTOM_NAME)),"Smart brush changed emitters or lost components");
         check(!p.parts.containsKey(Track.cell(4,2))&&p.parts.get(Track.cell(3,2)).node().exit(0)==1&&p.parts.get(Track.cell(4,3)).node().exit(1)==2,"Smart brush produced an illegal sharp corner");
         var before=p.saveWithFullMetadata(h.getLevel().registryAccess());check(ColliderPackets.paint(decoded,player)==0&&p.saveWithFullMetadata(h.getLevel().registryAccess()).equals(before),"Stale smart packet changed the machine");
         var loaded=new Collider(p.getBlockPos(),p.getBlockState());loaded.setLevel(h.getLevel());loaded.loadWithComponents(before,h.getLevel().registryAccess());check(loaded.parts.size()==4&&loaded.emitterA==a,"Smart layout failed NBT round-trip");
+    }finally{close(player);clear(p);}h.succeed();}
+
+    @GameTest(template="empty",timeoutTicks=60)
+    public static void mixedSuppliesRefillRecycleAtomicallyAndMigrateLegacyInputs(GameTestHelper h){var p=place(h,Direction.NORTH);var player=player(h,p);try{
+        var menu=(ColliderMenu)player.containerMenu;var motors=new ItemStack(BlockContent.ACCELERATOR_MOTOR,12);motors.set(DataComponents.CUSTOM_NAME,Component.literal("saved-motor"));
+        var guides=new ItemStack(BlockContent.ACCELERATOR_RING,12);guides.set(DataComponents.CUSTOM_NAME,Component.literal("saved-guide"));
+        player.getInventory().setItem(0,motors.copy());player.getInventory().setItem(1,guides.copy());
+        check(!menu.quickMoveStack(player,ColliderMenu.PLAYER_START+27).isEmpty()&&!menu.quickMoveStack(player,ColliderMenu.PLAYER_START+28).isEmpty(),"Shift-click did not fill both component supplies");
+        check(p.inventory.getItem(Collider.STRAIGHT_PARTS).getCount()==12&&p.inventory.getItem(Collider.PART_IN).getCount()==12,"Parts were routed to the wrong supplies");
+        check(ColliderPackets.handle(control(p,6,Track.cell(1,2),0,0,""),player),"Could not place the A anchor");
+        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{Track.cell(2,2)},0,0,false,false,Collider.STRAIGHT_PARTS),player)==1,"Manual straight supply could not be used");
+        for(int pos:new int[]{Track.cell(3,3),Track.cell(3,4)})check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{pos},0,0,false,true),player)>0,"Could not extend a mixed-material endpoint");
+        check(p.inventory.getItem(Collider.STRAIGHT_PARTS).getCount()==11&&p.inventory.getItem(Collider.PART_IN).getCount()==10,"Moving the motor into the new straight segment consumed or duplicated motors");
+        check(ItemStack.isSameItemSameComponents(p.parts.get(Track.cell(3,4)).item(),motors)&&p.parts.get(Track.cell(3,3)).node().kind()==Track.RING,"Endpoint conversion lost the original motor's components");
+        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{Track.cell(4,5)},1,0,false,false,Collider.PART_IN),player)==1,"Manual guide supply could not be used");
+        var other=motors.copyWithCount(64);other.set(DataComponents.CUSTOM_NAME,Component.literal("different-stock"));p.inventory.setItem(Collider.STRAIGHT_PARTS,other);p.inventory.setItem(Collider.PART_OUT,guides.copyWithCount(64));
+        var before=p.saveWithFullMetadata(h.getLevel().registryAccess());
+        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{Track.cell(3,4)},0,0,false,true),player)==0&&menu.editFailure==SmartTrack.Failure.RETURN_FULL.ordinal(),"Smart replacement discarded an unmergeable returned motor");
+        check(before.equals(p.saveWithFullMetadata(h.getLevel().registryAccess())),"Rejected refund modified inventory or beamline");
+        p.inventory.setItem(Collider.PART_OUT,ItemStack.EMPTY);check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{Track.cell(3,4)},0,0,false,true),player)>0,"Replacement did not recover after return space was freed");
+        check(p.parts.get(Track.cell(3,4)).node().kind()==Track.RING&&ItemStack.isSameItemSameComponents(p.inventory.getItem(Collider.PART_OUT),motors)&&p.inventory.getItem(Collider.PART_OUT).getCount()==1,"Replacement did not return the exact old motor");
+        check(ColliderPackets.paint(new ColliderPackets.Paint(21,p.revision,new int[]{Track.cell(20,20)},0,0,false,false,Collider.MAGNET_SLOT),player)==0,"Forged material source accessed a protected slot");
+        p.inventory.setItem(Collider.PART_IN,motors.copyWithCount(5));p.inventory.setItem(Collider.STRAIGHT_PARTS,ItemStack.EMPTY);var old=p.saveWithFullMetadata(h.getLevel().registryAccess());old.remove("partsVersion");
+        var migrated=new Collider(p.getBlockPos(),p.getBlockState());migrated.setLevel(h.getLevel());migrated.loadWithComponents(old,h.getLevel().registryAccess());
+        check(migrated.inventory.getItem(Collider.PART_IN).isEmpty()&&migrated.inventory.getItem(Collider.STRAIGHT_PARTS).getCount()==5&&ItemStack.isSameItemSameComponents(migrated.inventory.getItem(Collider.STRAIGHT_PARTS),motors),"Legacy single-slot motors were lost or stripped during migration");
     }finally{close(player);clear(p);}h.succeed();}
 
     @GameTest(template="empty",timeoutTicks=80)

@@ -22,13 +22,14 @@ public final class ColliderScreen extends OritechWidgetScreen<ColliderMenu> {
     private final List<UIComponent> pageComponents=new ArrayList<>();
     private final List<ButtonWidget> editButtons=new ArrayList<>();
     private final List<ButtonWidget> sideButtons=new ArrayList<>();
-    private ButtonWidget run,cancel,eject,automatic,lock,rotate,bendButton;
+    private ButtonWidget run,cancel,eject,automatic,lock,rotate,bendButton,lineMaterial,guideMaterial;
     private LabelWidget state,speed,recipeName,smartHint,magnetStats;
     private EditBox search;
     private ScrollWidget recipeList;
     private Board board;
     private int page,tool,direction,bend;
     private boolean smart=true;
+    private int manualSource=Collider.PART_IN;
     private String query="";
     private double panX=23,panY=27,cellSize=12;
     private static final int BOARD_X=8,BOARD_Y=56,BOARD_W=216,BOARD_H=80;
@@ -59,14 +60,17 @@ public final class ColliderScreen extends OritechWidgetScreen<ColliderMenu> {
         automatic=ButtonWidget.panel(8,195,66,16,tr("auto"),b->send(9,0,0,0,""));addComponent(automatic);
         lock=ButtonWidget.panel(8,215,66,16,tr("lock_current"),b->send(10,0,0,0,""));addComponent(lock);
         eject=ButtonWidget.panel(252,211,58,16,tr("eject_on"),b->send(2,0,0,0,""));addComponent(eject);
-        addComponent(new LabelWidget(8,152,32,10,tr("part_in")).withDarkColor());addComponent(new ItemSlotWidget(12,ColliderMenu.PART_Y).withTooltip(tr("part_hint")));
-        addComponent(new LabelWidget(43,152,34,10,tr("part_out")).withDarkColor());addComponent(new ItemSlotWidget(47,ColliderMenu.PART_Y));
+        lineMaterial=ButtonWidget.panel(ColliderMenu.STRAIGHT_X,150,22,12,tr("stock_line"),b->{manualSource=Collider.STRAIGHT_PARTS;smart=false;tool=0;});lineMaterial.withTooltip(tr("stock_line_hint"));addComponent(lineMaterial);
+        guideMaterial=ButtonWidget.panel(ColliderMenu.GUIDE_X,150,22,12,tr("stock_guide"),b->{manualSource=Collider.PART_IN;smart=false;tool=0;});guideMaterial.withTooltip(tr("stock_guide_hint"));addComponent(guideMaterial);
+        supplySlot(ColliderMenu.STRAIGHT_X,Collider.STRAIGHT_PARTS,"stock_line_hint");supplySlot(ColliderMenu.GUIDE_X,Collider.PART_IN,"stock_guide_hint");
+        addComponent(new LabelWidget(ColliderMenu.RETURN_X,151,22,10,tr("stock_return")).withDarkColor());addComponent(new ItemSlotWidget(ColliderMenu.RETURN_X,ColliderMenu.PART_Y));
         addComponent(new LabelWidget(ColliderMenu.INVENTORY_X,143,162,10,Component.translatable("container.inventory")).withDarkColor());
         for(int y=0;y<3;y++)for(int x=0;x<9;x++)addComponent(new ItemSlotWidget(ColliderMenu.INVENTORY_X+x*18,ColliderMenu.INVENTORY_Y+y*18));
         for(int x=0;x<9;x++)addComponent(new ItemSlotWidget(ColliderMenu.INVENTORY_X+x*18,ColliderMenu.INVENTORY_Y+58));
         search=addRenderableWidget(new EditBox(font,leftPos+8,topPos+37,216,16,tr("search")));search.setMaxLength(80);search.setHint(tr("search"));search.setValue(query);
         search.setResponder(value->{query=value;refreshRecipes();});buildPage();
     }
+    private void supplySlot(int x,int slot,String hint){addComponent(new ItemSlotWidget(x,ColliderMenu.PART_Y){@Override public void tick(){setTooltip(menu.collider.inventory.getItem(slot).isEmpty()?List.of(tr(hint)):null);}});}
     private void page(UIComponent component){pageComponents.add(component);addComponent(component);}
     private void buildPage(){for(var c:pageComponents)removeComponent(c);pageComponents.clear();editButtons.clear();sideButtons.clear();recipeList=null;board=null;smartHint=null;magnetStats=null;
         search.setVisible(page==1);search.setFocused(false);
@@ -110,11 +114,12 @@ public final class ColliderScreen extends OritechWidgetScreen<ColliderMenu> {
         if(page!=menu.page){page=menu.page;buildPage();}
         var data=menu.view;boolean busy=data.getBoolean("busy"),allowed=menu.getCarried().isEmpty()&&!minecraft.player.isSpectator();
         run.setLabel(tr(data.getBoolean("enabled")?"stop":"start"));run.setActive(allowed);cancel.setActive(allowed&&busy);
+        lineMaterial.setActive(editable());guideMaterial.setActive(editable());lineMaterial.withTextColor(!smart&&manualSource==Collider.STRAIGHT_PARTS?0xff237255:ButtonWidget.DEFAULT_TEXT_COLOR);guideMaterial.withTextColor(!smart&&manualSource==Collider.PART_IN?0xff237255:ButtonWidget.DEFAULT_TEXT_COLOR);
         automatic.setActive(allowed&&!busy&&!data.getString("locked").isEmpty());lock.setActive(allowed&&!busy&&data.getString("locked").isEmpty()&&!data.getString("recipe").isEmpty());
         automatic.setLabel(tr(data.getString("locked").isEmpty()?"auto":"locked"));eject.setLabel(tr(data.getBoolean("eject")?"eject_on":"eject_off"));eject.setActive(allowed);
         for(var button:editButtons)button.setActive(editable());if(page==0){for(int i=0;i<4;i++)editButtons.get(i).withTextColor(i==tool?0xff237255:ButtonWidget.DEFAULT_TEXT_COLOR);
             editButtons.getFirst().setLabel(tr(smart?"smart":"manual"));rotate.setLabel(Component.literal(DIRECTIONS[direction]));bendButton.setLabel(tr("bend."+bend));
-            rotate.setVisible(!smart&&tool==0||tool>=2);bendButton.setVisible(!smart&&tool==0);smartHint.setVisible(smart&&tool==0);
+            rotate.setVisible(!smart&&tool==0||tool>=2);bendButton.setVisible(!smart&&tool==0&&manualSource==Collider.PART_IN);smartHint.setVisible(smart&&tool==0);
         }
         if(magnetStats!=null){var settings=MagnetSupport.Settings.load(data.getCompound("magnet"));var energy=String.format(Locale.ROOT,"%,d / %,d FE",data.getLong("magneticEnergy"),settings.capacity());
             magnetStats.setText(settings.capacity()<=0?tr("magnet_missing"):tr("magnet_energy",energy).append("\n").append(settings.enabled()?tr("magnet_efficiency",AddonReadout.multiplier(settings.efficiency(),false)):tr("magnet_disabled")));
@@ -122,7 +127,8 @@ public final class ColliderScreen extends OritechWidgetScreen<ColliderMenu> {
         }
         String[] sideNames={"front","left","right","back","top","bottom"};var sides=data.getIntArray("sides");for(int i=0;i<sideButtons.size();i++){sideButtons.get(i).setLabel(tr("side."+sideNames[i]).append(": ").append(tr("mode."+(sides.length==6?sides[i]:0))));sideButtons.get(i).setActive(allowed);}
         var speedText=tr("speed",data.getLong("speed"));speed.setText(Component.literal(font.plainSubstrByWidth(speedText.getString(),72)));speed.withTooltip(speedText,tr("required",data.getLong("required")));int status=data.getInt("status");state.setText(tr("status."+status));state.withTooltip(tr("status."+status),tr("spent",data.getLong("spent")));
-        if(page==0&&menu.editFailure>0){var error=tr("smart_error."+menu.editFailure);state.setText(error);state.withTooltip(error,tr("smart_cost",menu.editRequired,menu.collider.inventory.getItem(Collider.PART_IN).getCount()));}
+        if(page==0&&menu.editFailure>0){var error=tr("smart_error."+menu.editFailure);state.setText(error);state.withTooltip(error,
+            tr("smart_motors",menu.editMotors,menu.collider.partCount(Track.MOTOR)),tr("smart_guides",menu.editGuides,menu.collider.partCount(Track.RING)));}
         var id=ResourceLocation.tryParse(data.getString("recipe"));var found=menu.collider.recipes().stream().filter(r->r.id().equals(id)).findFirst();
         Component text=found.map(r->r.value().getResults().getFirst().getHoverName()).orElse(Component.empty());recipeName.setText(Component.literal(font.plainSubstrByWidth(text.getString(),72)));recipeName.withTooltip(text);
     }
@@ -163,22 +169,26 @@ public final class ColliderScreen extends OritechWidgetScreen<ColliderMenu> {
                 if(node.kind()!=Track.RING&&cellSize>=10){String mark=node.kind()==Track.A?"A":node.kind()==Track.B?"B":node.kind()==Track.MOTOR?"M":"S";g.drawString(font,mark,cx-font.width(mark)/2,cy-4,color,false);}
                 if(pos==menu.view.getInt("problem")&&menu.view.getInt("status")>=Collider.TRACK_BASE)g.renderOutline(cx-radius,cy-radius,radius*2+1,radius*2+1,0xffec7878);
             }
-            if(preview!=null){boolean enough=preview.required()<=menu.collider.inventory.getItem(Collider.PART_IN).getCount();int color=preview.valid()&&enough?0xff99e6bf:0xffed8b84;
+            if(preview!=null){boolean enough=preview.needed(menu.layout,Track.MOTOR)<=menu.collider.partCount(Track.MOTOR)&&preview.needed(menu.layout,Track.RING)<=menu.collider.partCount(Track.RING);int color=preview.valid()&&enough?0xff99e6bf:0xffed8b84;
                 for(var entry:preview.nodes().entrySet()){int cx=sx(Track.x(entry.getKey())),cy=sy(Track.y(entry.getKey())),r=Math.max(2,(int)(cellSize*.4));var node=entry.getValue();
+                    g.pose().pushPose();g.pose().translate(0,0,10);g.fill(cx-r,cy-r,cx+r+1,cy+r+1,0xff35434c);
                     g.renderOutline(cx-r,cy-r,r*2+1,r*2+1,color);line(g,cx,cy,cx+Track.DX[node.front()]*r,cy+Track.DY[node.front()]*r,color);line(g,cx,cy,cx+Track.DX[node.back()]*r,cy+Track.DY[node.back()]*r,color);
+                    if(node.kind()==Track.MOTOR&&cellSize>=10)g.drawString(font,"M",cx-font.width("M")/2,cy-4,color,false);g.pose().popPose();
                 }
                 if(!preview.valid())for(int pos:stroke.isEmpty()?hover>=0?List.of(hover):List.<Integer>of():stroke){int cx=sx(Track.x(pos)),cy=sy(Track.y(pos));g.renderOutline(cx-(int)cellSize/2,cy-(int)cellSize/2,(int)cellSize,(int)cellSize,color);}
             }else for(int pos:stroke){int cx=sx(Track.x(pos)),cy=sy(Track.y(pos));g.renderOutline(cx-(int)cellSize/2,cy-(int)cellSize/2,(int)cellSize,(int)cellSize,0xff91c6e5);}
             if(menu.view.getBoolean("busy")&&menu.view.getLong("speed")>0){int cx=sx(menu.view.getDouble("x")),cy=sy(menu.view.getDouble("y"));g.fill(cx-2,cy-2,cx+3,cy+3,0xff80e6ff);}
             g.disableScissor();
-            if(hover>=0){var node=menu.layout.get(hover);var label=node==null?tr("empty"):nodeName(node.kind());withTooltip(label,Component.literal((Track.x(hover)+1)+", "+(Track.y(hover)+1)),tr("editor_hint"));
-                if(preview!=null)addTooltipLine(preview.valid()?tr("smart_cost",preview.required(),menu.collider.inventory.getItem(Collider.PART_IN).getCount()):tr("smart_error."+preview.failure().ordinal()));
+            if(hover>=0){var node=preview!=null&&preview.valid()?preview.nodes().getOrDefault(hover,menu.layout.get(hover)):menu.layout.get(hover);var label=node==null?tr("empty"):nodeName(node.kind());withTooltip(label,Component.literal((Track.x(hover)+1)+", "+(Track.y(hover)+1)),tr("editor_hint"));
+                if(preview!=null){if(preview.valid()){
+                    addTooltipLine(tr("smart_motors",preview.needed(menu.layout,Track.MOTOR),menu.collider.partCount(Track.MOTOR)));addTooltipLine(tr("smart_guides",preview.needed(menu.layout,Track.RING),menu.collider.partCount(Track.RING)));
+                    if(preview.nodes().entrySet().stream().anyMatch(e->menu.layout.containsKey(e.getKey())&&menu.layout.get(e.getKey()).kind()!=e.getValue().kind()))addTooltipLine(tr("smart_recycle"));
+                }else addTooltipLine(tr("smart_error."+preview.failure().ordinal()));}
             }else setTooltip(null);
         }
         private void updatePreview(int hover){if(!smart||tool!=0||removing||!editable()||stroke.isEmpty()&&hover<0){preview=null;return;}
-            int kind=Collider.partKind(menu.collider.inventory.getItem(Collider.PART_IN));if(kind==0)kind=Track.RING;
-            int gap=Math.clamp(menu.view.getInt("maxGap"),1,Track.SIZE);int hash=Objects.hash(menu.view.getInt("revision"),stroke,hover,kind,direction,gap);if(preview!=null&&hash==previewHash)return;previewHash=hash;
-            int[] path=stroke.isEmpty()?new int[]{hover}:stroke.stream().mapToInt(Integer::intValue).toArray();preview=SmartTrack.plan(menu.layout,path,kind,direction,gap);
+            int gap=Math.clamp(menu.view.getInt("maxGap"),1,Track.SIZE);int hash=Objects.hash(menu.view.getInt("revision"),stroke,hover,direction,gap);if(preview!=null&&hash==previewHash)return;previewHash=hash;
+            int[] path=stroke.isEmpty()?new int[]{hover}:stroke.stream().mapToInt(Integer::intValue).toArray();preview=SmartTrack.mixed(menu.layout,path,direction,gap);
         }
         @Override public boolean handleClick(double mx,double my,int button){
             if(button==2||button==0&&hasShiftDown()){panning=true;return true;}
@@ -194,7 +204,7 @@ public final class ColliderScreen extends OritechWidgetScreen<ColliderMenu> {
             }return true;}return false;
         }
         @Override public boolean handleMouseRelease(double mx,double my,int button){
-            panning=false;if(painting){painting=false;if(!stroke.isEmpty()&&editable())PacketDistributor.sendToServer(new ColliderPackets.Paint(menu.containerId,strokeRevision,stroke.stream().mapToInt(Integer::intValue).toArray(),direction,bend,removing,smart&&!removing));stroke.clear();preview=null;removing=false;return true;}return false;
+            panning=false;if(painting){painting=false;if(!stroke.isEmpty()&&editable())PacketDistributor.sendToServer(new ColliderPackets.Paint(menu.containerId,strokeRevision,stroke.stream().mapToInt(Integer::intValue).toArray(),direction,bend,removing,smart&&!removing,manualSource));stroke.clear();preview=null;removing=false;return true;}return false;
         }
         private void append(int pos){if(!stroke.isEmpty()&&stroke.getLast()==pos)return;
             if(smart&&!removing){int existing=stroke.indexOf(pos);if(existing>=0&&!(existing==0&&stroke.size()>3)){while(stroke.size()>existing+1)stroke.removeLast();return;}}
