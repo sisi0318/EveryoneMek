@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "oritechmekanism:mini_particle_collider",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "source": "block_entity",
+              "include": [
+                "oritechmekanism:collider"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "oritechmekanism:universal_processor",
-    "oritechmekanism:processor_part"
+    "oritechmekanism:processor_part",
+    "oritechmekanism:mini_particle_collider"
   ]
 }

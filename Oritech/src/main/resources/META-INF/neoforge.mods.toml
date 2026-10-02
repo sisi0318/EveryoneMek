@@ -6,7 +6,7 @@ modId="oritechmekanism"
 version="${version}"
 displayName="Oritech Mekanism"
 authors="EveryoneMek"
-description='''A deployable Oritech processor with original machine layouts and installable addons.'''
+description='''Oritech processing automation, installable addons and a miniature particle collider with editable internal beamlines.'''
 [[dependencies.oritechmekanism]]
 modId="neoforge"
 type="required"

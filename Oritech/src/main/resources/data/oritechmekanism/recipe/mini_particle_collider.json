@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "ACA"
+  ],
+  "key": {
+    "A": {
+      "item": "oritech:accelerator_controller"
+    },
+    "C": {
+      "item": "oritech:machine_core_3"
+    }
+  },
+  "result": {
+    "id": "oritechmekanism:mini_particle_collider",
+    "count": 1
+  }
+}

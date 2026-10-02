@@ -27,7 +27,7 @@ write(f'assets/{ID}/models/block/universal_processor.json', {
                  'up': 'oritech:block/machine_plating_block/particle'}})
 write(f'assets/{ID}/models/item/universal_processor.json', {'parent': f'{ID}:block/universal_processor'})
 write(f'data/{ID}/loot_table/blocks/universal_processor.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'{ID}:universal_processor', 'functions': [{'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': [f'{ID}:processor']}]}]}]})
-write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': [f'{ID}:universal_processor', f'{ID}:processor_part']})
+write('data/minecraft/tags/block/mineable/pickaxe.json', {'replace': False, 'values': [f'{ID}:universal_processor', f'{ID}:processor_part', f'{ID}:mini_particle_collider']})
 write(f'data/{ID}/recipe/universal_processor.json', {'type': 'minecraft:crafting_shaped', 'category': 'redstone',
     'pattern': ['PCP', 'MKM', 'PCP'],
     'key': {'P': {'item': 'oritech:machine_plating_block'}, 'C': {'item': 'oritech:processing_unit'},
@@ -35,6 +35,57 @@ write(f'data/{ID}/recipe/universal_processor.json', {'type': 'minecraft:crafting
     'result': {'id': f'{ID}:universal_processor', 'count': 1}})
 zh = {'block.oritechmekanism.universal_processor': '通用奥瑞处理器', 'block.oritechmekanism.processor_part': '奥瑞处理器部件'}
 en = {'block.oritechmekanism.universal_processor': 'Universal Oritech Processor', 'block.oritechmekanism.processor_part': 'Oritech Processor Part'}
+zh[f'block.{ID}.mini_particle_collider'] = '微型粒子碰撞机'
+en[f'block.{ID}.mini_particle_collider'] = 'Miniature Particle Collider'
+write(f'assets/{ID}/blockstates/mini_particle_collider.json', {'variants': {
+    f'facing={f}': {'model': f'{ID}:block/mini_particle_collider', 'y': y}
+    for f, y in [('north', 0), ('east', 90), ('south', 180), ('west', 270)]}})
+def collider_box(low, high, texture):
+    face_data = {'texture': texture}
+    if texture == '#core':
+        face_data['uv'] = [0, 0, 16, 16]
+    return {'from': low, 'to': high, 'faces': {face: dict(face_data) for face in ['north','south','east','west','up','down']}}
+write(f'assets/{ID}/models/block/mini_particle_collider.json', {
+    'parent': 'minecraft:block/block',
+    'textures': {'particle': shell, 'shell': shell, 'top': 'oritech:block/machine_plating_block/particle', 'core': 'oritech:block/machine_core_3'},
+    'elements': [collider_box([0,0,0],[16,2,16],'#shell'),collider_box([0,2,3],[16,15,16],'#shell'),
+                 collider_box([0,15,0],[16,16,16],'#top'),collider_box([0,2,0],[2,15,3],'#shell'),
+                 collider_box([14,2,0],[16,15,3],'#shell'),collider_box([7,2,0],[9,15,3],'#shell'),
+                 collider_box([2,5,1],[7,12,3],'#core'),collider_box([9,5,1],[14,12,3],'#core')]})
+write(f'assets/{ID}/models/item/mini_particle_collider.json', {'parent': f'{ID}:block/mini_particle_collider'})
+write(f'data/{ID}/recipe/mini_particle_collider.json', {'type':'minecraft:crafting_shaped','category':'redstone','pattern':['ACA'],
+    'key':{'A':{'item':'oritech:accelerator_controller'},'C':{'item':'oritech:machine_core_3'}},
+    'result':{'id':f'{ID}:mini_particle_collider','count':1}})
+write(f'data/{ID}/loot_table/blocks/mini_particle_collider.json', {'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':f'{ID}:mini_particle_collider',
+    'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':[f'{ID}:collider']}]}]}]})
+collider_pairs = {
+    'track':('内部轨道','Beamline'), 'recipes':('配方','Recipes'), 'ports':('接口','Ports'),
+    'input_a':('输入 A','Input A'), 'input_b':('输入 B','Input B'), 'output':('产物','Output'),
+    'start':('启动','Start'), 'stop':('暂停','Pause'), 'cancel':('终止','Abort'),
+    'cancel_hint':('停止任务并退回原料；已消耗电量不退回。','Abort and return reserved ingredients. Spent energy is not refunded.'),
+    'auto':('自动识别','Automatic'), 'locked':('已锁定','Locked'), 'lock_current':('锁定识别','Lock recipe'),
+    'eject_on':('弹出：开','Eject: on'), 'eject_off':('弹出：关','Eject: off'),
+    'part_in':('部件','Parts'), 'part_out':('取回','Return'),
+    'part_hint':('放入导环、加速马达或粒子传感器。','Insert guide rings, accelerator motors or particle sensors.'),
+    'editor_hint':('拖动布置／右键拆除\n滚轮缩放\nShift 拖动平移','Drag to place / right-click to remove\nScroll to zoom\nShift-drag to pan'),
+    'place':('放置','Place'), 'remove':('拆除','Remove'), 'move_a':('移动 A','Move A'), 'move_b':('移动 B','Move B'),
+    'bend.0':('直线','Line'), 'bend.1':('左弯','Left'), 'bend.2':('右弯','Right'),
+    'search':('搜索产物','Search products'), 'required':('碰撞能量：%s J','Collision energy: %s J'),
+    'speed':('速度：%s m/s','Speed: %s m/s'), 'spent':('本轮耗电：%s FE','Energy used: %s FE'),
+    'empty':('空格','Empty cell'), 'emitter_a':('A 注入端','Emitter A'), 'emitter_b':('B 注入端','Emitter B'),
+    'port_hint':('点击切换物品接口；方向相对机器正面。','Click to cycle. Sides follow the machine front.'),
+    'side.front':('前','Front'), 'side.left':('左','Left'), 'side.right':('右','Right'), 'side.back':('后','Back'), 'side.top':('上','Top'), 'side.bottom':('下','Bottom'),
+    'mode.0':('关闭','Closed'), 'mode.1':('输入 A','Input A'), 'mode.2':('输入 B','Input B'), 'mode.3':('双输入','Both inputs'), 'mode.4':('输出','Output'),
+    'status.0':('待机','Idle'), 'status.1':('缺少原料 A','Supply input A'), 'status.2':('缺少原料 B','Supply input B'),
+    'status.3':('原料不匹配','No matching recipe'), 'status.4':('输出空间不足','Empty the output'), 'status.5':('电力不足','Supply power'),
+    'status.6':('粒子加速中','Accelerating'), 'status.7':('碰撞完成','Collision complete'), 'status.8':('任务已暂停','Paused'),
+    'status.9':('先腾出原料槽','Make room for returns'), 'status.10':('配方已变更，请终止','Recipe changed; abort'),
+    'status.21':('轨道断开','Connect the beamline'), 'status.22':('部件朝向不匹配','Adjust the orientation'),
+    'status.23':('轨道未经过 B','Route through B'), 'status.24':('缺少加速马达','Add accelerator motors'),
+    'status.25':('弯道过紧','Widen the bends'), 'status.26':('导环间距过大','Reduce guide spacing'), 'status.27':('轨道数据无效','Invalid beamline'),
+}
+for key, (a, b) in collider_pairs.items():
+    zh[f'collider.{ID}.{key}'], en[f'collider.{ID}.{key}'] = a, b
 grades = [('原始', 'Primitive'), ('基础', 'Basic'), ('中级', 'Improved'), ('高级', 'Advanced'), ('精良', 'Elite'), ('极致', 'Ultra'), ('终极', 'Ultimate')]
 zh[f'item.{ID}.fluid_capacity_addon'] = '流体扩容插件'
 en[f'item.{ID}.fluid_capacity_addon'] = 'Fluid Capacity Addon'

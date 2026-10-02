@@ -9,7 +9,10 @@
 - 插件管理采用 276×245 独立窗口：合并列表、装载槽、卸载取出槽及玩家物品栏；交互对应用户给出的 Mek 升级窗口，面板和按钮复用奥瑞原控件。品质图标引用原 `machine_core/center.png` 与 `ring_1`–`ring_6`。
 - 四种扩容件为原机器核心 4–7 贴图的平面物品模型，与原核心方块的立体图标区分；全部引用原 16×16 PNG，不生成或复制新贴图。成品本身对应中级机器核心，低级扩容件及模型已删除。
 - 未安装主机时使用自有六面方块模型：正面引用 `oritech:block/machine_core_3`，顶部引用 `oritech:block/machine_plating_block/particle`，侧面、背面、底部和粒子引用 `oritech:block/iron_plating_block/particle`。物品图标引用同一模型。三张原贴图均为 16×16；没有新增或复制运行 PNG。
+- 微型粒子碰撞机使用生成器维护的八段机壳模型，正面双通道表示 A/B；继续引用中级核心和两种护板原贴图。窗口 320×240，原奥瑞面板与控件，标题位于内部；轨道、配方、接口三页共享 A/B／产物槽和玩家物品栏。轨道网格与方向线为代码绘制，部件不生成新位图。
 
 `tools/verify_resources.py` 核对实际依赖 JAR 的十组模型／动画／贴图、界面资源和发行包边界。该检查及服务端菜单坐标验证不能替代游戏内视觉、音效验收；按仓库要求不运行客户端。
 
 运行 `python tools/preview_shell.py --oritech <原版发布JAR>` 可将当前模型引用的三张原贴图机械投影为等距预览。预览位于忽略的 `build/style-reference/processor-preview.png`，不提交或打包原素材的派生图片。
+
+`tools/preview_collider.py --oritech <原版发布JAR>` 同样按碰撞机 JSON 中的立方体和 UV 投影原贴图，输出 `build/style-reference/collider-preview.png` 供本地检查，不进入发行包。

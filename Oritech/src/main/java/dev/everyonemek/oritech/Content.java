@@ -1,6 +1,7 @@
 package dev.everyonemek.oritech;
 
 import java.util.function.Supplier;
+import dev.everyonemek.oritech.collider.*;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -28,6 +29,8 @@ public final class Content {
     public static final Supplier<PartBlock> PART=BLOCKS.register("processor_part",()->new PartBlock());
     public static final Supplier<ProcessorItem> ITEM=ITEMS.register("universal_processor",ProcessorItem::new);
     public static final Supplier<FluidCapacityAddon> FLUID_CAPACITY=ITEMS.register("fluid_capacity_addon",FluidCapacityAddon::new);
+    public static final Supplier<ColliderBlock> COLLIDER=BLOCKS.register("mini_particle_collider",ColliderBlock::new);
+    public static final Supplier<BlockItem> COLLIDER_ITEM=ITEMS.register("mini_particle_collider",()->new BlockItem(COLLIDER.get(),new Item.Properties().stacksTo(1)));
     public static final java.util.List<Supplier<ProcessorUpgrade>> UPGRADES=new java.util.ArrayList<>();
     static{
         for(int tier=Processor.BASE_TIER+1;tier<=Processor.MAX_TIER;tier++){final int target=tier;UPGRADES.add(ITEMS.register("capacity_upgrade_"+tier,()->new ProcessorUpgrade(target)));}
@@ -36,12 +39,17 @@ public final class Content {
     public static final Supplier<BlockEntityType<Part>> PART_TILE=TILES.register("processor_part",()->BlockEntityType.Builder.of(Part::new,PART.get()).build(null));
     public static final Supplier<MenuType<ProcessorMenu>> MENU=MENUS.register("universal_processor",()->IMenuTypeExtension.create(ProcessorMenu::new));
     public static final Supplier<MenuType<AddonMenu>> ADDON_MENU=MENUS.register("processor_addons",()->IMenuTypeExtension.create(AddonMenu::new));
+    public static final Supplier<BlockEntityType<Collider>> COLLIDER_TILE=TILES.register("mini_particle_collider",()->BlockEntityType.Builder.of(Collider::new,COLLIDER.get()).build(null));
+    public static final Supplier<MenuType<ColliderMenu>> COLLIDER_MENU=MENUS.register("mini_particle_collider",()->IMenuTypeExtension.create(ColliderMenu::new));
+    public static final Supplier<DataComponentType<CompoundTag>> COLLIDER_DATA=COMPONENTS.register("collider",()->DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
     public static final Supplier<DataComponentType<CompoundTag>> DATA=COMPONENTS.register("processor",()->DataComponentType.<CompoundTag>builder().persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG).build());
-    public Content(IEventBus bus){BLOCKS.register(bus);ITEMS.register(bus);TILES.register(bus);MENUS.register(bus);COMPONENTS.register(bus);bus.addListener(Content::capabilities);bus.addListener(AddonPackets::register);
+    public Content(IEventBus bus){BLOCKS.register(bus);ITEMS.register(bus);TILES.register(bus);MENUS.register(bus);COMPONENTS.register(bus);bus.addListener(Content::capabilities);bus.addListener(AddonPackets::register);bus.addListener(ColliderPackets::register);
         bus.addListener((net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent e)->{
-            if(e.getTab()==rearth.oritech.init.ItemGroups.MACHINE_GROUP||e.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS){e.accept(ITEM.get());for(var upgrade:UPGRADES)e.accept(upgrade.get());e.accept(FLUID_CAPACITY.get());}
+            if(e.getTab()==rearth.oritech.init.ItemGroups.MACHINE_GROUP||e.getTabKey()==CreativeModeTabs.FUNCTIONAL_BLOCKS){e.accept(ITEM.get());for(var upgrade:UPGRADES)e.accept(upgrade.get());e.accept(FLUID_CAPACITY.get());e.accept(COLLIDER_ITEM.get());}
         });}
     private static void capabilities(RegisterCapabilitiesEvent e){
+        e.registerBlockEntity(Capabilities.ItemHandler.BLOCK,COLLIDER_TILE.get(),(p,s)->new ColliderPorts.Items(p,s));
+        e.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,COLLIDER_TILE.get(),(p,s)->new ColliderPorts.Energy(p));
         e.registerBlockEntity(Capabilities.ItemHandler.BLOCK,TILE.get(),(p,s)->new Ports.Items(()->p,s));
         e.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,TILE.get(),(p,s)->new Ports.Energy(()->p,s));
         e.registerBlockEntity(Capabilities.FluidHandler.BLOCK,TILE.get(),(p,s)->new Ports.Fluids(()->p,s));

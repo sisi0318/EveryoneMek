@@ -72,6 +72,20 @@ with ZipFile(args.oritech) as upstream:
             assert f"assets/oritech/models/item/{value['item'].split(':')[1]}.json" in names
     for part in ['center'] + [f'ring_{i}' for i in range(1, 7)]:
         assert f'assets/oritech/textures/gui/modular/machine_core/{part}.png' in names
+    collider_model = json.loads((resources / 'assets/oritechmekanism/models/block/mini_particle_collider.json').read_text(encoding='utf-8'))
+    assert len(collider_model['elements']) == 8
+    for reference in collider_model['textures'].values():
+        namespace, path = reference.split(':', 1)
+        png = upstream.read(f'assets/{namespace}/textures/{path}.png')
+        assert struct.unpack('>II', png[16:24]) == (16, 16), reference
+    for element in collider_model['elements']:
+        assert all(0 <= low < high <= 16 for low, high in zip(element['from'], element['to']))
+        assert set(element['faces']) == {'north', 'south', 'east', 'west', 'up', 'down'}
+        assert all(face['texture'][1:] in collider_model['textures'] for face in element['faces'].values())
+    collider_recipe = json.loads((resources / 'data/oritechmekanism/recipe/mini_particle_collider.json').read_text(encoding='utf-8'))
+    assert collider_recipe['pattern'] == ['ACA']
+    assert collider_recipe['key'] == {'A': {'item': 'oritech:accelerator_controller'}, 'C': {'item': 'oritech:machine_core_3'}}
+    assert collider_recipe['result'] == {'id': 'oritechmekanism:mini_particle_collider', 'count': 1}
 zh = json.loads((resources / 'assets/oritechmekanism/lang/zh_cn.json').read_text(encoding='utf-8'))
 en = json.loads((resources / 'assets/oritechmekanism/lang/en_us.json').read_text(encoding='utf-8'))
 assert zh.keys() == en.keys()
@@ -84,6 +98,8 @@ if args.jar:
         assert 'META-INF/neoforge.mods.toml' in files
         assert 'dev/everyonemek/oritech/Processor.class' in files
         assert 'dev/everyonemek/oritech/client/ProcessorRenderer.class' in files
+        assert 'dev/everyonemek/oritech/collider/Track.class' in files
+        assert 'dev/everyonemek/oritech/client/ColliderScreen.class' in files
         for tier in (2, 3):
             assert f'assets/oritechmekanism/models/item/capacity_upgrade_{tier}.json' not in files
             assert f'data/oritechmekanism/recipe/capacity_upgrade_{tier}.json' not in files

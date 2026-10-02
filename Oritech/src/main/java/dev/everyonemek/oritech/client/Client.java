@@ -8,6 +8,6 @@ import net.neoforged.neoforge.client.event.*;
 
 @EventBusSubscriber(modid=Content.ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class Client {
-    @SubscribeEvent public static void screens(RegisterMenuScreensEvent e){e.register(Content.MENU.get(),ProcessorScreen::new);e.register(Content.ADDON_MENU.get(),AddonScreen::new);}
+    @SubscribeEvent public static void screens(RegisterMenuScreensEvent e){e.register(Content.MENU.get(),ProcessorScreen::new);e.register(Content.ADDON_MENU.get(),AddonScreen::new);e.register(Content.COLLIDER_MENU.get(),ColliderScreen::new);}
     @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){e.registerBlockEntityRenderer(Content.TILE.get(),context->new ProcessorRenderer());}
 }

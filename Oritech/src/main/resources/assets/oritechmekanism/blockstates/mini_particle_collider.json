@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "oritechmekanism:block/mini_particle_collider",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "oritechmekanism:block/mini_particle_collider",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "oritechmekanism:block/mini_particle_collider",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "oritechmekanism:block/mini_particle_collider",
+      "y": 270
+    }
+  }
+}
