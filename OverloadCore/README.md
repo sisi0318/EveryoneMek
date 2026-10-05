@@ -1,6 +1,6 @@
 # Overload Core · 过载短路核心
 
-**0.1.0-alpha.30** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.31** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 一枚以雷霆为食的科技挂坠。缔结魂契后，八道禁律缠上你与麾下机枢，也赐予逆铸、回能和洞察之力。
 
@@ -10,7 +10,7 @@
 
 客户端与服务端都安装本模组、**Mekanism 1.21.1-10.7.19.85** 和 **Curios 9.5.1+1.21.1**。Mekanism Generators 为可选依赖，使用同一 Mek 版本。其他 EveryoneMek 扩展不是依赖。
 
-本地构建产物：`build/libs/OverloadCore-0.1.0-alpha.30.jar`。客户端与服务端需一起更新。
+本地构建产物：`build/libs/OverloadCore-0.1.0-alpha.31.jar`。客户端与服务端需一起更新。
 
 alpha.18 修复武器、雷印电容和改装页的储能文本显示。若旧版出现 `EnergyDisplay@...` 跳动，那是对象标识被误显示，实际电量不受影响。
 
@@ -28,6 +28,8 @@ alpha.19 移除独立饰品页面和过载核心升级；已有核心储能保�
 - `blackHoleLensing=false` 可关闭背景透镜，保留三维核心和流动光盘；`weaponShaders=false` 使用简化几何。多黑洞时最近8个显示透镜，其他保留三维外观。实际游戏画面及第三方光影组合由玩家验收。
 
 服务器配置 `combat.blackHoleShotFE`、`blackHoleChargeTicks`、`blackHoleCooldownTicks`、`blackHoleLifetimeTicks`、`blackHoleRadius`、`blackHoleDamagePerPulse` 调整数值。离线或跨维度时清除自己的黑洞，区块卸载也不会留下持久化引力场。
+
+alpha.31 修复光环随世界运行时间变成密集细线的问题，动画按每个黑洞自身计时，纹理扭曲保持有限幅度。透镜及气流与地面相交时渐隐，真实方块遮挡仍然保留。
 
 ## MekaTool 战斗双形态
 

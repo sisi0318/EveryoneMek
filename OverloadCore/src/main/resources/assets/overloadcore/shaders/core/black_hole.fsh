@@ -38,7 +38,12 @@ void main() {
     float r = length(impact);
     if (r > 3.0 || r < 0.96) discard;
     float sceneDepth = texture(SceneDepth, screenUV).r;
-    if (sceneDepth < 0.99999 && length(viewPoint(screenUV,sceneDepth)-eye) < ahead) discard;
+    float intersection=1.0;
+    if (sceneDepth < 0.99999) {
+        float clearance=length(viewPoint(screenUV,sceneDepth)-eye)-ahead;
+        intersection=smoothstep(0.0,max(.06,Radius*.12),clearance);
+        if(intersection<=0.0)discard;
+    }
     float taper = 1.0 - smoothstep(1.0,2.48,r);
     float shift = 0.72 * taper * taper / (r + 0.22);
     shift *= smoothstep(1.03,1.8,distanceToCenter/Radius);
@@ -51,7 +56,7 @@ void main() {
     float sourceDepth = texture(SceneDepth,sourceUV).r;
     if (sourceDepth < 0.99999 && length(viewPoint(sourceUV,sourceDepth)-eye) < dot(center,bent)) safe=0.0;
     sourceUV=mix(screenUV,sourceUV,safe);
-    float lensAlpha=(1.0-smoothstep(2.54,2.95,r))*Visibility;
+    float lensAlpha=(1.0-smoothstep(2.54,2.95,r))*Visibility*intersection;
     vec3 background=texture(SceneColor,sourceUV).rgb;
     float facing=dot(normalize(DiscNormal),axis);
     vec2 farSide=vec2(dot(DiscNormal,right),dot(DiscNormal,up));
@@ -64,7 +69,7 @@ void main() {
     float arcRadial=clamp((r-1.012)/.62,0.0,1.0);
     vec3 gas=gasLight(azimuth,arcRadial,Phase)*wrap*smoothstep(.05,.8,1.0-abs(facing))*1.85;
     float photon=exp(-pow((r-1.028)/.023,2.0))*1.7;
-    vec3 emission=(gas+vec3(1.0,.99,.94)*photon)*Visibility;
+    vec3 emission=(gas+vec3(1.0,.99,.94)*photon)*Visibility*intersection;
     float alpha=max(lensAlpha,clamp(max(emission.r,max(emission.g,emission.b)),0.0,1.0));
     if(alpha<.003)discard;
     fragColor=vec4(background*lensAlpha+emission,alpha);

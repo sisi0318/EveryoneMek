@@ -72,7 +72,7 @@ public final class BlackHolePass {
             var orientation=BlackHoleOptics.orientation(hole.getUUID());var normal=new Vector3f(0,1,0).rotate(orientation);
             var discAxis=new Vector3f(1,0,0).rotate(orientation);viewMatrix.transformDirection(discAxis).normalize();
             viewMatrix.transformDirection(normal).normalize();var disc=new Matrix4f(body).rotate(orientation).scale(radius);body.scale(radius);
-            float phase=GearVisualConfig.ANIMATE.get()?(float)((hole.level().getGameTime()%120000)+partial)/20:0;
+            float phase=GearVisualConfig.ANIMATE.get()?(hole.tickCount+partial)/20F:0;
             if((hole.getUUID().getLeastSignificantBits()&1)!=0)phase=-phase;
             views.add(new View(hole.getUUID(),body,disc,center,normal,discAxis,radius,phase,pixels,pixels>=40));
         }
@@ -110,8 +110,14 @@ public final class BlackHolePass {
             // Addition is order-independent, so both closed skins share one cached draw.
             RenderSystem.depthMask(false);RenderSystem.enableBlend();RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
             RenderSystem.blendFuncSeparate(GL11.GL_ONE,GL11.GL_ONE,GL11.GL_ZERO,GL11.GL_ONE);RenderSystem.disableCull();
+            discShader.getUniform("SoftDepth").set(lenses?1F:0F);
+            if(lenses){
+                discShader.setSampler("SceneDepth",scene.getDepthTextureId());
+                discShader.getUniform("DepthProjectionInverse").set(new Matrix4f(projection).invert());
+                discShader.getUniform("FrameSize").set((float)target.viewWidth,(float)target.viewHeight);
+            }else discShader.setSampler("SceneDepth",0);
             for(var v:views){
-                discShader.getUniform("Phase").set(v.phase);var mesh=disc(v.detailed);mesh.bind();
+                discShader.getUniform("Phase").set(v.phase);discShader.getUniform("SoftRange").set(Math.max(.06F,v.radius*.12F));var mesh=disc(v.detailed);mesh.bind();
                 mesh.drawWithShader(v.disc,projection,discShader);
             }
             VertexBuffer.unbind();

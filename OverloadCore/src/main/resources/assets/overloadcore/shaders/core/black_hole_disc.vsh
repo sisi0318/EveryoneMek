@@ -7,9 +7,11 @@ uniform mat4 ProjMat;
 uniform int FogShape;
 out vec2 discUV;
 out float vertexDistance;
+out float viewDepth;
 void main() {
     vec4 p=ModelViewMat*vec4(Position,1.0);
     vertexDistance=fog_distance(p.xyz,FogShape);
+    viewDepth=-p.z;
     discUV=UV0;
     gl_Position=ProjMat*p;
 }

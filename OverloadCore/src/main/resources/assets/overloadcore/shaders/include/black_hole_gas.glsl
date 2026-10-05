@@ -10,7 +10,9 @@ float gasNoise(vec2 p) {
 }
 vec3 gasLight(float azimuth,float radial,float time) {
     float r=clamp(radial,0.0,1.0);
-    float angle=azimuth-time*(.55+.36/(.4+r));
+    // Radial shear must stay bounded. Multiplying a radius-dependent speed by
+    // elapsed world time winds the field into thousands of aliased rings.
+    float angle=azimuth-time*.70+.65/(.75+r)+.35*sin(time*.9-r*4.0);
     vec2 orbit=vec2(cos(angle),sin(angle));
     float cloud=gasNoise(orbit*(4.0+r*6.0)+vec2(r*7.0,-time*.09));
     float stream=smoothstep(.30,.76,cloud);

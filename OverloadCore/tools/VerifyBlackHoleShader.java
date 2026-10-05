@@ -17,7 +17,9 @@ import org.lwjgl.opengl.GL;
 
 /** Actual shipped shaders and shared meshes, color/depth snapshot and perspective camera, without Minecraft. */
 public final class VerifyBlackHoleShader {
-    static int width=768,height=512,lens,disc,solid,back;
+    static int width=768,height=512,lens,disc,solid,back,ground,gasProbe;
+    static boolean groundScene;
+    static final Quaternionf groundView=new Quaternionf().rotationX(.28F);
     static Matrix4f projection;static Target main,snapshot;static Mesh quad;
     static Mesh[] spheres=new Mesh[2],discs=new Mesh[2];
     static int captures;
@@ -54,7 +56,10 @@ public final class VerifyBlackHoleShader {
     static void resize(int w,int h){if(main!=null){main.close();snapshot.close();}width=w;height=h;main=new Target();snapshot=new Target();projection=new Matrix4f().perspective((float)Math.toRadians(50),width/(float)height,.05F,128);glViewport(0,0,width,height);}
     static void background(boolean day,int wall){
         glBindFramebuffer(GL_FRAMEBUFFER,main.fbo);glDisable(GL_SCISSOR_TEST);glDepthMask(true);glEnable(GL_DEPTH_TEST);glDisable(GL_BLEND);glClearDepth(1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        glUseProgram(back);scalar(back,"Day",day?1:0);scalar(back,"Depth",(float)depth(-30));quad.draw();
+        if(groundScene){
+            glUseProgram(ground);matrix(ground,"InverseProjection",new Matrix4f(projection).invert());matrix(ground,"CameraProjection",projection);
+            vector(ground,"GroundNormal",new Vector3f(0,1,0).rotate(groundView));vector(ground,"GroundForward",new Vector3f(0,0,1).rotate(groundView));quad.draw();
+        }else{glUseProgram(back);scalar(back,"Day",day?1:0);scalar(back,"Depth",(float)depth(-30));quad.draw();}
         if(wall>0){glEnable(GL_SCISSOR_TEST);if(wall==1)glScissor(0,0,width/2,height);else glScissor(width/2-30,height/2-55,60,110);glClearColor(.13F,.23F,.36F,1);glClearDepth(depth(-3));glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);glDisable(GL_SCISSOR_TEST);}
     }
     static void snapshot(){glBindFramebuffer(GL_READ_FRAMEBUFFER,main.fbo);glBindFramebuffer(GL_DRAW_FRAMEBUFFER,snapshot.fbo);glBlitFramebuffer(0,0,width,height,0,0,width,height,GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT,GL_NEAREST);glBindFramebuffer(GL_FRAMEBUFFER,main.fbo);captures++;}
@@ -72,7 +77,8 @@ public final class VerifyBlackHoleShader {
         glEnable(GL_DEPTH_TEST);glDepthFunc(GL_LEQUAL);glDepthMask(true);glDisable(GL_BLEND);
         for(var h:holes){defaults(solid,new Matrix4f().translation(h.center).scale(h.radius));spheres[h.detailed?1:0].draw();}
         glDepthMask(false);glEnable(GL_BLEND);glBlendFuncSeparate(GL_ONE,GL_ONE,GL_ZERO,GL_ONE);glDisable(GL_CULL_FACE);
-        for(var h:holes){defaults(disc,new Matrix4f().translation(h.center).rotate(h.orientation).scale(h.radius));scalar(disc,"Phase",h.phase);
+        for(var h:holes){defaults(disc,new Matrix4f().translation(h.center).rotate(h.orientation).scale(h.radius));scalar(disc,"Phase",h.phase);scalar(disc,"SoftDepth",lenses?1:0);scalar(disc,"SoftRange",Math.max(.06F,h.radius*.12F));
+            if(lenses){matrix(disc,"DepthProjectionInverse",new Matrix4f(projection).invert());glUniform2f(glGetUniformLocation(disc,"FrameSize"),width,height);glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,snapshot.depth);glUniform1i(glGetUniformLocation(disc,"SceneDepth"),0);}
             discs[h.detailed?1:0].draw();}
         glDepthMask(true);return pixels();
     }
@@ -118,6 +124,25 @@ public final class VerifyBlackHoleShader {
         check(BlackHoleGeometry.sphere(false).quads()+BlackHoleGeometry.disc(false).quads()<=500,"Distant mesh exceeds budget");
         System.out.println("PASS color/depth lens, wall and foreground rejection, one capture/multiple holes, FOV/bob/scissor, inside core, resized low LOD");
     }
+    static void terrainChecks(Path out)throws Exception{
+        resize(1024,640);projection=new Matrix4f().perspective((float)Math.toRadians(70),width/(float)height,.05F,128);groundScene=true;
+        var center=new Vector3f(-1,-1.5F,-9).rotate(groundView);var tilt=new Quaternionf(groundView).rotateY(-.2F).rotateX(.34F);
+        for(float phase:new float[]{0,4,1000,5000})save(render(List.of(new Hole(center,3,tilt,phase,true)),true,0,true,true),out.resolve("ground-"+phase+".png"));
+        save(render(List.of(new Hole(center,3,tilt,1000,true)),true,0,false,true),out.resolve("ground-no-lens.png"));groundScene=false;
+    }
+    static void longTimeChecks() {
+        glBindFramebuffer(GL_FRAMEBUFFER,main.fbo);glDisable(GL_DEPTH_TEST);glDisable(GL_BLEND);glDisable(GL_SCISSOR_TEST);glUseProgram(gasProbe);
+        for(float phase:new float[]{0,4,250,1000,5000,6000,-5000}){
+            scalar(gasProbe,"Phase",phase);quad.draw();var row=pixels();int turns=0,previous=0;
+            for(int x=1;x<width;x++){
+                int i=(height/2*width+x)*4;int delta=(row[i]&255)-(row[i-4]&255);
+                if(Math.abs(delta)<3)continue;int sign=Integer.signum(delta);if(previous!=0&&sign!=previous)turns++;previous=sign;
+            }
+            check(turns<160,"Gas wound into dense radial noise at time "+phase+": "+turns+" turns");
+            System.out.println("PASS bounded gas frequency at time "+phase+": "+turns+" radial turns");
+        }
+        glEnable(GL_DEPTH_TEST);glDepthMask(true);
+    }
     public static void main(String[] args)throws Exception{
         var root=Path.of(args[0]);var out=root.resolve("build/black-hole-optics-check");Files.createDirectories(out);
         check(glfwInit(),"GLFW");glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);long window=glfwCreateWindow(960,540,"Original black hole optics (hidden)",0,0);check(window!=0,"Hidden GL context");
@@ -128,13 +153,16 @@ public final class VerifyBlackHoleShader {
             }
             var dir=root.resolve("src/main/resources/assets/overloadcore/shaders/core");
             String gas=Files.readString(dir.getParent().resolve("include/black_hole_gas.glsl"));
+            if(args.length>1)gas=Files.readString(Path.of(args[1]));
+            gasProbe=program("#version 150\nin vec3 Position;in vec2 UV0;out vec2 uv;void main(){uv=UV0;gl_Position=vec4(Position,1);}","#version 150\n"+gas+"\nuniform float Phase;in vec2 uv;out vec4 fragColor;void main(){fragColor=vec4(gasLight(.8,uv.x,Phase),1);}","Position","UV0");
             lens=program(Files.readString(dir.resolve("black_hole.vsh")),Files.readString(dir.resolve("black_hole.fsh")).replace("#moj_import <overloadcore:black_hole_gas.glsl>",gas),"Position","UV0");
             disc=program(Files.readString(dir.resolve("black_hole_disc.vsh")).replace("#moj_import <fog.glsl>",fog),Files.readString(dir.resolve("black_hole_disc.fsh")).replace("#moj_import <overloadcore:black_hole_gas.glsl>",gas),"Position","UV0");
             solid=program(bodyV.replace("#moj_import <fog.glsl>",fog),bodyF.replace("#moj_import <fog.glsl>",fog),"Position","Color");
             back=program("#version 150\nin vec3 Position;in vec2 UV0;out vec2 uv;void main(){uv=UV0;gl_Position=vec4(Position,1);}","#version 150\nuniform float Day;uniform float Depth;in vec2 uv;out vec4 fragColor;void main(){vec3 sky=mix(vec3(.022,.034,.065),vec3(.46,.67,.86),Day);vec3 ground=mix(vec3(.045,.039,.034),vec3(.22,.27,.30),Day);vec3 c=mix(ground,sky,smoothstep(.30,.60,uv.y));vec2 grid=abs(fract(uv*vec2(30,20))-.5);float line=1.0-smoothstep(.022,.044,min(grid.x,grid.y));c=mix(c,mix(vec3(.15,.18,.23),vec3(.63,.66,.65),Day),line*.6);fragColor=vec4(c,1);gl_FragDepth=Depth;}","Position","UV0");
+            ground=program("#version 150\nin vec3 Position;in vec2 UV0;out vec2 uv;void main(){uv=UV0;gl_Position=vec4(Position,1);}","#version 150\nuniform mat4 InverseProjection;uniform mat4 CameraProjection;uniform vec3 GroundNormal;uniform vec3 GroundForward;in vec2 uv;out vec4 fragColor;void main(){vec4 h=InverseProjection*vec4(uv*2.-1.,1,1);vec3 ray=normalize(h.xyz/h.w);float d=dot(GroundNormal,ray);if(d>=-.0001){fragColor=vec4(.52,.69,.93,1);gl_FragDepth=1.;return;}vec3 p=ray*(-1.65/d);vec2 grid=vec2(p.x,dot(p,GroundForward));float tile=mod(floor(grid.x)+floor(grid.y),2.);vec3 c=mix(vec3(.21,.32,.08),vec3(.26,.39,.10),tile);fragColor=vec4(c,1);vec4 clip=CameraProjection*vec4(p,1);gl_FragDepth=clip.z/clip.w*.5+.5;}","Position","UV0");
             quad=new Mesh(new float[]{-1,-1,0,0,0,1,-1,0,1,0,1,1,0,1,1,-1,1,0,0,1},2);
             for(int i=0;i<2;i++){spheres[i]=new Mesh(BlackHoleGeometry.sphere(i==1).vertices(),0);discs[i]=new Mesh(BlackHoleGeometry.disc(i==1).vertices(),2);}
-            glDisable(GL_CULL_FACE);glDepthFunc(GL_LEQUAL);resize(768,512);checks(out);
+            glDisable(GL_CULL_FACE);glDepthFunc(GL_LEQUAL);resize(768,512);checks(out);terrainChecks(out);longTimeChecks();
         }finally{glfwDestroyWindow(window);glfwTerminate();}
     }
 }
