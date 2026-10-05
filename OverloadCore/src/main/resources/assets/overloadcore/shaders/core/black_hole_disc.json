@@ -1,17 +1,10 @@
 {
-  "vertex": "overloadcore:black_hole",
-  "fragment": "overloadcore:black_hole",
-  "samplers": [
-    {
-      "name": "SceneColor"
-    },
-    {
-      "name": "SceneDepth"
-    }
-  ],
+  "vertex": "overloadcore:black_hole_disc",
+  "fragment": "overloadcore:black_hole_disc",
+  "samplers": [],
   "uniforms": [
     {
-      "name": "InverseProjection",
+      "name": "ModelViewMat",
       "type": "matrix4x4",
       "count": 16,
       "values": [
@@ -34,7 +27,7 @@
       ]
     },
     {
-      "name": "CameraProjection",
+      "name": "ProjMat",
       "type": "matrix4x4",
       "count": 16,
       "values": [
@@ -57,40 +50,49 @@
       ]
     },
     {
-      "name": "CenterView",
+      "name": "ColorModulator",
       "type": "float",
-      "count": 3,
+      "count": 4,
       "values": [
-        0,
-        0,
-        -8
+        1,
+        1,
+        1,
+        1
       ]
     },
     {
-      "name": "DiscNormal",
+      "name": "FogStart",
       "type": "float",
-      "count": 3,
+      "count": 1,
       "values": [
-        0,
-        1,
         0
       ]
     },
     {
-      "name": "FrameSize",
-      "type": "float",
-      "count": 2,
-      "values": [
-        1,
-        1
-      ]
-    },
-    {
-      "name": "Radius",
+      "name": "FogEnd",
       "type": "float",
       "count": 1,
       "values": [
-        1
+        1000
+      ]
+    },
+    {
+      "name": "FogColor",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "FogShape",
+      "type": "int",
+      "count": 1,
+      "values": [
+        0
       ]
     },
     {
@@ -99,14 +101,6 @@
       "count": 1,
       "values": [
         0
-      ]
-    },
-    {
-      "name": "Visibility",
-      "type": "float",
-      "count": 1,
-      "values": [
-        1
       ]
     }
   ]

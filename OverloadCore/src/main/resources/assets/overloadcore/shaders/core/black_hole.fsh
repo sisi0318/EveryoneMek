@@ -1,54 +1,68 @@
 #version 150
-#moj_import <fog.glsl>
-uniform mat4 ProjMat;
-uniform vec4 ColorModulator;
-uniform float FogStart;
-uniform float FogEnd;
-uniform vec4 FogColor;
-uniform int FogShape;
-in vec2 imagePoint;
-flat in vec3 centerView;
-flat in float radius;
-flat in float phase;
+uniform sampler2D SceneColor;
+uniform sampler2D SceneDepth;
+uniform mat4 InverseProjection;
+uniform mat4 CameraProjection;
+uniform vec3 CenterView;
+uniform vec3 DiscNormal;
+uniform vec2 FrameSize;
+uniform float Radius;
+uniform float Phase;
+uniform float Visibility;
+in vec2 screenUV;
 out vec4 fragColor;
+vec3 viewPoint(vec2 uv, float depth) {
+    vec4 p = InverseProjection * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    return p.xyz / p.w;
+}
+vec2 projectRay(vec3 eye, vec3 ray) {
+    vec4 p = CameraProjection * vec4(eye + ray, 1.0);
+    return p.xy / p.w * 0.5 + 0.5;
+}
 void main() {
-    // A small tilt keeps the optical disk legible from every camera angle.
-    vec2 p = mat2(0.987, -0.160, 0.160, 0.987) * imagePoint;
-    float r = length(p);
-    float aa = max(fwidth(r), 0.003);
-    float core = 1.0 - smoothstep(1.0-aa, 1.0+aa, r);
-    float er = length(vec2(p.x, (p.y+0.12)/0.29));
-    float angle = atan((p.y+0.12)/0.29, p.x);
-    float disk = smoothstep(1.04,1.16,er) * (1.0-smoothstep(2.25,2.85,er));
-    float threads = 0.86+0.10*sin(er*32.0-angle*4.0-phase*4.0)+0.045*sin(er*71.0+angle*7.0+phase*6.0);
-    float streaks = 0.90+0.10*sin(angle*5.0-er*6.0+phase*2.0);
-    // Only the near half crosses in front of the event horizon.
-    float front = 1.0-smoothstep(-0.16,-0.08,p.y);
-    disk *= max(front, 1.0-core);
-    float diskGlow = disk*clamp(threads*streaks,0.0,1.0);
-    float photon = exp(-pow((r-1.055)/0.035,2.0))*(1.0-core);
-    // Lensed image of the far side: a broad arch behind the core, with a much fainter lower echo.
-    float archR = length(vec2(p.x,p.y*0.85));
-    float arch = exp(-pow((archR-1.15)/0.11,2.0))*(1.0-core)*smoothstep(-0.05,0.35,p.y);
-    arch *= 0.72+0.20*sin(archR*85.0-atan(p.y,p.x)*4.0+phase*3.0);
-    float echo = exp(-pow((r-1.09)/0.07,2.0))*(1.0-core)*(1.0-smoothstep(-0.6,0.0,p.y))*.3;
-    float halo = exp(-max(0.0,r-1.1)*5.0)*(1.0-core)*.12;
-    float luminosity = clamp(diskGlow*1.22+photon*.38+arch*.9+echo,0.0,1.0);
-    float alpha = max(core,max(disk*.95,clamp(photon+arch+echo+halo,0.0,1.0)));
-    if(alpha<0.015)discard;
-    vec3 gold = vec3(1.0,0.55,0.16);
-    vec3 white = vec3(1.0,0.97,0.84);
-    vec3 light = mix(gold,white,smoothstep(0.14,0.85,luminosity));
-    vec3 color = light*(0.55+0.45*luminosity);
-    color *= 1.0-core;
-    color = mix(color,light*(.7+.3*luminosity),clamp(diskGlow*front*1.6,0.0,1.0));
-    // Curved core depth prevents the billboard plane from clipping into nearby walls.
-    float toward = core*sqrt(max(0.0,1.0-r*r));
-    if(disk>0.05&&front>0.5)toward=max(toward,sqrt(max(0.0,er*er-p.x*p.x))*.82);
-    vec3 surface = centerView + vec3(imagePoint*radius,toward*radius);
-    vec4 clip = ProjMat * vec4(surface,1.0);
-    if(clip.w<=0.0)discard;
-    gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.0,1.0);
-    float distance = fog_distance(surface,FogShape);
-    fragColor = linear_fog(vec4(color,alpha)*ColorModulator,distance,FogStart,FogEnd,FogColor);
+    vec4 eyeH=InverseProjection*vec4(0,0,-1,0);
+    vec3 eye=eyeH.xyz/eyeH.w;
+    vec3 center=CenterView-eye;
+    float distanceToCenter = length(center);
+    if (distanceToCenter <= Radius * 1.02) discard;
+    vec3 axis = center / distanceToCenter;
+    vec3 ray = normalize(viewPoint(screenUV, 1.0)-eye);
+    float ahead = dot(ray, center);
+    if (ahead <= 0.0) discard;
+    vec3 right = normalize(cross(axis, abs(axis.y) < 0.96 ? vec3(0,1,0) : vec3(0,0,1)));
+    vec3 up = cross(right, axis);
+    // Angular impact parameter follows the projected sphere even at wide FOV and off-centre.
+    vec2 impact = vec2(dot(ray,right), dot(ray,up)) * distanceToCenter / Radius;
+    float r = length(impact);
+    if (r > 3.0 || r < 0.96) discard;
+    float sceneDepth = texture(SceneDepth, screenUV).r;
+    if (sceneDepth < 0.99999 && length(viewPoint(screenUV,sceneDepth)-eye) < ahead) discard;
+    float taper = 1.0 - smoothstep(1.0,2.48,r);
+    float shift = 0.72 * taper * taper / (r + 0.22);
+    shift *= smoothstep(1.03,1.8,distanceToCenter/Radius);
+    vec2 sinAngle = impact * (1.0 - shift/max(r,0.1)) * Radius / distanceToCenter;
+    vec3 bent = normalize(axis * sqrt(max(0.0,1.0-dot(sinAngle,sinAngle))) + right*sinAngle.x + up*sinAngle.y);
+    vec2 sourceUV = projectRay(eye,bent);
+    vec2 border = 1.5 / FrameSize;
+    float safe = float(all(greaterThan(sourceUV,border)) && all(lessThan(sourceUV,vec2(1)-border)));
+    sourceUV = clamp(sourceUV,border,vec2(1)-border);
+    float sourceDepth = texture(SceneDepth,sourceUV).r;
+    if (sourceDepth < 0.99999 && length(viewPoint(sourceUV,sourceDepth)-eye) < dot(center,bent)) safe=0.0;
+    sourceUV=mix(screenUV,sourceUV,safe);
+    float lensAlpha=(1.0-smoothstep(2.54,2.95,r))*Visibility;
+    vec3 background=texture(SceneColor,sourceUV).rgb;
+    float facing=dot(normalize(DiscNormal),axis);
+    vec2 farSide=vec2(dot(DiscNormal,right),dot(DiscNormal,up));
+    farSide=normalize(farSide+vec2(0.0001))*(facing<0.0?1.0:-1.0);
+    float azimuth=atan(impact.y,impact.x);
+    float wrap=max(0.0,dot(impact/max(r,0.001),farSide));
+    float narrow=exp(-abs(r-1.028)*62.0);
+    float arch=exp(-pow((r-1.18)/0.16,2.0))*pow(wrap,0.6)*(1.0-abs(facing));
+    float ripple=0.84+0.16*sin(azimuth*6.0+r*17.0-Phase*1.4);
+    float strength=(narrow*.80+arch*1.12*ripple)*Visibility;
+    vec3 emission=mix(vec3(1.0,.61,.22),vec3(1.0,.96,.80),clamp(strength*1.4,0.0,1.0));
+    float glowAlpha=clamp(strength,0.0,.94);
+    float alpha=lensAlpha+glowAlpha*(1.0-lensAlpha);
+    if(alpha<.003)discard;
+    fragColor=vec4(background*lensAlpha*(1.0-glowAlpha)+emission*glowAlpha,alpha);
 }

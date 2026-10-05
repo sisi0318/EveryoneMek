@@ -99,3 +99,11 @@ VerifyGearShader输出tactical-7.png、training-hit.png、training-day.png、tra
 `black_hole.vsh/.fsh`独立绘制核心、流动盘、远侧光弧和局部柔光，以正常透明混合及表面深度支持遮挡。不做全屏扭曲或动态世界照明；关闭shader后使用BlackHoleGeometry缓存的球体与倾斜盘。`VerifyBlackHoleShader`用当前Minecraft fog include和真实GLSL在隐藏OpenGL中检查昼夜、动画、墙体深度与球面交界，预览输出在`build/black-hole-shader-check/`。
 
 保存的[黑洞shader预览](black-hole-preview.png)来自night-0.2.png；[发射器模型预览](black-hole-launcher-preview.png)由`tools/preview_black_hole_launcher.cjs`读取实际JSON、最近邻采样原PNG生成。二者均为离线渲染，不是游戏截图。工具、原稿、预览不进入JAR。
+
+## alpha.29 独立光学渲染
+
+用户提供的其他模组JAR仅用于了解效果组成和渲染顺序，本版没有导入其源码、shader或素材。`BlackHoleGeometry`自行建立两级单位球体与封闭透镜形盘，GPU缓存复用；`BlackHoleOptics`以UUID确定固定朝向并计算屏幕边界。盘面的纹理使用自身周期噪声与剪切相位，双面分次绘制消除未排序透明层的扇区亮纹，白金色调沿用本模组设定。
+
+背景透镜由自身相机射线模型计算角偏移，颜色与深度快照拒绝前景采样；没有使用参考shader的导数矩阵映射或原气体纹理公式。每次世界绘制共用快照，GPU仅绘制相关屏幕矩形。球体是实际三维网格，吸积盘具有厚度；关闭自定义shader仍有简化三维模型。
+
+`VerifyBlackHoleShader`输出到`build/black-hole-optics-check/`，背景网格用于辨认扭曲，并不是游戏贴图。保存[立体黑洞与透镜预览](black-hole-optics-preview.png)和[多黑洞预览](black-hole-multiple-preview.png)；旧alpha.28预览保留作历史。均为实际GLSL离线渲染，不是游戏截图，未做图像重绘。

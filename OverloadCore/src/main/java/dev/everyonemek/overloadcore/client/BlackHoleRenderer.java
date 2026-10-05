@@ -15,15 +15,13 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 
 @EventBusSubscriber(modid=OverloadCore.ID,value=Dist.CLIENT)
 public final class BlackHoleRenderer extends EntityRenderer<BlackHoleEntity> {
-    private static ShaderInstance shader;
-    private static final ResourceLocation ID=ResourceLocation.fromNamespaceAndPath(OverloadCore.ID,"black_hole");
-    private static final RenderType FIELD=RenderType.create("overloadcore_black_hole",DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,VertexFormat.Mode.QUADS,1024,false,true,
-        RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(()->shader))
-            .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
-            .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY).setCullState(RenderStateShard.NO_CULL).createCompositeState(false));
-    private static final RenderType FALLBACK=RenderType.create("overloadcore_black_hole_fallback",DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,32768,false,true,
+    private static final RenderType FALLBACK=RenderType.create("overloadcore_black_hole_fallback",DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,32768,false,false,
         RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeLightningShader))
             .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+            .setTransparencyState(RenderStateShard.NO_TRANSPARENCY).setCullState(RenderStateShard.NO_CULL).createCompositeState(false));
+    private static final RenderType FALLBACK_DISC=RenderType.create("overloadcore_black_hole_disc_fallback",DefaultVertexFormat.POSITION_COLOR,VertexFormat.Mode.QUADS,16384,false,true,
+        RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeLightningShader))
+            .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST).setWriteMaskState(RenderStateShard.COLOR_WRITE)
             .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY).setCullState(RenderStateShard.NO_CULL).createCompositeState(false));
     public BlackHoleRenderer(EntityRendererProvider.Context context){super(context);shadowRadius=0;}
     @SubscribeEvent public static void extensions(RegisterClientExtensionsEvent e){
@@ -41,23 +39,15 @@ public final class BlackHoleRenderer extends EntityRenderer<BlackHoleEntity> {
         },CoreContent.BLACK_HOLE_LAUNCHER.get());
     }
     @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){e.registerEntityRenderer(BlackHoleEntity.TYPE.get(),BlackHoleRenderer::new);}
-    @SubscribeEvent public static void shaders(RegisterShadersEvent e){
-        shader=null;
-        try{e.registerShader(new ShaderInstance(e.getResourceProvider(),ID,DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),s->shader=s);}
-        catch(java.io.IOException error){com.mojang.logging.LogUtils.getLogger().error("Black hole shader unavailable; using geometric fallback",error);}
-    }
     @Override public void render(BlackHoleEntity hole,float yaw,float partial,PoseStack pose,MultiBufferSource buffers,int light){
         if(hole.distanceToSqr(entityRenderDispatcher.camera.getPosition())>GearVisualConfig.DISTANCE.get()*GearVisualConfig.DISTANCE.get())return;
-        float radius=BlackHoleGeometry.quantizedRadius(hole.visualRadius(partial));
-        pose.pushPose();pose.mulPose(entityRenderDispatcher.cameraOrientation());
-        boolean custom=shader!=null&&GearVisualConfig.SHADERS.get();
-        var out=buffers.getBuffer(custom?FIELD:FALLBACK);
-        BlackHoleGeometry.Sink sink=(x,y,z,u,v,r,g,b,a)->{
-            var vertex=out.addVertex(pose.last().pose(),x,y,z).setColor(r,g,b,a);
-            if(custom)vertex.setUv(u,v).setNormal(0,0,1);
-        };
-        float phase=GearVisualConfig.ANIMATE.get()?(float)((hole.level().getGameTime()+partial)%160)/160:0;
-        if(custom)BlackHoleGeometry.billboard(sink,radius,phase);else BlackHoleGeometry.fallback(sink,radius);
+        if(BlackHolePass.queue(hole,partial))return;
+        float radius=hole.visualRadius(partial);
+        pose.pushPose();pose.scale(radius,radius,radius);
+        var core=buffers.getBuffer(FALLBACK);
+        BlackHoleGeometry.emit(BlackHoleGeometry.sphere(false),(x,y,z,u,v)->core.addVertex(pose.last().pose(),x,y,z).setColor(0,0,0,255));
+        pose.mulPose(BlackHoleOptics.orientation(hole.getUUID()));var disc=buffers.getBuffer(FALLBACK_DISC);
+        BlackHoleGeometry.emit(BlackHoleGeometry.disc(false),(x,y,z,u,v)->disc.addVertex(pose.last().pose(),x,y,z).setColor(255,214,132,(int)(190*(1-v))));
         pose.popPose();
     }
     @Override public ResourceLocation getTextureLocation(BlackHoleEntity entity){return net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS;}
