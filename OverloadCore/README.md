@@ -1,6 +1,6 @@
 # Overload Core · 过载短路核心
 
-**0.1.0-alpha.27** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
+**0.1.0-alpha.28** · Minecraft 1.21.1 · NeoForge 21.1.241 · Java 21
 
 一枚以雷霆为食的科技挂坠。缔结魂契后，八道禁律缠上你与麾下机枢，也赐予逆铸、回能和洞察之力。
 
@@ -10,11 +10,23 @@
 
 客户端与服务端都安装本模组、**Mekanism 1.21.1-10.7.19.85** 和 **Curios 9.5.1+1.21.1**。Mekanism Generators 为可选依赖，使用同一 Mek 版本。其他 EveryoneMek 扩展不是依赖。
 
-本地构建产物：`build/libs/OverloadCore-0.1.0-alpha.27.jar`。客户端与服务端需一起更新。
+本地构建产物：`build/libs/OverloadCore-0.1.0-alpha.28.jar`。客户端与服务端需一起更新。
 
 alpha.18 修复武器、雷印电容和改装页的储能文本显示。若旧版出现 `EnergyDisplay@...` 跳动，那是对象标识被误显示，实际电量不受影响。
 
 alpha.19 移除独立饰品页面和过载核心升级；已有核心储能保留，旧版已安装模块返还一次。
+
+## 黑洞发射器
+
+独立储能武器 `overloadcore:black_hole_launcher`，可在本模组创造栏找到或通过 JEI 查看合成。放入 **Mek 能量立方的充电槽**补充电量，也支持 MekaSuit 背包充电和 FE 充电设备。
+
+- **按住右键2秒，松开发射**；屏幕进度条提示就绪。提前松手、换掉物品或电量不足不会发射。
+- 储能 **10,000,000 FE**，每发 **250,000 FE**；不用弹药。支持副手。
+- 奇点命中方块／有效目标，或飞行48格后展开；牵引6格内可见目标，默认每0.5秒造成4点基础伤害，持续5秒。
+- 发射恢复时间5秒，每位玩家同时只能维持一个黑洞。不会伤害或牵引使用者、队友、创造玩家和受PVP规则保护的玩家；方块遮挡引力与伤害，保留方块和掉落物。
+- 独立 shader 绘制黑色核心、白金色流动吸积盘和弯曲光环，并写入表面深度；关闭 `weaponShaders` 后使用简化球体与光盘。实际游戏画面及第三方光影组合由玩家验收。
+
+服务器配置 `combat.blackHoleShotFE`、`blackHoleChargeTicks`、`blackHoleCooldownTicks`、`blackHoleLifetimeTicks`、`blackHoleRadius`、`blackHoleDamagePerPulse` 调整数值。离线或跨维度时清除自己的黑洞，区块卸载也不会留下持久化引力场。
 
 ## MekaTool 战斗双形态
 

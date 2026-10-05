@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ATA",
+    "CNC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_atomic"
+    },
+    "T": {
+      "item": "mekanism:teleportation_core"
+    },
+    "C": {
+      "item": "mekanism:ultimate_control_circuit"
+    },
+    "N": {
+      "item": "minecraft:nether_star"
+    },
+    "E": {
+      "item": "mekanism:energy_tablet"
+    }
+  },
+  "result": {
+    "id": "overloadcore:black_hole_launcher"
+  }
+}

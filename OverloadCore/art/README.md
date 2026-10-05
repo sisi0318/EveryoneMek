@@ -91,3 +91,11 @@ VerifyGearShader输出tactical-7.png、training-hit.png、training-day.png、tra
 ### alpha.27 浮字深度修复
 
 伤害浮字改用原生文字阴影，去掉深度写入的背景矩形。`tools/VerifyTrainingText.java` 从当前Minecraft资源JAR读取文字shader和数字图集，在隐藏GL中复现原背景遮字，检查修复后的批次顺序与墙体遮挡；输出到`build/training-text-check/`。上游字体仅供本地验证，不复制到运行资源或美术目录。
+
+## alpha.28 黑洞发射器
+
+用户参考图指定黑色核心、白金色吸积盘与弯曲光环，并明确使用shader。参考图仅作造型依据，未复制其素材。新机壳由`generate_equipment.black_hole`生成JSON，复用gear_alloy／gear_graphite／gear_grip／gear_circuit四张原创16px材质；没有新位图、代码重绘或上游图稿。
+
+`black_hole.vsh/.fsh`独立绘制核心、流动盘、远侧光弧和局部柔光，以正常透明混合及表面深度支持遮挡。不做全屏扭曲或动态世界照明；关闭shader后使用BlackHoleGeometry缓存的球体与倾斜盘。`VerifyBlackHoleShader`用当前Minecraft fog include和真实GLSL在隐藏OpenGL中检查昼夜、动画、墙体深度与球面交界，预览输出在`build/black-hole-shader-check/`。
+
+保存的[黑洞shader预览](black-hole-preview.png)来自night-0.2.png；[发射器模型预览](black-hole-launcher-preview.png)由`tools/preview_black_hole_launcher.cjs`读取实际JSON、最近邻采样原PNG生成。二者均为离线渲染，不是游戏截图。工具、原稿、预览不进入JAR。

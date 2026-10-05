@@ -16,5 +16,6 @@ public final class OverloadCore {
         bus.addListener(dev.everyonemek.overloadcore.gear.GearVisuals::register);
         bus.addListener(dev.everyonemek.overloadcore.gear.TacticalPackets::register);
         dev.everyonemek.overloadcore.training.TrainingContent.register(bus);
+        dev.everyonemek.overloadcore.gear.BlackHoleEntity.register(bus);
     }
 }

@@ -78,12 +78,40 @@ def training(write):
  write('data/minecraft/tags/block/mineable/pickaxe.json',{'replace':False,'values':['overloadcore:holographic_projector']})
  write('data/overloadcore/recipe/holographic_projector.json',{'type':'minecraft:crafting_shaped','pattern':['AGA','CSC','AEA'],'key':{k:{'item':v} for k,v in {'A':'mekanism:alloy_reinforced','G':'minecraft:glass','C':'mekanism:elite_control_circuit','S':'mekanism:steel_casing','E':'mekanism:energy_tablet'}.items()},'result':{'id':'overloadcore:holographic_projector'}})
 
+def black_hole(write):
+ def box(lo,hi,tex):
+  # Reuse the four original 16px material tiles; no raster repainting.
+  return {'from':lo,'to':hi,'faces':{side:{'texture':'#'+tex,'uv':[0,0,16,16]} for side in NORMALS}}
+ parts=[
+  ([5,8,1],[11,14,12],'dark'),([4,9,2],[5,13,11],'metal'),([11,9,2],[12,13,11],'metal'),
+  ([5.5,8.5,12],[10.5,13.5,15],'metal'),([6.5,1,7],[9.5,8,10],'grip'),([6,1,6.5],[10,2.5,10.5],'metal'),
+  ([5.5,6,3],[10.5,8,9],'dark'),([6.5,3.5,2.5],[9.5,6,4],'metal'),([6.5,2.5,3.5],[9.5,3.5,7],'metal'),
+  ([3,7,-7],[5,15,2],'metal'),([11,7,-7],[13,15,2],'metal'),([5,7,-7],[11,9,2],'metal'),([5,13,-7],[11,15,2],'metal'),
+  ([5,9,-3],[11,13,-2],'dark'),([6,10,-3.1],[10,12,-3],'energy'),
+  ([2.5,9,-5],[3,13,1],'dark'),([13,9,-5],[13.5,13,1],'dark'),
+  ([3.5,15,-5],[5,16,0],'dark'),([11,15,-5],[12.5,16,0],'dark'),
+  ([6,14,4],[10,15,10],'metal'),([7,15,5],[9,17,7],'dark'),([7.3,15.4,4.95],[8.7,16.5,5],'energy'),
+  ([3.9,10.4,4],[4,11.6,9],'energy'),([12,10.4,4],[12.1,11.6,9],'energy'),
+ ]
+ display={
+  'gui':{'rotation':[25,135,0],'translation':[0,-1,0],'scale':[.67,.67,.67]},
+  'ground':{'translation':[0,4,0],'scale':[.45,.45,.45]},
+  'fixed':{'rotation':[0,90,0],'scale':[.65,.65,.65]},
+ }
+ for hand in ['right','left']:
+  display['firstperson_'+hand+'hand']={'rotation':[0,0,0],'translation':[0,2.72,-.68],'scale':[.68,.68,.68]}
+  display['thirdperson_'+hand+'hand']={'rotation':[90,0,0],'translation':[0,.7,2.4],'scale':[.7,.7,.7]}
+ write('assets/overloadcore/models/item/black_hole_launcher.json',{'gui_light':'side','ambientocclusion':False,'textures':{k:'overloadcore:item/'+v for k,v in TEXTURES.items()},'display':display,'elements':[box(*p) for p in parts]})
+ write('data/overloadcore/recipe/black_hole_launcher.json',{'type':'minecraft:crafting_shaped','pattern':['ATA','CNC','AEA'],'key':{k:{'item':v} for k,v in {'A':'mekanism:alloy_atomic','T':'mekanism:teleportation_core','C':'mekanism:ultimate_control_circuit','N':'minecraft:nether_star','E':'mekanism:energy_tablet'}.items()},'result':{'id':'overloadcore:black_hole_launcher'}})
+ write('data/overloadcore/damage_type/gravity.json',{'message_id':'overloadcore.gravity','scaling':'never','exhaustion':.1})
+
 def generate(write):
- modules(write);combat(write);armor();training(write)
+ modules(write);combat(write);armor();training(write);black_hole(write)
  uniforms=[]
  for name in ['ModelViewMat','ProjMat']:uniforms.append({'name':name,'type':'matrix4x4','count':16,'values':[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]})
  for name,values,kind in [('ColorModulator',[1,1,1,1],'float'),('FogStart',[0],'float'),('FogEnd',[1000],'float'),('FogColor',[0,0,0,0],'float'),('FogShape',[0],'int')]:uniforms.append({'name':name,'type':kind,'count':len(values),'values':values})
  write('assets/overloadcore/shaders/core/gear_field.json',{'vertex':'overloadcore:gear_field','fragment':'overloadcore:gear_field','samplers':[],'uniforms':uniforms})
+ write('assets/overloadcore/shaders/core/black_hole.json',{'vertex':'overloadcore:black_hole','fragment':'overloadcore:black_hole','samplers':[],'uniforms':uniforms})
  pairs={}
  for k,(z,e,zd,ed) in NAMES.items():pairs['module.overloadcore.'+k]=(z,e);pairs['description.overloadcore.'+k]=(zd,ed)
  for k,pair in {
@@ -124,6 +152,16 @@ def generate(write):
  }.items():pairs['overloadcore.'+k]=pair
  pairs.update({'item.overloadcore.rail_lance':('Meka工具','Meka-Tool'),'item.overloadcore.thunder_blade':('Meka工具','Meka-Tool'),'death.attack.overloadcore.rail':('%s被磁轨弹贯穿','%s was pierced by a rail slug'),'death.attack.overloadcore.rail.player':('%s被%s的磁轨弹贯穿','%s was pierced by %s\'s rail slug')})
  pairs.update({
+  'item.overloadcore.black_hole_launcher':('黑洞发射器','Black Hole Launcher'),
+  'entity.overloadcore.black_hole':('微型黑洞','Micro Black Hole'),
+  'death.attack.overloadcore.gravity':('%s坠入了奇点','%s fell into a singularity'),
+  'death.attack.overloadcore.gravity.player':('%s坠入了%s的奇点','%s fell into %s\'s singularity'),
+  'overloadcore.black_hole.flavor':('将群星的坟墓，封入一瞬雷霆。','Seal the grave of stars within a moment of thunder.'),
+  'overloadcore.black_hole.use':('按住右键蓄力，松开发射；命中后牵引周围目标，不破坏方块。','Hold use to charge, then release. On impact, draws in nearby targets without breaking blocks.'),
+  'overloadcore.black_hole.cost':('消耗：%s FE · 蓄力：%s 秒','Cost: %s FE · Charge: %s s'),
+  'overloadcore.black_hole.active':('已有黑洞，请等待其消散','Wait for your existing black hole to dissipate'),
+  'overloadcore.black_hole.charging':('奇点约束 · %s%%','Singularity containment · %s%%'),
+  'overloadcore.black_hole.ready':('奇点就绪 · 松开发射','Singularity ready · Release to fire'),
   'key.overloadcore.combat_swap':('战斗形态快切','Quick-switch combat form'),
   'key.overloadcore.guard':('战术格挡（按住）','Tactical guard (hold)'),
   'block.overloadcore.holographic_projector':('全息靶场控制器','Holographic Range Controller'),

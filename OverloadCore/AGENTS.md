@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.27，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.27.jar`。
+- 0.1.0-alpha.28，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.28.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -17,6 +17,17 @@
 - 用户要求雷印有能量盾感，拒绝实体印章和大面积高饱和蓝色，并进一步明确参考 Mek 装备风格。alpha.14 使用 `art/source/thunder_ward-mek-v5.png`：MekaSuit 风格的深灰底层、分块银灰护板、绿色能源核心与外围白绿雷弧。不能只换颜色而不参考实际装备；参考路径见 art/README。
 - 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_mek.cjs` 仅设置背景 alpha，不更改 RGB。保护实际中性深灰轮廓包围的盾面，绿色雷弧不能被算入盾面跨度；不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
+
+## alpha.28 黑洞发射器
+
+- 用户在2026-10-05明确新增独立“黑洞发射器”，参考黑色核心／白金吸积盘图片，并指定需要shader。这是新的独立武器授权，不恢复旧rail_lance／thunder_blade；MekaTool现有双形态保持原契约。
+- BlackHoleLauncher使用GearEnergy同一份GEAR_ENERGY，固定10M FE容量，Mek／FE接口共用ForgeEnergyIntegration换算；无模块升级。真实栈／手／服务器开始时刻锁定蓄力，成功addFreshEntity才扣款，拒绝提前松手、替换栈、重复释放、冷却和第二个存活黑洞。弱身份键管理使用会话／活动实体，退出及跨维度清理。
+- BlackHoleEntity是noSave原生Projectile，48格飞行、沿途先检查已加载区块、原生碰撞与ProjectileImpactEvent；命中墙时中心停在近侧。OPENED／EXPIRES用SynchedEntityData，客户端只展示。引力场每2tick至多处理32个可见活体，每10tick沿原伤害事件结算；排除射手、队友、创造／旁观、PVP禁伤对象，不碰方块／ItemEntity。无归属、死亡、卸载、离线／换维度及到期终止。
+- BlackHoleRenderer独立black_hole.vsh/fsh，普通透明混合＋深度读写；billboard的UV坐标生成核心、流动盘及弯曲光环，gl_FragDepth对应球面／前盘，不能仅凭画板平面挡墙。Color.r存半径/8，网格半径先量化到相同字节精度；Color.g存循环相位。原版实体阶段使用默认主目标，不套AFTER_PARTICLES的目标。武器shader开关提供336面缓存几何回退，不使用全屏采样或世界光照修改。
+- generate_equipment.black_hole维护机壳、配方、damage_type、双语文案与shader JSON；复用既有4张16px材质，不修改核心PNG。客户端手持扩展实际事件在net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent；UseAnim.NONE，固定握把，蓄力抬枪，原CROSSBOW_HOLD第三人称姿势，无新增Mixin／枚举。
+- 黑洞回归检查真实能量立方充电、FE模拟及存档、实际主副手使用／换栈／费用／单实体限制，以及真实飞行撞墙、实体牵引、敌友／墙体／掉落物和到期。FE转J再回转会按原Mek取整，不能断言321 FE必定全收；NoAI生物不会执行原生travel，即使外力向量已改变也不移动，验证牵引用可travel但行走速度0的目标。
+- VerifyBlackHoleShader只运行隐藏OpenGL，使用实际GLSL与共享网格检查明暗背景、动画、近墙遮挡、穿入画板平面但仍在核心之后的深度和飞行半径；输出在build/black-hole-shader-check，不启动Minecraft客户端。
+- alpha.28共59项服务端GameTest通过；引力目标用不惧日光的Husk，避免把环境日晒误报为穿墙伤害。原18张16px贴图保持不变，预览／工具／GameTest不打包；实际客户端视效与握持留给玩家验收。
 
 ## alpha.24 战术与训练入口
 
@@ -40,7 +51,7 @@
 
 ## 当前 MekaTool 武器约定
 
-用户明确改为给原 MekaTool 安装战斗模块获得近战／远程双形态，并移除自绘剑枪。下面alpha.17–21的独立武器记录只作历史，不能恢复这些独立装备。
+用户明确改为给原 MekaTool 安装战斗模块获得近战／远程双形态，并移除旧自绘剑枪。下面alpha.17–21的独立武器记录只作历史，不能恢复这些旧装备；alpha.28新授权的黑洞发射器见上节。
 
 - alpha.25用户要求近战飞行效果体现剑气，移除月牙轮廓。GearEffectGeometry的kind=1改为固定斜角、两端收尖的刃面与短尾迹，共36面；沿前进轴横截面展开，不能放进包含视点的纵向平面而退化成线。material=3使用中心细刃光与流动纹理，普通透明混合；所有顶点不超过服务端裁墙终点。工具头接触刃保持原样，战斗逻辑与消息未改。
 - alpha.25验证：classes／jar、现有隐藏OpenGL实际shader检查通过，正面、斜侧面、动画、遮挡与5阶段天空预览可见且无大片白光；JAR与alpha.24比较只有GearEffectGeometry的类字节变化，玩法／网络类及全部16px贴图未变。未重复服务端GameTest，未启动客户端。持久预览见art/sword-energy-preview.png。

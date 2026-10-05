@@ -15,6 +15,8 @@ public final class CoreConfig {
     public static final ModConfigSpec.IntValue RAIL_COST, RAIL_CHARGE, RAIL_RANGE, BLADE_BURST_COST, BLADE_CHARGE, ARC_COST;
     public static final ModConfigSpec.DoubleValue RAIL_DAMAGE, BLADE_DAMAGE, ARC_DAMAGE;
     public static final ModConfigSpec.IntValue GUARD_UPKEEP,GUARD_DAMAGE_FE,GUARD_WINDOW,GUARD_REARM,POLAR_TICKS,TRAINING_FE;
+    public static final ModConfigSpec.IntValue BLACK_HOLE_COST, BLACK_HOLE_CHARGE, BLACK_HOLE_COOLDOWN, BLACK_HOLE_LIFETIME;
+    public static final ModConfigSpec.DoubleValue BLACK_HOLE_RADIUS, BLACK_HOLE_DAMAGE;
     static {
         var b = new ModConfigSpec.Builder();
         RANGE = b.comment("Radius in blocks; only owned or explicitly shared devices.").defineInRange("range", 32, 1, 64);
@@ -51,6 +53,12 @@ public final class CoreConfig {
         GUARD_REARM=b.defineInRange("perfectGuardRearmTicks",20,20,200);
         POLAR_TICKS=b.defineInRange("polarizationTicks",100,20,600);
         TRAINING_FE=b.defineInRange("trainingFEPerTick",200,1,1000000);
+        BLACK_HOLE_COST=b.defineInRange("blackHoleShotFE",250000,1,10000000);
+        BLACK_HOLE_CHARGE=b.defineInRange("blackHoleChargeTicks",40,10,200);
+        BLACK_HOLE_COOLDOWN=b.defineInRange("blackHoleCooldownTicks",100,20,1200);
+        BLACK_HOLE_LIFETIME=b.defineInRange("blackHoleLifetimeTicks",100,20,200);
+        BLACK_HOLE_RADIUS=b.defineInRange("blackHoleRadius",6D,2D,12D);
+        BLACK_HOLE_DAMAGE=b.defineInRange("blackHoleDamagePerPulse",4D,1D,100D);
         b.pop();
         SOUND_GAIN = b.defineInRange("soundGain", 1.8, 1, 3);
         WARD_COST_FE = b.comment("Thunder Ward: total FE cost per averted fatal incident; no cooldown.")

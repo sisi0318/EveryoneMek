@@ -38,13 +38,14 @@ public final class CoreContent {
         ()->new mekanism.common.item.ItemModule(()->dev.everyonemek.overloadcore.gear.EquipmentModules.COMBAT,new Item.Properties().rarity(Rarity.RARE)));
     public static final DeferredItem<dev.everyonemek.overloadcore.gear.LegacyWeaponItem> RAILGUN = ITEMS.register("rail_lance", () -> new dev.everyonemek.overloadcore.gear.LegacyWeaponItem(true));
     public static final DeferredItem<dev.everyonemek.overloadcore.gear.LegacyWeaponItem> BLADE = ITEMS.register("thunder_blade", () -> new dev.everyonemek.overloadcore.gear.LegacyWeaponItem(false));
+    public static final DeferredItem<dev.everyonemek.overloadcore.gear.BlackHoleLauncher> BLACK_HOLE_LAUNCHER = ITEMS.register("black_hole_launcher", dev.everyonemek.overloadcore.gear.BlackHoleLauncher::new);
     public static final java.util.Map<dev.everyonemek.overloadcore.gear.GearUpgrade, DeferredItem<mekanism.common.item.ItemModule>> UPGRADE_ITEMS =
           new java.util.EnumMap<>(dev.everyonemek.overloadcore.gear.GearUpgrade.class);
     static {
         for (var upgrade : dev.everyonemek.overloadcore.gear.GearUpgrade.values()) UPGRADE_ITEMS.put(upgrade, ITEMS.register("module_" + upgrade.id,
               () -> new mekanism.common.item.ItemModule(() -> dev.everyonemek.overloadcore.gear.EquipmentModules.get(upgrade), new Item.Properties().rarity(Rarity.RARE))));
         TABS.register("core", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.overloadcore"))
-              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); output.accept(COMBAT_MODULE); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); output.accept(dev.everyonemek.overloadcore.training.TrainingContent.BLOCK); }).build());
+              .icon(() -> new ItemStack(CORE.get())).displayItems((params, output) -> { output.accept(CORE); output.accept(WARD); output.accept(COUPLING_MODULE); output.accept(COMBAT_MODULE); output.accept(BLACK_HOLE_LAUNCHER); UPGRADE_ITEMS.forEach((kind,item)->{if(kind.targets!=0)output.accept(item);}); output.accept(dev.everyonemek.overloadcore.training.TrainingContent.BLOCK); }).build());
     }
     public static net.minecraft.network.chat.MutableComponent text(String key, Object... args) { return Component.translatable("overloadcore." + key, args); }
     public static void register(IEventBus bus) { ITEMS.register(bus); COMPONENTS.register(bus); TABS.register(bus); }

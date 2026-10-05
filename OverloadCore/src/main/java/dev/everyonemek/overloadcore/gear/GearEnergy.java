@@ -18,12 +18,13 @@ public final class GearEnergy implements IMekanismStrictEnergyHandler, IEnergyCo
     private final ItemStack stack;
     public GearEnergy(ItemStack stack) { this.stack = stack; }
     public static void register(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
-        event.registerItem(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.item(), (stack, ignored) -> new GearEnergy(stack), CoreContent.WARD.get(), CoreContent.RAILGUN.get(), CoreContent.BLADE.get());
+        event.registerItem(mekanism.common.capabilities.Capabilities.STRICT_ENERGY.item(), (stack, ignored) -> new GearEnergy(stack), CoreContent.WARD.get(), CoreContent.RAILGUN.get(), CoreContent.BLADE.get(), CoreContent.BLACK_HOLE_LAUNCHER.get());
         event.registerItem(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM,
-              (stack, ignored) -> new mekanism.common.integration.energy.forgeenergy.ForgeEnergyIntegration(new GearEnergy(stack)), CoreContent.WARD.get(), CoreContent.RAILGUN.get(), CoreContent.BLADE.get());
+              (stack, ignored) -> new mekanism.common.integration.energy.forgeenergy.ForgeEnergyIntegration(new GearEnergy(stack)), CoreContent.WARD.get(), CoreContent.RAILGUN.get(), CoreContent.BLADE.get(), CoreContent.BLACK_HOLE_LAUNCHER.get());
     }
     public static long stored(ItemStack stack) { return Math.clamp(stack.getOrDefault(CoreContent.GEAR_ENERGY, 0L), 0, Long.MAX_VALUE / 4); }
     public static long capacity(ItemStack stack) {
+        if (stack.is(CoreContent.BLACK_HOLE_LAUNCHER)) return EnergyUnit.FORGE_ENERGY.convertFrom(10000000L);
         if (stack.is(CoreContent.WARD)) {
             var c = mekanism.api.gear.IModuleHelper.INSTANCE.getModuleContainer(stack);
             int n = c == null ? 0 : c.installedCount(EquipmentModules.get(GearUpgrade.CAPACITOR));
