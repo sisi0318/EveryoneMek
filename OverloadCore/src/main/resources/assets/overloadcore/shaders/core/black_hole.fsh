@@ -44,8 +44,12 @@ void main() {
         intersection=smoothstep(0.0,max(.06,Radius*.12),clearance);
         if(intersection<=0.0)discard;
     }
-    float taper = 1.0 - smoothstep(1.0,2.48,r);
-    float shift = 0.72 * taper * taper / (r + 0.22);
+    // Compress the near-horizon image toward the optical centre, then join the
+    // unchanged world with a zero-slope transition. This is a bounded cubic map,
+    // not the reference shader's inverse-radius deflection formula.
+    float innerImage=.14+.92*max(r-1.0,0.0);
+    float sourceRadius=mix(innerImage,r,smoothstep(1.0,2.60,r));
+    float shift=max(0.0,r-sourceRadius);
     shift *= smoothstep(1.03,1.8,distanceToCenter/Radius);
     vec2 sinAngle = impact * (1.0 - shift/max(r,0.1)) * Radius / distanceToCenter;
     vec3 bent = normalize(axis * sqrt(max(0.0,1.0-dot(sinAngle,sinAngle))) + right*sinAngle.x + up*sinAngle.y);
@@ -56,21 +60,27 @@ void main() {
     float sourceDepth = texture(SceneDepth,sourceUV).r;
     if (sourceDepth < 0.99999 && length(viewPoint(sourceUV,sourceDepth)-eye) < dot(center,bent)) safe=0.0;
     sourceUV=mix(screenUV,sourceUV,safe);
-    float lensAlpha=(1.0-smoothstep(2.54,2.95,r))*Visibility*intersection;
+    float lensAlpha=(1.0-smoothstep(2.66,2.98,r))*Visibility*intersection;
     vec3 background=texture(SceneColor,sourceUV).rgb;
     float facing=dot(normalize(DiscNormal),axis);
     vec2 farSide=vec2(dot(DiscNormal,right),dot(DiscNormal,up));
-    farSide=normalize(farSide+vec2(0.0001))*(facing<0.0?1.0:-1.0);
+    farSide=normalize(farSide+vec2(0.0001))*(-facing/sqrt(facing*facing+.015));
     float side=dot(impact/max(r,0.001),farSide);
-    float wrap=pow(max(side,0.0),.4)+.28*pow(max(-side,0.0),.55);
+    float inclination=smoothstep(.03,.75,1.0-abs(facing));
+    // The core's continuous light envelope is present face-on too. Directional
+    // far-side arcs emerge smoothly as the disc turns, without switching off the halo.
+    float wrap=mix(.85,.40+.60*smoothstep(-.8,.8,side),inclination);
     vec3 skyDirection=right*impact.x+up*impact.y;
     vec3 discV=normalize(cross(DiscAxis,DiscNormal));
     float azimuth=atan(dot(skyDirection,discV),dot(skyDirection,DiscAxis));
-    float arcRadial=clamp((r-1.012)/.62,0.0,1.0);
-    vec3 gas=gasLight(azimuth,arcRadial,Phase)*wrap*smoothstep(.05,.8,1.0-abs(facing))*1.85;
-    float photon=exp(-pow((r-1.028)/.023,2.0))*1.7;
-    vec3 emission=(gas+vec3(1.0,.99,.94)*photon)*Visibility*intersection;
+    float arcRadial=clamp((r-1.012)/1.50,0.0,1.0);
+    vec3 gas=gasLight(azimuth,arcRadial,Phase)*wrap*1.65;
+    float photon=exp(-pow((r-1.028)/.040,2.0))*1.7;
+    float envelope=exp(-pow((r-1.12)/.23,2.0));
+    vec3 hotBand=vec3(1.0,.96,.82)*envelope*mix(.95,.65,inclination);
+    float transmission=exp(-envelope*mix(2.1,1.4,inclination));
+    vec3 emission=(gas+hotBand+vec3(1.0,.99,.94)*photon)*Visibility*intersection;
     float alpha=max(lensAlpha,clamp(max(emission.r,max(emission.g,emission.b)),0.0,1.0));
     if(alpha<.003)discard;
-    fragColor=vec4(background*lensAlpha+emission,alpha);
+    fragColor=vec4(background*lensAlpha*transmission+emission,alpha);
 }

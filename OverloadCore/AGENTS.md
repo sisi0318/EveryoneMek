@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.31，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.31.jar`。
+- 0.1.0-alpha.32，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.32.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -29,6 +29,8 @@
 - alpha.30 BlackHoleOptics.displayRadius仅在展开状态把原生显示半径换算到最大3格，飞行0.18不变；BlackHoleRenderer.shouldRender用前后插值半径的最大值扩大视锥范围，自定义shader和回退模型共用尺寸。BlackHoleEntity及所有服务器类保持字节不变，不能把视觉放大误接到伤害／牵引范围。
 - alpha.31用户游戏截图出现密集同心细线。根因是Phase用世界总时间，同时gasLight的角度包含time乘以随半径变化的转速，空间频率随时间不断升高；只检查0／1.8秒会漏掉。Phase改为实体tickCount＋partial，径向变形改为有界静态剪切＋正弦扰动。VerifyBlackHoleShader增加GPU径向扫描：旧材质250秒417次转折失败，新材质0／4／250／1000／5000／6000／负5000秒为0–11次。可传第二个参数指定旧gas文件复现，不改运行资源。
 - 同轮添加真实地平面颜色／深度检查，透镜目标深度从硬阈值变为前景之后0.12R渐隐；盘面用SceneDepth、逆投影与插值viewDepth实现同样的软交界。只复用本帧有效快照，SoftDepth=0时不采样且Sampler置0，避免闲置释放后引用旧纹理ID；不开额外复制。真实球体／盘面埋入地形仍应被遮挡，不能用穿墙渲染隐藏交界。
+- alpha.32用户明确差距在“空间被吞进去、光被扭曲”，并提供俯视建筑截图。代码对照发现旧版以1−abs(facing)抑制光弧，俯视时为0；背景近核心压缩也较弱、光弧约1.6R就结束。独立改成三次平滑源半径映射、角度无关热层与方向光弧分离；光弧扩大到约2.5R，方向符号在掠过盘面时平滑。近核心背景按热层透射衰减，避免把建筑纹理画成刚性的近核心边框；保留目标／采样源深度保护，不隐藏真实前景方块。
+- VerifyBlackHoleShader新增俯视方形灰色建筑背景（不是用户游戏截图），可复现原金属圈；归一化1.04–1.42R内的中亮度中性像素由2595降到0，检查上限为该区域的1.5%。alpha.32全部运行类与alpha.31字节一致，只改片元shader；仍需用户游戏内验收，不以纯空背景预览判断实际场景融合。
 - 只在主目标、完整视口及深度可用时复制颜色／深度，匹配Stencil与尺寸；resize后恢复线性颜色采样。纹理操作明确切到纹理单元0，避免创建／释放缓冲区破坏原光照纹理单元。State恢复读／写FBO、VAO、顶点缓冲、程序、纹理绑定、雾、混合、面剔除和矩形裁剪。重载／退出／换世界／闲置180帧释放GPU资源。
 - 最多64个可见实体走定制pass，额外实体回退原实体阶段的简化几何；最近8个且屏幕半径至少6px的黑洞计算透镜。blackHoleLensing关闭背景采样，weaponShaders关闭自定义shader，两者都保留三维核心和盘。第三方光影、透明方块合成等实际客户端组合仍需玩家验收，不宣称全部兼容。
 - generate_equipment.black_hole维护机壳、配方、damage_type、双语文案与shader JSON；复用既有4张16px材质，不修改核心PNG。客户端手持扩展实际事件在net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent；UseAnim.NONE，固定握把，蓄力抬枪，原CROSSBOW_HOLD第三人称姿势，无新增Mixin／枚举。
