@@ -39,10 +39,15 @@ public final class BlackHoleRenderer extends EntityRenderer<BlackHoleEntity> {
         },CoreContent.BLACK_HOLE_LAUNCHER.get());
     }
     @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){e.registerEntityRenderer(BlackHoleEntity.TYPE.get(),BlackHoleRenderer::new);}
+    @Override public boolean shouldRender(BlackHoleEntity hole,net.minecraft.client.renderer.culling.Frustum frustum,double x,double y,double z){
+        if(!hole.shouldRender(x,y,z))return false;
+        float radius=BlackHoleOptics.displayRadius(Math.max(hole.visualRadius(0),hole.visualRadius(1)),hole.isOpen());
+        return hole.noCulling||frustum.isVisible(hole.getBoundingBox().inflate(radius*BlackHoleGeometry.LENS_REACH+.5));
+    }
     @Override public void render(BlackHoleEntity hole,float yaw,float partial,PoseStack pose,MultiBufferSource buffers,int light){
         if(hole.distanceToSqr(entityRenderDispatcher.camera.getPosition())>GearVisualConfig.DISTANCE.get()*GearVisualConfig.DISTANCE.get())return;
         if(BlackHolePass.queue(hole,partial))return;
-        float radius=hole.visualRadius(partial);
+        float radius=BlackHoleOptics.displayRadius(hole.visualRadius(partial),hole.isOpen());
         pose.pushPose();pose.scale(radius,radius,radius);
         var core=buffers.getBuffer(FALLBACK);
         BlackHoleGeometry.emit(BlackHoleGeometry.sphere(false),(x,y,z,u,v)->core.addVertex(pose.last().pose(),x,y,z).setColor(0,0,0,255));

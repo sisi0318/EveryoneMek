@@ -66,17 +66,17 @@ public final class VerifyBlackHoleShader {
             glDisable(GL_DEPTH_TEST);glDepthMask(false);glEnable(GL_BLEND);glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
             for(var h:holes){var rect=BlackHoleOptics.bounds(h.center,h.radius*BlackHoleGeometry.LENS_REACH,projection,width,height);if(rect.empty())continue;
                 if(scissor){glEnable(GL_SCISSOR_TEST);glScissor(rect.x(),rect.y(),rect.width(),rect.height());}
-                vector(lens,"CenterView",h.center);vector(lens,"DiscNormal",new Vector3f(0,1,0).rotate(h.orientation));scalar(lens,"Radius",h.radius);scalar(lens,"Phase",h.phase);scalar(lens,"Visibility",1);quad.draw();
+                vector(lens,"CenterView",h.center);vector(lens,"DiscNormal",new Vector3f(0,1,0).rotate(h.orientation));vector(lens,"DiscAxis",new Vector3f(1,0,0).rotate(h.orientation));scalar(lens,"Radius",h.radius);scalar(lens,"Phase",h.phase);scalar(lens,"Visibility",1);quad.draw();
             }glDisable(GL_SCISSOR_TEST);
         }
         glEnable(GL_DEPTH_TEST);glDepthFunc(GL_LEQUAL);glDepthMask(true);glDisable(GL_BLEND);
         for(var h:holes){defaults(solid,new Matrix4f().translation(h.center).scale(h.radius));spheres[h.detailed?1:0].draw();}
-        glDepthMask(false);glEnable(GL_BLEND);glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(false);glEnable(GL_BLEND);glBlendFuncSeparate(GL_ONE,GL_ONE,GL_ZERO,GL_ONE);glDisable(GL_CULL_FACE);
         for(var h:holes){defaults(disc,new Matrix4f().translation(h.center).rotate(h.orientation).scale(h.radius));scalar(disc,"Phase",h.phase);
-            glEnable(GL_CULL_FACE);glCullFace(GL_FRONT);discs[h.detailed?1:0].draw();glCullFace(GL_BACK);discs[h.detailed?1:0].draw();glDisable(GL_CULL_FACE);}
+            discs[h.detailed?1:0].draw();}
         glDepthMask(true);return pixels();
     }
-    static Hole hole(float angle,float phase,boolean detailed){return new Hole(new Vector3f(0,0,-8),1.15F,new Quaternionf().rotationY(-.2F).rotateX(angle),phase,detailed);}
+    static Hole hole(float angle,float phase,boolean detailed){return new Hole(new Vector3f(0,0,-14),BlackHoleOptics.displayRadius(1.15F,true),new Quaternionf().rotationY(-.2F).rotateX(angle),phase,detailed);}
     static int changed(byte[] a,byte[] b){int count=0;for(int i=0;i<a.length;i+=4){if(Math.max(Math.abs((a[i]&255)-(b[i]&255)),Math.max(Math.abs((a[i+1]&255)-(b[i+1]&255)),Math.abs((a[i+2]&255)-(b[i+2]&255))))>5)count++;}return count;}
     static void save(byte[] data,Path file)throws Exception{var image=new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);for(int y=0;y<height;y++)for(int x=0;x<width;x++){int i=(y*width+x)*4;image.setRGB(x,height-y-1,(data[i]&255)<<16|(data[i+1]&255)<<8|data[i+2]&255);}ImageIO.write(image,"png",file.toFile());}
     static void checks(Path out)throws Exception{
@@ -95,7 +95,7 @@ public final class VerifyBlackHoleShader {
         var narrow=render(List.of(h),true,2,true,true);int spilled=0;
         for(int y=0;y<height;y++)for(int x=0;x<width;x++){if(x>=width/2-30&&x<width/2+30&&y>=height/2-55&&y<height/2+55)continue;int i=(y*width+x)*4;if(Math.abs((narrow[i]&255)-33)<=1&&Math.abs((narrow[i+1]&255)-59)<=1&&Math.abs((narrow[i+2]&255)-92)<=1)spilled++;}
         check(spilled==0,"Foreground wall was sampled into the background lens: "+spilled);save(narrow,out.resolve("foreground-sampling.png"));
-        var multiple=List.of(new Hole(new Vector3f(-1.7F,.4F,-10),1.2F,new Quaternionf().rotationX(.6F),2,true),new Hole(new Vector3f(1.0F,-.2F,-7),1,new Quaternionf().rotationX(-.3F),3,true));
+        var multiple=List.of(new Hole(new Vector3f(-4,.8F,-24),3,new Quaternionf().rotationX(.6F),2,true),new Hole(new Vector3f(2.6F,-.5F,-18),3,new Quaternionf().rotationX(-.3F),3,true));
         save(render(multiple,false,0,true,true),out.resolve("multiple.png"));check(captures==1,"More than one scene snapshot per frame");
         for(int fov:new int[]{50,90,110}){
             projection=new Matrix4f().perspective((float)Math.toRadians(fov),width/(float)height,.05F,128).translate(.04F,-.015F,0).rotateZ(.04F);
@@ -109,6 +109,9 @@ public final class VerifyBlackHoleShader {
         var inside=render(List.of(new Hole(new Vector3f(0,0,-.1F),1,new Quaternionf(),0,true)),true,0,true,true);int black=0;
         for(int i=0;i<inside.length;i+=4)if((inside[i]&255)<3&&(inside[i+1]&255)<3&&(inside[i+2]&255)<3)black++;
         check(black>width*height*.99,"Core opened a hole in the view when the camera went inside");
+        check(BlackHoleOptics.displayRadius(.18F,false)==.18F,"Visual enlargement changed the flying projectile");
+        projection=new Matrix4f().perspective((float)Math.toRadians(50),width/(float)height,.05F,128);
+        save(render(List.of(new Hole(h.center,1.15F,h.orientation,0,true)),false,0,true,true),out.resolve("previous-size.png"));
         resize(960,540);save(render(List.of(hole(.34F,0,false)),true,0,true,true),out.resolve("resized-low-detail.png"));
         check(captures==1&&glGetError()==GL_NO_ERROR,"Resize/capture GL failure");
         check(BlackHoleGeometry.sphere(true).quads()+BlackHoleGeometry.disc(true).quads()<=1600,"Detailed mesh exceeds budget");
@@ -124,8 +127,9 @@ public final class VerifyBlackHoleShader {
                 bodyV=new String(zip.getInputStream(zip.getEntry("assets/minecraft/shaders/core/rendertype_lightning.vsh")).readAllBytes());bodyF=new String(zip.getInputStream(zip.getEntry("assets/minecraft/shaders/core/rendertype_lightning.fsh")).readAllBytes());
             }
             var dir=root.resolve("src/main/resources/assets/overloadcore/shaders/core");
-            lens=program(Files.readString(dir.resolve("black_hole.vsh")),Files.readString(dir.resolve("black_hole.fsh")),"Position","UV0");
-            disc=program(Files.readString(dir.resolve("black_hole_disc.vsh")).replace("#moj_import <fog.glsl>",fog),Files.readString(dir.resolve("black_hole_disc.fsh")).replace("#moj_import <fog.glsl>",fog),"Position","UV0");
+            String gas=Files.readString(dir.getParent().resolve("include/black_hole_gas.glsl"));
+            lens=program(Files.readString(dir.resolve("black_hole.vsh")),Files.readString(dir.resolve("black_hole.fsh")).replace("#moj_import <overloadcore:black_hole_gas.glsl>",gas),"Position","UV0");
+            disc=program(Files.readString(dir.resolve("black_hole_disc.vsh")).replace("#moj_import <fog.glsl>",fog),Files.readString(dir.resolve("black_hole_disc.fsh")).replace("#moj_import <overloadcore:black_hole_gas.glsl>",gas),"Position","UV0");
             solid=program(bodyV.replace("#moj_import <fog.glsl>",fog),bodyF.replace("#moj_import <fog.glsl>",fog),"Position","Color");
             back=program("#version 150\nin vec3 Position;in vec2 UV0;out vec2 uv;void main(){uv=UV0;gl_Position=vec4(Position,1);}","#version 150\nuniform float Day;uniform float Depth;in vec2 uv;out vec4 fragColor;void main(){vec3 sky=mix(vec3(.022,.034,.065),vec3(.46,.67,.86),Day);vec3 ground=mix(vec3(.045,.039,.034),vec3(.22,.27,.30),Day);vec3 c=mix(ground,sky,smoothstep(.30,.60,uv.y));vec2 grid=abs(fract(uv*vec2(30,20))-.5);float line=1.0-smoothstep(.022,.044,min(grid.x,grid.y));c=mix(c,mix(vec3(.15,.18,.23),vec3(.63,.66,.65),Day),line*.6);fragColor=vec4(c,1);gl_FragDepth=Depth;}","Position","UV0");
             quad=new Mesh(new float[]{-1,-1,0,0,0,1,-1,0,1,0,1,1,0,1,1,-1,1,0,0,1},2);

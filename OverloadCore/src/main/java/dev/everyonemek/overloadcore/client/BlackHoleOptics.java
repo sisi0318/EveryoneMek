@@ -8,6 +8,8 @@ import org.joml.Vector4f;
 
 /** Camera math only, with no Minecraft state. Shared with the render checks. */
 public final class BlackHoleOptics {
+    public static final float OPEN_RADIUS=3F;
+    public static float displayRadius(float nativeRadius,boolean open){return open?nativeRadius*(OPEN_RADIUS/1.15F):nativeRadius;}
     public record Rect(int x,int y,int width,int height) {public boolean empty(){return width<=0||height<=0;}}
     public static Quaternionf orientation(UUID id){
         long bits=id.getMostSignificantBits()^Long.rotateLeft(id.getLeastSignificantBits(),19);

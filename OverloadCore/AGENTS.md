@@ -4,7 +4,7 @@
 
 ## 当前版本与依赖
 
-- 0.1.0-alpha.29，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.29.jar`。
+- 0.1.0-alpha.30，独立模组，命名空间 `overloadcore`，包名 `dev.everyonemek.overloadcore`，产物 `OverloadCore-0.1.0-alpha.30.jar`。
 - Minecraft 1.21.1、NeoForge 21.1.241、Java 21、Mekanism `1.21.1-10.7.19.85`、Curios `9.5.1+1.21.1`。Generators 同 Mek 版本，为可选依赖。
 - Gradle Wrapper 9.2.1、ModDev 2.0.146，使用本目录 `.gradle-home`。`-PwithGenerators=false` 禁用 Generators 运行依赖和对应测试源集。
 - 已取得并核对目标 Mek、Generators 与 Curios 发布 JAR 及对应源码。参考文件保存在被忽略的 `build/reference/`，不是构建依赖；正常构建从声明的 Maven 仓库解析依赖。
@@ -18,14 +18,15 @@
 - 当前原始输出为 RGB，误绘棋盘背景；沿用用户“只处理背景和尺寸”的授权，由 `prepare_ward_mek.cjs` 仅设置背景 alpha，不更改 RGB。保护实际中性深灰轮廓包围的盾面，绿色雷弧不能被算入盾面跨度；不能只按灰度洪泛而误抠除盾面。保留原稿、提示词与处理脚本。
 - 旧腕环、实体印章图稿及 `prepare_ward_seal.cjs` 仅用于历史记录。用户此前明确允许脚本仅去除印章误绘的棋盘背景及缩放，不要把该授权扩展为任意代码重绘。
 
-## 黑洞发射器与 alpha.29 光学渲染
+## 黑洞发射器与当前光学渲染
 
 - 用户在2026-10-05明确新增独立“黑洞发射器”，参考黑色核心／白金吸积盘图片，并指定需要shader。这是新的独立武器授权，不恢复旧rail_lance／thunder_blade；MekaTool现有双形态保持原契约。
 - BlackHoleLauncher使用GearEnergy同一份GEAR_ENERGY，固定10M FE容量，Mek／FE接口共用ForgeEnergyIntegration换算；无模块升级。真实栈／手／服务器开始时刻锁定蓄力，成功addFreshEntity才扣款，拒绝提前松手、替换栈、重复释放、冷却和第二个存活黑洞。弱身份键管理使用会话／活动实体，退出及跨维度清理。
 - BlackHoleEntity是noSave原生Projectile，48格飞行、沿途先检查已加载区块、原生碰撞与ProjectileImpactEvent；命中墙时中心停在近侧。OPENED／EXPIRES用SynchedEntityData，客户端只展示。引力场每2tick至多处理32个可见活体，每10tick沿原伤害事件结算；排除射手、队友、创造／旁观、PVP禁伤对象，不碰方块／ItemEntity。无归属、死亡、卸载、离线／换维度及到期终止。
 - alpha.29用户明确要求只参考其他JAR、独立实现并优化。BlackHolePass接收原实体渲染器通过距离／视锥筛选的实体，在AFTER_LEVEL绘制：原版1.21.1该事件处于Fabulous合成之后、手持物品与深度清除之前。AFTER_ENTITIES保存世界雾参数；不是搬用参考模组的AFTER_WEATHER或HUD阶段。无新Mixin／第三方运行依赖。
-- BlackHoleGeometry静态生成单位球体和封闭透镜形盘截面，BlackHolePass懒上传两级VBO；详图1152球面＋384盘面，远图288＋192。空间朝向由UUID确定，BlackHoleOptics负责矩形裁剪与屏幕尺寸，不随相机转盘。透明盘先剔除正面、再剔除背面；不排序每帧顶点，也不能用未排序双面混合留下三角亮纹。1.21.1没有GlStateManager._cullFace，使用GL11.glCullFace并恢复原模式。
-- black_hole是屏幕透镜shader，依据相机射线的归一化偏距而非固定画板圆，InverseProjection还恢复视角晃动后的投影中心；单次世界渲染共用颜色与深度快照，拒绝目标／采样源的前景深度。black_hole_disc独立计算周期噪声和剪切气体，POSITION_TEX格式，无参考shader代码。颜色用预乘透明混合；普通黑球写真实网格深度，盘只读深度。不会修改世界光照或镜头。
+- BlackHoleGeometry静态生成单位球体和封闭透镜形盘截面，BlackHolePass懒上传两级VBO；详图1152球面＋384盘面，远图288＋192。空间朝向由UUID确定，BlackHoleOptics负责矩形裁剪与屏幕尺寸，不随相机转盘。alpha.29透明盘用前后面两次绘制解决三角亮纹；alpha.30改为顺序无关的加色发光，一次绘制封闭盘，不再做前后面排序。不要把普通半透明材质改回未排序双面绘制。1.21.1没有GlStateManager._cullFace。
+- black_hole是屏幕透镜shader，依据相机射线的归一化偏距而非固定画板圆，InverseProjection还恢复视角晃动后的投影中心；单次世界渲染共用颜色与深度快照，拒绝目标／采样源的前景深度。black_hole_disc与折弯光弧共享自己实现的include/black_hole_gas.glsl，以周期噪声、流纹与温度衰减产生发光气流；DiscAxis把光弧纹理投到实际盘面轴向。透镜预乘混合，气体RGB加色且保留目标alpha；黑球写深度，盘只读深度。气体在雾中衰减到零，不把雾颜色作为额外光源。
+- alpha.30 BlackHoleOptics.displayRadius仅在展开状态把原生显示半径换算到最大3格，飞行0.18不变；BlackHoleRenderer.shouldRender用前后插值半径的最大值扩大视锥范围，自定义shader和回退模型共用尺寸。BlackHoleEntity及所有服务器类保持字节不变，不能把视觉放大误接到伤害／牵引范围。
 - 只在主目标、完整视口及深度可用时复制颜色／深度，匹配Stencil与尺寸；resize后恢复线性颜色采样。纹理操作明确切到纹理单元0，避免创建／释放缓冲区破坏原光照纹理单元。State恢复读／写FBO、VAO、顶点缓冲、程序、纹理绑定、雾、混合、面剔除和矩形裁剪。重载／退出／换世界／闲置180帧释放GPU资源。
 - 最多64个可见实体走定制pass，额外实体回退原实体阶段的简化几何；最近8个且屏幕半径至少6px的黑洞计算透镜。blackHoleLensing关闭背景采样，weaponShaders关闭自定义shader，两者都保留三维核心和盘。第三方光影、透明方块合成等实际客户端组合仍需玩家验收，不宣称全部兼容。
 - generate_equipment.black_hole维护机壳、配方、damage_type、双语文案与shader JSON；复用既有4张16px材质，不修改核心PNG。客户端手持扩展实际事件在net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent；UseAnim.NONE，固定握把，蓄力抬枪，原CROSSBOW_HOLD第三人称姿势，无新增Mixin／枚举。

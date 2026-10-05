@@ -107,3 +107,11 @@ VerifyGearShader输出tactical-7.png、training-hit.png、training-day.png、tra
 背景透镜由自身相机射线模型计算角偏移，颜色与深度快照拒绝前景采样；没有使用参考shader的导数矩阵映射或原气体纹理公式。每次世界绘制共用快照，GPU仅绘制相关屏幕矩形。球体是实际三维网格，吸积盘具有厚度；关闭自定义shader仍有简化三维模型。
 
 `VerifyBlackHoleShader`输出到`build/black-hole-optics-check/`，背景网格用于辨认扭曲，并不是游戏贴图。保存[立体黑洞与透镜预览](black-hole-optics-preview.png)和[多黑洞预览](black-hole-multiple-preview.png)；旧alpha.28预览保留作历史。均为实际GLSL离线渲染，不是游戏截图，未做图像重绘。
+
+## alpha.30 黑洞尺寸与气体光环
+
+用户反馈参考中的环更像黑洞。本轮仅在被忽略的构建目录内使用参考JAR的实际shader作离线对照，确认差异在发光气流、内缘强光和弯曲光弧；第三方shader、探针和参考预览均不提交、不打包。
+
+运行代码继续独立实现：`black_hole_gas.glsl`把本模组的周期噪声发展为有明暗间隙的流纹，内缘炽亮、外围快速变稀，并与上下折弯光弧共用。盘面从透明色块改为发光气体，保持白金色调；加色混合顺序无关，缓存盘面仅需一次绘制。展开核心改为3格半径，预览摄影距离14格，旧版同距离对照在`build/black-hole-optics-check/previous-size.png`。
+
+保存[放大后的光环预览](black-hole-expanded-preview.png)。背景网格只用于观察透镜，图片直接来自实际GLSL离线输出，不是游戏截图；原PNG材质和发射器模型未改。

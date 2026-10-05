@@ -1,10 +1,12 @@
 #version 150
+#moj_import <overloadcore:black_hole_gas.glsl>
 uniform sampler2D SceneColor;
 uniform sampler2D SceneDepth;
 uniform mat4 InverseProjection;
 uniform mat4 CameraProjection;
 uniform vec3 CenterView;
 uniform vec3 DiscNormal;
+uniform vec3 DiscAxis;
 uniform vec2 FrameSize;
 uniform float Radius;
 uniform float Phase;
@@ -54,15 +56,16 @@ void main() {
     float facing=dot(normalize(DiscNormal),axis);
     vec2 farSide=vec2(dot(DiscNormal,right),dot(DiscNormal,up));
     farSide=normalize(farSide+vec2(0.0001))*(facing<0.0?1.0:-1.0);
-    float azimuth=atan(impact.y,impact.x);
-    float wrap=max(0.0,dot(impact/max(r,0.001),farSide));
-    float narrow=exp(-abs(r-1.028)*62.0);
-    float arch=exp(-pow((r-1.18)/0.16,2.0))*pow(wrap,0.6)*(1.0-abs(facing));
-    float ripple=0.84+0.16*sin(azimuth*6.0+r*17.0-Phase*1.4);
-    float strength=(narrow*.80+arch*1.12*ripple)*Visibility;
-    vec3 emission=mix(vec3(1.0,.61,.22),vec3(1.0,.96,.80),clamp(strength*1.4,0.0,1.0));
-    float glowAlpha=clamp(strength,0.0,.94);
-    float alpha=lensAlpha+glowAlpha*(1.0-lensAlpha);
+    float side=dot(impact/max(r,0.001),farSide);
+    float wrap=pow(max(side,0.0),.4)+.28*pow(max(-side,0.0),.55);
+    vec3 skyDirection=right*impact.x+up*impact.y;
+    vec3 discV=normalize(cross(DiscAxis,DiscNormal));
+    float azimuth=atan(dot(skyDirection,discV),dot(skyDirection,DiscAxis));
+    float arcRadial=clamp((r-1.012)/.62,0.0,1.0);
+    vec3 gas=gasLight(azimuth,arcRadial,Phase)*wrap*smoothstep(.05,.8,1.0-abs(facing))*1.85;
+    float photon=exp(-pow((r-1.028)/.023,2.0))*1.7;
+    vec3 emission=(gas+vec3(1.0,.99,.94)*photon)*Visibility;
+    float alpha=max(lensAlpha,clamp(max(emission.r,max(emission.g,emission.b)),0.0,1.0));
     if(alpha<.003)discard;
-    fragColor=vec4(background*lensAlpha*(1.0-glowAlpha)+emission*glowAlpha,alpha);
+    fragColor=vec4(background*lensAlpha+emission,alpha);
 }

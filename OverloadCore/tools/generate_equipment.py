@@ -112,9 +112,9 @@ def generate(write):
  for name,values,kind in [('ColorModulator',[1,1,1,1],'float'),('FogStart',[0],'float'),('FogEnd',[1000],'float'),('FogColor',[0,0,0,0],'float'),('FogShape',[0],'int')]:uniforms.append({'name':name,'type':kind,'count':len(values),'values':values})
  write('assets/overloadcore/shaders/core/gear_field.json',{'vertex':'overloadcore:gear_field','fragment':'overloadcore:gear_field','samplers':[],'uniforms':uniforms})
  lens_uniforms=[{'name':name,'type':'matrix4x4','count':16,'values':[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]} for name in ['InverseProjection','CameraProjection']]
- for name,values in [('CenterView',[0,0,-8]),('DiscNormal',[0,1,0]),('FrameSize',[1,1]),('Radius',[1]),('Phase',[0]),('Visibility',[1])]:lens_uniforms.append({'name':name,'type':'float','count':len(values),'values':values})
+ for name,values in [('CenterView',[0,0,-8]),('DiscNormal',[0,1,0]),('DiscAxis',[1,0,0]),('FrameSize',[1,1]),('Radius',[1]),('Phase',[0]),('Visibility',[1])]:lens_uniforms.append({'name':name,'type':'float','count':len(values),'values':values})
  write('assets/overloadcore/shaders/core/black_hole.json',{'vertex':'overloadcore:black_hole','fragment':'overloadcore:black_hole','samplers':[{'name':'SceneColor'},{'name':'SceneDepth'}],'uniforms':lens_uniforms})
- write('assets/overloadcore/shaders/core/black_hole_disc.json',{'vertex':'overloadcore:black_hole_disc','fragment':'overloadcore:black_hole_disc','samplers':[],'uniforms':uniforms+[{'name':'Phase','type':'float','count':1,'values':[0]}]})
+ write('assets/overloadcore/shaders/core/black_hole_disc.json',{'vertex':'overloadcore:black_hole_disc','fragment':'overloadcore:black_hole_disc','samplers':[],'uniforms':[u for u in uniforms if u['name']!='FogColor']+[{'name':'Phase','type':'float','count':1,'values':[0]}]})
  pairs={}
  for k,(z,e,zd,ed) in NAMES.items():pairs['module.overloadcore.'+k]=(z,e);pairs['description.overloadcore.'+k]=(zd,ed)
  for k,pair in {

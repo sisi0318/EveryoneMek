@@ -77,6 +77,16 @@
       ]
     },
     {
+      "name": "DiscAxis",
+      "type": "float",
+      "count": 3,
+      "values": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
       "name": "FrameSize",
       "type": "float",
       "count": 2,

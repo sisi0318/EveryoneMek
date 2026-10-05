@@ -32,7 +32,7 @@ public final class BlackHolePass {
     private static boolean captureFailed;
     private static float fogStart,fogEnd;
     private static float[] fogColor={0,0,0,0};
-    private record View(UUID id,Matrix4f body,Matrix4f disc,Vector3f center,Vector3f normal,float radius,float phase,float pixels,boolean detailed){}
+    private record View(UUID id,Matrix4f body,Matrix4f disc,Vector3f center,Vector3f normal,Vector3f discAxis,float radius,float phase,float pixels,boolean detailed){}
     public static boolean queue(BlackHoleEntity hole,float partial){
         if(VISIBLE.containsKey(hole))return true;
         if(discShader==null||!GearVisualConfig.SHADERS.get()||frame-lastWorldPass>2||VISIBLE.size()>=64)return false;
@@ -64,16 +64,17 @@ public final class BlackHolePass {
         var views=new ArrayList<View>(VISIBLE.size());
         for(var entry:VISIBLE.entrySet()){
             var hole=entry.getKey();float partial=entry.getValue();if(hole.isRemoved()||hole.level()!=mc.level)continue;
-            float radius=hole.visualRadius(partial);
+            float radius=BlackHoleOptics.displayRadius(hole.visualRadius(partial),hole.isOpen());
             var body=new Matrix4f(viewMatrix).translate((float)(Mth.lerp(partial,hole.xo,hole.getX())-camera.x),
                 (float)(Mth.lerp(partial,hole.yo,hole.getY())-camera.y),(float)(Mth.lerp(partial,hole.zo,hole.getZ())-camera.z));
             var center=body.transformPosition(new Vector3f());float pixels=BlackHoleOptics.pixelRadius(center,radius,projection,target.viewHeight);
             if(pixels<.4F)continue;
             var orientation=BlackHoleOptics.orientation(hole.getUUID());var normal=new Vector3f(0,1,0).rotate(orientation);
+            var discAxis=new Vector3f(1,0,0).rotate(orientation);viewMatrix.transformDirection(discAxis).normalize();
             viewMatrix.transformDirection(normal).normalize();var disc=new Matrix4f(body).rotate(orientation).scale(radius);body.scale(radius);
             float phase=GearVisualConfig.ANIMATE.get()?(float)((hole.level().getGameTime()%120000)+partial)/20:0;
             if((hole.getUUID().getLeastSignificantBits()&1)!=0)phase=-phase;
-            views.add(new View(hole.getUUID(),body,disc,center,normal,radius,phase,pixels,pixels>=40));
+            views.add(new View(hole.getUUID(),body,disc,center,normal,discAxis,radius,phase,pixels,pixels>=40));
         }
         VISIBLE.clear();if(views.isEmpty())return;
         views.sort(Comparator.comparingDouble((View v)->v.center.lengthSquared()).reversed().thenComparing(View::id));lastUse=frame;
@@ -95,6 +96,7 @@ public final class BlackHolePass {
                     var rect=BlackHoleOptics.bounds(v.center,v.radius*BlackHoleGeometry.LENS_REACH,projection,target.viewWidth,target.viewHeight);
                     if(rect.empty())continue;state.scissor(rect);
                     lensShader.getUniform("CenterView").set(v.center);lensShader.getUniform("DiscNormal").set(v.normal);
+                    lensShader.getUniform("DiscAxis").set(v.discAxis);
                     lensShader.getUniform("Radius").set(v.radius);lensShader.getUniform("Phase").set(v.phase);
                     float visibility=fogEnd>fogStart?1-Mth.clamp((v.center.length()-fogStart)/(fogEnd-fogStart),0,1):1;
                     lensShader.getUniform("Visibility").set(visibility);
@@ -104,14 +106,13 @@ public final class BlackHolePass {
             state.restoreScissor();
             RenderSystem.enableDepthTest();RenderSystem.depthFunc(GL11.GL_LEQUAL);RenderSystem.depthMask(true);RenderSystem.disableBlend();
             for(var v:views){var mesh=sphere(v.detailed);mesh.bind();mesh.drawWithShader(v.body,projection,GameRenderer.getRendertypeLightningShader());}
-            RenderSystem.depthMask(false);premultiplied();
-            // Closed skins: render exits before entries. Fixed face culling avoids per-frame
-            // CPU index sorting and the bright sector seams from unsorted transparent skins.
-            RenderSystem.enableCull();
+            // Emissive gas adds light, rather than painting an opaque plate over the scene.
+            // Addition is order-independent, so both closed skins share one cached draw.
+            RenderSystem.depthMask(false);RenderSystem.enableBlend();RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
+            RenderSystem.blendFuncSeparate(GL11.GL_ONE,GL11.GL_ONE,GL11.GL_ZERO,GL11.GL_ONE);RenderSystem.disableCull();
             for(var v:views){
                 discShader.getUniform("Phase").set(v.phase);var mesh=disc(v.detailed);mesh.bind();
-                GL11.glCullFace(GL11.GL_FRONT);mesh.drawWithShader(v.disc,projection,discShader);
-                GL11.glCullFace(GL11.GL_BACK);mesh.drawWithShader(v.disc,projection,discShader);
+                mesh.drawWithShader(v.disc,projection,discShader);
             }
             VertexBuffer.unbind();
         }
